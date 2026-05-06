@@ -36,117 +36,121 @@ export default function LoginPage() {
   return (
     <>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Nunito', 'Segoe UI', sans-serif; }
-        .login-wrap {
+        body { font-family: 'Rubik', sans-serif; background: #0d2137; direction: rtl; }
+        .page {
           min-height: 100vh;
-          background: linear-gradient(135deg, #1A5C6B, #2A7B8C, #3A9BAE);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
+          background: linear-gradient(160deg, #091928 0%, #0d2137 50%, #0a2a40 100%);
+          display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          padding: 24px 20px; position: relative; overflow: hidden;
         }
-        .login-card {
-          background: #fff;
-          border-radius: 24px;
-          padding: 32px;
-          width: 100%;
-          max-width: 400px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-          direction: rtl;
+        .page::before {
+          content: ''; position: absolute; top: -120px; left: -120px;
+          width: 400px; height: 400px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(100,223,223,0.07) 0%, transparent 70%);
+          pointer-events: none;
         }
-        .login-input {
-          width: 100%;
-          padding: 13px 16px;
-          border-radius: 12px;
-          border: 2px solid #EAD9B5;
-          font-family: 'Nunito', sans-serif;
-          font-size: 16px;
-          margin-bottom: 12px;
-          direction: rtl;
-          background: #F8F3EA;
-          outline: none;
-          display: block;
-          color: #1A2B35;
+        .page::after {
+          content: ''; position: absolute; bottom: -100px; right: -100px;
+          width: 350px; height: 350px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(100,223,223,0.04) 0%, transparent 70%);
+          pointer-events: none;
         }
-        .login-input:focus { border-color: #2A7B8C; }
-        .login-btn-primary {
-          width: 100%;
-          padding: 14px;
-          border-radius: 14px;
-          border: none;
-          background: linear-gradient(135deg, #2A7B8C, #3A9BAE);
-          color: #fff;
-          font-size: 16px;
-          font-weight: 800;
-          cursor: pointer;
-          font-family: 'Nunito', sans-serif;
-          margin-bottom: 12px;
-          display: block;
+        .card {
+          background: rgba(255,255,255,0.05);
+          border: 0.5px solid rgba(100,223,223,0.2);
+          border-radius: 24px; padding: 36px 28px;
+          width: 100%; max-width: 420px;
+          position: relative; z-index: 1;
         }
-        .login-btn-primary:disabled { opacity: 0.6; cursor: default; }
-        .login-btn-secondary {
-          width: 100%;
-          padding: 11px;
-          border-radius: 12px;
-          border: 2px solid #EAD9B5;
-          background: transparent;
-          color: #7A9BAA;
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          font-family: 'Nunito', sans-serif;
+        .logo-wrap { text-align: center; margin-bottom: 32px; }
+        .logo-name {
+          font-family: 'Rubik', sans-serif; font-size: 44px;
+          font-weight: 900; color: #ffffff;
+          letter-spacing: -1.5px; line-height: 1;
+        }
+        .logo-sub {
+          font-family: 'Rubik', sans-serif; font-size: 12px;
+          font-weight: 300; color: rgba(255,255,255,0.3);
+          letter-spacing: 0.8px; margin-top: 6px;
+        }
+        .greeting {
+          font-family: 'Rubik', sans-serif; font-size: 14px;
+          font-weight: 400; color: rgba(100,223,223,0.7);
+          margin-top: 14px; letter-spacing: 0.3px;
+        }
+        .input {
+          width: 100%; padding: 14px 16px; border-radius: 14px;
+          border: 0.5px solid rgba(100,223,223,0.2);
+          font-family: 'Rubik', sans-serif; font-size: 15px;
+          margin-bottom: 12px; direction: rtl;
+          background: rgba(255,255,255,0.07);
+          color: #ffffff; outline: none;
+          transition: border-color 0.2s, background 0.2s;
           display: block;
         }
-        .login-error {
-          background: #E8704A20;
-          border: 1.5px solid #E8704A;
-          border-radius: 10px;
-          padding: 10px 14px;
-          margin-bottom: 14px;
-          color: #E8704A;
-          font-size: 13px;
-          font-weight: 700;
+        .input:focus { border-color: #64dfdf; background: rgba(255,255,255,0.09); }
+        .input::placeholder { color: rgba(255,255,255,0.25); }
+        .btn-primary {
+          width: 100%; padding: 15px; border-radius: 14px;
+          border: none; background: #64dfdf;
+          color: #0d2137; font-size: 15px; font-weight: 700;
+          cursor: pointer; font-family: 'Rubik', sans-serif;
+          margin-bottom: 10px; display: block;
+          transition: opacity 0.2s; letter-spacing: 0.2px;
         }
+        .btn-primary:disabled { opacity: 0.5; cursor: default; }
+        .btn-primary:hover:not(:disabled) { opacity: 0.88; }
+        .btn-secondary {
+          width: 100%; padding: 13px; border-radius: 14px;
+          border: 0.5px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.04);
+          color: rgba(255,255,255,0.4); font-size: 13px;
+          font-weight: 500; cursor: pointer;
+          font-family: 'Rubik', sans-serif; display: block;
+          transition: all 0.2s;
+        }
+        .btn-secondary:hover { border-color: rgba(100,223,223,0.3); color: rgba(100,223,223,0.7); }
+        .error-box {
+          background: rgba(255,107,107,0.1);
+          border: 0.5px solid rgba(255,107,107,0.3);
+          border-radius: 12px; padding: 10px 14px;
+          margin-bottom: 14px; color: #ff6b6b;
+          font-size: 13px; font-weight: 500;
+          font-family: 'Rubik', sans-serif;
+        }
+        .divider { height: 0.5px; background: rgba(255,255,255,0.07); margin: 18px 0; }
       `}</style>
 
-      <div className="login-wrap">
-        <div className="login-card">
-          <div style={{textAlign:"center", marginBottom:28}}>
-            <div style={{fontSize:48}}>🌺</div>
-            <h1 style={{fontFamily:"'Playfair Display',serif", fontSize:28, fontWeight:900, color:"#1A5C6B", margin:"8px 0 4px"}}>
-              TripPlan
-            </h1>
-            <p style={{color:"#7A9BAA", fontSize:14}}>
-              {isNew ? "צור חשבון חדש" : "ברוך השב!"}
-            </p>
+      <div className="page">
+        <div className="card">
+          <div className="logo-wrap">
+            <div className="logo-name">טיולון</div>
+            <div className="logo-sub">מתכנן הטיולים שלי</div>
+            <div className="greeting">{isNew ? "צור חשבון חדש ✨" : "ברוך השב 👋"}</div>
           </div>
 
-          <input
-            className="login-input"
-            type="email"
-            value={email}
+          <input className="input" type="email" value={email}
             onChange={e => setEmail(e.target.value)}
-            placeholder="אימייל"
-            autoComplete="email"
-          />
-          <input
-            className="login-input"
-            type="password"
-            value={password}
+            placeholder="אימייל" autoComplete="email"/>
+
+          <input className="input" type="password" value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="סיסמה (מינימום 6 תווים)"
             onKeyDown={e => e.key === "Enter" && handle()}
-            autoComplete={isNew ? "new-password" : "current-password"}
-          />
+            autoComplete={isNew ? "new-password" : "current-password"}/>
 
-          {error && <div className="login-error">⚠️ {error}</div>}
+          {error && <div className="error-box">⚠️ {error}</div>}
 
-          <button className="login-btn-primary" onClick={handle} disabled={loading}>
+          <button className="btn-primary" onClick={handle} disabled={loading}>
             {loading ? "⏳ רגע..." : isNew ? "צור חשבון ✓" : "התחבר ←"}
           </button>
 
-          <button className="login-btn-secondary" onClick={() => { setIsNew(n => !n); setError(""); }}>
+          <div className="divider"/>
+
+          <button className="btn-secondary" onClick={() => { setIsNew(n => !n); setError(""); }}>
             {isNew ? "יש לי חשבון – התחבר" : "משתמש חדש? הירשם"}
           </button>
         </div>
