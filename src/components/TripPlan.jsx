@@ -257,7 +257,11 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete}){
               onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.05)";e.currentTarget.style.borderColor="rgba(100,223,223,0.18)";}}>
               <div style={{width:44,height:44,borderRadius:13,background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🌍</div>
               <div style={{flex:1}}>
-                <div style={{fontFamily:"'Rubik',sans-serif",fontSize:16,fontWeight:700,color:"#ffffff",letterSpacing:"-0.2px"}}>{t.destination||"יעד לא מוגדר"}</div>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{fontFamily:"'Rubik',sans-serif",fontSize:16,fontWeight:700,color:"#ffffff",letterSpacing:"-0.2px"}}>{t.destination||"יעד לא מוגדר"}</div>
+                  {t.owner!==userId&&t.owner&&<span style={{fontSize:9,background:"rgba(100,223,223,0.12)",color:"#64dfdf",border:"0.5px solid rgba(100,223,223,0.3)",borderRadius:999,padding:"2px 7px",fontWeight:600}}>משותף</span>}
+                  {t.owner===userId&&t.sharedWith?.length>0&&<span style={{fontSize:9,background:"rgba(100,223,223,0.08)",color:"rgba(100,223,223,0.6)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:999,padding:"2px 7px"}}>👥 {t.sharedWith.length}</span>}
+                </div>
                 <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:3,fontWeight:400}}>
                   {t.startDate?`${fmtDate(t.startDate)} – ${fmtDate(t.endDate)}`:"תאריכים לא מוגדרים"}
                   {nights>0&&` · ${nights} ימים`}
@@ -994,12 +998,15 @@ function CalendarScreen({trip,expenses}){
 }
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
-const newTrip=()=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{}});
+const newTrip=(ownerId)=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]});
 
-export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onLogout,userEmail}){
+export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onLogout,userEmail,userId}){
   const[trips,setTrips]=useState(initialTrips);
   const[activeId,setActiveId]=useState(null);
   const[screen,setScreen]=useState("destination");
+  const[shareModal,setShareModal]=useState(null); // tripId being shared
+  const[shareEmail,setShareEmail]=useState("");
+  const[shareMsg,setShareMsg]=useState("");
   const{rates,allCodes,info,toILS}=useRates();
 
   // sync incoming trips from Firestore
@@ -1043,8 +1050,18 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onL
     }));
   },[activeId,onSaveTrip]);
 
+  const handleShare=async(tripId)=>{
+    if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
+    try{
+      await onShareTrip(tripId,shareEmail.trim());
+      setShareMsg("✅ הטיול שותף בהצלחה!");
+      setShareEmail("");
+      setTimeout(()=>{setShareModal(null);setShareMsg("");},2000);
+    }catch(e){setShareMsg("שגיאה, נסה שוב");}
+  };
+
   const handleCreate=()=>{
-    const t=newTrip();
+    const t=newTrip(userId);
     setTrips((ts)=>[...ts,t]);
     onSaveTrip(t);
     setActiveId(t.id);
@@ -1055,6 +1072,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onL
   const handleBack=()=>{setActiveId(null);setScreen("destination");};
   const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
 
+  const isOwner=active?.owner===userId||!active?.owner;
   const screens=["destination","expenses","budget","calendar"];
 
   if(!activeId){
@@ -1082,8 +1100,52 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onL
       <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:"#0d2137",fontFamily:"'Rubik',sans-serif"}}>
         <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
           <button onClick={handleBack} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 12px",cursor:"pointer",letterSpacing:"0.3px"}}>← טיולון</button>
-          <span style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:15,fontWeight:700,flex:1,textAlign:"center",letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
+          <div style={{flex:1,textAlign:"center"}}>
+            <span style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
+            {active?.sharedWith?.length>0&&<div style={{fontSize:9,color:"rgba(100,223,223,0.6)",marginTop:1}}>👥 {active.sharedWith.length} משתתפים</div>}
+          </div>
+          {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>👥 שתף</button>}
         </div>
+        {/* Share modal */}
+        {shareModal&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+            <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:24,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+              <h3 style={{fontFamily:"'Rubik',sans-serif",fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>👥 שתף טיול</h3>
+              <p style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginBottom:16,fontFamily:"'Rubik',sans-serif"}}>הכנס את האימייל של המשתתף</p>
+              
+              {/* Current shared list */}
+              {trips.find(t=>t.id===shareModal)?.sharedWith?.length>0&&(
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginBottom:8,fontFamily:"'Rubik',sans-serif",letterSpacing:"0.5px",textTransform:"uppercase"}}>משותף עם</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                    {trips.find(t=>t.id===shareModal)?.sharedWith?.map(email=>(
+                      <div key={email} style={{fontSize:12,background:"rgba(100,223,223,0.1)",color:"#64dfdf",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:999,padding:"4px 10px",fontFamily:"'Rubik',sans-serif"}}>
+                        {email}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <input
+                value={shareEmail}
+                onChange={e=>setShareEmail(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&handleShare(shareModal)}
+                placeholder="אימייל@example.com"
+                type="email"
+                style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,direction:"ltr",color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",marginBottom:10}}
+                onFocus={e=>(e.target.style.borderColor="#64dfdf")}
+                onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}
+              />
+              {shareMsg&&<div style={{fontSize:12,color:shareMsg.startsWith("✅")?"#4ade80":"#ff6b6b",marginBottom:10,fontFamily:"'Rubik',sans-serif",fontWeight:500}}>{shareMsg}</div>}
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>שתף ✓</button>
+                <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",color:"rgba(255,255,255,0.5)"}}>סגור</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{flex:1,overflowY:"auto"}}>
           {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
           {screen==="expenses"   &&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
