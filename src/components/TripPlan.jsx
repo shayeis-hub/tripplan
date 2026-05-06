@@ -24,7 +24,7 @@ const DEFAULT_CURRENCIES=[
   {code:"USD",label:"דולר אמריקאי",symbol:"$"},
   {code:"EUR",label:"יורו",symbol:"€"},
 ];
-const CURRENCY_NAMES:{[key:string]:string}={
+const CURRENCY_NAMES={
   ILS:"שקל ישראלי",USD:"דולר אמריקאי",EUR:"יורו",GBP:"לירה שטרלינג",
   JPY:"ין יפני",THB:"בהט תאילנדי",TRY:"לירה טורקית",AED:"דירהם אמירתי",
   CHF:"פרנק שוויצרי",CAD:"דולר קנדי",AUD:"דולר אוסטרלי",INR:"רופי הודי",
@@ -34,21 +34,21 @@ const CURRENCY_NAMES:{[key:string]:string}={
   IDR:"רופיה אינדונזית",PHP:"פסו פיליפיני",EGP:"לירה מצרית",ZAR:"ראנד ד.א.",
   MAD:"דירהם מרוקאי",JOD:"דינר ירדני",
 };
-const CURR_SYMBOLS:{[key:string]:string}={
+const CURR_SYMBOLS={
   ILS:"₪",USD:"$",EUR:"€",GBP:"£",JPY:"¥",THB:"฿",TRY:"₺",
   CHF:"Fr",CAD:"C$",AUD:"A$",INR:"₹",BRL:"R$",SGD:"S$",HKD:"HK$",
   SEK:"kr",NOK:"kr",DKK:"kr",PLN:"zł",CNY:"¥",KRW:"₩",RUB:"₽",
 };
-const getCurrLabel=(code:string)=>CURRENCY_NAMES[code]||code;
-const getCurrSymbol=(code:string)=>CURR_SYMBOLS[code]||code;
+const getCurrLabel=(code)=>CURRENCY_NAMES[code]||code;
+const getCurrSymbol=(code)=>CURR_SYMBOLS[code]||code;
 const WMO={0:"☀️ בהיר",1:"🌤️ בהיר חלקית",2:"⛅ מעונן חלקית",3:"☁️ מעונן",45:"🌫️ ערפל",48:"🌫️ ערפל",51:"🌦️ טפטוף קל",53:"🌦️ טפטוף",55:"🌧️ טפטוף כבד",61:"🌧️ גשם קל",63:"🌧️ גשם",65:"🌧️ גשם כבד",80:"🌦️ ממטרים",81:"🌧️ ממטרים",82:"⛈️ ממטרים כבדים",95:"⛈️ סערה",96:"⛈️ סערה+ברד",99:"⛈️ סערה חזקה"};
 const PERSON_COLORS=[C.ocean,C.coral,C.palm,C.sunset,C.purple,C.oceanLight,"#C0392B","#8E44AD"];
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
-const fmtDate=d=>d?new Date(d).toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
+const fmtDate=(d)=>d?new Date(d).toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
 const getRange=(s,e)=>{const a=[];if(!s||!e)return a;const c=new Date(s),l=new Date(e);while(c<=l){a.push(c.toISOString().slice(0,10));c.setDate(c.getDate()+1);}return a;};
 const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
-const remTime=t=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-180;if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
+const remTime=(t)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-180;if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
 
 // ─── HOOKS ────────────────────────────────────────────────────────────────────
 function useRates(){
@@ -80,7 +80,7 @@ function useWeather(destination,startDate,endDate){
   useEffect(()=>{
     if(!destination||!startDate||!endDate)return;
     const today=new Date();today.setHours(0,0,0,0);
-    const diff=Math.round((new Date(startDate)-today)/86400000);
+    const diff=Math.round((new Date(startDate).getTime()-today.getTime())/86400000);
     if(diff>16||diff<-1){setErr("תחזית זמינה רק עד 16 יום קדימה");return;}
     setLoading(true);setErr(null);setWx(null);
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1&language=en`)
@@ -239,7 +239,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete}){
         )}
 
         {trips.map(t=>{
-          const nights=t.startDate&&t.endDate?Math.round((new Date(t.endDate)-new Date(t.startDate))/86400000)+1:0;
+          const nights=t.startDate&&t.endDate?Math.round((new Date(t.endDate).getTime()-new Date(t.startDate).getTime())/86400000)+1:0;
           const total=t.expenses?.reduce((s,e)=>s+e.amountILS,0)||0;
           return(
             <div key={t.id} onClick={()=>onSelect(t.id)} style={{background:C.white,borderRadius:18,padding:"16px 18px",boxShadow:"0 4px 16px rgba(42,123,140,0.10)",cursor:"pointer",display:"flex",alignItems:"center",gap:14,borderRight:`4px solid ${C.ocean}`,transition:"transform 0.15s,box-shadow 0.15s"}}
@@ -401,7 +401,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
           <SI label="תאריך חזרה 🏠"  value={trip.endDate}   onChange={v=>onUpdate({endDate:v})}   type="date" min={trip.startDate}/>
           {valid&&(
             <div style={{padding:"12px 16px",background:`${C.ocean}12`,borderRadius:12,border:`2px solid ${C.ocean}25`,textAlign:"center"}}>
-              <span style={{fontFamily:F.d,fontSize:26,fontWeight:900,color:C.ocean}}>{Math.round((new Date(trip.endDate)-new Date(trip.startDate))/86400000)+1}</span>
+              <span style={{fontFamily:F.d,fontSize:26,fontWeight:900,color:C.ocean}}>{Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1}</span>
               <span style={{fontSize:15,fontWeight:700,color:C.oceanDeep,marginRight:6}}>ימי טיול 🎉</span>
               <div style={{fontSize:12,color:C.muted,marginTop:2}}>{fmtDate(trip.startDate)} – {fmtDate(trip.endDate)}</div>
             </div>
@@ -498,7 +498,7 @@ function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,r
         <span style={{fontSize:24,flexShrink:0,marginTop:2}}>{cat?.icon}</span>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontWeight:700,fontSize:14}}>{cat?.label}</div>
-          {exp.category==="hotel"&&exp.checkIn&&<div style={{fontSize:11,color:C.ocean,fontWeight:600}}>{fmtDate(exp.checkIn)} → {fmtDate(exp.checkOut)} · {Math.round((new Date(exp.checkOut)-new Date(exp.checkIn))/86400000)} לילות</div>}
+          {exp.category==="hotel"&&exp.checkIn&&<div style={{fontSize:11,color:C.ocean,fontWeight:600}}>{fmtDate(exp.checkIn)} → {fmtDate(exp.checkOut)} · {Math.round((new Date(exp.checkOut).getTime()-new Date(exp.checkIn).getTime())/86400000)} לילות</div>}
           {exp.category==="flight"&&exp.departureTime&&<div style={{fontSize:11,color:C.ocean,fontWeight:600}}>המראה: {exp.departureTime}</div>}
           {exp.description&&<div style={{fontSize:12,color:C.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{exp.description}</div>}
           <div style={{fontSize:12,color:C.muted,marginTop:2}}>{sym(exp.currency)}{exp.amount.toFixed(2)} ≈ ₪{exp.amountILS.toFixed(2)}</div>
@@ -618,7 +618,7 @@ function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,r
                     <SI label="📅 צ׳ק אין"   value={form.checkIn}  onChange={v=>set({checkIn:v})}  type="date" min={trip.startDate} max={trip.endDate}/>
                     <SI label="📅 צ׳ק אאוט" value={form.checkOut} onChange={v=>set({checkOut:v})} type="date" min={form.checkIn}  max={trip.endDate}/>
                     {form.checkIn&&form.checkOut&&form.checkOut>form.checkIn&&(
-                      <div style={{fontSize:12,color:C.ocean,fontWeight:700,marginTop:-8,marginBottom:6}}>🌙 {Math.round((new Date(form.checkOut)-new Date(form.checkIn))/86400000)} לילות</div>
+                      <div style={{fontSize:12,color:C.ocean,fontWeight:700,marginTop:-8,marginBottom:6}}>🌙 {Math.round((new Date(form.checkOut).getTime()-new Date(form.checkIn).getTime())/86400000)} לילות</div>
                     )}
                     <div style={{fontSize:11,color:C.muted}}>הסכום הוא לכל תקופת השהייה</div>
                   </div>
@@ -986,17 +986,9 @@ function CalendarScreen({trip,expenses}){
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 const newTrip=()=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{}});
 
-interface TripPlanProps {
-  trips: any[];
-  onSaveTrip: (trip: any) => Promise<void>;
-  onDeleteTrip: (id: string) => Promise<void>;
-  onLogout: () => Promise<void>;
-  userEmail: string;
-}
-
-export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onLogout,userEmail}:TripPlanProps){
-  const[trips,setTrips]=useState<any[]>(initialTrips);
-  const[activeId,setActiveId]=useState<string|null>(null);
+export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onLogout,userEmail}){
+  const[trips,setTrips]=useState(initialTrips);
+  const[activeId,setActiveId]=useState(null);
   const[screen,setScreen]=useState("destination");
   const{rates,allCodes,info,toILS}=useRates();
 
@@ -1005,17 +997,17 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onL
     setTrips(initialTrips);
   },[initialTrips]);
 
-  const active=trips.find((t:any)=>t.id===activeId);
+  const active=trips.find(t=>t.id===activeId);
   const expenses=active?.expenses||[];
 
-  const updTrip=useCallback((patch:any)=>{
-    setTrips((ts:any[])=>ts.map(t=>t.id===activeId?{...t,...patch}:t));
-    const updated=trips.find((t:any)=>t.id===activeId);
+  const updTrip=useCallback((patch)=>{
+    setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,...patch}:t));
+    const updated=trips.find(t=>t.id===activeId);
     if(updated) onSaveTrip({...updated,...patch});
   },[activeId,trips,onSaveTrip]);
 
-  const addExp=useCallback((e:any)=>{
-    setTrips((ts:any[])=>ts.map(t=>{
+  const addExp=useCallback((e)=>{
+    setTrips((ts)=>ts.map(t=>{
       if(t.id!==activeId)return t;
       const updated={...t,expenses:[...t.expenses,e]};
       onSaveTrip(updated);
@@ -1023,19 +1015,19 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onL
     }));
   },[activeId,onSaveTrip]);
 
-  const togglePay=useCallback((id:string)=>{
-    setTrips((ts:any[])=>ts.map(t=>{
+  const togglePay=useCallback((id)=>{
+    setTrips((ts)=>ts.map(t=>{
       if(t.id!==activeId)return t;
-      const updated={...t,expenses:t.expenses.map((e:any)=>e.id===id?{...e,paid:!e.paid}:e)};
+      const updated={...t,expenses:t.expenses.map(e=>e.id===id?{...e,paid:!e.paid}:e)};
       onSaveTrip(updated);
       return updated;
     }));
   },[activeId,onSaveTrip]);
 
-  const delExp=useCallback((id:string)=>{
-    setTrips((ts:any[])=>ts.map(t=>{
+  const delExp=useCallback((id)=>{
+    setTrips((ts)=>ts.map(t=>{
       if(t.id!==activeId)return t;
-      const updated={...t,expenses:t.expenses.filter((e:any)=>e.id!==id)};
+      const updated={...t,expenses:t.expenses.filter(e=>e.id!==id)};
       onSaveTrip(updated);
       return updated;
     }));
@@ -1043,15 +1035,15 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onL
 
   const handleCreate=()=>{
     const t=newTrip();
-    setTrips((ts:any[])=>[...ts,t]);
+    setTrips((ts)=>[...ts,t]);
     onSaveTrip(t);
     setActiveId(t.id);
     setScreen("destination");
   };
 
-  const handleSelect=(id:string)=>{setActiveId(id);setScreen("destination");};
+  const handleSelect=id=>{setActiveId(id);setScreen("destination");};
   const handleBack=()=>{setActiveId(null);setScreen("destination");};
-  const handleDelete=(id:string)=>{setTrips((ts:any[])=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
+  const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
 
   const screens=["destination","expenses","budget","calendar"];
 
