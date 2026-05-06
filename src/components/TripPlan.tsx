@@ -24,17 +24,17 @@ const DEFAULT_CURRENCIES=[
   {code:"USD",label:"דולר אמריקאי",symbol:"$"},
   {code:"EUR",label:"יורו",symbol:"€"},
 ];
-const CURRENCY_NAMES={
+const CURRENCY_NAMES:{[key:string]:string}={
   ILS:"שקל ישראלי",USD:"דולר אמריקאי",EUR:"יורו",GBP:"לירה שטרלינג",
   JPY:"ין יפני",THB:"בהט תאילנדי",TRY:"לירה טורקית",AED:"דירהם אמירתי",
   CHF:"פרנק שוויצרי",CAD:"דולר קנדי",AUD:"דולר אוסטרלי",INR:"רופי הודי",
   MXN:"פסו מקסיקני",BRL:"ריאל ברזילאי",SGD:"דולר סינגפורי",HKD:"דולר הונג קונגי",
   SEK:"כתר שוודי",NOK:"כתר נורווגי",DKK:"כתר דני",PLN:"זלוטי פולני",
-  CNY:"יואן סיני",KRW:"וון קוריאני",MYR:"רינגיט מלזי",THB:"בהט תאילנדי",
+  CNY:"יואן סיני",KRW:"וון קוריאני",MYR:"רינגיט מלזי",
   IDR:"רופיה אינדונזית",PHP:"פסו פיליפיני",EGP:"לירה מצרית",ZAR:"ראנד ד.א.",
-  MAD:"דירהם מרוקאי",JOD:"דינר ירדני",AED:"דירהם אמירתי",
+  MAD:"דירהם מרוקאי",JOD:"דינר ירדני",
 };
-const CURR_SYMBOLS={
+const CURR_SYMBOLS:{[key:string]:string}={
   ILS:"₪",USD:"$",EUR:"€",GBP:"£",JPY:"¥",THB:"฿",TRY:"₺",
   CHF:"Fr",CAD:"C$",AUD:"A$",INR:"₹",BRL:"R$",SGD:"S$",HKD:"HK$",
   SEK:"kr",NOK:"kr",DKK:"kr",PLN:"zł",CNY:"¥",KRW:"₩",RUB:"₽",
