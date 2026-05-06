@@ -1054,20 +1054,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
     try{
       await onShareTrip(tripId,shareEmail.trim());
-      // Send email notification
-      const trip=trips.find(t=>t.id===tripId);
-      const dates=trip?.startDate&&trip?.endDate?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:"";
-      fetch("/api/share-email",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          toEmail:shareEmail.trim(),
-          fromEmail:userEmail,
-          tripDestination:trip?.destination||"טיול",
-          tripDates:dates,
-        }),
-      }).catch(()=>{}); // fire and forget
-      setShareMsg("✅ הטיול שותף ומייל נשלח!");
+      setShareMsg("✅ הטיול שותף בהצלחה!");
       setShareEmail("");
       setTimeout(()=>{setShareModal(null);setShareMsg("");},2500);
     }catch(e){setShareMsg("שגיאה, נסה שוב");}
@@ -1150,7 +1137,31 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                 onFocus={e=>(e.target.style.borderColor="#64dfdf")}
                 onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}
               />
-              {shareMsg&&<div style={{fontSize:12,color:shareMsg.startsWith("✅")?"#4ade80":"#ff6b6b",marginBottom:10,fontFamily:"'Rubik',sans-serif",fontWeight:500}}>{shareMsg}</div>}
+              {shareMsg&&(
+                <div style={{marginBottom:10}}>
+                  <div style={{fontSize:12,color:shareMsg.startsWith("✅")?"#4ade80":"#ff6b6b",marginBottom:shareMsg.startsWith("✅")?10:0,fontFamily:"'Rubik',sans-serif",fontWeight:500}}>{shareMsg}</div>
+                  {shareMsg.startsWith("✅")&&(
+                    <div style={{display:"flex",gap:8,marginTop:8}}>
+                      <button onClick={()=>{
+                        const url=`https://tripplan-murex.vercel.app`;
+                        const text=`הוזמנת לטיול "${trips.find(t=>t.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} :
+${url}`;
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");
+                      }} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                        📲 שלח בוואטסאפ
+                      </button>
+                      <button onClick={()=>{
+                        const url=`https://tripplan-murex.vercel.app`;
+                        const text=`הוזמנת לטיול "${trips.find(t=>t.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} : ${url}`;
+                        navigator.clipboard.writeText(text);
+                        setShareMsg("✅ הועתק ללוח!");
+                      }} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                        📋 העתק לינק
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <div style={{display:"flex",gap:8}}>
                 <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>שתף ✓</button>
                 <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",color:"rgba(255,255,255,0.5)"}}>סגור</button>
