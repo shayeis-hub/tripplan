@@ -3,8 +3,9 @@ import { AuthProvider } from "@/lib/AuthContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TripPlan",
-  description: "מתכנן הטיולים שלך",
+  title: "טיולון",
+  description: "מתכנן הטיולים שלי",
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({
