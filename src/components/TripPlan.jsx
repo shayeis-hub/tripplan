@@ -228,18 +228,11 @@ function PieChart({data}){
 // ─── TRIP SELECTOR SCREEN ─────────────────────────────────────────────────────
 function TripSelectorScreen({trips,onSelect,onCreate,onDelete}){
   return(
-    <div style={{minHeight:"100vh",background:"rgba(255,255,255,0.04)"}}>
-      <div style={{background:`linear-gradient(135deg,${C.oceanDeep},${C.ocean})`,padding:"40px 24px 60px",position:"relative",overflow:"hidden",textAlign:"center"}}>
-        <div style={{position:"absolute",top:-40,left:-40,width:160,height:160,borderRadius:"50%",background:"rgba(255,255,255,0.05)"}}/>
-        <div style={{position:"absolute",bottom:-30,right:-30,width:120,height:120,borderRadius:"50%",background:"rgba(255,255,255,0.07)"}}/>
-        <div style={{position:"relative",zIndex:1}}>
-          <div style={{fontSize:48,marginBottom:8}}>🌺</div>
-          <h1 style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:32,fontWeight:900}}>TripPlan</h1>
-          <p style={{color:"rgba(255,255,255,0.75)",marginTop:6,fontSize:15}}>מתכנן הטיולים שלך</p>
-        </div>
-        <svg style={{position:"absolute",bottom:0,left:0,width:"100%",height:28}} viewBox="0 0 400 28" preserveAspectRatio="none">
-          <path d="M0,14 C100,28 300,0 400,14 L400,28 L0,28 Z" fill={C.lightBg}/>
-        </svg>
+    <div style={{minHeight:"100vh",background:"#0d2137"}}>
+      <div style={{background:"linear-gradient(160deg,#091928 0%,#0d2137 100%)",padding:"36px 20px 28px",borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
+        <div style={{fontSize:10,fontWeight:400,color:"rgba(255,255,255,0.2)",letterSpacing:"1.5px",textTransform:"uppercase",marginBottom:8}}>ברוך הבא</div>
+        <h1 style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:38,fontWeight:900,letterSpacing:"-1px",lineHeight:1}}>טיולון</h1>
+        <p style={{fontFamily:"'Rubik',sans-serif",color:"rgba(255,255,255,0.3)",marginTop:6,fontSize:12,fontWeight:300,letterSpacing:"0.5px"}}>מתכנן הטיולים שלי</p>
       </div>
 
       <div style={{padding:"20px 18px",display:"flex",flexDirection:"column",gap:10}}>
