@@ -226,7 +226,7 @@ function PieChart({data}){
 }
 
 // ─── TRIP SELECTOR SCREEN ─────────────────────────────────────────────────────
-function TripSelectorScreen({trips,onSelect,onCreate,onDelete}){
+function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId}){
   return(
     <div style={{minHeight:"100vh",background:"#0d2137"}}>
       <div style={{background:"linear-gradient(160deg,#091928 0%,#0d2137 100%)",padding:"36px 20px 28px",borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
@@ -1101,7 +1101,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             </div>
             <button onClick={onLogout} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 12px",cursor:"pointer"}}>התנתק</button>
           </div>
-          <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete}/>
+          <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} userId={userId}/>
         </div>
       </>
     );
