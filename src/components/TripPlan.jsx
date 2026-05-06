@@ -1054,9 +1054,22 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
     try{
       await onShareTrip(tripId,shareEmail.trim());
-      setShareMsg("✅ הטיול שותף בהצלחה!");
+      // Send email notification
+      const trip=trips.find(t=>t.id===tripId);
+      const dates=trip?.startDate&&trip?.endDate?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:"";
+      fetch("/api/share-email",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          toEmail:shareEmail.trim(),
+          fromEmail:userEmail,
+          tripDestination:trip?.destination||"טיול",
+          tripDates:dates,
+        }),
+      }).catch(()=>{}); // fire and forget
+      setShareMsg("✅ הטיול שותף ומייל נשלח!");
       setShareEmail("");
-      setTimeout(()=>{setShareModal(null);setShareMsg("");},2000);
+      setTimeout(()=>{setShareModal(null);setShareMsg("");},2500);
     }catch(e){setShareMsg("שגיאה, נסה שוב");}
   };
 
