@@ -1056,7 +1056,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       await onShareTrip(tripId,shareEmail.trim());
       setShareMsg("✅ הטיול שותף בהצלחה!");
       setShareEmail("");
-      setTimeout(()=>{setShareModal(null);setShareMsg("");},2500);
+      // modal stays open until user closes manually
     }catch(e){setShareMsg("שגיאה, נסה שוב");}
   };
 
