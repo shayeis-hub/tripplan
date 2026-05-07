@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "טיולון",
   description: "מתכנן הטיולים שלי",
-  icons: { icon: "/favicon.svg" },
+  icons: { icon: "/favicon.ico" },
 };
 
 export default function RootLayout({
