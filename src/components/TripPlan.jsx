@@ -226,6 +226,163 @@ function PieChart({data}){
 }
 
 // ─── TRIP SELECTOR SCREEN ─────────────────────────────────────────────────────
+// ─── CURRENCY CONVERTER ──────────────────────────────────────────────────────
+function CurrencyConverter({rates,onClose,tripCurrencies}){
+  const[amount,setAmount]=useState("");
+  const[from,setFrom]=useState(tripCurrencies?.[1]||"USD");
+  const[to,setTo]=useState("ILS");
+
+  const allCodes=Object.keys(rates).filter(c=>rates[c]>0).sort();
+  const converted=amount&&!isNaN(amount)
+    ? (parseFloat(amount)*rates[from]/rates[to]).toFixed(2)
+    : "";
+
+  const swap=()=>{setFrom(to);setTo(from);};
+
+  return(
+    <div style={{margin:"0 0 0",background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderBottom:"0.5px solid rgba(100,223,223,0.15)"}}>
+      <div style={{padding:"12px 18px"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+          <div style={{fontFamily:"'Rubik',sans-serif",fontSize:13,fontWeight:700,color:"#64dfdf"}}>💱 מחשבון המרת מטבע</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",fontSize:16,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <input value={amount} onChange={e=>setAmount(e.target.value)} type="number" placeholder="סכום" min="0"
+            style={{flex:2,padding:"10px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",direction:"ltr"}}
+            onFocus={e=>(e.target.style.borderColor="#64dfdf")} onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}/>
+          <select value={from} onChange={e=>setFrom(e.target.value)}
+            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            {allCodes.map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+          <button onClick={swap} style={{padding:"8px 10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontSize:14,cursor:"pointer"}}>⇄</button>
+          <select value={to} onChange={e=>setTo(e.target.value)}
+            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            {allCodes.map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        {converted&&(
+          <div style={{marginTop:10,padding:"10px 14px",background:"rgba(100,223,223,0.1)",borderRadius:10,textAlign:"center"}}>
+            <span style={{fontFamily:"'Rubik',sans-serif",fontSize:22,fontWeight:800,color:"#64dfdf"}}>{converted} {to}</span>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:3,fontFamily:"'Rubik',sans-serif"}}>
+              1 {from} = {rates[from]&&rates[to]?(rates[from]/rates[to]).toFixed(4):""} {to}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── PDF EXPORT ───────────────────────────────────────────────────────────────
+function exportTripPDF(trip,expenses){
+  if(!trip) return;
+  const CATS_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));
+  const total=expenses.reduce((s,e)=>s+e.amountILS,0);
+  const paid=expenses.filter(e=>e.paid).reduce((s,e)=>s+e.amountILS,0);
+  const sharedExp=expenses.filter(e=>e.isShared!==false);
+  const byCat=CATS.map(cat=>{const ce=expenses.filter(e=>e.category===cat.id);return{...cat,total:ce.reduce((s,e)=>s+e.amountILS,0),count:ce.length};}).filter(c=>c.count>0);
+
+  // Group expenses by date
+  const byDate={};
+  expenses.forEach(e=>{
+    const d=e.category==="hotel"?e.checkIn:e.date;
+    if(!byDate[d]) byDate[d]=[];
+    byDate[d].push(e);
+  });
+  const sortedDates=Object.keys(byDate).sort();
+
+  const html=`<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Rubik', Arial, sans-serif; background: #fff; color: #1a2b35; padding: 32px; direction: rtl; }
+  .header { text-align: center; padding: 28px; background: linear-gradient(135deg, #0d2137, #0a3050); border-radius: 16px; margin-bottom: 24px; color: white; }
+  .logo { font-size: 36px; font-weight: 900; letter-spacing: -1px; }
+  .dest { font-size: 22px; font-weight: 700; margin-top: 8px; opacity: 0.9; }
+  .dates { font-size: 13px; opacity: 0.5; margin-top: 4px; }
+  .section { margin-bottom: 24px; }
+  .section-title { font-size: 16px; font-weight: 700; color: #0d2137; border-bottom: 2px solid #64dfdf; padding-bottom: 6px; margin-bottom: 12px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px; }
+  .kpi { background: #f8fafc; border-radius: 12px; padding: 14px; text-align: center; border-top: 3px solid #64dfdf; }
+  .kpi-val { font-size: 22px; font-weight: 800; color: #0d2137; }
+  .kpi-lbl { font-size: 11px; color: #7a9baa; margin-top: 4px; }
+  .bar-row { margin-bottom: 10px; }
+  .bar-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .bar-track { height: 8px; background: #e8f4f8; border-radius: 999px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 999px; background: #64dfdf; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: #0d2137; color: white; padding: 8px 12px; text-align: right; font-weight: 600; }
+  td { padding: 8px 12px; border-bottom: 1px solid #f0f4f8; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .day-header { background: #e8f4f8; font-weight: 700; padding: 8px 12px; border-radius: 8px; margin: 12px 0 6px; font-size: 13px; color: #0d2137; }
+  .badge-paid { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 999px; font-size: 10px; }
+  .badge-unpaid { background: #fef2f2; color: #991b1b; padding: 2px 8px; border-radius: 999px; font-size: 10px; }
+  .badge-shared { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 999px; font-size: 10px; }
+  .badge-personal { background: #f3e8ff; color: #7c3aed; padding: 2px 8px; border-radius: 999px; font-size: 10px; }
+  .settlement-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; }
+  .footer { text-align: center; color: #7a9baa; font-size: 11px; margin-top: 32px; padding-top: 16px; border-top: 1px solid #e8f4f8; }
+  @media print { body { padding: 16px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">טיולון</div>
+  <div class="dest">🌍 ${trip.destination||"טיול"}</div>
+  <div class="dates">${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-val">₪${total.toFixed(0)}</div><div class="kpi-lbl">סה"כ הוצאות</div></div>
+  <div class="kpi"><div class="kpi-val">₪${paid.toFixed(0)}</div><div class="kpi-lbl">שולם</div></div>
+  <div class="kpi"><div class="kpi-val">${expenses.length}</div><div class="kpi-lbl">הוצאות</div></div>
+</div>
+
+<div class="section">
+  <div class="section-title">פירוט לפי קטגוריה</div>
+  ${byCat.map(cat=>`
+    <div class="bar-row">
+      <div class="bar-header"><span>${cat.icon} ${cat.label} (${cat.count})</span><span>₪${cat.total.toFixed(0)}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${total>0?(cat.total/total*100).toFixed(0):0}%"></div></div>
+    </div>
+  `).join("")}
+</div>
+
+<div class="section">
+  <div class="section-title">הוצאות לפי יום</div>
+  ${sortedDates.map(d=>`
+    <div class="day-header">${fmtDate(d)}</div>
+    <table>
+      <tr><th>קטגוריה</th><th>תיאור</th><th>סכום</th><th>סטטוס</th><th>סוג</th></tr>
+      ${byDate[d].map(e=>`
+        <tr>
+          <td>${CATS_MAP[e.category]?.icon||""} ${CATS_MAP[e.category]?.label||e.category}</td>
+          <td>${e.description||"—"}</td>
+          <td>₪${e.amountILS.toFixed(0)}</td>
+          <td><span class="${e.paid?"badge-paid":"badge-unpaid"}">${e.paid?"שולם":"טרם"}</span></td>
+          <td><span class="${e.isShared===false?"badge-personal":"badge-shared"}">${e.isShared===false?"אישית":"משותפת"}</span></td>
+        </tr>
+      `).join("")}
+    </table>
+  `).join("")}
+</div>
+
+<div class="footer">
+  נוצר על ידי טיולון – מתכנן הטיולים שלי &nbsp;|&nbsp; ${new Date().toLocaleDateString("he-IL")}
+</div>
+</body>
+</html>`;
+
+  // Open in new window and trigger print
+  const w=window.open("","_blank");
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(),800);
+}
+
 function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId}){
   return(
     <div style={{minHeight:"100vh",background:"#0d2137"}}>
@@ -1262,9 +1419,13 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[trips,setTrips]=useState(initialTrips);
   const[activeId,setActiveId]=useState(null);
   const[screen,setScreen]=useState("destination");
-  const[shareModal,setShareModal]=useState(null); // tripId being shared
+  const[shareModal,setShareModal]=useState(null);
   const[shareEmail,setShareEmail]=useState("");
   const[shareMsg,setShareMsg]=useState("");
+  const[showConverter,setShowConverter]=useState(false);
+  const[convAmount,setConvAmount]=useState("");
+  const[convFrom,setConvFrom]=useState("USD");
+  const[convTo,setConvTo]=useState("ILS");
   const{rates,allCodes,info,toILS}=useRates();
 
   // sync incoming trips from Firestore
@@ -1344,8 +1505,13 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               <span style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:20,fontWeight:800,letterSpacing:"-0.5px",lineHeight:1}}>טיולון</span>
               <span style={{fontFamily:"'Rubik',sans-serif",color:"rgba(255,255,255,0.35)",fontSize:10,fontWeight:300,letterSpacing:"0.5px",marginTop:3}}>מתכנן הטיולים שלי</span>
             </div>
-            <button onClick={onLogout} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 12px",cursor:"pointer"}}>התנתק</button>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>💱</button>
+              <button onClick={onLogout} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 12px",cursor:"pointer"}}>התנתק</button>
+            </div>
           </div>
+          {/* Currency Converter */}
+          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]}/>}
           <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} userId={userId}/>
         </div>
       </>
@@ -1362,7 +1528,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             <span style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
             {active?.sharedWith?.length>0&&<div style={{fontSize:9,color:"rgba(100,223,223,0.6)",marginTop:1}}>👥 {active.sharedWith.length} משתתפים</div>}
           </div>
-          {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>👥 שתף</button>}
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>exportTripPDF(active,expenses)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>📄</button>
+            {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>👥 שתף</button>}
+          </div>
         </div>
         {/* Share modal */}
         {shareModal&&(
