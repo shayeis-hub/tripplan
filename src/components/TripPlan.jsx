@@ -927,6 +927,33 @@ function CalendarScreen({trip,expenses}){
   const removeAct=i=>setEditActs(a=>a.filter((_,j)=>j!==i));
 
   // ── MONTH VIEW ──────────────────────────────────────────────────────────────
+  const[curMonth,setCurMonth]=useState(()=>{
+    if(!trip.startDate) return {y:new Date().getFullYear(),m:new Date().getMonth()};
+    const d=new Date(trip.startDate);
+    return {y:d.getFullYear(),m:d.getMonth()};
+  });
+
+  // Get all months that overlap with the trip
+  const tripMonths=useMemo(()=>{
+    if(!trip.startDate||!trip.endDate) return [];
+    const months=[];
+    const s=new Date(trip.startDate);
+    const e=new Date(trip.endDate);
+    const cur=new Date(s.getFullYear(),s.getMonth(),1);
+    const last=new Date(e.getFullYear(),e.getMonth(),1);
+    while(cur<=last){
+      months.push({y:cur.getFullYear(),m:cur.getMonth()});
+      cur.setMonth(cur.getMonth()+1);
+    }
+    return months;
+  },[trip.startDate,trip.endDate]);
+
+  const canPrev=tripMonths.length>0&&(curMonth.y>tripMonths[0].y||(curMonth.y===tripMonths[0].y&&curMonth.m>tripMonths[0].m));
+  const canNext=tripMonths.length>0&&(curMonth.y<tripMonths[tripMonths.length-1].y||(curMonth.y===tripMonths[tripMonths.length-1].y&&curMonth.m<tripMonths[tripMonths.length-1].m));
+
+  const prevMonth=()=>{if(!canPrev)return;const d=new Date(curMonth.y,curMonth.m-1,1);setCurMonth({y:d.getFullYear(),m:d.getMonth()});};
+  const nextMonth=()=>{if(!canNext)return;const d=new Date(curMonth.y,curMonth.m+1,1);setCurMonth({y:d.getFullYear(),m:d.getMonth()});};
+
   function MonthView(){
     if(!trip.startDate||!trip.endDate) return(
       <div style={{textAlign:"center",color:"rgba(255,255,255,0.25)",padding:"40px 0"}}>
@@ -934,14 +961,10 @@ function CalendarScreen({trip,expenses}){
       </div>
     );
 
-    // Build calendar grid for the month of startDate
-    const start=new Date(trip.startDate);
-    const end=new Date(trip.endDate);
-    const year=start.getFullYear();
-    const month=start.getMonth();
+    const year=curMonth.y;
+    const month=curMonth.m;
     const firstDay=new Date(year,month,1);
     const lastDay=new Date(year,month+1,0);
-    // Sunday=0
     const startPad=firstDay.getDay();
     const days=[];
     for(let i=0;i<startPad;i++) days.push(null);
@@ -952,8 +975,12 @@ function CalendarScreen({trip,expenses}){
 
     return(
       <div style={{padding:"14px 14px 20px"}}>
-        {/* Month header */}
-        <div style={{textAlign:"center",fontFamily:"'Rubik',sans-serif",fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:14,letterSpacing:"-0.3px"}}>{monthName}</div>
+        {/* Month header with navigation */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+          <button onClick={prevMonth} disabled={!canPrev} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canPrev?"rgba(100,223,223,0.08)":"transparent",color:canPrev?"#64dfdf":"rgba(255,255,255,0.15)",fontSize:16,cursor:canPrev?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>→</button>
+          <div style={{fontFamily:"'Rubik',sans-serif",fontSize:16,fontWeight:700,color:"#ffffff",letterSpacing:"-0.3px"}}>{monthName}</div>
+          <button onClick={nextMonth} disabled={!canNext} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canNext?"rgba(100,223,223,0.08)":"transparent",color:canNext?"#64dfdf":"rgba(255,255,255,0.15)",fontSize:16,cursor:canNext?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
+        </div>
         {/* Day labels */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:6}}>
           {dayNames.map(d=>(
