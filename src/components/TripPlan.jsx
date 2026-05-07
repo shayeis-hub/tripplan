@@ -458,7 +458,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
 }
 
 // ─── SCREEN 2: EXPENSES ───────────────────────────────────────────────────────
-const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",departureTime:"",paidBy:"",splitWith:[],splitType:"equal"});
+const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",departureTime:"",paidBy:"",splitWith:[],splitType:"equal",isShared:true});
 
 function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,ratesInfo}){
   const dates=getRange(trip.startDate,trip.endDate);
@@ -511,7 +511,7 @@ function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,r
       <div style={{background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"13px",borderRight:`3px solid ${cat?.color||"rgba(255,255,255,0.2)"}`,display:"flex",alignItems:"flex-start",gap:10}}>
         <span style={{fontSize:24,flexShrink:0,marginTop:2}}>{cat?.icon}</span>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontWeight:600,fontSize:13,color:"#ffffff"}}>{cat?.label}</div>
+          <div style={{fontWeight:600,fontSize:13,color:"#ffffff",display:"flex",alignItems:"center",gap:6}}>{cat?.label}{exp.isShared===false&&<span style={{fontSize:9,background:"rgba(167,139,250,0.15)",color:"#a78bfa",border:"0.5px solid rgba(167,139,250,0.3)",borderRadius:999,padding:"1px 6px"}}>אישית</span>}{exp.isShared!==false&&<span style={{fontSize:9,background:"rgba(100,223,223,0.1)",color:"#64dfdf",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:999,padding:"1px 6px"}}>משותפת</span>}</div>
           {exp.category==="hotel"&&exp.checkIn&&<div style={{fontSize:11,color:"#64dfdf",fontWeight:600}}>{fmtDate(exp.checkIn)} → {fmtDate(exp.checkOut)} · {Math.round((new Date(exp.checkOut).getTime()-new Date(exp.checkIn).getTime())/86400000)} לילות</div>}
           {exp.category==="flight"&&exp.departureTime&&<div style={{fontSize:11,color:"#64dfdf",fontWeight:600}}>המראה: {exp.departureTime}</div>}
           {exp.description&&<div style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{exp.description}</div>}
@@ -697,6 +697,15 @@ function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,r
                   </div>
                 )}
 
+                {/* Shared / Personal toggle */}
+                <div style={{display:"flex",gap:8,marginBottom:12}}>
+                  <button onClick={()=>set({isShared:true})} style={{flex:1,padding:"10px",borderRadius:12,border:`0.5px solid ${form.isShared?"#64dfdf":"rgba(255,255,255,0.12)"}`,background:form.isShared?"rgba(100,223,223,0.12)":"rgba(255,255,255,0.04)",color:form.isShared?"#64dfdf":"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer"}}>
+                    👥 משותפת
+                  </button>
+                  <button onClick={()=>set({isShared:false})} style={{flex:1,padding:"10px",borderRadius:12,border:`0.5px solid ${!form.isShared?"#a78bfa":"rgba(255,255,255,0.12)"}`,background:!form.isShared?"rgba(167,139,250,0.12)":"rgba(255,255,255,0.04)",color:!form.isShared?"#a78bfa":"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer"}}>
+                    👤 אישית
+                  </button>
+                </div>
                 <button onClick={()=>set({paid:!form.paid})} style={{width:"100%",padding:"11px",borderRadius:12,border:`0.5px solid ${form.paid?'#4ade80':'rgba(255,255,255,0.15)'}`,background:form.paid?'rgba(74,222,128,0.1)':'rgba(255,255,255,0.05)',color:form.paid?'#4ade80':'rgba(255,255,255,0.4)',fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
                   {form.paid?"✅ שולם":"⏳ טרם שולם"}
                 </button>
@@ -719,7 +728,11 @@ function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,r
 // ─── SCREEN 3: BUDGET + SETTLEMENT ───────────────────────────────────────────
 function BudgetScreen({trip,expenses}){
   const people=trip.people||[];
+  const sharedExp=expenses.filter(e=>e.isShared!==false);
+  const personalExp=expenses.filter(e=>e.isShared===false);
   const total=expenses.reduce((s,e)=>s+e.amountILS,0);
+  const totalShared=sharedExp.reduce((s,e)=>s+e.amountILS,0);
+  const totalPersonal=personalExp.reduce((s,e)=>s+e.amountILS,0);
   const paid=expenses.filter(e=>e.paid).reduce((s,e)=>s+e.amountILS,0);
   const unpaid=total-paid;
   const byCat=CATS.map(cat=>{const ce=expenses.filter(e=>e.category===cat.id);return{...cat,total:ce.reduce((s,e)=>s+e.amountILS,0),count:ce.length};}).filter(c=>c.count>0);
@@ -730,7 +743,8 @@ function BudgetScreen({trip,expenses}){
     if(people.length<2)return[];
     const balances={};
     people.forEach(p=>balances[p.id]=0);
-    expenses.forEach(exp=>{
+    // Only shared expenses enter settlement
+    expenses.filter(e=>e.isShared!==false).forEach(exp=>{
       if(!exp.paidBy)return;
       const participants=[exp.paidBy,...(exp.splitWith||[])];
       if(participants.length<2)return;
@@ -868,134 +882,351 @@ function BudgetScreen({trip,expenses}){
   );
 }
 
-// ─── SCREEN 4: CALENDAR ───────────────────────────────────────────────────────
+// ─── SCREEN 4: CALENDAR ─────────────────────────────────────────────────────
 function CalendarScreen({trip,expenses}){
   const dates=getRange(trip.startDate,trip.endDate);
-  const[acts,setActs]=useState({});
+  const[acts,setActs]=useState({});       // {date: [{text, time}]}
   const[editD,setEditD]=useState(null);
-  const[inp,setInp]=useState("");
+  const[view,setView]=useState("month");  // "month" | "day"
+  const[selDate,setSelDate]=useState(dates[0]||"");
+  const[editActs,setEditActs]=useState([]); // [{text,time}] being edited
   const{wx,loading:wLoad,error:wErr}=useWeather(trip.destination,trip.startDate,trip.endDate);
-
-  const openEdit=d=>{setEditD(d);setInp((acts[d]||[]).join("\n"));};
-  const saveEdit=()=>{setActs(a=>({...a,[editD]:inp.split("\n").map(l=>l.trim()).filter(Boolean)}));setEditD(null);};
-
-  const flightsOn=d=>expenses.filter(e=>e.category==="flight"&&e.date===d&&e.departureTime);
-  const hotelsOn =d=>expenses.filter(e=>e.category==="hotel"&&e.checkIn<=d&&e.checkOut>=d);
-  const otherOn  =d=>expenses.filter(e=>!["flight","hotel"].includes(e.category)&&e.date===d);
 
   const wxMap={};
   if(wx?.daily){const{time,weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max}=wx.daily;time.forEach((t,i)=>{wxMap[t]={code:weathercode[i],max:temperature_2m_max[i],min:temperature_2m_min[i],rain:precipitation_probability_max[i]};});}
 
-  return(
-    <div>
-      <WaveHeader title="📅 לוח שנה" subtitle={trip.destination?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}/>
+  // Deduplicate by departure time + description for flights, checkIn+checkOut for hotels
+  const flightsOn=d=>{
+    const all=expenses.filter(e=>e.category==="flight"&&e.date===d&&e.departureTime);
+    const seen=new Set();
+    return all.filter(e=>{const key=`${e.departureTime}_${e.description||""}`;if(seen.has(key))return false;seen.add(key);return true;});
+  };
+  const hotelsOn=d=>{
+    const all=expenses.filter(e=>e.category==="hotel"&&e.checkIn<=d&&e.checkOut>=d);
+    const seen=new Set();
+    return all.filter(e=>{const key=`${e.checkIn}_${e.checkOut}_${e.description||""}`;if(seen.has(key))return false;seen.add(key);return true;});
+  };
+  const otherOn=d=>expenses.filter(e=>!["flight","hotel"].includes(e.category)&&e.date===d&&e.isShared!==false);
+  const hasEvents=d=>{
+    const a=acts[d]||[];
+    return a.length>0||flightsOn(d).length>0||hotelsOn(d).length>0||otherOn(d).length>0;
+  };
 
-      {trip.destination&&(
-        <div style={{margin:"12px 16px 0",padding:"9px 14px",background:"rgba(255,255,255,0.05)",borderRadius:12,fontSize:12,boxShadow:"0 2px 8px rgba(0,0,0,0.05)",color:"rgba(255,255,255,0.35)"}}>
-          {wLoad&&"🌤️ טוען תחזית..."}{wErr&&<span style={{color:"#ff6b6b"}}>☁️ {wErr}</span>}{wx&&!wLoad&&<span style={{color:"#4ade80",fontWeight:700}}>🌍 תחזית: {wx.name}, {wx.country}</span>}
+  const openEdit=d=>{
+    setEditD(d);
+    const existing=acts[d]||[];
+    setEditActs(existing.length>0?existing.map(a=>typeof a==="string"?{text:a,time:""}:a):[{text:"",time:""}]);
+  };
+  const saveEdit=()=>{
+    const valid=editActs.filter(a=>a.text.trim());
+    setActs(a=>({...a,[editD]:valid}));
+    setEditD(null);
+  };
+  const addActRow=()=>setEditActs(a=>[...a,{text:"",time:""}]);
+  const updateAct=(i,field,val)=>setEditActs(a=>a.map((x,j)=>j===i?{...x,[field]:val}:x));
+  const removeAct=i=>setEditActs(a=>a.filter((_,j)=>j!==i));
+
+  // ── MONTH VIEW ──────────────────────────────────────────────────────────────
+  function MonthView(){
+    if(!trip.startDate||!trip.endDate) return(
+      <div style={{textAlign:"center",color:"rgba(255,255,255,0.25)",padding:"40px 0"}}>
+        <div style={{fontSize:44,marginBottom:14}}>🗓️</div>הגדר יעד ותאריכים
+      </div>
+    );
+
+    // Build calendar grid for the month of startDate
+    const start=new Date(trip.startDate);
+    const end=new Date(trip.endDate);
+    const year=start.getFullYear();
+    const month=start.getMonth();
+    const firstDay=new Date(year,month,1);
+    const lastDay=new Date(year,month+1,0);
+    // Sunday=0
+    const startPad=firstDay.getDay();
+    const days=[];
+    for(let i=0;i<startPad;i++) days.push(null);
+    for(let d=1;d<=lastDay.getDate();d++) days.push(new Date(year,month,d));
+
+    const monthName=firstDay.toLocaleDateString("he-IL",{month:"long",year:"numeric"});
+    const dayNames=["א","ב","ג","ד","ה","ו","ש"];
+
+    return(
+      <div style={{padding:"14px 14px 20px"}}>
+        {/* Month header */}
+        <div style={{textAlign:"center",fontFamily:"'Rubik',sans-serif",fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:14,letterSpacing:"-0.3px"}}>{monthName}</div>
+        {/* Day labels */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:6}}>
+          {dayNames.map(d=>(
+            <div key={d} style={{textAlign:"center",fontSize:11,fontWeight:600,color:"rgba(255,255,255,0.25)",padding:"4px 0"}}>{d}</div>
+          ))}
         </div>
-      )}
-
-      {editD&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-          <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:22,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
-            <h3 style={{fontFamily:"'Rubik',sans-serif",fontSize:19,fontWeight:700,marginBottom:4,color:"#0a3050"}}>פעילויות ל{fmtDate(editD)}</h3>
-            <p style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginBottom:12}}>שורה נפרדת לכל פעילות</p>
-            <textarea value={inp} onChange={e=>setInp(e.target.value)} rows={6} placeholder={"ביקור במקדש\nשוק לילה\nטיול בספינה"}
-              style={{width:"100%",padding:"11px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,resize:"vertical",direction:"rtl",color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none"}}
-              onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
-            <div style={{display:"flex",gap:9,marginTop:12}}>
-              <button onClick={saveEdit} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:15,cursor:"pointer"}}>שמור ✓</button>
-              <button onClick={()=>setEditD(null)} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:14,cursor:"pointer",color:"rgba(255,255,255,0.5)"}}>ביטול</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:14}}>
-        {dates.length===0?(<div style={{textAlign:"center",color:"rgba(255,255,255,0.35)",padding:"40px 0"}}><div style={{fontSize:44,marginBottom:14}}>🗓️</div>הגדר יעד ותאריכים</div>)
-        :dates.map((date,idx)=>{
-          const wday=new Date(date).toLocaleDateString("he-IL",{weekday:"long"});
-          const dayNum=new Date(date).getDate();
-          const month=new Date(date).toLocaleDateString("he-IL",{month:"long"});
-          const dayActs=acts[date]||[];
-          const flights=flightsOn(date);
-          const hotels=hotelsOn(date);
-          const others=otherOn(date);
-          const wxd=wxMap[date];
-          const hasContent=dayActs.length>0||flights.length>0||hotels.length>0||others.length>0;
-          return(
-            <div key={date} style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(100,223,223,0.14)",borderRadius:16,overflow:"hidden"}}>
-              <div style={{background:"rgba(100,223,223,0.08)",borderBottom:"0.5px solid rgba(100,223,223,0.12)",padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                <div style={{display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{width:42,height:42,borderRadius:10,background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.2)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-                    <div style={{color:"#ffffff",fontSize:17,fontWeight:800,fontFamily:"'Rubik',sans-serif",lineHeight:1}}>{dayNum}</div>
-                    <div style={{color:"rgba(255,255,255,0.35)",fontSize:9,fontWeight:400}}>{month}</div>
-                  </div>
-                  <div>
-                    <div style={{color:"#ffffff",fontWeight:800,fontSize:15}}>{wday}</div>
-                    <div style={{color:"rgba(255,255,255,0.7)",fontSize:11}}>יום {idx+1} מתוך {dates.length}</div>
-                  </div>
-                </div>
-                <button onClick={()=>openEdit(date)} style={{padding:"6px 12px",borderRadius:8,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,cursor:"pointer"}}>✏️ פעילויות</button>
-              </div>
-              <div style={{padding:"12px 16px"}}>
-                {wxd&&(
-                  <div style={{marginBottom:10,padding:"9px 12px",background:"rgba(100,223,223,0.07)",border:"0.5px solid rgba(100,223,223,0.15)",borderRadius:11,display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{fontSize:20}}>{(WMO[wxd.code]||"🌡️").split(" ")[0]}</div>
-                    <div style={{flex:1}}>
-                      <div style={{fontWeight:600,fontSize:13,color:"rgba(255,255,255,0.75)"}}>{WMO[wxd.code]?.split(" ").slice(1).join(" ")||"—"}</div>
-                      <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:1}}>🌡️ {wxd.min?.toFixed(0)}°–{wxd.max?.toFixed(0)}°C{wxd.rain>0?` · 💧${wxd.rain}%`:""}</div>
-                    </div>
+        {/* Grid */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+          {days.map((d,i)=>{
+            if(!d) return <div key={i}/>;
+            const ds=d.toISOString().slice(0,10);
+            const inTrip=ds>=trip.startDate&&ds<=trip.endDate;
+            const isToday=ds===new Date().toISOString().slice(0,10);
+            const isSel=ds===selDate;
+            const hasEv=hasEvents(ds);
+            const wxd=wxMap[ds];
+            return(
+              <div key={ds} onClick={()=>{if(inTrip){setSelDate(ds);setView("day");}}}
+                style={{
+                  minHeight:52,padding:"5px 4px 4px",borderRadius:10,
+                  background:isSel?"rgba(100,223,223,0.2)":inTrip?"rgba(255,255,255,0.05)":"transparent",
+                  border:isSel?"0.5px solid #64dfdf":isToday?"0.5px solid rgba(100,223,223,0.4)":"0.5px solid transparent",
+                  cursor:inTrip?"pointer":"default",
+                  display:"flex",flexDirection:"column",alignItems:"center",gap:2,
+                  transition:"all 0.15s",
+                  opacity:inTrip?1:0.3,
+                }}>
+                <div style={{
+                  fontSize:13,fontWeight:isSel||isToday?700:500,
+                  color:isSel?"#64dfdf":isToday?"#64dfdf":"rgba(255,255,255,0.8)",
+                  fontFamily:"'Rubik',sans-serif",lineHeight:1,
+                }}>{d.getDate()}</div>
+                {/* weather mini */}
+                {wxd&&inTrip&&<div style={{fontSize:10,lineHeight:1}}>{WMO[wxd.code]?.split(" ")[0]||""}</div>}
+                {/* event dots */}
+                {hasEv&&inTrip&&(
+                  <div style={{display:"flex",gap:2,flexWrap:"wrap",justifyContent:"center",marginTop:2}}>
+                    {flightsOn(ds).length>0&&<div style={{width:5,height:5,borderRadius:"50%",background:"#64dfdf"}}/>}
+                    {hotelsOn(ds).length>0&&<div style={{width:5,height:5,borderRadius:"50%",background:"#48b5c4"}}/>}
+                    {otherOn(ds).length>0&&<div style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24"}}/>}
+                    {(acts[ds]||[]).length>0&&<div style={{width:5,height:5,borderRadius:"50%",background:"#a78bfa"}}/>}
                   </div>
                 )}
-                {flights.map(f=>{const rem=remTime(f.departureTime);return(
-                  <div key={f.id} style={{marginBottom:9,padding:"10px 12px",background:`${C.ocean}0D`,borderRadius:11,borderRight:`3px solid ${C.ocean}`}}>
-                    <div style={{fontWeight:700,fontSize:14,color:"#0a3050"}}>✈️ טיסה — המראה {f.departureTime}</div>
-                    {rem&&<div style={{fontSize:12,color:"#ff6b6b",fontWeight:700,marginTop:4}}>🔔 הגעה לשדה עד {rem}</div>}
-                    {f.description&&<div style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginTop:3}}>{f.description}</div>}
-                  </div>
-                );})}
-                {hotels.map(h=>{const isIn=h.checkIn===date,isOut=h.checkOut===date;return(
-                  <div key={h.id} style={{marginBottom:9,padding:"10px 12px",background:`${C.oceanLight}12`,borderRadius:11,borderRight:`3px solid ${C.oceanLight}`}}>
-                    <div style={{fontWeight:700,fontSize:14,color:"#0a3050",display:"flex",alignItems:"center",gap:7,flexWrap:"wrap"}}>
-                      <span>🏨 {h.description||"מלון"}</span>
-                      {isIn&&<span style={{fontSize:11,background:C.palm,color:"#ffffff",borderRadius:6,padding:"2px 7px"}}>צ׳ק אין</span>}
-                      {isOut&&<span style={{fontSize:11,background:C.coral,color:"#ffffff",borderRadius:6,padding:"2px 7px"}}>צ׳ק אאוט</span>}
-                    </div>
-                    <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:3}}>{fmtDate(h.checkIn)} → {fmtDate(h.checkOut)}</div>
-                  </div>
-                );})}
-                {others.map(e=>{
-                  const cat=CATS.find(c=>c.id===e.category);
-                  return(
-                    <div key={e.id} style={{marginBottom:9,padding:"10px 12px",background:`${cat?.color}12`,borderRadius:11,borderRight:`3px solid ${cat?.color}`}}>
-                      <div style={{fontWeight:700,fontSize:14,color:"#ffffff"}}>{cat?.icon} {cat?.label}{e.description?` – ${e.description}`:""}</div>
-                      <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:3,display:"flex",gap:10}}>
-                        <span>₪{e.amountILS.toFixed(0)}</span>
-                        <span style={{color:e.paid?C.palm:C.coral,fontWeight:700}}>{e.paid?"✅ שולם":"⏳ טרם שולם"}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-                {dayActs.length>0?(
-                  <ul style={{listStyle:"none",display:"flex",flexDirection:"column",gap:7}}>
-                    {dayActs.map((act,i)=>(
-                      <li key={i} style={{display:"flex",alignItems:"flex-start",gap:9,padding:"8px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10}}>
-                        <span style={{fontSize:16,marginTop:1}}>🌺</span>
-                        <span style={{fontSize:13,fontWeight:400,color:"rgba(255,255,255,0.75)"}}>{act}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ):!hasContent&&(<div style={{textAlign:"center",color:"rgba(255,255,255,0.35)",padding:"12px 0",fontSize:13}}>לחץ ✏️ להוספת פעילויות 🌴</div>)}
               </div>
+            );
+          })}
+        </div>
+        {/* Legend */}
+        <div style={{display:"flex",gap:14,justifyContent:"center",marginTop:14,flexWrap:"wrap"}}>
+          {[["#64dfdf","טיסה"],["#48b5c4","מלון"],["#fbbf24","הוצאות"],["#a78bfa","פעילויות"]].map(([color,label])=>(
+            <div key={label} style={{display:"flex",alignItems:"center",gap:5}}>
+              <div style={{width:7,height:7,borderRadius:"50%",background:color}}/>
+              <span style={{fontSize:10,color:"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif"}}>{label}</span>
             </div>
-          );
-        })}
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── DAY VIEW ────────────────────────────────────────────────────────────────
+  function DayView(){
+    const flights=flightsOn(selDate);
+    const hotels=hotelsOn(selDate);
+    const others=otherOn(selDate);
+    const dayActs=(acts[selDate]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);
+    const wxd=wxMap[selDate];
+    const wday=new Date(selDate).toLocaleDateString("he-IL",{weekday:"long"});
+    const dayNum=new Date(selDate).getDate();
+    const monthName=new Date(selDate).toLocaleDateString("he-IL",{month:"long"});
+
+    // Build timeline events: collect all timed events
+    const timedEvents=[];
+    flights.forEach(f=>{
+      if(f.departureTime){
+        const[h,m]=f.departureTime.split(":").map(Number);
+        timedEvents.push({hour:h+m/60,type:"flight",data:f,duration:0.5});
+        const rem=remTime(f.departureTime);
+        if(rem){const[rh,rm]=rem.split(":").map(Number);timedEvents.push({hour:rh+rm/60,type:"reminder",data:f,duration:0.25});}
+      }
+    });
+    hotels.forEach(h=>{
+      const isIn=h.checkIn===selDate,isOut=h.checkOut===selDate;
+      if(isIn) timedEvents.push({hour:14,type:"hotel-in",data:h,duration:1});
+      if(isOut) timedEvents.push({hour:11,type:"hotel-out",data:h,duration:1});
+      if(!isIn&&!isOut) timedEvents.push({hour:12,type:"hotel-stay",data:h,duration:0.5});
+    });
+    dayActs.forEach((a,i)=>{
+      if(a.time){const[h,m]=a.time.split(":").map(Number);timedEvents.push({hour:h+m/60,type:"activity",data:a,duration:1,idx:i});}
+      else timedEvents.push({hour:null,type:"activity",data:a,duration:1,idx:i});
+    });
+    others.forEach(e=>timedEvents.push({hour:null,type:"other",data:e,duration:0.5}));
+
+    const timed=timedEvents.filter(e=>e.hour!==null).sort((a,b)=>a.hour-b.hour);
+    const untimed=timedEvents.filter(e=>e.hour===null);
+
+    // Hour range: 6am to midnight
+    const hours=Array.from({length:19},(_,i)=>i+5); // 5..23
+
+    const hourToY=h=>(h-5)*56; // 56px per hour
+    const totalH=19*56;
+
+    const eventColor={
+      flight:"#64dfdf",reminder:"#ff6b6b",
+      "hotel-in":"#4ade80","hotel-out":"#fbbf24","hotel-stay":"#48b5c4",
+      activity:"#a78bfa",other:"#fbbf24",
+    };
+    const eventLabel={
+      flight:f=>`✈️ המראה ${f.departureTime}`,
+      reminder:f=>`🔔 הגעה לשדה עד ${remTime(f.departureTime)}`,
+      "hotel-in":h=>`🏨 צ׳ק אין – ${h.description||"מלון"}`,
+      "hotel-out":h=>`🏨 צ׳ק אאוט – ${h.description||"מלון"}`,
+      "hotel-stay":h=>`🏨 ${h.description||"מלון"}`,
+      activity:a=>a.text,
+      other:e=>`${CATS.find(c=>c.id===e.category)?.icon} ${e.description||CATS.find(c=>c.id===e.category)?.label}`,
+    };
+
+    return(
+      <div style={{padding:"14px 14px 20px"}}>
+        {/* Day header */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{width:44,height:44,borderRadius:12,background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.3)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+              <div style={{color:"#ffffff",fontSize:18,fontWeight:800,fontFamily:"'Rubik',sans-serif",lineHeight:1}}>{dayNum}</div>
+              <div style={{color:"rgba(255,255,255,0.35)",fontSize:9}}>{monthName}</div>
+            </div>
+            <div>
+              <div style={{color:"#ffffff",fontWeight:700,fontSize:16,fontFamily:"'Rubik',sans-serif"}}>{wday}</div>
+              {wxd&&<div style={{fontSize:12,color:"#64dfdf",marginTop:2}}>{WMO[wxd.code]?.split(" ")[0]} {wxd.max?.toFixed(0)}°C</div>}
+            </div>
+          </div>
+          <button onClick={()=>openEdit(selDate)} style={{padding:"7px 12px",borderRadius:9,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,cursor:"pointer"}}>✏️ פעילויות</button>
+        </div>
+
+        {/* Timeline */}
+        <div style={{position:"relative",display:"flex",gap:0}}>
+          {/* Hour labels */}
+          <div style={{width:36,flexShrink:0,position:"relative",height:totalH}}>
+            {hours.map(h=>(
+              <div key={h} style={{position:"absolute",top:hourToY(h)-8,right:0,fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Rubik',sans-serif",textAlign:"right",width:"100%"}}>
+                {String(h).padStart(2,"0")}:00
+              </div>
+            ))}
+          </div>
+          {/* Grid + events */}
+          <div style={{flex:1,position:"relative",height:totalH,marginRight:8}}>
+            {/* Hour lines */}
+            {hours.map(h=>(
+              <div key={h} style={{position:"absolute",top:hourToY(h),left:0,right:0,height:0.5,background:"rgba(255,255,255,0.07)"}}/>
+            ))}
+            {/* Timed events */}
+            {timed.map((ev,i)=>{
+              const top=hourToY(ev.hour);
+              const height=Math.max(ev.duration*56,28);
+              const col=eventColor[ev.type]||"#64dfdf";
+              const label=eventLabel[ev.type]?.(ev.data)||"";
+              return(
+                <div key={i} style={{
+                  position:"absolute",top,right:0,left:0,height,
+                  background:`${col}18`,border:`0.5px solid ${col}50`,
+                  borderRight:`3px solid ${col}`,borderRadius:8,
+                  padding:"4px 8px",display:"flex",alignItems:"center",
+                  zIndex:2,
+                }}>
+                  <span style={{fontSize:12,fontWeight:600,color:col,fontFamily:"'Rubik',sans-serif",lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{label}</span>
+                </div>
+              );
+            })}
+            {/* Current time line */}
+            {selDate===new Date().toISOString().slice(0,10)&&(()=>{
+              const now=new Date();
+              const h=now.getHours()+now.getMinutes()/60;
+              if(h>=5&&h<=23) return(
+                <div style={{position:"absolute",top:hourToY(h),left:0,right:0,height:2,background:"#ff6b6b",zIndex:10,borderRadius:999}}>
+                  <div style={{position:"absolute",right:-4,top:-3,width:8,height:8,borderRadius:"50%",background:"#ff6b6b"}}/>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* Untimed events */}
+        {untimed.length>0&&(
+          <div style={{marginTop:16}}>
+            <div style={{fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.25)",letterSpacing:"1px",textTransform:"uppercase",marginBottom:8,fontFamily:"'Rubik',sans-serif"}}>ללא שעה</div>
+            {untimed.map((ev,i)=>{
+              const col=eventColor[ev.type]||"#64dfdf";
+              const label=eventLabel[ev.type]?.(ev.data)||"";
+              return(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:10,marginBottom:6}}>
+                  <div style={{width:4,height:4,borderRadius:"50%",background:col,flexShrink:0}}/>
+                  <span style={{fontSize:13,color:"rgba(255,255,255,0.7)",fontFamily:"'Rubik',sans-serif"}}>{label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {timed.length===0&&untimed.length===0&&(
+          <div style={{textAlign:"center",color:"rgba(255,255,255,0.2)",padding:"32px 0",fontSize:13,fontFamily:"'Rubik',sans-serif"}}>
+            לחץ ✏️ להוספת פעילויות 🌴
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── EDIT MODAL ──────────────────────────────────────────────────────────────
+  const EditModal=()=>editD?(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:22,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"80vh",overflowY:"auto"}}>
+        <h3 style={{fontFamily:"'Rubik',sans-serif",fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:14}}>✏️ פעילויות ל{fmtDate(editD)}</h3>
+        {editActs.map((act,i)=>(
+          <div key={i} style={{display:"flex",gap:8,marginBottom:10,alignItems:"center"}}>
+            <input value={act.time} onChange={e=>updateAct(i,"time",e.target.value)} type="time"
+              style={{width:88,padding:"9px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:13,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",flexShrink:0}}/>
+            <input value={act.text} onChange={e=>updateAct(i,"text",e.target.value)} placeholder="תיאור פעילות..."
+              style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:13,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",direction:"rtl"}}/>
+            <button onClick={()=>removeAct(i)} style={{background:"rgba(255,107,107,0.12)",border:"none",color:"#ff6b6b",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:14,flexShrink:0}}>✕</button>
+          </div>
+        ))}
+        <button onClick={addActRow} style={{width:"100%",padding:"9px",borderRadius:10,border:"0.5px dashed rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.05)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",marginBottom:14}}>
+          ➕ הוסף פעילות
+        </button>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={saveEdit} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>שמור ✓</button>
+          <button onClick={()=>setEditD(null)} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",color:"rgba(255,255,255,0.5)"}}>ביטול</button>
+        </div>
+      </div>
+    </div>
+  ):null;
+
+  // ── RENDER ──────────────────────────────────────────────────────────────────
+  return(
+    <div>
+      <div style={{background:"linear-gradient(160deg,#0d2137 0%,#0a3050 100%)",padding:"18px 18px 14px",borderBottom:"0.5px solid rgba(100,223,223,0.12)"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+          <div>
+            <h1 style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:22,fontWeight:800,letterSpacing:"-0.3px",lineHeight:1}}>לוח שנה</h1>
+            <p style={{color:"rgba(255,255,255,0.35)",marginTop:4,fontSize:11,fontWeight:400}}>{trip.destination?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}</p>
+          </div>
+          {trip.destination&&<div style={{fontSize:11,color:"rgba(255,255,255,0.3)",fontFamily:"'Rubik',sans-serif"}}>{wLoad?"🌤️ טוען...":wx?`🌍 ${wx.name}`:wErr?"☁️":""}</div>}
+        </div>
+        {/* View toggle */}
+        <div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.06)",borderRadius:10,padding:3}}>
+          <button onClick={()=>setView("month")} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="month"?"rgba(100,223,223,0.18)":"transparent",color:view==="month"?"#64dfdf":"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>📅 חודש</button>
+          <button onClick={()=>{setView("day");if(!selDate&&dates[0])setSelDate(dates[0]);}} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="day"?"rgba(100,223,223,0.18)":"transparent",color:view==="day"?"#64dfdf":"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>🕐 יום</button>
+        </div>
+        {/* Day nav (only in day view) */}
+        {view==="day"&&dates.length>0&&(
+          <div style={{display:"flex",gap:6,overflowX:"auto",marginTop:10,paddingBottom:2}}>
+            {dates.map(d=>{
+              const hasEv=hasEvents(d);
+              return(
+                <button key={d} onClick={()=>setSelDate(d)} style={{minWidth:48,padding:"7px 6px",borderRadius:10,border:`0.5px solid ${selDate===d?"#64dfdf":"rgba(255,255,255,0.1)"}`,background:selDate===d?"rgba(100,223,223,0.15)":"rgba(255,255,255,0.04)",color:selDate===d?"#ffffff":"rgba(255,255,255,0.4)",fontFamily:"'Rubik',sans-serif",fontWeight:selDate===d?700:500,fontSize:12,cursor:"pointer",textAlign:"center",flexShrink:0,position:"relative"}}>
+                  <div style={{fontSize:9,opacity:0.7}}>{new Date(d).toLocaleDateString("he-IL",{weekday:"short"})}</div>
+                  <div style={{fontSize:15}}>{new Date(d).getDate()}</div>
+                  {hasEv&&<div style={{width:4,height:4,borderRadius:"50%",background:"#64dfdf",margin:"2px auto 0"}}/>}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <EditModal/>
+
+      <div style={{overflowY:"auto"}}>
+        {view==="month"?<MonthView/>:<DayView/>}
       </div>
     </div>
   );
 }
+
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 const newTrip=(ownerId)=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]});
