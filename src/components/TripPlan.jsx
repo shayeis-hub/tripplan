@@ -246,17 +246,19 @@ function CurrencyConverter({rates,onClose,tripCurrencies}){
           <div style={{fontFamily:"'Rubik',sans-serif",fontSize:13,fontWeight:700,color:"#64dfdf"}}>💱 מחשבון המרת מטבע</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",fontSize:16,cursor:"pointer"}}>✕</button>
         </div>
+        {/* Amount input */}
+        <input value={amount} onChange={e=>setAmount(e.target.value)} type="number" placeholder="הכנס סכום..." min="0"
+          style={{width:"100%",padding:"11px 14px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:16,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",direction:"ltr",marginBottom:10}}
+          onFocus={e=>(e.target.style.borderColor="#64dfdf")} onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}/>
+        {/* From / swap / To */}
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <input value={amount} onChange={e=>setAmount(e.target.value)} type="number" placeholder="סכום" min="0"
-            style={{flex:2,padding:"10px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",direction:"ltr"}}
-            onFocus={e=>(e.target.style.borderColor="#64dfdf")} onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}/>
           <select value={from} onChange={e=>setFrom(e.target.value)}
-            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
             {allCodes.map(c=><option key={c} value={c}>{c}</option>)}
           </select>
-          <button onClick={swap} style={{padding:"8px 10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontSize:14,cursor:"pointer"}}>⇄</button>
+          <button onClick={swap} style={{padding:"8px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontSize:16,cursor:"pointer",flexShrink:0}}>⇄</button>
           <select value={to} onChange={e=>setTo(e.target.value)}
-            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
             {allCodes.map(c=><option key={c} value={c}>{c}</option>)}
           </select>
         </div>
@@ -1529,10 +1531,14 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             {active?.sharedWith?.length>0&&<div style={{fontSize:9,color:"rgba(100,223,223,0.6)",marginTop:1}}>👥 {active.sharedWith.length} משתתפים</div>}
           </div>
           <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>💱</button>
             <button onClick={()=>exportTripPDF(active,expenses)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>📄</button>
             {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>👥 שתף</button>}
           </div>
         </div>
+        {/* Currency Converter in trip view */}
+        {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
+
         {/* Share modal */}
         {shareModal&&(
           <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
