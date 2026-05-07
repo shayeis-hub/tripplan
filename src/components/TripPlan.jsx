@@ -226,6 +226,71 @@ function PieChart({data}){
 }
 
 // ─── TRIP SELECTOR SCREEN ─────────────────────────────────────────────────────
+// ─── PUSH NOTIFICATIONS ──────────────────────────────────────────────────────
+function usePushNotifications(userId){
+  const[permission,setPermission]=useState(typeof Notification!=="undefined"?Notification.permission:"default");
+  const[subscribed,setSubscribed]=useState(false);
+
+  const subscribe=async()=>{
+    if(!userId||typeof Notification==="undefined") return;
+    try{
+      const perm=await Notification.requestPermission();
+      setPermission(perm);
+      if(perm!=="granted") return;
+
+      const reg=await navigator.serviceWorker.ready;
+      const existing=await reg.pushManager.getSubscription();
+      if(existing){await saveSubscription(existing,userId);setSubscribed(true);return;}
+
+      const sub=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY||""),
+      });
+      await saveSubscription(sub,userId);
+      setSubscribed(true);
+    }catch(e){console.error("Push subscribe error:",e);}
+  };
+
+  const saveSubscription=async(sub,uid)=>{
+    await fetch("/api/push-subscribe",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({subscription:sub.toJSON(),userId:uid}),
+    });
+  };
+
+  useEffect(()=>{
+    if(!userId||typeof navigator==="undefined"||!navigator.serviceWorker) return;
+    navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    navigator.serviceWorker.ready.then(reg=>{
+      reg.pushManager.getSubscription().then(sub=>{
+        if(sub){saveSubscription(sub,userId);setSubscribed(true);}
+      });
+    });
+  },[userId]);
+
+  return{permission,subscribed,subscribe};
+}
+
+function urlBase64ToUint8Array(base64String){
+  const padding="=".repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,"+").replace(/_/g,"/");
+  const rawData=window.atob(base64);
+  const outputArray=new Uint8Array(rawData.length);
+  for(let i=0;i<rawData.length;++i) outputArray[i]=rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function sendPushToUser(userId,title,body,url="/"){
+  try{
+    await fetch("/api/push-send",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({userId,title,body,url}),
+    });
+  }catch(e){}
+}
+
 // ─── CURRENCY CONVERTER ──────────────────────────────────────────────────────
 function CurrencyConverter({rates,onClose,tripCurrencies}){
   const[amount,setAmount]=useState("");
@@ -1429,6 +1494,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[convFrom,setConvFrom]=useState("USD");
   const[convTo,setConvTo]=useState("ILS");
   const{rates,allCodes,info,toILS}=useRates();
+  const{permission,subscribed,subscribe}=usePushNotifications(userId);
 
   // sync incoming trips from Firestore
   useEffect(()=>{
@@ -1451,7 +1517,25 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       onSaveTrip(updated);
       return updated;
     }));
-  },[activeId,onSaveTrip]);
+    // Schedule flight reminder notification
+    if(e.category==="flight"&&e.departureTime&&subscribed){
+      const[h,m]=e.departureTime.split(":").map(Number);
+      const flightDate=new Date(e.date);
+      flightDate.setHours(h-3,m,0,0);
+      const msUntil=flightDate.getTime()-Date.now();
+      if(msUntil>0&&msUntil<24*60*60*1000){ // only if within 24h
+        setTimeout(()=>{
+          sendPushToUser(userId,"🔔 הגעה לשדה התעופה!",`טיסתך ב-${e.departureTime} – הגיע הזמן לצאת לשדה`);
+        },msUntil);
+      }
+    }
+    // Notify shared trip members about new expense
+    const active=trips.find(t=>t.id===activeId);
+    if(active?.sharedWith?.length>0&&e.isShared!==false){
+      const cat=CATS.find(c=>c.id===e.category);
+      sendPushToUser(userId,`${cat?.icon||""} הוצאה חדשה בטיולון`,`${cat?.label}: ₪${e.amountILS?.toFixed(0)||""} נוסף לטיול ${active.destination||""}`);
+    }
+  },[activeId,onSaveTrip,subscribed,userId,trips]);
 
   const togglePay=useCallback((id)=>{
     setTrips((ts)=>ts.map(t=>{
@@ -1509,6 +1593,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>💱</button>
+              <button onClick={subscribe} title={subscribed?"התראות פעילות":"הפעל התראות"} style={{background:subscribed?"rgba(74,222,128,0.12)":"rgba(100,223,223,0.1)",border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(100,223,223,0.25)"}`,borderRadius:8,color:subscribed?"#4ade80":"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>{subscribed?"🔔":"🔕"}</button>
               <button onClick={onLogout} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 12px",cursor:"pointer"}}>התנתק</button>
             </div>
           </div>
