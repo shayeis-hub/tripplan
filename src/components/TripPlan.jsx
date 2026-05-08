@@ -1332,7 +1332,10 @@ function CalendarScreen({trip,expenses}){
       if(a.time){const[h,m]=a.time.split(":").map(Number);timedEvents.push({hour:h+m/60,type:"activity",data:a,duration:1,idx:i});}
       else timedEvents.push({hour:null,type:"activity",data:a,duration:1,idx:i});
     });
-    others.forEach(e=>timedEvents.push({hour:null,type:"other",data:e,duration:0.5}));
+    others.forEach(e=>{
+      if(e.time){const[h,m]=e.time.split(":").map(Number);timedEvents.push({hour:h+m/60,type:"other",data:e,duration:0.75});}
+      else timedEvents.push({hour:null,type:"other",data:e,duration:0.5});
+    });
 
     const timed=timedEvents.filter(e=>e.hour!==null).sort((a,b)=>a.hour-b.hour);
     const untimed=timedEvents.filter(e=>e.hour===null);
