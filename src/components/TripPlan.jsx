@@ -344,7 +344,8 @@ function CurrencyConverter({rates,onClose,tripCurrencies}){
 function exportTripPDF(trip,expenses){
   if(!trip) return;
   const CATS_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));
-  const total=expenses.reduce((s,e)=>s+e.amountILS,0);
+  const getAmt=e=>e.paid&&e.amountILSLocked?e.amountILSLocked:e.amountILS;
+  const total=expenses.reduce((s,e)=>s+getAmt(e),0);
   const paid=expenses.filter(e=>e.paid).reduce((s,e)=>s+e.amountILS,0);
   const sharedExp=expenses.filter(e=>e.isShared!==false);
   const byCat=CATS.map(cat=>{const ce=expenses.filter(e=>e.category===cat.id);return{...cat,total:ce.reduce((s,e)=>s+e.amountILS,0),count:ce.length};}).filter(c=>c.count>0);
@@ -682,14 +683,15 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
 }
 
 // ─── SCREEN 2: EXPENSES ───────────────────────────────────────────────────────
-const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",departureTime:"",paidBy:"",splitWith:[],splitType:"equal",isShared:true});
+const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",departureTime:"",time:"",paidBy:"",splitWith:[],splitType:"equal",isShared:true});
 
-function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,ratesInfo}){
+function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo}){
   const dates=getRange(trip.startDate,trip.endDate);
   const people=trip.people||[];
   const[sel,setSel]=useState(dates[0]||"");
   const[form,setForm]=useState(mkForm(dates,trip.defaultCurrency));
   const[show,setShow]=useState(false);
+  const[editId,setEditId]=useState(null); // expense being edited
   // search & filter
   const[search,setSearch]=useState("");
   const[filterCat,setFilterCat]=useState("all");
@@ -706,9 +708,33 @@ function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,r
   const handleAdd=()=>{
     if(!form.amount)return;
     const date=form.category==="hotel"?form.checkIn:form.date;
-    onAdd({id:uid(),...form,date,amount:parseFloat(form.amount),amountILS:toILS(parseFloat(form.amount),form.currency)});
+    onAdd({id:uid(),...form,date,amount:parseFloat(form.amount),amountILS:toILS(parseFloat(form.amount),form.currency),amountILSLocked:form.paid?toILS(parseFloat(form.amount),form.currency):undefined});
     setForm(mkForm(dates,trip.defaultCurrency));
     setShow(false);
+    setEditId(null);
+  };
+
+  const handleEdit=(exp)=>{
+    setForm({
+      category:exp.category,amount:String(exp.amount),currency:exp.currency,
+      description:exp.description||"",paid:exp.paid,date:exp.date,
+      checkIn:exp.checkIn||"",checkOut:exp.checkOut||"",
+      departureTime:exp.departureTime||"",time:exp.time||"",
+      paidBy:exp.paidBy||"",splitWith:exp.splitWith||[],
+      splitType:exp.splitType||"equal",isShared:exp.isShared!==false,
+    });
+    setEditId(exp.id);
+    setShow(true);
+    setSel(exp.date||exp.checkIn||sel);
+  };
+
+  const handleSaveEdit=()=>{
+    if(!form.amount)return;
+    const date=form.category==="hotel"?form.checkIn:form.date;
+    onEdit(editId,{...form,date,amount:parseFloat(form.amount),amountILS:toILS(parseFloat(form.amount),form.currency)});
+    setForm(mkForm(dates,trip.defaultCurrency));
+    setShow(false);
+    setEditId(null);
   };
 
   // all expenses for selected day (for display in list)
@@ -749,6 +775,7 @@ function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,r
         </div>
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}>
           <button onClick={()=>onTogglePaid(exp.id)} style={{padding:"5px 9px",borderRadius:8,border:"none",background:exp.paid?"rgba(74,222,128,0.12)":"rgba(255,107,107,0.12)",color:exp.paid?"#4ade80":"#ff6b6b",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:11,cursor:"pointer"}}>{exp.paid?"✅":"⏳"}</button>
+          <button onClick={()=>handleEdit(exp)} style={{padding:"5px 7px",borderRadius:8,border:"none",background:"rgba(100,223,223,0.1)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,cursor:"pointer"}}>✏️</button>
           <button onClick={()=>onDelete(exp.id)} style={{padding:"5px 7px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.1)",color:"#ff6b6b",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,cursor:"pointer"}}>🗑️</button>
         </div>
       </div>
@@ -886,6 +913,15 @@ function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,r
                 <SI label="תיאור (אופציונלי)" value={form.description} onChange={v=>set({description:v})} placeholder="למשל: ארוחת ערב..."/>
 
                 {form.category!=="hotel"&&form.category!=="flight"&&(
+                  <div style={{marginBottom:14}}>
+                    <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:"rgba(255,255,255,0.4)",letterSpacing:"0.5px",textTransform:"uppercase"}}>שעה (אופציונלי)</label>
+                    <input type="time" value={form.time} onChange={e=>set({time:e.target.value})}
+                      style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none"}}
+                      onFocus={e=>(e.target.style.borderColor="#64dfdf")} onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}/>
+                  </div>
+                )}
+
+                {form.category!=="hotel"&&form.category!=="flight"&&(
                   <SS label="תאריך" value={form.date} onChange={v=>set({date:v})}>
                     {dates.map(d=><option key={d} value={d}>{fmtDate(d)}</option>)}
                   </SS>
@@ -934,7 +970,7 @@ function ExpensesScreen({trip,expenses,onAdd,onTogglePaid,onDelete,toILS,rates,r
                   {form.paid?"✅ שולם":"⏳ טרם שולם"}
                 </button>
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={handleAdd} style={{flex:2,padding:"13px",borderRadius:13,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:15,cursor:"pointer"}}>הוסף ✓</button>
+                  <button onClick={editId?handleSaveEdit:handleAdd} style={{flex:2,padding:"13px",borderRadius:13,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:15,cursor:"pointer"}}>{editId?"שמור שינויים ✓":"הוסף ✓"}</button>
                   <button onClick={()=>setShow(false)} style={{flex:1,padding:"13px",borderRadius:13,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:14,cursor:"pointer",color:"rgba(255,255,255,0.5)"}}>ביטול</button>
                 </div>
               </Card>
@@ -1690,7 +1726,7 @@ ${url}`;
 
         <div style={{flex:1,overflowY:"auto"}}>
           {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
-          {screen==="expenses"   &&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
+          {screen==="expenses"   &&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
           {screen==="budget"     &&<BudgetScreen trip={active} expenses={expenses}/>}
           {screen==="calendar"   &&<CalendarScreen trip={active} expenses={expenses}/>}
         </div>

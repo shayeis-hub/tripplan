@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -12,12 +12,17 @@ export default function LoginPage() {
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
 
+  useEffect(() => {
+    try { const saved = localStorage.getItem("tayalon_email"); if (saved) setEmail(saved); } catch {}
+  }, []);
+
   const handle = async () => {
     if (!email || !password) return;
     setLoading(true); setError("");
     try {
       if (isNew) await register(email, password);
       else       await login(email, password);
+      try { localStorage.setItem("tayalon_email", email); } catch {}
       router.push("/");
     } catch (e: any) {
       const msg: Record<string,string> = {
