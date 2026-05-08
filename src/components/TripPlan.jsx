@@ -1591,6 +1591,15 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     }));
   },[activeId,onSaveTrip]);
 
+  const editExp=useCallback((id,patch)=>{
+    setTrips((ts)=>ts.map(t=>{
+      if(t.id!==activeId)return t;
+      const updated={...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)};
+      onSaveTrip(updated);
+      return updated;
+    }));
+  },[activeId,onSaveTrip]);
+
   const handleShare=async(tripId)=>{
     if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
     try{
