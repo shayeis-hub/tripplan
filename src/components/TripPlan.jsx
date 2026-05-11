@@ -674,6 +674,19 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
           )}
         </Card>
 
+        <Card>
+          <h2 style={{fontFamily:"'Rubik',sans-serif",fontSize:18,fontWeight:700,marginBottom:14,color:"rgba(255,255,255,0.85)"}}>💰 תקציב מתוכנן</h2>
+          <p style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginBottom:12,fontFamily:"'Rubik',sans-serif"}}>הגדר תקציב כולל לטיול ותקבל מעקב התקדמות</p>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <input type="number" value={trip.budget||""} onChange={e=>onUpdate({budget:e.target.value?parseFloat(e.target.value):null})}
+              placeholder="למשל: 15000"
+              style={{flex:1,padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",direction:"ltr"}}
+              onFocus={e=>(e.target.style.borderColor="#64dfdf")} onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}/>
+            <span style={{color:"rgba(255,255,255,0.5)",fontFamily:"'Rubik',sans-serif",fontSize:15,flexShrink:0}}>₪</span>
+          </div>
+          {trip.budget>0&&<div style={{fontSize:12,color:"#64dfdf",marginTop:8,fontFamily:"'Rubik',sans-serif"}}>✓ תקציב: ₪{parseFloat(trip.budget).toLocaleString()}</div>}
+        </Card>
+
         <Btn onClick={onNext} disabled={!valid} style={{width:"100%",fontSize:17,padding:"16px",borderRadius:16,boxShadow:valid?`0 6px 20px ${C.ocean}40`:"none"}}>
           המשך להוספת הוצאות ←
         </Btn>
@@ -720,6 +733,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       description:exp.description||"",paid:exp.paid,date:exp.date,
       checkIn:exp.checkIn||"",checkOut:exp.checkOut||"",
       departureTime:exp.departureTime||"",time:exp.time||"",
+      address:exp.address||"",
       paidBy:exp.paidBy||"",splitWith:exp.splitWith||[],
       splitType:exp.splitType||"equal",isShared:exp.isShared!==false,
     });
@@ -1404,7 +1418,7 @@ function CalendarScreen({trip,expenses}){
               const col=eventColor[ev.type]||"#64dfdf";
               const label=eventLabel[ev.type]?.(ev.data)||"";
               return(
-                <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://maps.google.com/dir/?api=1&destination=${encodeURIComponent(ev.data.address)}`,"_blank");}}
+                <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");}}
                   style={{
                     position:"absolute",top,right:0,left:0,height,
                     background:`${col}18`,border:`0.5px solid ${col}50`,
@@ -1438,7 +1452,7 @@ function CalendarScreen({trip,expenses}){
               const col=eventColor[ev.type]||"#64dfdf";
               const label=eventLabel[ev.type]?.(ev.data)||"";
               return(
-                <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://maps.google.com/dir/?api=1&destination=${encodeURIComponent(ev.data.address)}`,"_blank");}}
+                <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");}}
                   style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:10,marginBottom:6,cursor:ev.data?.address?"pointer":"default"}}>
                   <div style={{width:4,height:4,borderRadius:"50%",background:col,flexShrink:0}}/>
                   <span style={{fontSize:13,color:"rgba(255,255,255,0.7)",fontFamily:"'Rubik',sans-serif",flex:1}}>{label}</span>
