@@ -1073,6 +1073,45 @@ function BudgetScreen({trip,expenses}){
         action={<button onClick={handlePDF} style={{padding:"8px 18px",borderRadius:10,border:"2px solid rgba(255,255,255,0.5)",background:"rgba(255,255,255,0.15)",color:"#ffffff",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>📤 ייצוא</button>}/>
       <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:14}}>
 
+        {/* Budget progress bar */}
+        {trip.budget>0&&(
+          <div style={{background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"16px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div style={{fontFamily:"'Rubik',sans-serif",fontSize:15,fontWeight:700,color:"#ffffff"}}>💰 עמידה בתקציב</div>
+              <div style={{fontFamily:"'Rubik',sans-serif",fontSize:13,fontWeight:700,color:"#64dfdf"}}>₪{parseFloat(trip.budget).toLocaleString()}</div>
+            </div>
+            {(()=>{
+              const pct=Math.min((total/trip.budget)*100,100);
+              const over=total>trip.budget;
+              const remaining=trip.budget-total;
+              const barColor=pct<70?"#4ade80":pct<90?"#fbbf24":"#ff6b6b";
+              return(<>
+                <div style={{height:12,background:"rgba(255,255,255,0.08)",borderRadius:999,overflow:"hidden",marginBottom:10}}>
+                  <div style={{height:"100%",width:`${pct}%`,background:barColor,borderRadius:999,transition:"width 0.6s"}}/>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontFamily:"'Rubik',sans-serif",marginBottom:8}}>
+                  <span style={{color:barColor,fontWeight:700}}>{pct.toFixed(1)}% מהתקציב</span>
+                  <span style={{color:over?"#ff6b6b":"#4ade80",fontWeight:700}}>
+                    {over?`חריגה של ₪${Math.abs(remaining).toLocaleString()}`:`נותרו ₪${remaining.toLocaleString()}`}
+                  </span>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                  {[
+                    {label:"הוצאתי",value:`₪${total.toFixed(0)}`,color:"#64dfdf"},
+                    {label:"שולם",value:`₪${paid.toFixed(0)}`,color:"#4ade80"},
+                    {label:"נותר",value:over?`-₪${Math.abs(remaining).toFixed(0)}`:`₪${remaining.toFixed(0)}`,color:over?"#ff6b6b":"#4ade80"},
+                  ].map(item=>(
+                    <div key={item.label} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px",textAlign:"center"}}>
+                      <div style={{fontFamily:"'Rubik',sans-serif",fontSize:14,fontWeight:700,color:item.color}}>{item.value}</div>
+                      <div style={{fontFamily:"'Rubik',sans-serif",fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:2}}>{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </>);
+            })()}
+          </div>
+        )}
+
         {/* KPI */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           {[{label:'סה"כ הוצאות',value:total,color:"#64dfdf",icon:"📊"},{label:"שולם",value:paid,color:"#4ade80",icon:"✅"},{label:"טרם שולם",value:unpaid,color:"#ff6b6b",icon:"⏳"},{label:"מס׳ הוצאות",value:expenses.length,color:"#fbbf24",icon:"🧾",noFmt:true}].map(item=>(
