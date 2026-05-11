@@ -44,11 +44,11 @@ export async function GET(req: NextRequest) {
         // ── Flight: 3 hours before ──
         if (exp.category === "flight" && exp.date === today && exp.departureTime) {
           const [fh, fm] = exp.departureTime.split(":").map(Number);
-          const remM = fh * 60 + fm - 180;
+          const remM = fh * 60 + fm - 300; // 5 hours before
           const curM = nowHour * 60 + nowMin;
           if (remM >= curM && remM < curM + 60) {
             const remTime = `${String(Math.floor(remM/60)).padStart(2,"0")}:${String(remM%60).padStart(2,"0")}`;
-            await sendPush(userId, "✈️ הגיע הזמן לצאת לשדה!", `טיסתך ב-${exp.departureTime} – צא לשדה עד ${remTime}`);
+            await sendPush(userId, "✈️ תזכורת טיסה!", `טיסתך ב-${exp.departureTime} – הגיע הזמן להתכונן לנסיעה לשדה`);
             notifications.push(`flight-${userId}`);
           }
         }

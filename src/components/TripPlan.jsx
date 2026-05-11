@@ -65,7 +65,7 @@ const PERSON_COLORS=[C.ocean,C.coral,C.palm,C.sunset,C.purple,C.oceanLight,"#C03
 const fmtDate=(d)=>d?new Date(d).toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
 const getRange=(s,e)=>{const a=[];if(!s||!e)return a;const c=new Date(s),l=new Date(e);while(c<=l){a.push(c.toISOString().slice(0,10));c.setDate(c.getDate()+1);}return a;};
 const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
-const remTime=(t)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-180;if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
+const remTime=(t)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-300;if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
 
 // ─── HOOKS ────────────────────────────────────────────────────────────────────
 function useRates(){
@@ -98,14 +98,16 @@ function useWeather(destination,startDate,endDate){
     if(!destination||!startDate||!endDate)return;
     const today=new Date();today.setHours(0,0,0,0);
     const diff=Math.round((new Date(startDate).getTime()-today.getTime())/86400000);
-    if(diff>16||diff<-1){setErr("תחזית זמינה רק עד 16 יום קדימה");return;}
+    if(diff>16){setErr("תחזית זמינה רק עד 16 יום קדימה");return;}
     setLoading(true);setErr(null);setWx(null);
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1&language=en`)
       .then(r=>r.json()).then(geo=>{
         if(!geo.results?.length)throw new Error("יעד לא נמצא");
         const{latitude:lat,longitude:lon,name,country}=geo.results[0];
-        const end2=endDate>new Date(today.getTime()+16*86400000).toISOString().slice(0,10)?new Date(today.getTime()+16*86400000).toISOString().slice(0,10):endDate;
-        return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&start_date=${startDate}&end_date=${end2}&timezone=auto`)
+        const maxDate=new Date(today.getTime()+16*86400000).toISOString().slice(0,10);
+        const end2=endDate>maxDate?maxDate:endDate;
+        const start2=startDate<today.toISOString().slice(0,10)?today.toISOString().slice(0,10):startDate;
+        return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&start_date=${start2}&end_date=${end2}&timezone=auto`)
           .then(r=>r.json()).then(fc=>({name,country,daily:fc.daily}));
       }).then(d=>{setWx(d);setLoading(false);}).catch(e=>{setErr(e.message||"שגיאה");setLoading(false);});
   },[destination,startDate,endDate]);
