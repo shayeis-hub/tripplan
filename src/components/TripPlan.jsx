@@ -1409,11 +1409,13 @@ function CalendarScreen({trip,expenses}){
         if(rem){const[rh,rm]=rem.split(":").map(Number);timedEvents.push({hour:rh+rm/60,type:"reminder",data:f,duration:0.25});}
       }
     });
+    // Hotels: check-in/out go on timeline, stay days go to top banner
+    const stayHotels=[]; // for top banner
     hotels.forEach(h=>{
       const isIn=h.checkIn===selDate,isOut=h.checkOut===selDate;
       if(isIn) timedEvents.push({hour:14,type:"hotel-in",data:h,duration:1});
       if(isOut) timedEvents.push({hour:11,type:"hotel-out",data:h,duration:1});
-      if(!isIn&&!isOut) timedEvents.push({hour:12,type:"hotel-stay",data:h,duration:0.5});
+      if(!isIn&&!isOut) stayHotels.push(h); // middle day – goes to top banner
     });
     dayActs.forEach((a,i)=>{
       if(a.time){const[h,m]=a.time.split(":").map(Number);timedEvents.push({hour:h+m/60,type:"activity",data:a,duration:1,idx:i});}
@@ -1464,6 +1466,15 @@ function CalendarScreen({trip,expenses}){
           </div>
           <button onClick={()=>openEdit(selDate)} style={{padding:"7px 12px",borderRadius:9,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,cursor:"pointer"}}>✏️ פעילויות</button>
         </div>
+
+        {/* Hotel stay banner – top of day */}
+        {stayHotels.map(h=>(
+          <div key={h.id} style={{marginBottom:10,padding:"8px 14px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:16}}>🏨</span>
+            <span style={{fontFamily:"'Rubik',sans-serif",fontSize:13,fontWeight:600,color:"rgba(100,223,223,0.9)"}}>המשך שהייה ב{h.description||"מלון"}</span>
+            <span style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginRight:"auto"}}>{fmtDate(h.checkIn)} – {fmtDate(h.checkOut)}</span>
+          </div>
+        ))}
 
         {/* Timeline */}
         <div style={{position:"relative",display:"flex",gap:0}}>
