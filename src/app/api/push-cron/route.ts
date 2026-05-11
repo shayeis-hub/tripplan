@@ -20,13 +20,8 @@ async function sendPush(userId: string, title: string, body: string) {
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
-  // Temporary debug - remove after fix
-  if (!process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "CRON_SECRET not set", env_keys: Object.keys(process.env).filter(k=>k.includes("CRON")) }, { status: 500 });
-  }
-  if (authHeader !== expected) {
-    return NextResponse.json({ error: "Unauthorized", received_length: authHeader?.length, expected_length: expected.length }, { status: 401 });
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
