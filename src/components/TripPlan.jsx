@@ -58,6 +58,35 @@ const CURR_SYMBOLS={
 };
 const getCurrLabel=(code)=>CURRENCY_NAMES[code]||code;
 const getCurrSymbol=(code)=>CURR_SYMBOLS[code]||code;
+// Common Hebrew destination names to English
+const HE_TO_EN_DEST={
+  "פריז":"Paris","צרפת":"France","לונדון":"London","אנגליה":"England",
+  "רומא":"Rome","איטליה":"Italy","ברלין":"Berlin","גרמניה":"Germany",
+  "מדריד":"Madrid","ספרד":"Spain","אמסטרדם":"Amsterdam","הולנד":"Netherlands",
+  "ברצלונה":"Barcelona","ליסבון":"Lisbon","פורטוגל":"Portugal",
+  "אתונה":"Athens","יוון":"Greece","פראג":"Prague","וינה":"Vienna",
+  "בודפשט":"Budapest","וורשה":"Warsaw","ברוסל":"Brussels","בלגיה":"Belgium",
+  "ציריך":"Zurich","ז'נבה":"Geneva","שוויץ":"Switzerland",
+  "קופנהגן":"Copenhagen","דנמרק":"Denmark","סטוקהולם":"Stockholm","שוודיה":"Sweden",
+  "אוסלו":"Oslo","נורווגיה":"Norway","הלסינקי":"Helsinki","פינלנד":"Finland",
+  "דובאי":"Dubai","אבו דאבי":"Abu Dhabi","איחוד האמירויות":"UAE",
+  "בנגקוק":"Bangkok","תאילנד":"Thailand","פוקט":"Phuket","צ'יאנג מאי":"Chiang Mai",
+  "בלי":"Bali","אינדונזיה":"Indonesia","סינגפור":"Singapore",
+  "טוקיו":"Tokyo","יפן":"Japan","קיוטו":"Kyoto","אוסקה":"Osaka",
+  "ניו יורק":"New York","לוס אנג'לס":"Los Angeles","מיאמי":"Miami",
+  "שיקגו":"Chicago","לס וגאס":"Las Vegas","סן פרנסיסקו":"San Francisco",
+  "קנקון":"Cancun","מקסיקו":"Mexico","ברזיל":"Brazil","ריו דה ז'ניירו":"Rio de Janeiro",
+  "קהיר":"Cairo","מרוקו":"Morocco","מרקש":"Marrakech","תל אביב":"Tel Aviv",
+  "ירושלים":"Jerusalem","אילת":"Eilat","ישראל":"Israel",
+  "מוסקבה":"Moscow","רוסיה":"Russia","איסטנבול":"Istanbul","טורקיה":"Turkey",
+  "הודו":"India","מומבאי":"Mumbai","דלהי":"Delhi","גואה":"Goa",
+  "סידני":"Sydney","אוסטרליה":"Australia","מלבורן":"Melbourne",
+  "טורונטו":"Toronto","קנדה":"Canada","ונקובר":"Vancouver",
+  "קייפטאון":"Cape Town","דרום אפריקה":"South Africa",
+  "ריאד":"Riyadh","ערב הסעודית":"Saudi Arabia","קטר":"Qatar","דוחא":"Doha",
+};
+const translateDest=(name)=>HE_TO_EN_DEST[name]||name;
+
 const WMO={0:"☀️ בהיר",1:"🌤️ בהיר חלקית",2:"⛅ מעונן חלקית",3:"☁️ מעונן",45:"🌫️ ערפל",48:"🌫️ ערפל",51:"🌦️ טפטוף קל",53:"🌦️ טפטוף",55:"🌧️ טפטוף כבד",61:"🌧️ גשם קל",63:"🌧️ גשם",65:"🌧️ גשם כבד",80:"🌦️ ממטרים",81:"🌧️ ממטרים",82:"⛈️ ממטרים כבדים",95:"⛈️ סערה",96:"⛈️ סערה+ברד",99:"⛈️ סערה חזקה"};
 const PERSON_COLORS=[C.ocean,C.coral,C.palm,C.sunset,C.purple,C.oceanLight,"#C0392B","#8E44AD"];
 
@@ -100,7 +129,7 @@ function useWeather(destination,startDate,endDate){
     const diff=Math.round((new Date(startDate).getTime()-today.getTime())/86400000);
     if(diff>16){setWxError("תחזית זמינה רק עד 16 יום קדימה");return;}
     setLoading(true);setWxError(null);setWx(null);
-    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1&language=en`)
+    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(translateDest(destination))}&count=1&language=en`)
       .then(r=>r.json()).then(geo=>{
         if(!geo.results?.length)throw new Error("יעד לא נמצא");
         const{latitude:lat,longitude:lon,name,country}=geo.results[0];
