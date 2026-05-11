@@ -93,13 +93,13 @@ function useRates(){
 }
 
 function useWeather(destination,startDate,endDate){
-  const[wx,setWx]=useState(null);const[loading,setLoading]=useState(false);const[error,setErr]=useState(null);
+  const[wx,setWx]=useState(null);const[loading,setLoading]=useState(false);const[wxError,setWxError]=useState(null);
   useEffect(()=>{
     if(!destination||!startDate||!endDate)return;
     const today=new Date();today.setHours(0,0,0,0);
     const diff=Math.round((new Date(startDate).getTime()-today.getTime())/86400000);
-    if(diff>16){setErr("תחזית זמינה רק עד 16 יום קדימה");return;}
-    setLoading(true);setErr(null);setWx(null);
+    if(diff>16){setWxError("תחזית זמינה רק עד 16 יום קדימה");return;}
+    setLoading(true);setWxError(null);setWx(null);
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1&language=en`)
       .then(r=>r.json()).then(geo=>{
         if(!geo.results?.length)throw new Error("יעד לא נמצא");
@@ -109,9 +109,9 @@ function useWeather(destination,startDate,endDate){
         const start2=startDate<today.toISOString().slice(0,10)?today.toISOString().slice(0,10):startDate;
         return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&start_date=${start2}&end_date=${end2}&timezone=auto`)
           .then(r=>r.json()).then(fc=>({name,country,daily:fc.daily}));
-      }).then(d=>{setWx(d);setLoading(false);}).catch(e=>{setErr(e.message||"שגיאה");setLoading(false);});
+      }).then(d=>{setWx(d);setLoading(false);}).catch(e=>{setWxError(e.message||"שגיאה");setLoading(false);});
   },[destination,startDate,endDate]);
-  return{wx,loading,error};
+  return{wx,loading,error:wxError};
 }
 
 // ─── GLOBAL STYLE ─────────────────────────────────────────────────────────────
