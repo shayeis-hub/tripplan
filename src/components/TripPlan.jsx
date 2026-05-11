@@ -683,7 +683,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
 }
 
 // ─── SCREEN 2: EXPENSES ───────────────────────────────────────────────────────
-const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",departureTime:"",time:"",paidBy:"",splitWith:[],splitType:"equal",isShared:true});
+const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",departureTime:"",time:"",address:"",paidBy:"",splitWith:[],splitType:"equal",isShared:true});
 
 function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo}){
   const dates=getRange(trip.startDate,trip.endDate);
@@ -911,6 +911,9 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                 {form.amount&&<div style={{marginBottom:12,padding:"9px 12px",background:`${C.palm}15`,borderRadius:10,fontSize:13,color:"#6ee7a0",fontWeight:700}}>≈ {toILS(parseFloat(form.amount)||0,form.currency).toFixed(2)} ₪</div>}
 
                 <SI label="תיאור (אופציונלי)" value={form.description} onChange={v=>set({description:v})} placeholder="למשל: ארוחת ערב..."/>
+                {["hotel","attraction","food","other"].includes(form.category)&&(
+                  <SI label="📍 כתובת (אופציונלי)" value={form.address||""} onChange={v=>set({address:v})} placeholder="למשל: 123 Sukhumvit Rd, Bangkok"/>
+                )}
 
                 {form.category!=="hotel"&&form.category!=="flight"&&(
                   <div style={{marginBottom:14}}>
@@ -1401,14 +1404,16 @@ function CalendarScreen({trip,expenses}){
               const col=eventColor[ev.type]||"#64dfdf";
               const label=eventLabel[ev.type]?.(ev.data)||"";
               return(
-                <div key={i} style={{
-                  position:"absolute",top,right:0,left:0,height,
-                  background:`${col}18`,border:`0.5px solid ${col}50`,
-                  borderRight:`3px solid ${col}`,borderRadius:8,
-                  padding:"4px 8px",display:"flex",alignItems:"center",
-                  zIndex:2,
-                }}>
-                  <span style={{fontSize:12,fontWeight:600,color:col,fontFamily:"'Rubik',sans-serif",lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{label}</span>
+                <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://maps.google.com/dir/?api=1&destination=${encodeURIComponent(ev.data.address)}`,"_blank");}}
+                  style={{
+                    position:"absolute",top,right:0,left:0,height,
+                    background:`${col}18`,border:`0.5px solid ${col}50`,
+                    borderRight:`3px solid ${col}`,borderRadius:8,
+                    padding:"4px 8px",display:"flex",alignItems:"center",justifyContent:"space-between",
+                    zIndex:2,cursor:ev.data?.address?"pointer":"default",
+                  }}>
+                  <span style={{fontSize:12,fontWeight:600,color:col,fontFamily:"'Rubik',sans-serif",lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{label}</span>
+                  {ev.data?.address&&<span style={{fontSize:14,marginRight:4,flexShrink:0}}>🗺️</span>}
                 </div>
               );
             })}
@@ -1433,9 +1438,11 @@ function CalendarScreen({trip,expenses}){
               const col=eventColor[ev.type]||"#64dfdf";
               const label=eventLabel[ev.type]?.(ev.data)||"";
               return(
-                <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:10,marginBottom:6}}>
+                <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://maps.google.com/dir/?api=1&destination=${encodeURIComponent(ev.data.address)}`,"_blank");}}
+                  style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:10,marginBottom:6,cursor:ev.data?.address?"pointer":"default"}}>
                   <div style={{width:4,height:4,borderRadius:"50%",background:col,flexShrink:0}}/>
-                  <span style={{fontSize:13,color:"rgba(255,255,255,0.7)",fontFamily:"'Rubik',sans-serif"}}>{label}</span>
+                  <span style={{fontSize:13,color:"rgba(255,255,255,0.7)",fontFamily:"'Rubik',sans-serif",flex:1}}>{label}</span>
+                  {ev.data?.address&&<span style={{fontSize:13}}>🗺️</span>}
                 </div>
               );
             })}
