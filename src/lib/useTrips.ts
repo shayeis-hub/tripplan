@@ -51,18 +51,29 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
     return () => { unsub1(); unsub2(); };
   }, [userId, userEmail]);
 
+  // Remove undefined values recursively (Firebase doesn't accept undefined)
+  const stripUndefined = (obj: any): any => {
+    if (Array.isArray(obj)) return obj.map(stripUndefined);
+    if (obj && typeof obj === 'object') {
+      return Object.fromEntries(
+        Object.entries(obj)
+          .filter(([_, v]) => v !== undefined)
+          .map(([k, v]) => [k, stripUndefined(v)])
+      );
+    }
+    return obj;
+  };
+
   const saveTrip = async (trip: any) => {
     if (!userId) return;
     try {
-      await setDoc(
-        doc(db, "trips", trip.id),
-        {
-          ...trip,
-          owner: trip.owner || userId,
-          sharedWith: trip.sharedWith || [],
-          updatedAt: Date.now(),
-        }
-      );
+      const clean = stripUndefined({
+        ...trip,
+        owner: trip.owner || userId,
+        sharedWith: trip.sharedWith || [],
+        updatedAt: Date.now(),
+      });
+      await setDoc(doc(db, "trips", trip.id), clean);
     } catch (err) {
       console.error("Firebase saveTrip error:", err);
     }
