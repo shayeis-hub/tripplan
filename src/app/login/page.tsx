@@ -25,7 +25,6 @@ export default function LoginPage() {
       try { localStorage.setItem("tayalon_email", email); } catch {}
       router.push("/");
     } catch (e: any) {
-      console.log("Login error:", e, "code:", e?.code, "message:", e?.message);
       const msg: Record<string,string> = {
         "auth/user-not-found":       "משתמש לא נמצא",
         "auth/wrong-password":       "סיסמה שגויה",
@@ -145,7 +144,7 @@ export default function LoginPage() {
           <input className="input" type="password" value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="סיסמה (מינימום 6 תווים)"
-            onKeyDown={e => e.key === "Enter" && handle()}
+            onKeyDown={evt => evt.key === "Enter" && handle()}
             autoComplete={isNew ? "new-password" : "current-password"}/>
 
           {error && <div className="error-box">⚠️ {error}</div>}
