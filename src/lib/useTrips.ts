@@ -73,13 +73,6 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
         sharedWith: trip.sharedWith || [],
         updatedAt: Date.now(),
       });
-      // Debug: find undefined values
-      const findUndefined = (obj: any, path = ''): void => {
-        if (Array.isArray(obj)) { obj.forEach((v,i) => findUndefined(v, `${path}[${i}]`)); return; }
-        if (obj && typeof obj === 'object') { Object.entries(obj).forEach(([k,v]) => findUndefined(v, `${path}.${k}`)); return; }
-        if (obj === undefined) console.error('Found undefined at:', path);
-      };
-      findUndefined(clean, 'trip');
       await setDoc(doc(db, "trips", trip.id), clean);
     } catch (err) {
       console.error("Firebase saveTrip error:", err);
