@@ -29,7 +29,7 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, emailVal, passVal);
       }
       try { localStorage.setItem("tayalon_email", emailVal); } catch {}
-      router.replace("/");
+      setTimeout(() => router.replace("/"), 500);
     } catch (firebaseErr: any) {
       const codes: Record<string,string> = {
         "auth/user-not-found":       "משתמש לא נמצא",
