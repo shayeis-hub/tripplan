@@ -1652,12 +1652,15 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   },[activeId,trips,onSaveTrip]);
 
   const addExp=useCallback((e)=>{
-    setTrips((ts)=>ts.map(t=>{
-      if(t.id!==activeId)return t;
-      const updated={...t,expenses:[...t.expenses,e]};
-      onSaveTrip(updated);
-      return updated;
-    }));
+    setTrips((ts)=>{
+      const next=ts.map(t=>{
+        if(t.id!==activeId)return t;
+        return{...t,expenses:[...t.expenses,e]};
+      });
+      const updated=next.find(t=>t.id===activeId);
+      if(updated) setTimeout(()=>onSaveTrip(updated),0);
+      return next;
+    });
     // Schedule flight reminder notification
     if(e.category==="flight"&&e.departureTime&&subscribed){
       const[h,m]=e.departureTime.split(":").map(Number);
@@ -1688,21 +1691,27 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   },[activeId,onSaveTrip]);
 
   const delExp=useCallback((id)=>{
-    setTrips((ts)=>ts.map(t=>{
-      if(t.id!==activeId)return t;
-      const updated={...t,expenses:t.expenses.filter(e=>e.id!==id)};
-      onSaveTrip(updated);
-      return updated;
-    }));
+    setTrips((ts)=>{
+      const next=ts.map(t=>{
+        if(t.id!==activeId)return t;
+        return{...t,expenses:t.expenses.filter(e=>e.id!==id)};
+      });
+      const updated=next.find(t=>t.id===activeId);
+      if(updated) setTimeout(()=>onSaveTrip(updated),0);
+      return next;
+    });
   },[activeId,onSaveTrip]);
 
   const editExp=useCallback((id,patch)=>{
-    setTrips((ts)=>ts.map(t=>{
-      if(t.id!==activeId)return t;
-      const updated={...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)};
-      onSaveTrip(updated);
-      return updated;
-    }));
+    setTrips((ts)=>{
+      const next=ts.map(t=>{
+        if(t.id!==activeId)return t;
+        return{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)};
+      });
+      const updated=next.find(t=>t.id===activeId);
+      if(updated) setTimeout(()=>onSaveTrip(updated),0);
+      return next;
+    });
   },[activeId,onSaveTrip]);
 
   const handleShare=async(tripId)=>{
