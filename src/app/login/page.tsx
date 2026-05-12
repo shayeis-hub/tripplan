@@ -25,6 +25,7 @@ export default function LoginPage() {
       try { localStorage.setItem("tayalon_email", email); } catch {}
       router.push("/");
     } catch (e: any) {
+      console.log("Login error:", e, "code:", e?.code, "message:", e?.message);
       const msg: Record<string,string> = {
         "auth/user-not-found":       "משתמש לא נמצא",
         "auth/wrong-password":       "סיסמה שגויה",
