@@ -1,54 +1,33 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const { login, register, user, loading } = useAuth();
   const router = useRouter();
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [isNew,    setIsNew]    = useState(false);
   const [error,    setError]    = useState("");
-  const [loading,  setLoading]  = useState(false);
+  const [busy,     setBusy]     = useState(false);
 
   useEffect(() => {
     try { const saved = localStorage.getItem("tayalon_email"); if (saved) setEmail(saved); } catch {}
-    // Redirect if already logged in
-    import("firebase/auth").then(({ getAuth, onAuthStateChanged }) => {
-      const auth = getAuth();
-      const unsub = onAuthStateChanged(auth, user => {
-        if (user) router.push("/");
-      });
-      return unsub;
-    });
   }, []);
+
+  // Redirect when logged in
+  useEffect(() => {
+    if (!loading && user) router.push("/");
+  }, [user, loading]);
 
   const handle = async () => {
     if (!email || !password) return;
-    setLoading(true); setError("");
+    setBusy(true); setError("");
     try {
-      // Lazy import to avoid SSR issues
-      const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import("firebase/auth");
-      const { initializeApp, getApps } = await import("firebase/app");
-      
-      const firebaseConfig = {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-      };
-      
-      const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      
-      if (isNew) {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
+      if (isNew) await register(email, password);
+      else       await login(email, password);
       try { localStorage.setItem("tayalon_email", email); } catch {}
-      router.push("/");
     } catch (err: any) {
       const msg: Record<string,string> = {
         "auth/user-not-found":       "משתמש לא נמצא",
@@ -59,9 +38,11 @@ export default function LoginPage() {
         "auth/invalid-email":        "אימייל לא תקין",
       };
       setError(msg[err.code] || `שגיאה: ${err.code || err.message}`);
+      setBusy(false);
     }
-    setLoading(false);
   };
+
+  if (loading) return null;
 
   return (
     <>
@@ -74,11 +55,11 @@ export default function LoginPage() {
           background: linear-gradient(160deg, #091928 0%, #0d2137 50%, #0a2a40 100%);
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          padding: 24px 20px; position: relative; overflow: hidden;
+          padding: 24px 20px;
         }
         .card {
           background: rgba(255,255,255,0.05); border: 0.5px solid rgba(100,223,223,0.2);
-          border-radius: 24px; padding: 36px 28px; width: 100%; max-width: 420px; position: relative; z-index: 1;
+          border-radius: 24px; padding: 36px 28px; width: 100%; max-width: 420px;
         }
         .logo-wrap { text-align: center; margin-bottom: 32px; }
         .logo-name { font-size: 44px; font-weight: 900; color: #fff; letter-spacing: -1.5px; }
@@ -106,8 +87,7 @@ export default function LoginPage() {
         }
         .error-box {
           background: rgba(255,107,107,0.1); border: 0.5px solid rgba(255,107,107,0.3);
-          border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;
-          color: #ff6b6b; font-size: 13px;
+          border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; color: #ff6b6b; font-size: 13px;
         }
         .divider { height: 0.5px; background: rgba(255,255,255,0.07); margin: 18px 0; }
       `}</style>
@@ -125,8 +105,8 @@ export default function LoginPage() {
             onKeyDown={ev => { if (ev.key === "Enter") handle(); }}
             autoComplete={isNew ? "new-password" : "current-password"}/>
           {error && <div className="error-box">⚠️ {error}</div>}
-          <button className="btn-primary" onClick={() => handle()} disabled={loading}>
-            {loading ? "⏳ רגע..." : isNew ? "צור חשבון ✓" : "התחבר ←"}
+          <button className="btn-primary" onClick={handle} disabled={busy}>
+            {busy ? "⏳ רגע..." : isNew ? "צור חשבון ✓" : "התחבר ←"}
           </button>
           <div className="divider"/>
           <button className="btn-secondary" onClick={() => { setIsNew(n => !n); setError(""); }}>
