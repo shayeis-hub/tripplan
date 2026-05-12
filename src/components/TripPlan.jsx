@@ -92,7 +92,8 @@ const PERSON_COLORS=[C.ocean,C.coral,C.palm,C.sunset,C.purple,C.oceanLight,"#C03
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 const fmtDate=(d)=>d?new Date(d).toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
-const getRange=(s,e)=>{const a=[];if(!s||!e)return a;const c=new Date(s),l=new Date(e);while(c<=l){a.push(c.toISOString().slice(0,10));c.setDate(c.getDate()+1);}return a;};
+const localDateStr=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const getRange=(s,e)=>{const a=[];if(!s||!e)return a;const c=new Date(s),l=new Date(e);while(c<=l){a.push(localDateStr(c));c.setDate(c.getDate()+1);}return a;};
 const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
 const remTime=(t)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-300;if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
 
@@ -133,9 +134,9 @@ function useWeather(destination,startDate,endDate){
       .then(r=>r.json()).then(geo=>{
         if(!geo.results?.length)throw new Error("יעד לא נמצא");
         const{latitude:lat,longitude:lon,name,country}=geo.results[0];
-        const maxDate=new Date(today.getTime()+16*86400000).toISOString().slice(0,10);
+        const maxDate=localDateStr(new Date(today.getTime()+16*86400000));
         const end2=endDate>maxDate?maxDate:endDate;
-        const start2=startDate<today.toISOString().slice(0,10)?today.toISOString().slice(0,10):startDate;
+        const start2=startDate<localDateStr(today)?localDateStr(today):startDate;
         return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&start_date=${start2}&end_date=${end2}&timezone=auto`)
           .then(r=>r.json()).then(fc=>({name,country,daily:fc.daily}));
       }).then(d=>{setWx(d);setLoading(false);}).catch(e=>{setWxError(e.message||"שגיאה");setLoading(false);});
@@ -1340,7 +1341,7 @@ function CalendarScreen({trip,expenses}){
             if(!d) return <div key={i}/>;
             const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             const inTrip=ds>=trip.startDate&&ds<=trip.endDate;
-            const isToday=ds===new Date().toISOString().slice(0,10);
+            const isToday=ds===localDateStr(new Date());
             const isSel=ds===selDate;
             const hasEv=hasEvents(ds);
             const wxd=wxMap[ds];
