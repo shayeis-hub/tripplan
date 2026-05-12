@@ -22,6 +22,8 @@ const DARK_BG = "#0d2137";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { setDoc, doc } from "firebase/firestore";
 
 const C = {
   // backgrounds
@@ -187,7 +189,7 @@ function WaveHeader({title,subtitle,action}){
 }
 
 function NavBar({screens,current,onNav}){
-  const labels=["יעד","הוצאות","תקציב","לוח שנה"],icons=["🌴","💳","💰","📅"];
+  const labels=["יעד","הוצאות","תקציב","לוח שנה","מצא"],icons=["🌴","💳","💰","📅","🏨"];
   return(
     <div style={{display:"flex",background:"rgba(0,0,0,0.35)",borderTop:"0.5px solid rgba(100,223,223,0.1)",position:"sticky",bottom:0,zIndex:100,backdropFilter:"blur(10px)"}}>
       {screens.map((s,i)=>(
@@ -1678,6 +1680,89 @@ function CalendarScreen({trip,expenses}){
 }
 
 
+function DiscoverScreen({trip}){
+  const dest=translateDest(trip.destination||"");
+  const encDest=encodeURIComponent(dest||trip.destination||"");
+  const checkIn=trip.startDate||"";
+  const checkOut=trip.endDate||"";
+  const AGODA_CID=process.env.NEXT_PUBLIC_AGODA_CID||"";
+  const BOOKING_AID=process.env.NEXT_PUBLIC_BOOKING_AID||"";
+  const VIATOR_PID=process.env.NEXT_PUBLIC_VIATOR_PID||"";
+  const GYG_ID=process.env.NEXT_PUBLIC_GYG_PARTNER_ID||"";
+
+  const agodaDates=checkIn&&checkOut?`&checkIn=${checkIn}&checkOut=${checkOut}`:"";
+  const bookingDates=checkIn&&checkOut?`&checkin=${checkIn}&checkout=${checkOut}`:"";
+  const hotels=[
+    {name:"Agoda",icon:"🅰",color:"#e0455a",desc:"מחירים נמוכים על מלונות ברחבי העולם",
+     url:`https://www.agoda.com/search?q=${encDest}${agodaDates}&adults=2&rooms=1${AGODA_CID?`&cid=${AGODA_CID}`:""}`},
+    {name:"Booking.com",icon:"🔵",color:"#003580",desc:"השוואת מלונות, דירות ווילות",
+     url:`https://www.booking.com/search.html?ss=${encDest}${bookingDates}&lang=he${BOOKING_AID?`&aid=${BOOKING_AID}`:""}`},
+  ];
+  const activities=[
+    {name:"Viator",icon:"🎡",color:"#2d9cdb",desc:"טיולים, אטרקציות וחוויות מקומיות",
+     url:`https://www.viator.com/search/${encDest}${VIATOR_PID?`?pid=${VIATOR_PID}&mcid=42383`:""}`},
+    {name:"GetYourGuide",icon:"🗺️",color:"#ff6b35",desc:"פעילויות וסיורים מודרכים",
+     url:`https://www.getyourguide.com/s/?q=${encDest}${GYG_ID?`&partner_id=${GYG_ID}`:""}`},
+  ];
+  const open=url=>window.open(url,"_blank");
+
+  return(
+    <div>
+      <WaveHeader title="🏨 מצא" subtitle={trip.destination?`השראה ל${trip.destination}`:"חפש מלונות ואטרקציות"}/>
+      <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:14}}>
+        {!trip.destination?(
+          <div style={{textAlign:"center",padding:"48px 0",color:W35}}>
+            <div style={{fontSize:44,marginBottom:12}}>🌍</div>
+            <div style={{fontSize:15,fontWeight:600}}>הכנס יעד בלשונית "יעד" כדי לחפש</div>
+          </div>
+        ):(
+          <>
+            <div style={{fontSize:12,color:W40,fontFamily:RF,textAlign:"center",background:W05,borderRadius:10,padding:"10px"}}>
+              מציג תוצאות עבור <strong style={{color:TEAL}}>{trip.destination}</strong>
+              {checkIn&&checkOut?` · ${fmtDate(checkIn)} – ${fmtDate(checkOut)}`:""}
+            </div>
+            <Card>
+              <h2 style={{fontFamily:RF,fontSize:16,fontWeight:700,marginBottom:14,color:"#ffffff"}}>🏨 מלונות</h2>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {hotels.map(h=>(
+                  <button key={h.name} onClick={()=>open(h.url)}
+                    style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderRadius:14,border:`0.5px solid ${h.color}50`,background:`${h.color}12`,cursor:"pointer",textAlign:"right",width:"100%"}}>
+                    <div style={{width:42,height:42,borderRadius:12,background:h.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:900,color:"#fff",flexShrink:0}}>{h.icon}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{h.name}</div>
+                      <div style={{fontSize:12,color:W35,marginTop:2}}>{h.desc}</div>
+                    </div>
+                    <div style={{color:W35,fontSize:18}}>←</div>
+                  </button>
+                ))}
+              </div>
+            </Card>
+            <Card>
+              <h2 style={{fontFamily:RF,fontSize:16,fontWeight:700,marginBottom:14,color:"#ffffff"}}>🎡 אטרקציות וחוויות</h2>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {activities.map(a=>(
+                  <button key={a.name} onClick={()=>open(a.url)}
+                    style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderRadius:14,border:`0.5px solid ${a.color}50`,background:`${a.color}12`,cursor:"pointer",textAlign:"right",width:"100%"}}>
+                    <div style={{width:42,height:42,borderRadius:12,background:a.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{a.icon}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{a.name}</div>
+                      <div style={{fontSize:12,color:W35,marginTop:2}}>{a.desc}</div>
+                    </div>
+                    <div style={{color:W35,fontSize:18}}>←</div>
+                  </button>
+                ))}
+              </div>
+            </Card>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.18)",textAlign:"center",fontFamily:RF,lineHeight:1.6}}>
+              הלחיצה תפתח אתר חיצוני. קישורים עשויים להכיל תגמול שותפים.
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const newTrip=(ownerId)=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]});
 
 export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onLogout,userEmail,userId}){
@@ -1687,6 +1772,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[shareModal,setShareModal]=useState(null);
   const[shareEmail,setShareEmail]=useState("");
   const[shareMsg,setShareMsg]=useState("");
+  const[inspireModal,setInspireModal]=useState(false);
+  const[inspireHidden,setInspireHidden]=useState(new Set());
+  const[inspireLink,setInspireLink]=useState(null);
+  const[inspireSaving,setInspireSaving]=useState(false);
   const[showConverter,setShowConverter]=useState(false);
   const[convAmount,setConvAmount]=useState("");
   const[convFrom,setConvFrom]=useState("USD");
@@ -1781,6 +1870,24 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     }catch(e){setShareMsg("שגיאה, נסה שוב");}
   };
 
+  const createInspireLink=async()=>{
+    if(!active)return;
+    setInspireSaving(true);
+    try{
+      const shareId=uid();
+      const CATS_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));
+      const sanitized=expenses
+        .filter(e=>!inspireHidden.has(e.id))
+        .map(e=>({id:e.id,category:e.category,description:e.description||"",date:e.date||"",checkIn:e.checkIn||"",checkOut:e.checkOut||"",address:e.address||""}));
+      await setDoc(doc(db,"publicShares",shareId),{
+        destination:active.destination,startDate:active.startDate,endDate:active.endDate,
+        expenses:sanitized,createdAt:Date.now(),
+      });
+      setInspireLink(`${window.location.origin}/trip/${shareId}`);
+    }catch(e){console.error(e);}
+    setInspireSaving(false);
+  };
+
   const handleCreate=()=>{
     const t=newTrip(userId);
     setTrips((ts)=>[...ts,t]);
@@ -1794,7 +1901,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
 
   const isOwner=active?.owner===userId||!active?.owner;
-  const screens=["destination","expenses","budget","calendar"];
+  const screens=["destination","expenses","budget","calendar","discover"];
 
   if(!activeId){
     return(
@@ -1835,6 +1942,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>💱</button>
             <button onClick={()=>exportTripPDF(active,expenses)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>📄</button>
             {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>👥 שתף</button>}
+            {isOwner&&<button onClick={()=>{setInspireModal(true);setInspireLink(null);setInspireHidden(new Set());}} style={{background:"rgba(251,191,36,0.1)",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:8,color:"#fbbf24",fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>✨</button>}
           </div>
         </div>
         {/* Currency Converter in trip view */}
@@ -1877,7 +1985,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                   {shareMsg.startsWith("✅")&&(
                     <div style={{display:"flex",gap:8,marginTop:8}}>
                       <button onClick={()=>{
-                        const url=`https://tripplan-murex.vercel.app`;
+                        const url=`https://tulon.co.il`;
                         const text=`הוזמנת לטיול "${trips.find(t=>t.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} :
 ${url}`;
                         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");
@@ -1885,7 +1993,7 @@ ${url}`;
                         📲 שלח בוואטסאפ
                       </button>
                       <button onClick={()=>{
-                        const url=`https://tripplan-murex.vercel.app`;
+                        const url=`https://tulon.co.il`;
                         const text=`הוזמנת לטיול "${trips.find(t=>t.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} : ${url}`;
                         navigator.clipboard.writeText(text);
                         setShareMsg("✅ הועתק ללוח!");
@@ -1904,11 +2012,59 @@ ${url}`;
           </div>
         )}
 
+        {/* Inspiration share modal */}
+        {inspireModal&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+            <div style={{background:"#0d2f4a",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:20,padding:24,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"85vh",overflowY:"auto"}}>
+              <h3 style={{fontFamily:RF,fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>✨ שתף כהשראה</h3>
+              <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>הטיול יישלח ללא מחירים. בטל סימון פריטים שאתה רוצה להסתיר:</p>
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+                {expenses.length===0&&<div style={{color:W35,fontSize:13,textAlign:"center",padding:"12px 0"}}>אין הוצאות לשתף</div>}
+                {expenses.map(e=>{
+                  const cat=CATS.find(c=>c.id===e.category);
+                  const hidden=inspireHidden.has(e.id);
+                  return(
+                    <div key={e.id} onClick={()=>setInspireHidden(prev=>{const n=new Set(prev);n.has(e.id)?n.delete(e.id):n.add(e.id);return n;})}
+                      style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:12,background:hidden?"rgba(255,255,255,0.03)":"rgba(100,223,223,0.07)",border:`0.5px solid ${hidden?"rgba(255,255,255,0.08)":"rgba(100,223,223,0.2)"}`,cursor:"pointer",opacity:hidden?0.45:1,transition:"all 0.15s"}}>
+                      <div style={{width:20,height:20,borderRadius:5,border:`2px solid ${hidden?W25:TEAL}`,background:hidden?"transparent":TEAL,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                        {!hidden&&<span style={{color:DARK_BG,fontSize:12,fontWeight:900}}>✓</span>}
+                      </div>
+                      <span style={{fontSize:14}}>{cat?.icon||"📦"}</span>
+                      <span style={{fontFamily:RF,fontSize:13,color:"#ffffff",flex:1}}>{e.description||cat?.label||e.category}</span>
+                      {e.date&&<span style={{fontSize:11,color:W35}}>{fmtDate(e.date)}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+              {!inspireLink?(
+                <button onClick={createInspireLink} disabled={inspireSaving||expenses.length===0}
+                  style={{width:"100%",padding:"13px",borderRadius:12,border:"none",background:"#fbbf24",color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:15,cursor:"pointer",marginBottom:10,opacity:inspireSaving?0.6:1}}>
+                  {inspireSaving?"⏳ יוצר לינק...":"✨ צור לינק שיתוף"}
+                </button>
+              ):(
+                <div style={{background:"rgba(251,191,36,0.1)",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:14,padding:"14px",marginBottom:12}}>
+                  <div style={{fontSize:11,color:"rgba(251,191,36,0.7)",fontFamily:RF,marginBottom:8}}>הלינק מוכן! 🎉</div>
+                  <div style={{fontFamily:"monospace",fontSize:12,color:TEAL,wordBreak:"break-all",marginBottom:12,background:W05,padding:"8px 12px",borderRadius:8}}>{inspireLink}</div>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={()=>navigator.clipboard.writeText(inspireLink)}
+                      style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>📋 העתק</button>
+                    <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`הצצה לטיול שלי ל${active?.destination||""}! ראה מה עשינו ולמד: ${inspireLink}`)}`,"_blank")}
+                      style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>📲 וואטסאפ</button>
+                  </div>
+                </div>
+              )}
+              <button onClick={()=>{setInspireModal(false);setInspireLink(null);setInspireHidden(new Set());}}
+                style={{width:"100%",padding:"11px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>סגור</button>
+            </div>
+          </div>
+        )}
+
         <div style={{flex:1,overflowY:"auto"}}>
           {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
           {screen==="expenses"   &&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
           {screen==="budget"     &&<BudgetScreen trip={active} expenses={expenses}/>}
           {screen==="calendar"   &&<CalendarScreen trip={active} expenses={expenses}/>}
+          {screen==="discover"   &&<DiscoverScreen trip={active}/>}
         </div>
         <NavBar screens={screens} current={screen} onNav={setScreen}/>
       </div>

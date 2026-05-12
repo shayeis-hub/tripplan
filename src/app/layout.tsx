@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/lib/AuthContext";
+import RegisterSW from "@/components/RegisterSW";
 
 export const metadata: Metadata = {
   title: "טיולון – מתכנן הטיולים שלי",
@@ -38,7 +40,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="טיולון" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body>{children}</body>
+      <body><AuthProvider><RegisterSW />{children}</AuthProvider></body>
     </html>
   );
 }

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
               <!-- CTA Button -->
               <div style="text-align: center; margin-bottom: 24px;">
-                <a href="https://tripplan-murex.vercel.app" 
+                <a href="https://tulon.co.il" 
                    style="display: inline-block; background: #64dfdf; color: #0d2137; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 12px; text-decoration: none; letter-spacing: 0.3px;">
                   פתח את טיולון ←
                 </a>
