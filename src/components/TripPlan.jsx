@@ -1,39 +1,59 @@
 "use client";
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+
+// ─── STYLE CONSTANTS ──────────────────────────────────────────────────────────
+const RF = "'Rubik',sans-serif";
+const W05 = "rgba(255,255,255,0.05)";
+const W07 = "rgba(255,255,255,0.07)";
+const W08 = "rgba(255,255,255,0.08)";
+const W12 = "rgba(255,255,255,0.12)";
+const W15 = "rgba(255,255,255,0.15)";
+const W25 = "rgba(255,255,255,0.25)";
+const W35 = "rgba(255,255,255,0.35)";
+const W40 = "rgba(255,255,255,0.4)";
+const W50 = "rgba(255,255,255,0.5)";
+const W55 = "rgba(255,255,255,0.55)";
+const W60 = "rgba(255,255,255,0.6)";
+const W70 = "rgba(255,255,255,0.7)";
+const TB  = "rgba(100,223,223,0.15)";
+const TBB = "rgba(100,223,223,0.2)";
+const TBL = "rgba(100,223,223,0.12)";
+const TEAL = "#64dfdf";
+const DARK_BG = "#0d2137";
+
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const C = {
   // backgrounds
-  bg:"#0d2137", bgCard:"rgba(255,255,255,0.06)", bgCardHover:"rgba(255,255,255,0.09)",
-  bgInput:"rgba(255,255,255,0.07)", bgNav:"rgba(0,0,0,0.3)", bgSection:"rgba(100,223,223,0.07)",
+  bg:DARK_BG, bgCard:"rgba(255,255,255,0.06)", bgCardHover:"rgba(255,255,255,0.09)",
+  bgInput:W07, bgNav:"rgba(0,0,0,0.3)", bgSection:"rgba(100,223,223,0.07)",
   // accent
-  teal:"#64dfdf", tealDim:"rgba(100,223,223,0.15)", tealBorder:"rgba(100,223,223,0.25)",
+  teal:TEAL, tealDim:TB, tealBorder:"rgba(100,223,223,0.25)",
   tealDeep:"#48b5c4",
   // text
-  white:"#ffffff", textPrimary:"#ffffff", textSecondary:"rgba(255,255,255,0.55)",
+  white:"#ffffff", textPrimary:"#ffffff", textSecondary:W55,
   textMuted:"rgba(255,255,255,0.3)", textHint:"rgba(255,255,255,0.18)",
   // status
   green:"#4ade80", greenDim:"rgba(74,222,128,0.12)",
   red:"#ff6b6b", redDim:"rgba(255,107,107,0.12)",
   amber:"#fbbf24", amberDim:"rgba(251,191,36,0.12)",
   // borders
-  border:"rgba(255,255,255,0.08)", borderAccent:"rgba(100,223,223,0.2)",
+  border:W08, borderAccent:TBB,
   // legacy aliases (keep backward compat)
-  ocean:"#64dfdf", oceanLight:"#48b5c4", oceanDeep:"#0a3050",
+  ocean:TEAL, oceanLight:"#48b5c4", oceanDeep:"#0a3050",
   coral:"#ff6b6b", palm:"#4ade80", palmLight:"#6ee7a0",
-  sunset:"#fbbf24", dark:"#0d2137", darkMid:"#0a3050",
-  muted:"rgba(255,255,255,0.35)", lightBg:"#0d2137", sandDark:"rgba(255,255,255,0.08)",
-  sky:"#64dfdf", purple:"#a78bfa",
+  sunset:"#fbbf24", dark:DARK_BG, darkMid:"#0a3050",
+  muted:W35, lightBg:DARK_BG, sandDark:W08,
+  sky:TEAL, purple:"#a78bfa",
 };
 const F={d:"'Rubik',sans-serif",b:"'Rubik',sans-serif"};
 const CATS=[
-  {id:"flight",label:"טיסה",icon:"✈️",color:"#64dfdf"},
+  {id:"flight",label:"טיסה",icon:"✈️",color:TEAL},
   {id:"hotel",label:"מלון",icon:"🏨",color:"#48b5c4"},
   {id:"attraction",label:"אטרקציות",icon:"🎡",color:"#ff6b6b"},
   {id:"food",label:"אוכל",icon:"🍜",color:"#fbbf24"},
   {id:"taxi",label:"מונית",icon:"🚕",color:"#4ade80"},
-  {id:"other",label:"אחר",icon:"📦",color:"rgba(255,255,255,0.35)"},
+  {id:"other",label:"אחר",icon:"📦",color:W35},
 ];
 // ברירת מחדל – תמיד זמינים
 const DEFAULT_CURRENCIES=[
@@ -90,14 +110,12 @@ const translateDest=(name)=>HE_TO_EN_DEST[name]||name;
 const WMO={0:"☀️ בהיר",1:"🌤️ בהיר חלקית",2:"⛅ מעונן חלקית",3:"☁️ מעונן",45:"🌫️ ערפל",48:"🌫️ ערפל",51:"🌦️ טפטוף קל",53:"🌦️ טפטוף",55:"🌧️ טפטוף כבד",61:"🌧️ גשם קל",63:"🌧️ גשם",65:"🌧️ גשם כבד",80:"🌦️ ממטרים",81:"🌧️ ממטרים",82:"⛈️ ממטרים כבדים",95:"⛈️ סערה",96:"⛈️ סערה+ברד",99:"⛈️ סערה חזקה"};
 const PERSON_COLORS=[C.ocean,C.coral,C.palm,C.sunset,C.purple,C.oceanLight,"#C0392B","#8E44AD"];
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
 const fmtDate=(d)=>d?new Date(d).toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
 const localDateStr=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const getRange=(s,e)=>{const a=[];if(!s||!e)return a;const c=new Date(s),l=new Date(e);while(c<=l){a.push(localDateStr(c));c.setDate(c.getDate()+1);}return a;};
 const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
 const remTime=(t)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-300;if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
 
-// ─── HOOKS ────────────────────────────────────────────────────────────────────
 function useRates(){
   // rates: { CODE: ILS_value } — e.g. rates.USD = 3.7 means 1 USD = 3.7 ILS
   const[rates,setRates]=useState({ILS:1,USD:3.7,EUR:4.0,THB:0.105});
@@ -144,7 +162,6 @@ function useWeather(destination,startDate,endDate){
   return{wx,loading,error:wxError};
 }
 
-// ─── GLOBAL STYLE ─────────────────────────────────────────────────────────────
 const GS=`
   @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -155,14 +172,13 @@ const GS=`
   input,select,textarea,button{font-family:'Rubik',sans-serif}
 `;
 
-// ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
 function WaveHeader({title,subtitle,action}){
   return(
     <div style={{background:"linear-gradient(160deg,#0d2137 0%,#0a3050 100%)",padding:"22px 20px 18px",borderBottom:"0.5px solid rgba(100,223,223,0.12)"}}>
       <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between"}}>
         <div>
-          <h1 style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:24,fontWeight:800,letterSpacing:"-0.3px",lineHeight:1}}>{title}</h1>
-          {subtitle&&<p style={{color:"rgba(255,255,255,0.4)",marginTop:5,fontSize:12,fontWeight:400,letterSpacing:"0.2px"}}>{subtitle}</p>}
+          <h1 style={{fontFamily:RF,color:"#ffffff",fontSize:24,fontWeight:800,letterSpacing:"-0.3px",lineHeight:1}}>{title}</h1>
+          {subtitle&&<p style={{color:W40,marginTop:5,fontSize:12,fontWeight:400,letterSpacing:"0.2px"}}>{subtitle}</p>}
         </div>
         {action&&<div>{action}</div>}
       </div>
@@ -176,23 +192,23 @@ function NavBar({screens,current,onNav}){
     <div style={{display:"flex",background:"rgba(0,0,0,0.35)",borderTop:"0.5px solid rgba(100,223,223,0.1)",position:"sticky",bottom:0,zIndex:100,backdropFilter:"blur(10px)"}}>
       {screens.map((s,i)=>(
         <button key={s} onClick={()=>onNav(s)} style={{flex:1,padding:"10px 4px 8px",border:"none",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,borderTop:current===s?"2px solid #64dfdf":"2px solid transparent",transition:"all 0.2s"}}>
-          <div style={{width:32,height:32,borderRadius:10,background:current===s?"rgba(100,223,223,0.12)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,transition:"all 0.2s"}}>{icons[i]}</div>
-          <span style={{fontSize:10,fontWeight:600,color:current===s?"#64dfdf":"rgba(255,255,255,0.25)",fontFamily:"'Rubik',sans-serif",letterSpacing:"0.3px"}}>{labels[i]}</span>
+          <div style={{width:32,height:32,borderRadius:10,background:current===s?TBL:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,transition:"all 0.2s"}}>{icons[i]}</div>
+          <span style={{fontSize:10,fontWeight:600,color:current===s?TEAL:W25,fontFamily:RF,letterSpacing:"0.3px"}}>{labels[i]}</span>
         </button>
       ))}
     </div>
   );
 }
 
-const Card=({children,style})=><div style={{background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"16px",...style}}>{children}</div>;
-const FL=({children})=><label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:"rgba(255,255,255,0.4)",letterSpacing:"0.5px",textTransform:"uppercase"}}>{children}</label>;
+const Card=({children,style})=><div style={{background:W05,border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"16px",...style}}>{children}</div>;
+const FL=({children})=><label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:W40,letterSpacing:"0.5px",textTransform:"uppercase"}}>{children}</label>;
 
 function SI({label,value,onChange,type="text",placeholder,min,max,style}){
   return(
     <div style={{marginBottom:14,...style}}>
       {label&&<FL>{label}</FL>}
       <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} min={min} max={max}
-        style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`2px solid ${C.sandDark}`,fontFamily:"'Rubik',sans-serif",fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.04)",outline:"none",direction:"rtl",transition:"border 0.2s"}}
+        style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`2px solid ${C.sandDark}`,fontFamily:RF,fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.04)",outline:"none",direction:"rtl",transition:"border 0.2s"}}
         onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
     </div>
   );
@@ -203,7 +219,7 @@ function SS({label,value,onChange,children,style}){
     <div style={{marginBottom:14,...style}}>
       {label&&<FL>{label}</FL>}
       <select value={value} onChange={e=>onChange(e.target.value)}
-        style={{width:"100%",padding:"11px 12px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,background:"rgba(255,255,255,0.07)",color:"#ffffff",direction:"rtl",outline:"none"}}>
+        style={{width:"100%",padding:"11px 12px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,background:W07,color:"#ffffff",direction:"rtl",outline:"none"}}>
         {children}
       </select>
     </div>
@@ -215,13 +231,12 @@ function Btn({children,onClick,color,outline,small,disabled,style}){
   const border=outline?`2px solid ${color||C.sandDark}`:"none";
   const col=outline?(color||C.muted):C.white;
   return(
-    <button onClick={onClick} disabled={disabled} style={{padding:small?"8px 14px":"13px 20px",borderRadius:12,border,background:disabled?C.sandDark:bg,color:disabled?C.muted:col,fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:small?13:15,cursor:disabled?"default":"pointer",transition:"all 0.2s",opacity:disabled?0.6:1,...style}}>
+    <button onClick={onClick} disabled={disabled} style={{padding:small?"8px 14px":"13px 20px",borderRadius:12,border,background:disabled?C.sandDark:bg,color:disabled?C.muted:col,fontFamily:RF,fontWeight:700,fontSize:small?13:15,cursor:disabled?"default":"pointer",transition:"all 0.2s",opacity:disabled?0.6:1,...style}}>
       {children}
     </button>
   );
 }
 
-// ─── PIE CHART ────────────────────────────────────────────────────────────────
 function PieChart({data}){
   const total=data.reduce((s,d)=>s+d.value,0);
   if(!total)return null;
@@ -240,8 +255,8 @@ function PieChart({data}){
             onTouchStart={()=>setHov(i)} onTouchEnd={()=>setTimeout(()=>setHov(null),1200)}/>
         ))}
         <text x={cx} y={cy-8} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={11} fill="#ffffff" fontWeight={700}>{hov!==null?slices[hov].label:'סה"כ'}</text>
-        <text x={cx} y={cy+10} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={13} fill="#64dfdf" fontWeight={900}>{hov!==null?`₪${slices[hov].value.toFixed(0)}`:`₪${total.toFixed(0)}`}</text>
-        {hov!==null&&<text x={cx} y={cy+26} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={9} fill="rgba(255,255,255,0.4)">{((slices[hov].value/total)*100).toFixed(1)}%</text>}
+        <text x={cx} y={cy+10} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={13} fill={TEAL} fontWeight={900}>{hov!==null?`₪${slices[hov].value.toFixed(0)}`:`₪${total.toFixed(0)}`}</text>
+        {hov!==null&&<text x={cx} y={cy+26} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={9} fill={W40}>{((slices[hov].value/total)*100).toFixed(1)}%</text>}
       </svg>
       <div style={{display:"flex",flexWrap:"wrap",gap:"6px 12px",justifyContent:"center",maxWidth:260}}>
         {slices.map((s,i)=>(
@@ -249,7 +264,7 @@ function PieChart({data}){
             onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(null)}>
             <div style={{width:11,height:11,borderRadius:3,background:s.color,flexShrink:0}}/>
             <span style={{fontSize:12,fontWeight:700}}>{s.icon} {s.label}</span>
-            <span style={{fontSize:11,color:"rgba(255,255,255,0.35)"}}>{((s.value/total)*100).toFixed(0)}%</span>
+            <span style={{fontSize:11,color:W35}}>{((s.value/total)*100).toFixed(0)}%</span>
           </div>
         ))}
       </div>
@@ -257,7 +272,6 @@ function PieChart({data}){
   );
 }
 
-// ─── TRIP SELECTOR SCREEN ─────────────────────────────────────────────────────
 // ─── PUSH NOTIFICATIONS ──────────────────────────────────────────────────────
 function usePushNotifications(userId){
   const[permission,setPermission]=useState(typeof Notification!=="undefined"?Notification.permission:"default");
@@ -323,7 +337,6 @@ async function sendPushToUser(userId,title,body,url="/"){
   }catch(e){}
 }
 
-// ─── CURRENCY CONVERTER ──────────────────────────────────────────────────────
 function CurrencyConverter({rates,onClose,tripCurrencies}){
   const[amount,setAmount]=useState("");
   const[from,setFrom]=useState(tripCurrencies?.[1]||"USD");
@@ -340,29 +353,29 @@ function CurrencyConverter({rates,onClose,tripCurrencies}){
     <div style={{margin:"0 0 0",background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderBottom:"0.5px solid rgba(100,223,223,0.15)"}}>
       <div style={{padding:"12px 18px"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-          <div style={{fontFamily:"'Rubik',sans-serif",fontSize:13,fontWeight:700,color:"#64dfdf"}}>💱 מחשבון המרת מטבע</div>
-          <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",fontSize:16,cursor:"pointer"}}>✕</button>
+          <div style={{fontFamily:RF,fontSize:13,fontWeight:700,color:TEAL}}>💱 מחשבון המרת מטבע</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:W40,fontSize:16,cursor:"pointer"}}>✕</button>
         </div>
         {/* Amount input */}
         <input value={amount} onChange={e=>setAmount(e.target.value)} type="number" placeholder="הכנס סכום..." min="0"
-          style={{width:"100%",padding:"11px 14px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:16,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",direction:"ltr",marginBottom:10}}
-          onFocus={e=>(e.target.style.borderColor="#64dfdf")} onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}/>
+          style={{width:"100%",padding:"11px 14px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:16,color:"#ffffff",background:W07,outline:"none",direction:"ltr",marginBottom:10}}
+          onFocus={e=>(e.target.style.borderColor=TEAL)} onBlur={e=>(e.target.style.borderColor=TBB)}/>
         {/* From / swap / To */}
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <select value={from} onChange={e=>setFrom(e.target.value)}
-            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
             {allCodes.map(c=><option key={c} value={c}>{c}</option>)}
           </select>
-          <button onClick={swap} style={{padding:"8px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontSize:16,cursor:"pointer",flexShrink:0}}>⇄</button>
+          <button onClick={swap} style={{padding:"8px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.08)",color:TEAL,fontSize:16,cursor:"pointer",flexShrink:0}}>⇄</button>
           <select value={to} onChange={e=>setTo(e.target.value)}
-            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
             {allCodes.map(c=><option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         {converted&&(
           <div style={{marginTop:10,padding:"10px 14px",background:"rgba(100,223,223,0.1)",borderRadius:10,textAlign:"center"}}>
-            <span style={{fontFamily:"'Rubik',sans-serif",fontSize:22,fontWeight:800,color:"#64dfdf"}}>{converted} {to}</span>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:3,fontFamily:"'Rubik',sans-serif"}}>
+            <span style={{fontFamily:RF,fontSize:22,fontWeight:800,color:TEAL}}>{converted} {to}</span>
+            <div style={{fontSize:11,color:W35,marginTop:3,fontFamily:RF}}>
               1 {from} = {rates[from]&&rates[to]?(rates[from]/rates[to]).toFixed(4):""} {to}
             </div>
           </div>
@@ -372,7 +385,6 @@ function CurrencyConverter({rates,onClose,tripCurrencies}){
   );
 }
 
-// ─── PDF EXPORT ───────────────────────────────────────────────────────────────
 function exportTripPDF(trip,expenses){
   if(!trip) return;
   const CATS_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));
@@ -485,20 +497,20 @@ function exportTripPDF(trip,expenses){
 
 function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId}){
   return(
-    <div style={{minHeight:"100vh",background:"#0d2137"}}>
+    <div style={{minHeight:"100vh",background:DARK_BG}}>
       <div style={{background:"linear-gradient(160deg,#091928 0%,#0d2137 100%)",padding:"36px 20px 28px",borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
         <div style={{fontSize:10,fontWeight:400,color:"rgba(255,255,255,0.2)",letterSpacing:"1.5px",textTransform:"uppercase",marginBottom:8}}>ברוך הבא</div>
-        <h1 style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:38,fontWeight:900,letterSpacing:"-1px",lineHeight:1}}>טיולון</h1>
-        <p style={{fontFamily:"'Rubik',sans-serif",color:"rgba(255,255,255,0.3)",marginTop:6,fontSize:12,fontWeight:300,letterSpacing:"0.5px"}}>מתכנן הטיולים שלי</p>
+        <h1 style={{fontFamily:RF,color:"#ffffff",fontSize:38,fontWeight:900,letterSpacing:"-1px",lineHeight:1}}>טיולון</h1>
+        <p style={{fontFamily:RF,color:"rgba(255,255,255,0.3)",marginTop:6,fontSize:12,fontWeight:300,letterSpacing:"0.5px"}}>מתכנן הטיולים שלי</p>
       </div>
 
       <div style={{padding:"20px 18px",display:"flex",flexDirection:"column",gap:10}}>
-        <button onClick={onCreate} style={{padding:"16px",borderRadius:14,border:"0.5px dashed rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.06)",color:"#64dfdf",fontSize:15,fontWeight:600,fontFamily:"'Rubik',sans-serif",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+        <button onClick={onCreate} style={{padding:"16px",borderRadius:14,border:"0.5px dashed rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.06)",color:TEAL,fontSize:15,fontWeight:600,fontFamily:RF,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
           ➕ טיול חדש
         </button>
 
         {trips.length===0&&(
-          <div style={{textAlign:"center",padding:"40px 0",color:"rgba(255,255,255,0.35)"}}>
+          <div style={{textAlign:"center",padding:"40px 0",color:W35}}>
             <div style={{fontSize:48,marginBottom:12}}>✈️</div>
             <div style={{fontSize:16,fontWeight:600}}>אין טיולים עדיין</div>
             <div style={{fontSize:13,marginTop:6}}>לחץ על "טיול חדש" כדי להתחיל</div>
@@ -509,21 +521,21 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId}){
           const nights=t.startDate&&t.endDate?Math.round((new Date(t.endDate).getTime()-new Date(t.startDate).getTime())/86400000)+1:0;
           const total=t.expenses?.reduce((s,e)=>s+e.amountILS,0)||0;
           return(
-            <div key={t.id} onClick={()=>onSelect(t.id)} style={{background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"14px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,transition:"all 0.2s"}}
-              onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.08)";e.currentTarget.style.borderColor="rgba(100,223,223,0.35)";}}
-              onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.05)";e.currentTarget.style.borderColor="rgba(100,223,223,0.18)";}}>
+            <div key={t.id} onClick={()=>onSelect(t.id)} style={{background:W05,border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"14px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,transition:"all 0.2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.background=W08;e.currentTarget.style.borderColor="rgba(100,223,223,0.35)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background=W05;e.currentTarget.style.borderColor="rgba(100,223,223,0.18)";}}>
               <div style={{width:44,height:44,borderRadius:13,background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🌍</div>
               <div style={{flex:1}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <div style={{fontFamily:"'Rubik',sans-serif",fontSize:16,fontWeight:700,color:"#ffffff",letterSpacing:"-0.2px"}}>{t.destination||"יעד לא מוגדר"}</div>
-                  {t.owner!==userId&&t.owner&&<span style={{fontSize:9,background:"rgba(100,223,223,0.12)",color:"#64dfdf",border:"0.5px solid rgba(100,223,223,0.3)",borderRadius:999,padding:"2px 7px",fontWeight:600}}>משותף</span>}
+                  <div style={{fontFamily:RF,fontSize:16,fontWeight:700,color:"#ffffff",letterSpacing:"-0.2px"}}>{t.destination||"יעד לא מוגדר"}</div>
+                  {t.owner!==userId&&t.owner&&<span style={{fontSize:9,background:TBL,color:TEAL,border:"0.5px solid rgba(100,223,223,0.3)",borderRadius:999,padding:"2px 7px",fontWeight:600}}>משותף</span>}
                   {t.owner===userId&&t.sharedWith?.length>0&&<span style={{fontSize:9,background:"rgba(100,223,223,0.08)",color:"rgba(100,223,223,0.6)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:999,padding:"2px 7px"}}>👥 {t.sharedWith.length}</span>}
                 </div>
-                <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:3,fontWeight:400}}>
+                <div style={{fontSize:11,color:W35,marginTop:3,fontWeight:400}}>
                   {t.startDate?`${fmtDate(t.startDate)} – ${fmtDate(t.endDate)}`:"תאריכים לא מוגדרים"}
                   {nights>0&&` · ${nights} ימים`}
                 </div>
-                {total>0&&<div style={{fontSize:12,color:"#64dfdf",fontWeight:600,marginTop:4}}>₪{total.toFixed(0)}</div>}
+                {total>0&&<div style={{fontSize:12,color:TEAL,fontWeight:600,marginTop:4}}>₪{total.toFixed(0)}</div>}
               </div>
               <button onClick={ev=>{ev.stopPropagation();if(window.confirm("למחוק את הטיול?"))onDelete(t.id);}} style={{padding:"6px 9px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.12)",color:"#ff6b6b",fontSize:14,cursor:"pointer"}}>🗑️</button>
             </div>
@@ -534,7 +546,6 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId}){
   );
 }
 
-// ─── SCREEN 1: DESTINATION + PEOPLE ──────────────────────────────────────────
 // ─── CURRENCY MANAGER COMPONENT ─────────────────────────────────────────────
 function CurrencyManager({trip,onUpdate,allCodes,rates}){
   const tripCurrencies = trip.currencies || ["ILS","USD","EUR"];
@@ -565,8 +576,8 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
 
   return(
     <Card>
-      <h2 style={{fontFamily:"'Rubik',sans-serif",fontSize:20,fontWeight:700,marginBottom:4,color:"#0a3050"}}>💱 מטבעות בטיול</h2>
-      <p style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginBottom:12}}>בחר את המטבעות שתשתמש בהם. לחץ על מטבע להגדרתו כברירת מחדל.</p>
+      <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,marginBottom:4,color:"#0a3050"}}>💱 מטבעות בטיול</h2>
+      <p style={{fontSize:12,color:W35,marginBottom:12}}>בחר את המטבעות שתשתמש בהם. לחץ על מטבע להגדרתו כברירת מחדל.</p>
 
       {/* Active currencies */}
       <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:12}}>
@@ -577,23 +588,23 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
             <div key={code} onClick={()=>onUpdate({defaultCurrency:code})}
               style={{display:"flex",alignItems:"center",gap:7,padding:"9px 13px",borderRadius:14,border:`2px solid ${isDefault?C.ocean:C.sandDark}`,background:isDefault?`${C.ocean}15`:C.white,cursor:"pointer",transition:"all 0.15s"}}>
               <div style={{textAlign:"center"}}>
-                <div style={{fontFamily:"'Rubik',sans-serif",fontSize:18,fontWeight:900,color:isDefault?C.ocean:C.dark,lineHeight:1}}>{getCurrSymbol(code)}</div>
+                <div style={{fontFamily:RF,fontSize:18,fontWeight:900,color:isDefault?C.ocean:C.dark,lineHeight:1}}>{getCurrSymbol(code)}</div>
                 <div style={{fontSize:11,fontWeight:700,color:isDefault?C.ocean:C.darkMid}}>{code}</div>
               </div>
               <div>
                 <div style={{fontSize:12,fontWeight:700,color:isDefault?C.ocean:C.dark}}>{getCurrLabel(code)}</div>
-                {rate&&code!=="ILS"&&<div style={{fontSize:10,color:"rgba(255,255,255,0.35)"}}>1 {code} = ₪{rate.toFixed(3)}</div>}
-                {isDefault&&<div style={{fontSize:10,color:"#64dfdf",fontWeight:700}}>★ ברירת מחדל</div>}
+                {rate&&code!=="ILS"&&<div style={{fontSize:10,color:W35}}>1 {code} = ₪{rate.toFixed(3)}</div>}
+                {isDefault&&<div style={{fontSize:10,color:TEAL,fontWeight:700}}>★ ברירת מחדל</div>}
               </div>
               {tripCurrencies.length>1&&(
                 <button onClick={e=>{e.stopPropagation();removeCurrency(code);}}
-                  style={{background:"none",border:"none",cursor:"pointer",fontSize:15,color:"rgba(255,255,255,0.35)",padding:"0 0 0 4px",lineHeight:1}}>×</button>
+                  style={{background:"none",border:"none",cursor:"pointer",fontSize:15,color:W35,padding:"0 0 0 4px",lineHeight:1}}>×</button>
               )}
             </div>
           );
         })}
         <button onClick={()=>setShowPicker(p=>!p)}
-          style={{padding:"9px 14px",borderRadius:14,border:`2px dashed ${C.ocean}`,background:`${C.ocean}08`,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>
+          style={{padding:"9px 14px",borderRadius:14,border:`2px dashed ${C.ocean}`,background:`${C.ocean}08`,color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>
           ➕ הוסף מטבע
         </button>
       </div>
@@ -602,25 +613,25 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
       {showPicker&&(
         <div style={{background:"rgba(255,255,255,0.04)",borderRadius:14,padding:"12px",border:"0.5px solid rgba(100,223,223,0.15)"}}>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="חפש מטבע... (למשל: THB, יאן, דולר)"
-            style={{width:"100%",padding:"10px 14px",borderRadius:10,border:`2px solid ${C.sandDark}`,fontFamily:"'Rubik',sans-serif",fontSize:14,direction:"rtl",background:"rgba(255,255,255,0.05)",outline:"none",marginBottom:10}}
+            style={{width:"100%",padding:"10px 14px",borderRadius:10,border:`2px solid ${C.sandDark}`,fontFamily:RF,fontSize:14,direction:"rtl",background:W05,outline:"none",marginBottom:10}}
             onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)} autoFocus/>
           {allCodes.length===0&&(
-            <div style={{textAlign:"center",color:"rgba(255,255,255,0.35)",fontSize:13,padding:"8px 0"}}>
+            <div style={{textAlign:"center",color:W35,fontSize:13,padding:"8px 0"}}>
               ⏳ שאיבת מטבעות... (נדרש חיבור לאינטרנט)
             </div>
           )}
           {/* Popular first if no search */}
           {!search&&(
             <div style={{marginBottom:8}}>
-              <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",marginBottom:6}}>פופולריים:</div>
+              <div style={{fontSize:11,fontWeight:700,color:W35,marginBottom:6}}>פופולריים:</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                 {["THB","GBP","JPY","AED","TRY","AUD","CAD","CHF","SGD","INR","EGP","MAD","JOD"]
                   .filter(c=>!tripCurrencies.includes(c))
                   .slice(0,10)
                   .map(code=>(
                     <button key={code} onClick={()=>addCurrency(code)}
-                      style={{padding:"5px 11px",borderRadius:999,border:`1.5px solid ${C.sandDark}`,background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:12,cursor:"pointer",color:"#ffffff"}}>
-                      {getCurrSymbol(code)} {code} <span style={{color:"rgba(255,255,255,0.35)",fontWeight:400}}>{getCurrLabel(code)}</span>
+                      style={{padding:"5px 11px",borderRadius:999,border:`1.5px solid ${C.sandDark}`,background:W05,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",color:"#ffffff"}}>
+                      {getCurrSymbol(code)} {code} <span style={{color:W35,fontWeight:400}}>{getCurrLabel(code)}</span>
                     </button>
                   ))}
               </div>
@@ -629,15 +640,15 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
           {/* Search results */}
           {search&&(
             <div style={{maxHeight:180,overflowY:"auto",display:"flex",flexDirection:"column",gap:4}}>
-              {filtered.length===0?<div style={{color:"rgba(255,255,255,0.35)",fontSize:13,textAlign:"center",padding:"8px"}}>לא נמצאו תוצאות</div>
+              {filtered.length===0?<div style={{color:W35,fontSize:13,textAlign:"center",padding:"8px"}}>לא נמצאו תוצאות</div>
               :filtered.map(code=>(
                 <button key={code} onClick={()=>addCurrency(code)}
-                  style={{padding:"8px 12px",borderRadius:10,border:"none",background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontSize:13,cursor:"pointer",textAlign:"right",display:"flex",alignItems:"center",gap:10,transition:"background 0.1s"}}
+                  style={{padding:"8px 12px",borderRadius:10,border:"none",background:W05,fontFamily:RF,fontSize:13,cursor:"pointer",textAlign:"right",display:"flex",alignItems:"center",gap:10,transition:"background 0.1s"}}
                   onMouseEnter={e=>(e.target.style.background=C.sandDark)} onMouseLeave={e=>(e.target.style.background=C.white)}>
-                  <span style={{fontWeight:800,color:"#64dfdf",minWidth:36}}>{getCurrSymbol(code)}</span>
+                  <span style={{fontWeight:800,color:TEAL,minWidth:36}}>{getCurrSymbol(code)}</span>
                   <span style={{fontWeight:700}}>{code}</span>
-                  <span style={{color:"rgba(255,255,255,0.35)",fontSize:12}}>{getCurrLabel(code)}</span>
-                  {rates[code]&&code!=="ILS"&&<span style={{color:"rgba(255,255,255,0.35)",fontSize:11,marginRight:"auto"}}>₪{rates[code].toFixed(3)}</span>}
+                  <span style={{color:W35,fontSize:12}}>{getCurrLabel(code)}</span>
+                  {rates[code]&&code!=="ILS"&&<span style={{color:W35,fontSize:11,marginRight:"auto"}}>₪{rates[code].toFixed(3)}</span>}
                 </button>
               ))}
             </div>
@@ -666,15 +677,15 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
       <WaveHeader title="🌴 תכנון הטיול" subtitle="לאן אנחנו טסים?"/>
       <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:16}}>
         <Card>
-          <h2 style={{fontFamily:"'Rubik',sans-serif",fontSize:20,fontWeight:700,marginBottom:16,color:"#0a3050"}}>פרטי היעד</h2>
+          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,marginBottom:16,color:"#0a3050"}}>פרטי היעד</h2>
           <SI label="יעד הטיול 🌍" value={trip.destination} onChange={v=>onUpdate({destination:v})} placeholder="למשל: תאילנד, פריז..."/>
           <SI label="תאריך יציאה ✈️" value={trip.startDate} onChange={v=>onUpdate({startDate:v})} type="date"/>
           <SI label="תאריך חזרה 🏠"  value={trip.endDate}   onChange={v=>onUpdate({endDate:v})}   type="date" min={trip.startDate}/>
           {valid&&(
             <div style={{padding:"12px 16px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:12,textAlign:"center"}}>
-              <span style={{fontFamily:"'Rubik',sans-serif",fontSize:26,fontWeight:800,color:"#64dfdf"}}>{Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1}</span>
-              <span style={{fontSize:14,fontWeight:600,color:"rgba(255,255,255,0.7)",marginRight:6}}>ימי טיול 🎉</span>
-              <div style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginTop:2}}>{fmtDate(trip.startDate)} – {fmtDate(trip.endDate)}</div>
+              <span style={{fontFamily:RF,fontSize:26,fontWeight:800,color:TEAL}}>{Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1}</span>
+              <span style={{fontSize:14,fontWeight:600,color:W70,marginRight:6}}>ימי טיול 🎉</span>
+              <div style={{fontSize:12,color:W35,marginTop:2}}>{fmtDate(trip.startDate)} – {fmtDate(trip.endDate)}</div>
             </div>
           )}
         </Card>
@@ -683,23 +694,23 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
 
         {/* People */}
         <Card>
-          <h2 style={{fontFamily:"'Rubik',sans-serif",fontSize:20,fontWeight:700,marginBottom:4,color:"#0a3050"}}>👥 משתתפים</h2>
-          <p style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:14}}>הוסף את כל האנשים/משפחות בטיול לניהול הוצאות משותפות</p>
+          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,marginBottom:4,color:"#0a3050"}}>👥 משתתפים</h2>
+          <p style={{fontSize:13,color:W35,marginBottom:14}}>הוסף את כל האנשים/משפחות בטיול לניהול הוצאות משותפות</p>
           <div style={{display:"flex",gap:8,marginBottom:12}}>
             <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="שם משתתף..." onKeyDown={e=>e.key==="Enter"&&addPerson()}
-              style={{flex:1,padding:"10px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,direction:"rtl",background:"rgba(255,255,255,0.07)",color:"#ffffff",outline:"none"}}
+              style={{flex:1,padding:"10px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,direction:"rtl",background:W07,color:"#ffffff",outline:"none"}}
               onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
-            <button onClick={addPerson} style={{padding:"10px 16px",borderRadius:12,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>➕</button>
+            <button onClick={addPerson} style={{padding:"10px 16px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>➕</button>
           </div>
           {people.length===0?(
-            <div style={{textAlign:"center",color:"rgba(255,255,255,0.35)",padding:"12px 0",fontSize:13}}>טיול סולו? ניתן להשאיר ריק 🌴</div>
+            <div style={{textAlign:"center",color:W35,padding:"12px 0",fontSize:13}}>טיול סולו? ניתן להשאיר ריק 🌴</div>
           ):(
             <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
               {people.map(p=>(
                 <div key={p.id} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:999,background:p.color+"15",border:`0.5px solid ${p.color}40`}}>
                   <div style={{width:10,height:10,borderRadius:"50%",background:p.color,flexShrink:0}}/>
                   <span style={{fontSize:13,fontWeight:700,color:"#ffffff"}}>{p.name}</span>
-                  <button onClick={()=>removePerson(p.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,color:"rgba(255,255,255,0.35)",padding:"0 0 0 2px",lineHeight:1}}>×</button>
+                  <button onClick={()=>removePerson(p.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,color:W35,padding:"0 0 0 2px",lineHeight:1}}>×</button>
                 </div>
               ))}
             </div>
@@ -707,16 +718,16 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
         </Card>
 
         <Card>
-          <h2 style={{fontFamily:"'Rubik',sans-serif",fontSize:18,fontWeight:700,marginBottom:14,color:"rgba(255,255,255,0.85)"}}>💰 תקציב מתוכנן</h2>
-          <p style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginBottom:12,fontFamily:"'Rubik',sans-serif"}}>הגדר תקציב כולל לטיול ותקבל מעקב התקדמות</p>
+          <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:14,color:"rgba(255,255,255,0.85)"}}>💰 תקציב מתוכנן</h2>
+          <p style={{fontSize:12,color:W35,marginBottom:12,fontFamily:RF}}>הגדר תקציב כולל לטיול ותקבל מעקב התקדמות</p>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <input type="number" value={trip.budget||""} onChange={e=>onUpdate({budget:e.target.value?parseFloat(e.target.value):null})}
               placeholder="למשל: 15000"
-              style={{flex:1,padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",direction:"ltr"}}
-              onFocus={e=>(e.target.style.borderColor="#64dfdf")} onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}/>
-            <span style={{color:"rgba(255,255,255,0.5)",fontFamily:"'Rubik',sans-serif",fontSize:15,flexShrink:0}}>₪</span>
+              style={{flex:1,padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:15,color:"#ffffff",background:W07,outline:"none",direction:"ltr"}}
+              onFocus={e=>(e.target.style.borderColor=TEAL)} onBlur={e=>(e.target.style.borderColor=TBB)}/>
+            <span style={{color:W50,fontFamily:RF,fontSize:15,flexShrink:0}}>₪</span>
           </div>
-          {trip.budget>0&&<div style={{fontSize:12,color:"#64dfdf",marginTop:8,fontFamily:"'Rubik',sans-serif"}}>✓ תקציב: ₪{parseFloat(trip.budget).toLocaleString()}</div>}
+          {trip.budget>0&&<div style={{fontSize:12,color:TEAL,marginTop:8,fontFamily:RF}}>✓ תקציב: ₪{parseFloat(trip.budget).toLocaleString()}</div>}
         </Card>
 
         <Btn onClick={onNext} disabled={!valid} style={{width:"100%",fontSize:17,padding:"16px",borderRadius:16,boxShadow:valid?`0 6px 20px ${C.ocean}40`:"none"}}>
@@ -727,7 +738,6 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
   );
 }
 
-// ─── SCREEN 2: EXPENSES ───────────────────────────────────────────────────────
 const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",departureTime:"",time:"",address:"",paidBy:"",splitWith:[],splitType:"equal",isShared:true});
 
 function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo}){
@@ -804,14 +814,14 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const ExpenseRow=({exp})=>{
     const cat=CATS.find(c=>c.id===exp.category);
     return(
-      <div style={{background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"13px",borderRight:`3px solid ${cat?.color||"rgba(255,255,255,0.2)"}`,display:"flex",alignItems:"flex-start",gap:10}}>
+      <div style={{background:W05,border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"13px",borderRight:`3px solid ${cat?.color||"rgba(255,255,255,0.2)"}`,display:"flex",alignItems:"flex-start",gap:10}}>
         <span style={{fontSize:24,flexShrink:0,marginTop:2}}>{cat?.icon}</span>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontWeight:600,fontSize:13,color:"#ffffff",display:"flex",alignItems:"center",gap:6}}>{cat?.label}{exp.isShared===false&&<span style={{fontSize:9,background:"rgba(167,139,250,0.15)",color:"#a78bfa",border:"0.5px solid rgba(167,139,250,0.3)",borderRadius:999,padding:"1px 6px"}}>אישית</span>}{exp.isShared!==false&&<span style={{fontSize:9,background:"rgba(100,223,223,0.1)",color:"#64dfdf",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:999,padding:"1px 6px"}}>משותפת</span>}</div>
-          {exp.category==="hotel"&&exp.checkIn&&<div style={{fontSize:11,color:"#64dfdf",fontWeight:600}}>{fmtDate(exp.checkIn)} → {fmtDate(exp.checkOut)} · {Math.round((new Date(exp.checkOut).getTime()-new Date(exp.checkIn).getTime())/86400000)} לילות</div>}
-          {exp.category==="flight"&&exp.departureTime&&<div style={{fontSize:11,color:"#64dfdf",fontWeight:600}}>המראה: {exp.departureTime}</div>}
-          {exp.description&&<div style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{exp.description}</div>}
-          <div style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginTop:2}}>{sym(exp.currency)}{exp.amount.toFixed(2)} ≈ <span style={{color:"#64dfdf",fontWeight:600}}>₪{exp.amountILS.toFixed(2)}</span></div>
+          <div style={{fontWeight:600,fontSize:13,color:"#ffffff",display:"flex",alignItems:"center",gap:6}}>{cat?.label}{exp.isShared===false&&<span style={{fontSize:9,background:"rgba(167,139,250,0.15)",color:"#a78bfa",border:"0.5px solid rgba(167,139,250,0.3)",borderRadius:999,padding:"1px 6px"}}>אישית</span>}{exp.isShared!==false&&<span style={{fontSize:9,background:"rgba(100,223,223,0.1)",color:TEAL,border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:999,padding:"1px 6px"}}>משותפת</span>}</div>
+          {exp.category==="hotel"&&exp.checkIn&&<div style={{fontSize:11,color:TEAL,fontWeight:600}}>{fmtDate(exp.checkIn)} → {fmtDate(exp.checkOut)} · {Math.round((new Date(exp.checkOut).getTime()-new Date(exp.checkIn).getTime())/86400000)} לילות</div>}
+          {exp.category==="flight"&&exp.departureTime&&<div style={{fontSize:11,color:TEAL,fontWeight:600}}>המראה: {exp.departureTime}</div>}
+          {exp.description&&<div style={{fontSize:12,color:W35,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{exp.description}</div>}
+          <div style={{fontSize:12,color:W35,marginTop:2}}>{sym(exp.currency)}{exp.amount.toFixed(2)} ≈ <span style={{color:TEAL,fontWeight:600}}>₪{exp.amountILS.toFixed(2)}</span></div>
           {exp.paidBy&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
             <span style={{fontSize:11,background:personColor(exp.paidBy)+"25",color:personColor(exp.paidBy),borderRadius:6,padding:"2px 7px",fontWeight:700}}>שילם: {personName(exp.paidBy)}</span>
             {exp.splitWith?.length>0&&exp.splitWith.map(id=>(
@@ -820,9 +830,9 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           </div>}
         </div>
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}>
-          <button onClick={()=>onTogglePaid(exp.id)} style={{padding:"5px 9px",borderRadius:8,border:"none",background:exp.paid?"rgba(74,222,128,0.12)":"rgba(255,107,107,0.12)",color:exp.paid?"#4ade80":"#ff6b6b",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:11,cursor:"pointer"}}>{exp.paid?"✅":"⏳"}</button>
-          <button onClick={()=>handleEdit(exp)} style={{padding:"5px 7px",borderRadius:8,border:"none",background:"rgba(100,223,223,0.1)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,cursor:"pointer"}}>✏️</button>
-          <button onClick={()=>onDelete(exp.id)} style={{padding:"5px 7px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.1)",color:"#ff6b6b",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,cursor:"pointer"}}>🗑️</button>
+          <button onClick={()=>onTogglePaid(exp.id)} style={{padding:"5px 9px",borderRadius:8,border:"none",background:exp.paid?"rgba(74,222,128,0.12)":"rgba(255,107,107,0.12)",color:exp.paid?"#4ade80":"#ff6b6b",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>{exp.paid?"✅":"⏳"}</button>
+          <button onClick={()=>handleEdit(exp)} style={{padding:"5px 7px",borderRadius:8,border:"none",background:"rgba(100,223,223,0.1)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,cursor:"pointer"}}>✏️</button>
+          <button onClick={()=>onDelete(exp.id)} style={{padding:"5px 7px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.1)",color:"#ff6b6b",fontFamily:RF,fontWeight:600,fontSize:11,cursor:"pointer"}}>🗑️</button>
         </div>
       </div>
     );
@@ -832,7 +842,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     <div>
       <WaveHeader title="💳 הוצאות" subtitle={trip.destination?`הטיול ל${trip.destination}`:""}/>
 
-      <div style={{margin:"14px 16px 0",padding:"9px 14px",background:"rgba(255,255,255,0.05)",borderRadius:12,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",gap:10,flexWrap:"wrap",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+      <div style={{margin:"14px 16px 0",padding:"9px 14px",background:W05,borderRadius:12,fontSize:12,color:W35,display:"flex",gap:10,flexWrap:"wrap",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
         <span>💱 {(trip.currencies||[]).filter(c=>c!=="ILS").map(code=>`1 ${code} = ₪${(rates[code]||0).toFixed(3)}`).join(" | ")}</span>
         {ratesInfo.updated&&<span style={{color:"#4ade80"}}>✓ {ratesInfo.updated}</span>}
         {ratesInfo.error&&<span style={{color:"#ff6b6b"}}>{ratesInfo.error}</span>}
@@ -843,31 +853,31 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         <div style={{flex:1,position:"relative"}}>
           <span style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:15,pointerEvents:"none"}}>🔍</span>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="חיפוש הוצאות..."
-            style={{width:"100%",padding:"10px 36px 10px 12px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,direction:"rtl",background:"rgba(255,255,255,0.07)",color:"#ffffff",outline:"none"}}
+            style={{width:"100%",padding:"10px 36px 10px 12px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,direction:"rtl",background:W07,color:"#ffffff",outline:"none"}}
             onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
         </div>
-        <button onClick={()=>setShowFilters(f=>!f)} style={{padding:"10px 14px",borderRadius:12,border:`0.5px solid ${showFilters||filterCat!=="all"||filterPaid!=="all"?"#64dfdf":"rgba(255,255,255,0.15)"}`,background:showFilters||filterCat!=="all"||filterPaid!=="all"?"rgba(100,223,223,0.12)":"rgba(255,255,255,0.06)",color:showFilters||filterCat!=="all"||filterPaid!=="all"?"#64dfdf":"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>
+        <button onClick={()=>setShowFilters(f=>!f)} style={{padding:"10px 14px",borderRadius:12,border:`0.5px solid ${showFilters||filterCat!=="all"||filterPaid!=="all"?TEAL:W15}`,background:showFilters||filterCat!=="all"||filterPaid!=="all"?TBL:"rgba(255,255,255,0.06)",color:showFilters||filterCat!=="all"||filterPaid!=="all"?TEAL:W35,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>
           🎛️ סינון
         </button>
       </div>
 
       {showFilters&&(
-        <div style={{margin:"8px 16px 0",padding:"12px",background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:14}}>
+        <div style={{margin:"8px 16px 0",padding:"12px",background:W05,border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:14}}>
           <div style={{marginBottom:10}}>
-            <div style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.6)",marginBottom:6}}>קטגוריה</div>
+            <div style={{fontSize:12,fontWeight:700,color:W60,marginBottom:6}}>קטגוריה</div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
               {[{id:"all",label:"הכל",icon:"📋"},...CATS].map(c=>(
-                <button key={c.id} onClick={()=>setFilterCat(c.id)} style={{padding:"5px 10px",borderRadius:999,border:`0.5px solid ${filterCat===c.id?"#64dfdf":"rgba(255,255,255,0.12)"}`,background:filterCat===c.id?"rgba(100,223,223,0.15)":"rgba(255,255,255,0.05)",color:filterCat===c.id?"#64dfdf":"rgba(255,255,255,0.5)",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>
+                <button key={c.id} onClick={()=>setFilterCat(c.id)} style={{padding:"5px 10px",borderRadius:999,border:`0.5px solid ${filterCat===c.id?TEAL:W12}`,background:filterCat===c.id?TB:W05,color:filterCat===c.id?TEAL:W50,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
                   {c.icon} {c.label}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <div style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.6)",marginBottom:6}}>סטטוס תשלום</div>
+            <div style={{fontSize:12,fontWeight:700,color:W60,marginBottom:6}}>סטטוס תשלום</div>
             <div style={{display:"flex",gap:6}}>
               {[{id:"all",label:"הכל"},{id:"paid",label:"✅ שולם"},{id:"unpaid",label:"⏳ טרם שולם"}].map(o=>(
-                <button key={o.id} onClick={()=>setFilterPaid(o.id)} style={{padding:"5px 12px",borderRadius:999,border:`0.5px solid ${filterPaid===o.id?"#64dfdf":"rgba(255,255,255,0.12)"}`,background:filterPaid===o.id?"rgba(100,223,223,0.15)":"rgba(255,255,255,0.05)",color:filterPaid===o.id?"#64dfdf":"rgba(255,255,255,0.5)",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>
+                <button key={o.id} onClick={()=>setFilterPaid(o.id)} style={{padding:"5px 12px",borderRadius:999,border:`0.5px solid ${filterPaid===o.id?TEAL:W12}`,background:filterPaid===o.id?TB:W05,color:filterPaid===o.id?TEAL:W50,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
                   {o.label}
                 </button>
               ))}
@@ -879,8 +889,8 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       {/* Search results mode */}
       {isFiltering?(
         <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}>
-          <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",fontWeight:600}}>נמצאו {allFiltered.length} הוצאות</div>
-          {allFiltered.length===0?<div style={{textAlign:"center",color:"rgba(255,255,255,0.35)",padding:"24px 0",fontSize:15}}>🔍 לא נמצאו תוצאות</div>
+          <div style={{fontSize:13,color:W35,fontWeight:600}}>נמצאו {allFiltered.length} הוצאות</div>
+          {allFiltered.length===0?<div style={{textAlign:"center",color:W35,padding:"24px 0",fontSize:15}}>🔍 לא נמצאו תוצאות</div>
           :allFiltered.map(exp=><ExpenseRow key={exp.id} exp={exp}/>)}
         </div>
       ):(
@@ -891,7 +901,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
               {dates.map(d=>{
                 const cnt=expenses.filter(e=>e.category==="hotel"?e.checkIn<=d&&e.checkOut>=d:e.date===d).length;
                 return(
-                  <button key={d} onClick={()=>setSel(d)} style={{minWidth:60,padding:"9px 7px",borderRadius:13,border:`0.5px solid ${sel===d?"#64dfdf":"rgba(255,255,255,0.1)"}`,background:sel===d?"rgba(100,223,223,0.15)":"rgba(255,255,255,0.04)",color:sel===d?"#ffffff":"rgba(255,255,255,0.4)",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:12,cursor:"pointer",textAlign:"center",flexShrink:0,position:"relative"}}>
+                  <button key={d} onClick={()=>setSel(d)} style={{minWidth:60,padding:"9px 7px",borderRadius:13,border:`0.5px solid ${sel===d?TEAL:"rgba(255,255,255,0.1)"}`,background:sel===d?TB:"rgba(255,255,255,0.04)",color:sel===d?"#ffffff":W40,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",textAlign:"center",flexShrink:0,position:"relative"}}>
                     <div style={{fontSize:10,opacity:0.8}}>{new Date(d).toLocaleDateString("he-IL",{weekday:"short"})}</div>
                     <div style={{fontSize:15}}>{new Date(d).getDate()}</div>
                     {cnt>0&&<div style={{position:"absolute",top:-4,right:-4,width:15,height:15,borderRadius:"50%",background:C.coral,color:"#ffffff",fontSize:9,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{cnt}</div>}
@@ -902,20 +912,20 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           </div>
 
           <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:12}}>
-            <button onClick={()=>{set({date:sel,checkIn:sel});setShow(true);}} style={{padding:"14px",borderRadius:14,border:"0.5px dashed rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.06)",color:"#64dfdf",fontSize:14,fontWeight:600,fontFamily:"'Rubik',sans-serif",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+            <button onClick={()=>{set({date:sel,checkIn:sel});setShow(true);}} style={{padding:"14px",borderRadius:14,border:"0.5px dashed rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.06)",color:TEAL,fontSize:14,fontWeight:600,fontFamily:RF,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
               ➕ הוסף הוצאה ל{fmtDate(sel)}
             </button>
 
             {show&&(
               <Card>
-                <h3 style={{fontFamily:"'Rubik',sans-serif",fontSize:17,fontWeight:700,marginBottom:14,color:"#0a3050"}}>הוצאה חדשה</h3>
+                <h3 style={{fontFamily:RF,fontSize:17,fontWeight:700,marginBottom:14,color:"#0a3050"}}>הוצאה חדשה</h3>
 
                 {/* category */}
                 <div style={{marginBottom:14}}>
                   <FL>קטגוריה</FL>
                   <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
                     {CATS.map(cat=>(
-                      <button key={cat.id} onClick={()=>set({category:cat.id})} style={{padding:"7px 11px",borderRadius:999,border:`0.5px solid ${form.category===cat.id?cat.color:'rgba(255,255,255,0.15)'}`,background:form.category===cat.id?cat.color+'20':'rgba(255,255,255,0.05)',color:form.category===cat.id?cat.color:'rgba(255,255,255,0.6)',fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>
+                      <button key={cat.id} onClick={()=>set({category:cat.id})} style={{padding:"7px 11px",borderRadius:999,border:`0.5px solid ${form.category===cat.id?cat.color:'rgba(255,255,255,0.15)'}`,background:form.category===cat.id?cat.color+'20':'rgba(255,255,255,0.05)',color:form.category===cat.id?cat.color:'rgba(255,255,255,0.6)',fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
                         {cat.icon} {cat.label}
                       </button>
                     ))}
@@ -929,9 +939,9 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                     <SI label="📅 צ׳ק אין"   value={form.checkIn}  onChange={v=>set({checkIn:v})}  type="date" min={trip.startDate} max={trip.endDate}/>
                     <SI label="📅 צ׳ק אאוט" value={form.checkOut} onChange={v=>set({checkOut:v})} type="date" min={form.checkIn}  max={trip.endDate}/>
                     {form.checkIn&&form.checkOut&&form.checkOut>form.checkIn&&(
-                      <div style={{fontSize:12,color:"#64dfdf",fontWeight:700,marginTop:-8,marginBottom:6}}>🌙 {Math.round((new Date(form.checkOut).getTime()-new Date(form.checkIn).getTime())/86400000)} לילות</div>
+                      <div style={{fontSize:12,color:TEAL,fontWeight:700,marginTop:-8,marginBottom:6}}>🌙 {Math.round((new Date(form.checkOut).getTime()-new Date(form.checkIn).getTime())/86400000)} לילות</div>
                     )}
-                    <div style={{fontSize:11,color:"rgba(255,255,255,0.35)"}}>הסכום הוא לכל תקופת השהייה</div>
+                    <div style={{fontSize:11,color:W35}}>הסכום הוא לכל תקופת השהייה</div>
                   </div>
                 )}
 
@@ -963,10 +973,10 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
                 {form.category!=="hotel"&&form.category!=="flight"&&(
                   <div style={{marginBottom:14}}>
-                    <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:"rgba(255,255,255,0.4)",letterSpacing:"0.5px",textTransform:"uppercase"}}>שעה (אופציונלי)</label>
+                    <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:W40,letterSpacing:"0.5px",textTransform:"uppercase"}}>שעה (אופציונלי)</label>
                     <input type="time" value={form.time} onChange={e=>set({time:e.target.value})}
-                      style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none"}}
-                      onFocus={e=>(e.target.style.borderColor="#64dfdf")} onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}/>
+                      style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:15,color:"#ffffff",background:W07,outline:"none"}}
+                      onFocus={e=>(e.target.style.borderColor=TEAL)} onBlur={e=>(e.target.style.borderColor=TBB)}/>
                   </div>
                 )}
 
@@ -988,7 +998,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                       <FL>שיתוף עם:</FL>
                       <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
                         {people.filter(p=>p.id!==form.paidBy).map(p=>(
-                          <button key={p.id} onClick={()=>toggleSplitPerson(p.id)} style={{padding:"6px 12px",borderRadius:999,border:`2px solid ${form.splitWith.includes(p.id)?p.color:C.sandDark}`,background:form.splitWith.includes(p.id)?p.color+"20":C.white,color:form.splitWith.includes(p.id)?p.color:"#ffffff",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>
+                          <button key={p.id} onClick={()=>toggleSplitPerson(p.id)} style={{padding:"6px 12px",borderRadius:999,border:`2px solid ${form.splitWith.includes(p.id)?p.color:C.sandDark}`,background:form.splitWith.includes(p.id)?p.color+"20":C.white,color:form.splitWith.includes(p.id)?p.color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
                             {p.name}
                           </button>
                         ))}
@@ -997,7 +1007,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                     {form.splitWith.length>0&&(
                       <div style={{display:"flex",gap:6}}>
                         {[{id:"equal",label:"חלוקה שווה"},{id:"payer",label:"המשלם משלם הכל"}].map(o=>(
-                          <button key={o.id} onClick={()=>set({splitType:o.id})} style={{flex:1,padding:"7px",borderRadius:10,border:`1.5px solid ${form.splitType===o.id?C.purple:C.sandDark}`,background:form.splitType===o.id?`${C.purple}15`:C.white,color:form.splitType===o.id?C.purple:C.muted,fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>
+                          <button key={o.id} onClick={()=>set({splitType:o.id})} style={{flex:1,padding:"7px",borderRadius:10,border:`1.5px solid ${form.splitType===o.id?C.purple:C.sandDark}`,background:form.splitType===o.id?`${C.purple}15`:C.white,color:form.splitType===o.id?C.purple:C.muted,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
                             {o.label}
                           </button>
                         ))}
@@ -1008,24 +1018,24 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
                 {/* Shared / Personal toggle */}
                 <div style={{display:"flex",gap:8,marginBottom:12}}>
-                  <button onClick={()=>set({isShared:true})} style={{flex:1,padding:"10px",borderRadius:12,border:`0.5px solid ${form.isShared?"#64dfdf":"rgba(255,255,255,0.12)"}`,background:form.isShared?"rgba(100,223,223,0.12)":"rgba(255,255,255,0.04)",color:form.isShared?"#64dfdf":"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer"}}>
+                  <button onClick={()=>set({isShared:true})} style={{flex:1,padding:"10px",borderRadius:12,border:`0.5px solid ${form.isShared?TEAL:W12}`,background:form.isShared?TBL:"rgba(255,255,255,0.04)",color:form.isShared?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer"}}>
                     👥 משותפת
                   </button>
-                  <button onClick={()=>set({isShared:false})} style={{flex:1,padding:"10px",borderRadius:12,border:`0.5px solid ${!form.isShared?"#a78bfa":"rgba(255,255,255,0.12)"}`,background:!form.isShared?"rgba(167,139,250,0.12)":"rgba(255,255,255,0.04)",color:!form.isShared?"#a78bfa":"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer"}}>
+                  <button onClick={()=>set({isShared:false})} style={{flex:1,padding:"10px",borderRadius:12,border:`0.5px solid ${!form.isShared?"#a78bfa":W12}`,background:!form.isShared?"rgba(167,139,250,0.12)":"rgba(255,255,255,0.04)",color:!form.isShared?"#a78bfa":W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer"}}>
                     👤 אישית
                   </button>
                 </div>
-                <button onClick={()=>set({paid:!form.paid})} style={{width:"100%",padding:"11px",borderRadius:12,border:`0.5px solid ${form.paid?'#4ade80':'rgba(255,255,255,0.15)'}`,background:form.paid?'rgba(74,222,128,0.1)':'rgba(255,255,255,0.05)',color:form.paid?'#4ade80':'rgba(255,255,255,0.4)',fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                <button onClick={()=>set({paid:!form.paid})} style={{width:"100%",padding:"11px",borderRadius:12,border:`0.5px solid ${form.paid?'#4ade80':'rgba(255,255,255,0.15)'}`,background:form.paid?'rgba(74,222,128,0.1)':'rgba(255,255,255,0.05)',color:form.paid?'#4ade80':'rgba(255,255,255,0.4)',fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
                   {form.paid?"✅ שולם":"⏳ טרם שולם"}
                 </button>
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={editId?handleSaveEdit:handleAdd} style={{flex:2,padding:"13px",borderRadius:13,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:15,cursor:"pointer"}}>{editId?"שמור שינויים ✓":"הוסף ✓"}</button>
-                  <button onClick={()=>setShow(false)} style={{flex:1,padding:"13px",borderRadius:13,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:14,cursor:"pointer",color:"rgba(255,255,255,0.5)"}}>ביטול</button>
+                  <button onClick={editId?handleSaveEdit:handleAdd} style={{flex:2,padding:"13px",borderRadius:13,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:15,cursor:"pointer"}}>{editId?"שמור שינויים ✓":"הוסף ✓"}</button>
+                  <button onClick={()=>setShow(false)} style={{flex:1,padding:"13px",borderRadius:13,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer",color:W50}}>ביטול</button>
                 </div>
               </Card>
             )}
 
-            {dayExp.length===0?(<div style={{textAlign:"center",color:"rgba(255,255,255,0.25)",padding:"28px 0",fontSize:14,fontFamily:"'Rubik',sans-serif"}}><div style={{fontSize:36,marginBottom:10}}>🌊</div>אין הוצאות לתאריך זה</div>)
+            {dayExp.length===0?(<div style={{textAlign:"center",color:W25,padding:"28px 0",fontSize:14,fontFamily:RF}}><div style={{fontSize:36,marginBottom:10}}>🌊</div>אין הוצאות לתאריך זה</div>)
             :dayExp.map(exp=><ExpenseRow key={exp.id} exp={exp}/>)}
           </div>
         </>
@@ -1034,7 +1044,6 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   );
 }
 
-// ─── SCREEN 3: BUDGET + SETTLEMENT ───────────────────────────────────────────
 function BudgetScreen({trip,expenses}){
   const people=trip.people||[];
   const sharedExp=expenses.filter(e=>e.isShared!==false);
@@ -1102,15 +1111,15 @@ function BudgetScreen({trip,expenses}){
   return(
     <div>
       <WaveHeader title="💰 תקציב" subtitle={trip.destination?`סיכום הטיול ל${trip.destination}`:""}
-        action={<button onClick={handlePDF} style={{padding:"8px 18px",borderRadius:10,border:"2px solid rgba(255,255,255,0.5)",background:"rgba(255,255,255,0.15)",color:"#ffffff",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>📤 ייצוא</button>}/>
+        action={<button onClick={handlePDF} style={{padding:"8px 18px",borderRadius:10,border:"2px solid rgba(255,255,255,0.5)",background:W15,color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>📤 ייצוא</button>}/>
       <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:14}}>
 
         {/* Budget progress bar */}
         {trip.budget>0&&(
-          <div style={{background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"16px"}}>
+          <div style={{background:W05,border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"16px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <div style={{fontFamily:"'Rubik',sans-serif",fontSize:15,fontWeight:700,color:"#ffffff"}}>💰 עמידה בתקציב</div>
-              <div style={{fontFamily:"'Rubik',sans-serif",fontSize:13,fontWeight:700,color:"#64dfdf"}}>₪{parseFloat(trip.budget).toLocaleString()}</div>
+              <div style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>💰 עמידה בתקציב</div>
+              <div style={{fontFamily:RF,fontSize:13,fontWeight:700,color:TEAL}}>₪{parseFloat(trip.budget).toLocaleString()}</div>
             </div>
             {(()=>{
               const pct=Math.min((total/trip.budget)*100,100);
@@ -1118,10 +1127,10 @@ function BudgetScreen({trip,expenses}){
               const remaining=trip.budget-total;
               const barColor=pct<70?"#4ade80":pct<90?"#fbbf24":"#ff6b6b";
               return(<>
-                <div style={{height:12,background:"rgba(255,255,255,0.08)",borderRadius:999,overflow:"hidden",marginBottom:10}}>
+                <div style={{height:12,background:W08,borderRadius:999,overflow:"hidden",marginBottom:10}}>
                   <div style={{height:"100%",width:`${pct}%`,background:barColor,borderRadius:999,transition:"width 0.6s"}}/>
                 </div>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontFamily:"'Rubik',sans-serif",marginBottom:8}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontFamily:RF,marginBottom:8}}>
                   <span style={{color:barColor,fontWeight:700}}>{pct.toFixed(1)}% מהתקציב</span>
                   <span style={{color:over?"#ff6b6b":"#4ade80",fontWeight:700}}>
                     {over?`חריגה של ₪${Math.abs(remaining).toLocaleString()}`:`נותרו ₪${remaining.toLocaleString()}`}
@@ -1129,13 +1138,13 @@ function BudgetScreen({trip,expenses}){
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
                   {[
-                    {label:"הוצאתי",value:`₪${total.toFixed(0)}`,color:"#64dfdf"},
+                    {label:"הוצאתי",value:`₪${total.toFixed(0)}`,color:TEAL},
                     {label:"שולם",value:`₪${paid.toFixed(0)}`,color:"#4ade80"},
                     {label:"נותר",value:over?`-₪${Math.abs(remaining).toFixed(0)}`:`₪${remaining.toFixed(0)}`,color:over?"#ff6b6b":"#4ade80"},
                   ].map(item=>(
                     <div key={item.label} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px",textAlign:"center"}}>
-                      <div style={{fontFamily:"'Rubik',sans-serif",fontSize:14,fontWeight:700,color:item.color}}>{item.value}</div>
-                      <div style={{fontFamily:"'Rubik',sans-serif",fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:2}}>{item.label}</div>
+                      <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:item.color}}>{item.value}</div>
+                      <div style={{fontFamily:RF,fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:2}}>{item.label}</div>
                     </div>
                   ))}
                 </div>
@@ -1146,31 +1155,31 @@ function BudgetScreen({trip,expenses}){
 
         {/* KPI */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          {[{label:'סה"כ הוצאות',value:total,color:"#64dfdf",icon:"📊"},{label:"שולם",value:paid,color:"#4ade80",icon:"✅"},{label:"טרם שולם",value:unpaid,color:"#ff6b6b",icon:"⏳"},{label:"מס׳ הוצאות",value:expenses.length,color:"#fbbf24",icon:"🧾",noFmt:true}].map(item=>(
-            <div key={item.label} style={{background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(255,255,255,0.08)",borderTop:`2px solid ${item.color}`,borderRadius:14,padding:"14px",textAlign:"center"}}>
+          {[{label:'סה"כ הוצאות',value:total,color:TEAL,icon:"📊"},{label:"שולם",value:paid,color:"#4ade80",icon:"✅"},{label:"טרם שולם",value:unpaid,color:"#ff6b6b",icon:"⏳"},{label:"מס׳ הוצאות",value:expenses.length,color:"#fbbf24",icon:"🧾",noFmt:true}].map(item=>(
+            <div key={item.label} style={{background:W05,border:"0.5px solid rgba(255,255,255,0.08)",borderTop:`2px solid ${item.color}`,borderRadius:14,padding:"14px",textAlign:"center"}}>
               <div style={{fontSize:22,marginBottom:6}}>{item.icon}</div>
-              <div style={{fontFamily:"'Rubik',sans-serif",fontSize:20,fontWeight:700,color:item.color}}>{item.noFmt?item.value:`₪${item.value.toFixed(0)}`}</div>
+              <div style={{fontFamily:RF,fontSize:20,fontWeight:700,color:item.color}}>{item.noFmt?item.value:`₪${item.value.toFixed(0)}`}</div>
               <div style={{fontSize:10,fontWeight:400,color:"rgba(255,255,255,0.3)",marginTop:4,letterSpacing:"0.3px"}}>{item.label}</div>
             </div>
           ))}
         </div>
 
         {/* Pie */}
-        {pieData.length>0&&<Card><h2 style={{fontFamily:"'Rubik',sans-serif",fontSize:18,fontWeight:700,marginBottom:16,color:"#0a3050",textAlign:"center"}}>📊 גרף עוגה</h2><PieChart data={pieData}/></Card>}
+        {pieData.length>0&&<Card><h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:16,color:"#0a3050",textAlign:"center"}}>📊 גרף עוגה</h2><PieChart data={pieData}/></Card>}
 
         {/* Bars */}
         {byCat.length>0&&(
           <Card>
-            <h2 style={{fontFamily:"'Rubik',sans-serif",fontSize:18,fontWeight:700,marginBottom:16,color:"#0a3050"}}>פירוט לפי קטגוריה</h2>
+            <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:16,color:"#0a3050"}}>פירוט לפי קטגוריה</h2>
             {byCat.map(cat=>{
               const maxT=Math.max(...byCat.map(c=>c.total),1);
               return(
                 <div key={cat.id} style={{marginBottom:16}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                    <div style={{fontWeight:700,fontSize:15,display:"flex",gap:6,alignItems:"center"}}><span>{cat.icon}</span><span>{cat.label}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.35)"}}>({cat.count})</span></div>
-                    <div style={{fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:15,color:"#64dfdf"}}>₪{cat.total.toFixed(0)}</div>
+                    <div style={{fontWeight:700,fontSize:15,display:"flex",gap:6,alignItems:"center"}}><span>{cat.icon}</span><span>{cat.label}</span><span style={{fontSize:11,color:W35}}>({cat.count})</span></div>
+                    <div style={{fontFamily:RF,fontWeight:700,fontSize:15,color:TEAL}}>₪{cat.total.toFixed(0)}</div>
                   </div>
-                  <div style={{height:5,background:"rgba(255,255,255,0.08)",borderRadius:999,overflow:"hidden"}}>
+                  <div style={{height:5,background:W08,borderRadius:999,overflow:"hidden"}}>
                     <div style={{height:"100%",width:`${(cat.total/maxT)*100}%`,background:cat.color,borderRadius:999,transition:"width 0.5s"}}/>
                   </div>
                   <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:3}}>{total>0?((cat.total/total)*100).toFixed(1):0}%</div>
@@ -1183,7 +1192,7 @@ function BudgetScreen({trip,expenses}){
         {/* Paid bar */}
         {expenses.length>0&&(
           <Card>
-            <h2 style={{fontFamily:"'Rubik',sans-serif",fontSize:18,fontWeight:700,marginBottom:12,color:"#0a3050"}}>סטטוס תשלום</h2>
+            <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:12,color:"#0a3050"}}>סטטוס תשלום</h2>
             <div style={{display:"flex",height:6,borderRadius:999,overflow:"hidden",marginBottom:12}}>
               <div style={{flex:paid,background:C.palm,transition:"flex 0.5s"}}/>
               <div style={{flex:unpaid,background:C.coral,transition:"flex 0.5s"}}/>
@@ -1201,8 +1210,8 @@ function BudgetScreen({trip,expenses}){
         {/* Settlement */}
         {people.length>=2&&(
           <Card>
-            <h2 style={{fontFamily:"'Rubik',sans-serif",fontSize:18,fontWeight:700,marginBottom:4,color:"#0a3050"}}>💸 התחשבנות</h2>
-            <p style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginBottom:14}}>מי חייב למי בסוף הטיול</p>
+            <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:4,color:"#0a3050"}}>💸 התחשבנות</h2>
+            <p style={{fontSize:12,color:W35,marginBottom:14}}>מי חייב למי בסוף הטיול</p>
             {settlement.length===0?(
               <div style={{textAlign:"center",color:"#4ade80",padding:"16px 0",fontWeight:700,fontSize:14}}>✅ אין חובות! הכל מאוזן</div>
             ):settlement.map((d,i)=>(
@@ -1212,10 +1221,10 @@ function BudgetScreen({trip,expenses}){
                 </div>
                 <div style={{flex:1}}>
                   <span style={{fontWeight:700,color:d.from.color}}>{d.from.name}</span>
-                  <span style={{color:"rgba(255,255,255,0.35)",fontSize:13}}> חייב ל</span>
+                  <span style={{color:W35,fontSize:13}}> חייב ל</span>
                   <span style={{fontWeight:700,color:d.to.color}}>{d.to.name}</span>
                 </div>
-                <div style={{fontFamily:"'Rubik',sans-serif",fontSize:16,fontWeight:700,color:"#ff6b6b"}}>₪{d.amount.toFixed(0)}</div>
+                <div style={{fontFamily:RF,fontSize:16,fontWeight:700,color:"#ff6b6b"}}>₪{d.amount.toFixed(0)}</div>
                 <div style={{width:32,height:32,borderRadius:"50%",background:d.to.color+"30",border:`2px solid ${d.to.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:d.to.color,flexShrink:0}}>
                   {d.to.name[0]}
                 </div>
@@ -1224,13 +1233,12 @@ function BudgetScreen({trip,expenses}){
           </Card>
         )}
 
-        {expenses.length===0&&<div style={{textAlign:"center",color:"rgba(255,255,255,0.35)",padding:"32px 0"}}><div style={{fontSize:40,marginBottom:10}}>🌺</div><div style={{fontSize:15}}>אין הוצאות עדיין</div></div>}
+        {expenses.length===0&&<div style={{textAlign:"center",color:W35,padding:"32px 0"}}><div style={{fontSize:40,marginBottom:10}}>🌺</div><div style={{fontSize:15}}>אין הוצאות עדיין</div></div>}
       </div>
     </div>
   );
 }
 
-// ─── SCREEN 4: CALENDAR ─────────────────────────────────────────────────────
 function CalendarScreen({trip,expenses}){
   const dates=getRange(trip.startDate,trip.endDate);
   const[acts,setActs]=useState({});       // {date: [{text, time}]}
@@ -1304,7 +1312,7 @@ function CalendarScreen({trip,expenses}){
 
   function MonthView(){
     if(!trip.startDate||!trip.endDate) return(
-      <div style={{textAlign:"center",color:"rgba(255,255,255,0.25)",padding:"40px 0"}}>
+      <div style={{textAlign:"center",color:W25,padding:"40px 0"}}>
         <div style={{fontSize:44,marginBottom:14}}>🗓️</div>הגדר יעד ותאריכים
       </div>
     );
@@ -1325,14 +1333,14 @@ function CalendarScreen({trip,expenses}){
       <div style={{padding:"14px 14px 20px"}}>
         {/* Month header with navigation */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-          <button onClick={prevMonth} disabled={!canPrev} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canPrev?"rgba(100,223,223,0.08)":"transparent",color:canPrev?"#64dfdf":"rgba(255,255,255,0.15)",fontSize:16,cursor:canPrev?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>→</button>
-          <div style={{fontFamily:"'Rubik',sans-serif",fontSize:16,fontWeight:700,color:"#ffffff",letterSpacing:"-0.3px"}}>{monthName}</div>
-          <button onClick={nextMonth} disabled={!canNext} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canNext?"rgba(100,223,223,0.08)":"transparent",color:canNext?"#64dfdf":"rgba(255,255,255,0.15)",fontSize:16,cursor:canNext?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
+          <button onClick={prevMonth} disabled={!canPrev} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canPrev?"rgba(100,223,223,0.08)":"transparent",color:canPrev?TEAL:W15,fontSize:16,cursor:canPrev?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>→</button>
+          <div style={{fontFamily:RF,fontSize:16,fontWeight:700,color:"#ffffff",letterSpacing:"-0.3px"}}>{monthName}</div>
+          <button onClick={nextMonth} disabled={!canNext} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canNext?"rgba(100,223,223,0.08)":"transparent",color:canNext?TEAL:W15,fontSize:16,cursor:canNext?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
         </div>
         {/* Day labels */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:6}}>
           {dayNames.map(d=>(
-            <div key={d} style={{textAlign:"center",fontSize:11,fontWeight:600,color:"rgba(255,255,255,0.25)",padding:"4px 0"}}>{d}</div>
+            <div key={d} style={{textAlign:"center",fontSize:11,fontWeight:600,color:W25,padding:"4px 0"}}>{d}</div>
           ))}
         </div>
         {/* Grid */}
@@ -1349,7 +1357,7 @@ function CalendarScreen({trip,expenses}){
               <div key={ds} onClick={()=>{if(inTrip){setSelDate(ds);setView("day");}}}
                 style={{
                   minHeight:52,padding:"5px 4px 4px",borderRadius:10,
-                  background:isSel?"rgba(100,223,223,0.2)":inTrip?"rgba(255,255,255,0.05)":"transparent",
+                  background:isSel?TBB:inTrip?W05:"transparent",
                   border:isSel?"0.5px solid #64dfdf":isToday?"0.5px solid rgba(100,223,223,0.4)":"0.5px solid transparent",
                   cursor:inTrip?"pointer":"default",
                   display:"flex",flexDirection:"column",alignItems:"center",gap:2,
@@ -1358,15 +1366,15 @@ function CalendarScreen({trip,expenses}){
                 }}>
                 <div style={{
                   fontSize:13,fontWeight:isSel||isToday?700:500,
-                  color:isSel?"#64dfdf":isToday?"#64dfdf":"rgba(255,255,255,0.8)",
-                  fontFamily:"'Rubik',sans-serif",lineHeight:1,
+                  color:isSel?TEAL:isToday?TEAL:"rgba(255,255,255,0.8)",
+                  fontFamily:RF,lineHeight:1,
                 }}>{d.getDate()}</div>
                 {/* weather mini */}
                 {wxd&&inTrip&&<div style={{fontSize:10,lineHeight:1}}>{WMO[wxd.code]?.split(" ")[0]||""}</div>}
                 {/* event dots */}
                 {hasEv&&inTrip&&(
                   <div style={{display:"flex",gap:2,flexWrap:"wrap",justifyContent:"center",marginTop:2}}>
-                    {flightsOn(ds).length>0&&<div style={{width:5,height:5,borderRadius:"50%",background:"#64dfdf"}}/>}
+                    {flightsOn(ds).length>0&&<div style={{width:5,height:5,borderRadius:"50%",background:TEAL}}/>}
                     {hotelsOn(ds).length>0&&<div style={{width:5,height:5,borderRadius:"50%",background:"#48b5c4"}}/>}
                     {otherOn(ds).length>0&&<div style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24"}}/>}
                     {(acts[ds]||[]).length>0&&<div style={{width:5,height:5,borderRadius:"50%",background:"#a78bfa"}}/>}
@@ -1378,10 +1386,10 @@ function CalendarScreen({trip,expenses}){
         </div>
         {/* Legend */}
         <div style={{display:"flex",gap:14,justifyContent:"center",marginTop:14,flexWrap:"wrap"}}>
-          {[["#64dfdf","טיסה"],["#48b5c4","מלון"],["#fbbf24","הוצאות"],["#a78bfa","פעילויות"]].map(([color,label])=>(
+          {[[TEAL,"טיסה"],["#48b5c4","מלון"],["#fbbf24","הוצאות"],["#a78bfa","פעילויות"]].map(([color,label])=>(
             <div key={label} style={{display:"flex",alignItems:"center",gap:5}}>
               <div style={{width:7,height:7,borderRadius:"50%",background:color}}/>
-              <span style={{fontSize:10,color:"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif"}}>{label}</span>
+              <span style={{fontSize:10,color:W35,fontFamily:RF}}>{label}</span>
             </div>
           ))}
         </div>
@@ -1437,7 +1445,7 @@ function CalendarScreen({trip,expenses}){
     const totalH=19*56;
 
     const eventColor={
-      flight:"#64dfdf",reminder:"#ff6b6b",
+      flight:TEAL,reminder:"#ff6b6b",
       "hotel-in":"#4ade80","hotel-out":"#fbbf24","hotel-stay":"#48b5c4",
       activity:"#a78bfa",other:"#fbbf24",
     };
@@ -1456,23 +1464,23 @@ function CalendarScreen({trip,expenses}){
         {/* Day header */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:44,height:44,borderRadius:12,background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.3)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-              <div style={{color:"#ffffff",fontSize:18,fontWeight:800,fontFamily:"'Rubik',sans-serif",lineHeight:1}}>{dayNum}</div>
-              <div style={{color:"rgba(255,255,255,0.35)",fontSize:9}}>{monthName}</div>
+            <div style={{width:44,height:44,borderRadius:12,background:TBL,border:"0.5px solid rgba(100,223,223,0.3)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+              <div style={{color:"#ffffff",fontSize:18,fontWeight:800,fontFamily:RF,lineHeight:1}}>{dayNum}</div>
+              <div style={{color:W35,fontSize:9}}>{monthName}</div>
             </div>
             <div>
-              <div style={{color:"#ffffff",fontWeight:700,fontSize:16,fontFamily:"'Rubik',sans-serif"}}>{wday}</div>
-              {wxd&&<div style={{fontSize:12,color:"#64dfdf",marginTop:2}}>{WMO[wxd.code]?.split(" ")[0]} {wxd.max?.toFixed(0)}°C</div>}
+              <div style={{color:"#ffffff",fontWeight:700,fontSize:16,fontFamily:RF}}>{wday}</div>
+              {wxd&&<div style={{fontSize:12,color:TEAL,marginTop:2}}>{WMO[wxd.code]?.split(" ")[0]} {wxd.max?.toFixed(0)}°C</div>}
             </div>
           </div>
-          <button onClick={()=>openEdit(selDate)} style={{padding:"7px 12px",borderRadius:9,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,cursor:"pointer"}}>✏️ פעילויות</button>
+          <button onClick={()=>openEdit(selDate)} style={{padding:"7px 12px",borderRadius:9,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,cursor:"pointer"}}>✏️ פעילויות</button>
         </div>
 
         {/* Hotel stay banner – top of day */}
         {stayHotels.map(h=>(
           <div key={h.id} style={{marginBottom:10,padding:"8px 14px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
             <span style={{fontSize:16}}>🏨</span>
-            <span style={{fontFamily:"'Rubik',sans-serif",fontSize:13,fontWeight:600,color:"rgba(100,223,223,0.9)"}}>המשך שהייה ב{h.description||"מלון"}</span>
+            <span style={{fontFamily:RF,fontSize:13,fontWeight:600,color:"rgba(100,223,223,0.9)"}}>המשך שהייה ב{h.description||"מלון"}</span>
             <span style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginRight:"auto"}}>{fmtDate(h.checkIn)} – {fmtDate(h.checkOut)}</span>
           </div>
         ))}
@@ -1482,7 +1490,7 @@ function CalendarScreen({trip,expenses}){
           {/* Hour labels */}
           <div style={{width:36,flexShrink:0,position:"relative",height:totalH}}>
             {hours.map(h=>(
-              <div key={h} style={{position:"absolute",top:hourToY(h)-8,right:0,fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:"'Rubik',sans-serif",textAlign:"right",width:"100%"}}>
+              <div key={h} style={{position:"absolute",top:hourToY(h)-8,right:0,fontSize:10,color:W25,fontFamily:RF,textAlign:"right",width:"100%"}}>
                 {String(h).padStart(2,"0")}:00
               </div>
             ))}
@@ -1491,13 +1499,13 @@ function CalendarScreen({trip,expenses}){
           <div style={{flex:1,position:"relative",height:totalH,marginRight:8}}>
             {/* Hour lines */}
             {hours.map(h=>(
-              <div key={h} style={{position:"absolute",top:hourToY(h),left:0,right:0,height:0.5,background:"rgba(255,255,255,0.07)"}}/>
+              <div key={h} style={{position:"absolute",top:hourToY(h),left:0,right:0,height:0.5,background:W07}}/>
             ))}
             {/* Timed events */}
             {timed.map((ev,i)=>{
               const top=hourToY(ev.hour);
               const height=Math.max(ev.duration*56,28);
-              const col=eventColor[ev.type]||"#64dfdf";
+              const col=eventColor[ev.type]||TEAL;
               const label=eventLabel[ev.type]?.(ev.data)||"";
               return(
                 <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");}}
@@ -1508,7 +1516,7 @@ function CalendarScreen({trip,expenses}){
                     padding:"4px 8px",display:"flex",alignItems:"center",justifyContent:"space-between",
                     zIndex:2,cursor:ev.data?.address?"pointer":"default",
                   }}>
-                  <span style={{fontSize:12,fontWeight:600,color:col,fontFamily:"'Rubik',sans-serif",lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{label}</span>
+                  <span style={{fontSize:12,fontWeight:600,color:col,fontFamily:RF,lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{label}</span>
                   {ev.data?.address&&<span style={{fontSize:14,marginRight:4,flexShrink:0}}>🗺️</span>}
                 </div>
               );
@@ -1529,15 +1537,15 @@ function CalendarScreen({trip,expenses}){
         {/* Untimed events */}
         {untimed.length>0&&(
           <div style={{marginTop:16}}>
-            <div style={{fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.25)",letterSpacing:"1px",textTransform:"uppercase",marginBottom:8,fontFamily:"'Rubik',sans-serif"}}>ללא שעה</div>
+            <div style={{fontSize:10,fontWeight:600,color:W25,letterSpacing:"1px",textTransform:"uppercase",marginBottom:8,fontFamily:RF}}>ללא שעה</div>
             {untimed.map((ev,i)=>{
-              const col=eventColor[ev.type]||"#64dfdf";
+              const col=eventColor[ev.type]||TEAL;
               const label=eventLabel[ev.type]?.(ev.data)||"";
               return(
                 <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");}}
                   style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:10,marginBottom:6,cursor:ev.data?.address?"pointer":"default"}}>
                   <div style={{width:4,height:4,borderRadius:"50%",background:col,flexShrink:0}}/>
-                  <span style={{fontSize:13,color:"rgba(255,255,255,0.7)",fontFamily:"'Rubik',sans-serif",flex:1}}>{label}</span>
+                  <span style={{fontSize:13,color:W70,fontFamily:RF,flex:1}}>{label}</span>
                   {ev.data?.address&&<span style={{fontSize:13}}>🗺️</span>}
                 </div>
               );
@@ -1545,7 +1553,7 @@ function CalendarScreen({trip,expenses}){
           </div>
         )}
         {timed.length===0&&untimed.length===0&&(
-          <div style={{textAlign:"center",color:"rgba(255,255,255,0.2)",padding:"32px 0",fontSize:13,fontFamily:"'Rubik',sans-serif"}}>
+          <div style={{textAlign:"center",color:"rgba(255,255,255,0.2)",padding:"32px 0",fontSize:13,fontFamily:RF}}>
             לחץ ✏️ להוספת פעילויות 🌴
           </div>
         )}
@@ -1557,22 +1565,22 @@ function CalendarScreen({trip,expenses}){
   const EditModal=()=>editD?(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:22,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"80vh",overflowY:"auto"}}>
-        <h3 style={{fontFamily:"'Rubik',sans-serif",fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:14}}>✏️ פעילויות ל{fmtDate(editD)}</h3>
+        <h3 style={{fontFamily:RF,fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:14}}>✏️ פעילויות ל{fmtDate(editD)}</h3>
         {editActs.map((act,i)=>(
           <div key={i} style={{display:"flex",gap:8,marginBottom:10,alignItems:"center"}}>
             <input value={act.time} onChange={e=>updateAct(i,"time",e.target.value)} type="time"
-              style={{width:88,padding:"9px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:13,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",flexShrink:0}}/>
+              style={{width:88,padding:"9px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none",flexShrink:0}}/>
             <input value={act.text} onChange={e=>updateAct(i,"text",e.target.value)} placeholder="תיאור פעילות..."
-              style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:13,color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",direction:"rtl"}}/>
+              style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none",direction:"rtl"}}/>
             <button onClick={()=>removeAct(i)} style={{background:"rgba(255,107,107,0.12)",border:"none",color:"#ff6b6b",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:14,flexShrink:0}}>✕</button>
           </div>
         ))}
-        <button onClick={addActRow} style={{width:"100%",padding:"9px",borderRadius:10,border:"0.5px dashed rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.05)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",marginBottom:14}}>
+        <button onClick={addActRow} style={{width:"100%",padding:"9px",borderRadius:10,border:"0.5px dashed rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.05)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",marginBottom:14}}>
           ➕ הוסף פעילות
         </button>
         <div style={{display:"flex",gap:8}}>
-          <button onClick={saveEdit} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>שמור ✓</button>
-          <button onClick={()=>setEditD(null)} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",color:"rgba(255,255,255,0.5)"}}>ביטול</button>
+          <button onClick={saveEdit} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>שמור ✓</button>
+          <button onClick={()=>setEditD(null)} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>ביטול</button>
         </div>
       </div>
     </div>
@@ -1584,15 +1592,15 @@ function CalendarScreen({trip,expenses}){
       <div style={{background:"linear-gradient(160deg,#0d2137 0%,#0a3050 100%)",padding:"18px 18px 14px",borderBottom:"0.5px solid rgba(100,223,223,0.12)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
           <div>
-            <h1 style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:22,fontWeight:800,letterSpacing:"-0.3px",lineHeight:1}}>לוח שנה</h1>
-            <p style={{color:"rgba(255,255,255,0.35)",marginTop:4,fontSize:11,fontWeight:400}}>{trip.destination?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}</p>
+            <h1 style={{fontFamily:RF,color:"#ffffff",fontSize:22,fontWeight:800,letterSpacing:"-0.3px",lineHeight:1}}>לוח שנה</h1>
+            <p style={{color:W35,marginTop:4,fontSize:11,fontWeight:400}}>{trip.destination?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}</p>
           </div>
-          {trip.destination&&<div style={{fontSize:11,color:"rgba(255,255,255,0.3)",fontFamily:"'Rubik',sans-serif"}}>{wLoad?"🌤️ טוען...":wx?`🌍 ${wx.name}`:wErr?"☁️":""}</div>}
+          {trip.destination&&<div style={{fontSize:11,color:"rgba(255,255,255,0.3)",fontFamily:RF}}>{wLoad?"🌤️ טוען...":wx?`🌍 ${wx.name}`:wErr?"☁️":""}</div>}
         </div>
         {/* View toggle */}
         <div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.06)",borderRadius:10,padding:3}}>
-          <button onClick={()=>setView("month")} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="month"?"rgba(100,223,223,0.18)":"transparent",color:view==="month"?"#64dfdf":"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>📅 חודש</button>
-          <button onClick={()=>{setView("day");if(!selDate&&dates[0])setSelDate(dates[0]);}} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="day"?"rgba(100,223,223,0.18)":"transparent",color:view==="day"?"#64dfdf":"rgba(255,255,255,0.35)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>🕐 יום</button>
+          <button onClick={()=>setView("month")} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="month"?"rgba(100,223,223,0.18)":"transparent",color:view==="month"?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>📅 חודש</button>
+          <button onClick={()=>{setView("day");if(!selDate&&dates[0])setSelDate(dates[0]);}} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="day"?"rgba(100,223,223,0.18)":"transparent",color:view==="day"?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>🕐 יום</button>
         </div>
         {/* Day nav (only in day view) */}
         {view==="day"&&dates.length>0&&(
@@ -1600,10 +1608,10 @@ function CalendarScreen({trip,expenses}){
             {dates.map(d=>{
               const hasEv=hasEvents(d);
               return(
-                <button key={d} onClick={()=>setSelDate(d)} style={{minWidth:48,padding:"7px 6px",borderRadius:10,border:`0.5px solid ${selDate===d?"#64dfdf":"rgba(255,255,255,0.1)"}`,background:selDate===d?"rgba(100,223,223,0.15)":"rgba(255,255,255,0.04)",color:selDate===d?"#ffffff":"rgba(255,255,255,0.4)",fontFamily:"'Rubik',sans-serif",fontWeight:selDate===d?700:500,fontSize:12,cursor:"pointer",textAlign:"center",flexShrink:0,position:"relative"}}>
+                <button key={d} onClick={()=>setSelDate(d)} style={{minWidth:48,padding:"7px 6px",borderRadius:10,border:`0.5px solid ${selDate===d?TEAL:"rgba(255,255,255,0.1)"}`,background:selDate===d?TB:"rgba(255,255,255,0.04)",color:selDate===d?"#ffffff":W40,fontFamily:RF,fontWeight:selDate===d?700:500,fontSize:12,cursor:"pointer",textAlign:"center",flexShrink:0,position:"relative"}}>
                   <div style={{fontSize:9,opacity:0.7}}>{new Date(d).toLocaleDateString("he-IL",{weekday:"short"})}</div>
                   <div style={{fontSize:15}}>{new Date(d).getDate()}</div>
-                  {hasEv&&<div style={{width:4,height:4,borderRadius:"50%",background:"#64dfdf",margin:"2px auto 0"}}/>}
+                  {hasEv&&<div style={{width:4,height:4,borderRadius:"50%",background:TEAL,margin:"2px auto 0"}}/>}
                 </button>
               );
             })}
@@ -1621,7 +1629,6 @@ function CalendarScreen({trip,expenses}){
 }
 
 
-// ─── MAIN APP ─────────────────────────────────────────────────────────────────
 const newTrip=(ownerId)=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]});
 
 export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onLogout,userEmail,userId}){
@@ -1744,17 +1751,17 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     return(
       <>
         <style>{GS}</style>
-        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",fontFamily:"'Rubik',sans-serif"}}>
+        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",fontFamily:RF}}>
           {/* user bar */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"10px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             <div style={{display:"flex",flexDirection:"column"}}>
-              <span style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:20,fontWeight:800,letterSpacing:"-0.5px",lineHeight:1}}>טיולון</span>
-              <span style={{fontFamily:"'Rubik',sans-serif",color:"rgba(255,255,255,0.35)",fontSize:10,fontWeight:300,letterSpacing:"0.5px",marginTop:3}}>מתכנן הטיולים שלי</span>
+              <span style={{fontFamily:RF,color:"#ffffff",fontSize:20,fontWeight:800,letterSpacing:"-0.5px",lineHeight:1}}>טיולון</span>
+              <span style={{fontFamily:RF,color:W35,fontSize:10,fontWeight:300,letterSpacing:"0.5px",marginTop:3}}>מתכנן הטיולים שלי</span>
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>💱</button>
-              <button onClick={subscribe} title={subscribed?"התראות פעילות":"הפעל התראות"} style={{background:subscribed?"rgba(74,222,128,0.12)":"rgba(100,223,223,0.1)",border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(100,223,223,0.25)"}`,borderRadius:8,color:subscribed?"#4ade80":"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>{subscribed?"🔔":"🔕"}</button>
-              <button onClick={onLogout} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:11,padding:"5px 12px",cursor:"pointer"}}>התנתק</button>
+              <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>💱</button>
+              <button onClick={subscribe} title={subscribed?"התראות פעילות":"הפעל התראות"} style={{background:subscribed?"rgba(74,222,128,0.12)":"rgba(100,223,223,0.1)",border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(100,223,223,0.25)"}`,borderRadius:8,color:subscribed?"#4ade80":TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>{subscribed?"🔔":"🔕"}</button>
+              <button onClick={onLogout} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 12px",cursor:"pointer"}}>התנתק</button>
             </div>
           </div>
           {/* Currency Converter */}
@@ -1768,17 +1775,17 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   return(
     <>
       <style>{GS}</style>
-      <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:"#0d2137",fontFamily:"'Rubik',sans-serif"}}>
+      <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
         <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
-          <button onClick={handleBack} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 12px",cursor:"pointer",letterSpacing:"0.3px"}}>← טיולון</button>
+          <button onClick={handleBack} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 12px",cursor:"pointer",letterSpacing:"0.3px"}}>← טיולון</button>
           <div style={{flex:1,textAlign:"center"}}>
-            <span style={{fontFamily:"'Rubik',sans-serif",color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
+            <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
             {active?.sharedWith?.length>0&&<div style={{fontSize:9,color:"rgba(100,223,223,0.6)",marginTop:1}}>👥 {active.sharedWith.length} משתתפים</div>}
           </div>
           <div style={{display:"flex",gap:6}}>
-            <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>💱</button>
-            <button onClick={()=>exportTripPDF(active,expenses)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>📄</button>
-            {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>👥 שתף</button>}
+            <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>💱</button>
+            <button onClick={()=>exportTripPDF(active,expenses)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>📄</button>
+            {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>👥 שתף</button>}
           </div>
         </div>
         {/* Currency Converter in trip view */}
@@ -1788,16 +1795,16 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         {shareModal&&(
           <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
             <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:24,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
-              <h3 style={{fontFamily:"'Rubik',sans-serif",fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>👥 שתף טיול</h3>
-              <p style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginBottom:16,fontFamily:"'Rubik',sans-serif"}}>הכנס את האימייל של המשתתף</p>
+              <h3 style={{fontFamily:RF,fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>👥 שתף טיול</h3>
+              <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>הכנס את האימייל של המשתתף</p>
               
               {/* Current shared list */}
               {trips.find(t=>t.id===shareModal)?.sharedWith?.length>0&&(
                 <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginBottom:8,fontFamily:"'Rubik',sans-serif",letterSpacing:"0.5px",textTransform:"uppercase"}}>משותף עם</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginBottom:8,fontFamily:RF,letterSpacing:"0.5px",textTransform:"uppercase"}}>משותף עם</div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                     {trips.find(t=>t.id===shareModal)?.sharedWith?.map(email=>(
-                      <div key={email} style={{fontSize:12,background:"rgba(100,223,223,0.1)",color:"#64dfdf",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:999,padding:"4px 10px",fontFamily:"'Rubik',sans-serif"}}>
+                      <div key={email} style={{fontSize:12,background:"rgba(100,223,223,0.1)",color:TEAL,border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:999,padding:"4px 10px",fontFamily:RF}}>
                         {email}
                       </div>
                     ))}
@@ -1811,13 +1818,13 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                 onKeyDown={e=>e.key==="Enter"&&handleShare(shareModal)}
                 placeholder="אימייל@example.com"
                 type="email"
-                style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:"'Rubik',sans-serif",fontSize:14,direction:"ltr",color:"#ffffff",background:"rgba(255,255,255,0.07)",outline:"none",marginBottom:10}}
-                onFocus={e=>(e.target.style.borderColor="#64dfdf")}
-                onBlur={e=>(e.target.style.borderColor="rgba(100,223,223,0.2)")}
+                style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,direction:"ltr",color:"#ffffff",background:W07,outline:"none",marginBottom:10}}
+                onFocus={e=>(e.target.style.borderColor=TEAL)}
+                onBlur={e=>(e.target.style.borderColor=TBB)}
               />
               {shareMsg&&(
                 <div style={{marginBottom:10}}>
-                  <div style={{fontSize:12,color:shareMsg.startsWith("✅")?"#4ade80":"#ff6b6b",marginBottom:shareMsg.startsWith("✅")?10:0,fontFamily:"'Rubik',sans-serif",fontWeight:500}}>{shareMsg}</div>
+                  <div style={{fontSize:12,color:shareMsg.startsWith("✅")?"#4ade80":"#ff6b6b",marginBottom:shareMsg.startsWith("✅")?10:0,fontFamily:RF,fontWeight:500}}>{shareMsg}</div>
                   {shareMsg.startsWith("✅")&&(
                     <div style={{display:"flex",gap:8,marginTop:8}}>
                       <button onClick={()=>{
@@ -1825,7 +1832,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                         const text=`הוזמנת לטיול "${trips.find(t=>t.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} :
 ${url}`;
                         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");
-                      }} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                      }} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
                         📲 שלח בוואטסאפ
                       </button>
                       <button onClick={()=>{
@@ -1833,7 +1840,7 @@ ${url}`;
                         const text=`הוזמנת לטיול "${trips.find(t=>t.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} : ${url}`;
                         navigator.clipboard.writeText(text);
                         setShareMsg("✅ הועתק ללוח!");
-                      }} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:"#64dfdf",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                      }} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
                         📋 העתק לינק
                       </button>
                     </div>
@@ -1841,8 +1848,8 @@ ${url}`;
                 </div>
               )}
               <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:"#64dfdf",color:"#0d2137",fontFamily:"'Rubik',sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>שתף ✓</button>
-                <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",fontFamily:"'Rubik',sans-serif",fontWeight:600,fontSize:13,cursor:"pointer",color:"rgba(255,255,255,0.5)"}}>סגור</button>
+                <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>שתף ✓</button>
+                <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>סגור</button>
               </div>
             </div>
           </div>
