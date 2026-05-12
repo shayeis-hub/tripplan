@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { 
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged
+  createUserWithEmailAndPassword
 } from "firebase/auth";
 
 export default function LoginPage() {
@@ -18,10 +17,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     try { const s = localStorage.getItem("tayalon_email"); if (s) setEmailVal(s); } catch {}
-    const unsub = onAuthStateChanged(auth, (u) => {
-      if (u) router.replace("/");
-    });
-    return unsub;
   }, []);
 
   const doSubmit = async () => {
@@ -34,6 +29,7 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, emailVal, passVal);
       }
       try { localStorage.setItem("tayalon_email", emailVal); } catch {}
+      router.replace("/");
     } catch (firebaseErr: any) {
       const codes: Record<string,string> = {
         "auth/user-not-found":       "משתמש לא נמצא",
