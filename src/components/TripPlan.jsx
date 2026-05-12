@@ -114,7 +114,7 @@ const fmtDate=(d)=>d?new Date(d).toLocaleDateString("he-IL",{day:"2-digit",month
 const localDateStr=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const getRange=(s,e)=>{const a=[];if(!s||!e)return a;const c=new Date(s),l=new Date(e);while(c<=l){a.push(localDateStr(c));c.setDate(c.getDate()+1);}return a;};
 const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
-const remTime=(t)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-300;if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
+const remTime=(t,hrs=5)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-(hrs*60);if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
 
 function useRates(){
   // rates: { CODE: ILS_value } — e.g. rates.USD = 3.7 means 1 USD = 3.7 ILS
@@ -794,7 +794,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
   );
 }
 
-const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",departureTime:"",time:"",address:"",paidBy:"",splitWith:[],splitType:"equal",isShared:true});
+const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",departureTime:"",time:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",isShared:true});
 
 function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo}){
   const dates=getRange(trip.startDate,trip.endDate);
@@ -831,7 +831,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       description:exp.description||"",paid:exp.paid,date:exp.date,
       checkIn:exp.checkIn||"",checkOut:exp.checkOut||"",
       departureTime:exp.departureTime||"",time:exp.time||"",
-      address:exp.address||"",
+      address:exp.address||"",reminderHours:exp.reminderHours||5,
       paidBy:exp.paidBy||"",splitWith:exp.splitWith||[],
       splitType:exp.splitType||"equal",isShared:exp.isShared!==false,
     });
@@ -1450,7 +1450,7 @@ function CalendarScreen({trip,expenses}){
       if(f.departureTime){
         const[h,m]=f.departureTime.split(":").map(Number);
         timedEvents.push({hour:h+m/60,type:"flight",data:f,duration:0.5});
-        const rem=remTime(f.departureTime);
+        const rem=remTime(f.departureTime,f.reminderHours||5);
         if(rem){const[rh,rm]=rem.split(":").map(Number);timedEvents.push({hour:rh+rm/60,type:"reminder",data:f,duration:0.25});}
       }
     });
@@ -1487,7 +1487,7 @@ function CalendarScreen({trip,expenses}){
     };
     const eventLabel={
       flight:f=>`✈️ המראה ${f.departureTime}`,
-      reminder:f=>`🔔 הגעה לשדה עד ${remTime(f.departureTime)}`,
+      reminder:f=>`🔔 הגעה לשדה עד ${remTime(f.departureTime,f.reminderHours||5)}`,
       "hotel-in":h=>`🏨 צ׳ק אין – ${h.description||"מלון"}`,
       "hotel-out":h=>`🏨 צ׳ק אאוט – ${h.description||"מלון"}`,
       "hotel-stay":h=>`🏨 ${h.description||"מלון"}`,
