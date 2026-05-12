@@ -1338,7 +1338,7 @@ function CalendarScreen({trip,expenses}){
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
           {days.map((d,i)=>{
             if(!d) return <div key={i}/>;
-            const ds=d.toISOString().slice(0,10);
+            const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             const inTrip=ds>=trip.startDate&&ds<=trip.endDate;
             const isToday=ds===new Date().toISOString().slice(0,10);
             const isSel=ds===selDate;
