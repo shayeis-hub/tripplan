@@ -17,6 +17,7 @@ export default function LoginPage() {
   }, []);
 
   const handle = async () => {
+    console.log("handle called, email:", email, "password length:", password.length);
     if (!email || !password) return;
     setLoading(true); setError("");
     try {
