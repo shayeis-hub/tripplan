@@ -12,6 +12,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     try { const saved = localStorage.getItem("tayalon_email"); if (saved) setEmail(saved); } catch {}
+    // Redirect if already logged in
+    import("firebase/auth").then(({ getAuth, onAuthStateChanged }) => {
+      const auth = getAuth();
+      const unsub = onAuthStateChanged(auth, user => {
+        if (user) router.push("/");
+      });
+      return unsub;
+    });
   }, []);
 
   const handle = async () => {
