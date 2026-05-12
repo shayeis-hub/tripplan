@@ -12,8 +12,8 @@ import { auth } from "./firebase";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login:    (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  login:    (emailAddr: string, pw: string) => Promise<void>;
+  register: (emailAddr: string, pw: string) => Promise<void>;
   logout:   () => Promise<void>;
 }
 
@@ -24,19 +24,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => {
-      setUser(u);
+    const unsub = onAuthStateChanged(auth, (authUser) => {
+      setUser(authUser);
       setLoading(false);
     });
     return unsub;
   }, []);
 
-  const login = async (email: string, password: string) => { await signInWithEmailAndPassword(auth, email, password); };
-const register = async (email: string, password: string) => { await createUserWithEmailAndPassword(auth, email, password); };
-  const logout   = async () => { await signOut(auth); };
+  async function doLogin(emailAddr: string, pw: string) {
+    await signInWithEmailAndPassword(auth, emailAddr, pw);
+  }
+
+  async function doRegister(emailAddr: string, pw: string) {
+    await createUserWithEmailAndPassword(auth, emailAddr, pw);
+  }
+
+  async function doLogout() {
+    await signOut(auth);
+  }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login: doLogin, 
+      register: doRegister, 
+      logout: doLogout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
