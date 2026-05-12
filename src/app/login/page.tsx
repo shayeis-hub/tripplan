@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function LoginPage() {
-  const { login, register } = useAuth();
   const router = useRouter();
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
@@ -17,16 +17,17 @@ export default function LoginPage() {
   }, []);
 
   const handle = async () => {
-    console.log("handle called, email:", email, "password length:", password.length);
     if (!email || !password) return;
     setLoading(true); setError("");
     try {
-      if (isNew) await register(email, password);
-      else       await login(email, password);
+      if (isNew) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
       try { localStorage.setItem("tayalon_email", email); } catch {}
       router.push("/");
-    } catch (e: any) {
-      console.error("Full error:", JSON.stringify(e), "code:", e?.code, "msg:", e?.message);
+    } catch (err: any) {
       const msg: Record<string,string> = {
         "auth/user-not-found":       "משתמש לא נמצא",
         "auth/wrong-password":       "סיסמה שגויה",
@@ -35,7 +36,7 @@ export default function LoginPage() {
         "auth/weak-password":        "סיסמה חלשה מדי (מינימום 6 תווים)",
         "auth/invalid-email":        "אימייל לא תקין",
       };
-      setError(msg[e.code] || `שגיאה: ${e.code}`);
+      setError(msg[err.code] || `שגיאה: ${err.code || err.message}`);
     }
     setLoading(false);
   };
@@ -59,12 +60,6 @@ export default function LoginPage() {
           background: radial-gradient(circle, rgba(100,223,223,0.07) 0%, transparent 70%);
           pointer-events: none;
         }
-        .page::after {
-          content: ''; position: absolute; bottom: -100px; right: -100px;
-          width: 350px; height: 350px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(100,223,223,0.04) 0%, transparent 70%);
-          pointer-events: none;
-        }
         .card {
           background: rgba(255,255,255,0.05);
           border: 0.5px solid rgba(100,223,223,0.2);
@@ -73,60 +68,36 @@ export default function LoginPage() {
           position: relative; z-index: 1;
         }
         .logo-wrap { text-align: center; margin-bottom: 32px; }
-        .logo-name {
-          font-family: 'Rubik', sans-serif; font-size: 44px;
-          font-weight: 900; color: #ffffff;
-          letter-spacing: -1.5px; line-height: 1;
-        }
-        .logo-sub {
-          font-family: 'Rubik', sans-serif; font-size: 12px;
-          font-weight: 300; color: rgba(255,255,255,0.3);
-          letter-spacing: 0.8px; margin-top: 6px;
-        }
-        .greeting {
-          font-family: 'Rubik', sans-serif; font-size: 14px;
-          font-weight: 400; color: rgba(100,223,223,0.7);
-          margin-top: 14px; letter-spacing: 0.3px;
-        }
+        .logo-name { font-family: 'Rubik', sans-serif; font-size: 44px; font-weight: 900; color: #ffffff; letter-spacing: -1.5px; line-height: 1; }
+        .logo-sub { font-family: 'Rubik', sans-serif; font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.3); letter-spacing: 0.8px; margin-top: 6px; }
+        .greeting { font-family: 'Rubik', sans-serif; font-size: 14px; font-weight: 400; color: rgba(100,223,223,0.7); margin-top: 14px; }
         .input {
           width: 100%; padding: 14px 16px; border-radius: 14px;
           border: 0.5px solid rgba(100,223,223,0.2);
           font-family: 'Rubik', sans-serif; font-size: 15px;
           margin-bottom: 12px; direction: rtl;
-          background: rgba(255,255,255,0.07);
-          color: #ffffff; outline: none;
-          transition: border-color 0.2s, background 0.2s;
-          display: block;
+          background: rgba(255,255,255,0.07); color: #ffffff; outline: none;
+          transition: border-color 0.2s; display: block;
         }
-        .input:focus { border-color: #64dfdf; background: rgba(255,255,255,0.09); }
+        .input:focus { border-color: #64dfdf; }
         .input::placeholder { color: rgba(255,255,255,0.25); }
         .btn-primary {
-          width: 100%; padding: 15px; border-radius: 14px;
-          border: none; background: #64dfdf;
-          color: #0d2137; font-size: 15px; font-weight: 700;
-          cursor: pointer; font-family: 'Rubik', sans-serif;
-          margin-bottom: 10px; display: block;
-          transition: opacity 0.2s; letter-spacing: 0.2px;
+          width: 100%; padding: 15px; border-radius: 14px; border: none;
+          background: #64dfdf; color: #0d2137; font-size: 15px; font-weight: 700;
+          cursor: pointer; font-family: 'Rubik', sans-serif; margin-bottom: 10px;
+          display: block; transition: opacity 0.2s;
         }
         .btn-primary:disabled { opacity: 0.5; cursor: default; }
-        .btn-primary:hover:not(:disabled) { opacity: 0.88; }
         .btn-secondary {
           width: 100%; padding: 13px; border-radius: 14px;
-          border: 0.5px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.04);
-          color: rgba(255,255,255,0.4); font-size: 13px;
-          font-weight: 500; cursor: pointer;
-          font-family: 'Rubik', sans-serif; display: block;
-          transition: all 0.2s;
+          border: 0.5px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);
+          color: rgba(255,255,255,0.4); font-size: 13px; font-weight: 500;
+          cursor: pointer; font-family: 'Rubik', sans-serif; display: block;
         }
-        .btn-secondary:hover { border-color: rgba(100,223,223,0.3); color: rgba(100,223,223,0.7); }
         .error-box {
-          background: rgba(255,107,107,0.1);
-          border: 0.5px solid rgba(255,107,107,0.3);
-          border-radius: 12px; padding: 10px 14px;
-          margin-bottom: 14px; color: #ff6b6b;
-          font-size: 13px; font-weight: 500;
-          font-family: 'Rubik', sans-serif;
+          background: rgba(255,107,107,0.1); border: 0.5px solid rgba(255,107,107,0.3);
+          border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;
+          color: #ff6b6b; font-size: 13px; font-family: 'Rubik', sans-serif;
         }
         .divider { height: 0.5px; background: rgba(255,255,255,0.07); margin: 18px 0; }
       `}</style>
@@ -140,18 +111,18 @@ export default function LoginPage() {
           </div>
 
           <input className="input" type="email" value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={ev => setEmail(ev.target.value)}
             placeholder="אימייל" autoComplete="email"/>
 
           <input className="input" type="password" value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={ev => setPassword(ev.target.value)}
             placeholder="סיסמה (מינימום 6 תווים)"
-            onKeyDown={evt => evt.key === "Enter" && handle()}
+            onKeyDown={ev => { if (ev.key === "Enter") handle(); }}
             autoComplete={isNew ? "new-password" : "current-password"}/>
 
           {error && <div className="error-box">⚠️ {error}</div>}
 
-          <button className="btn-primary" onClick={handle} disabled={loading}>
+          <button className="btn-primary" onClick={() => handle()} disabled={loading}>
             {loading ? "⏳ רגע..." : isNew ? "צור חשבון ✓" : "התחבר ←"}
           </button>
 
