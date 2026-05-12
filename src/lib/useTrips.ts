@@ -53,15 +53,19 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
 
   const saveTrip = async (trip: any) => {
     if (!userId) return;
-    await setDoc(
-      doc(db, "trips", trip.id),
-      {
-        ...trip,
-        owner: trip.owner || userId,
-        sharedWith: trip.sharedWith || [],
-        updatedAt: Date.now(),
-      }
-    );
+    try {
+      await setDoc(
+        doc(db, "trips", trip.id),
+        {
+          ...trip,
+          owner: trip.owner || userId,
+          sharedWith: trip.sharedWith || [],
+          updatedAt: Date.now(),
+        }
+      );
+    } catch (err) {
+      console.error("Firebase saveTrip error:", err);
+    }
   };
 
   const deleteTrip = async (tripId: string) => {
