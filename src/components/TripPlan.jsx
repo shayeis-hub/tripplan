@@ -1009,8 +1009,21 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                     <SS label="תאריך טיסה" value={form.date} onChange={v=>set({date:v})}>
                       {dates.map(d=><option key={d} value={d}>{fmtDate(d)}</option>)}
                     </SS>
-                    {form.departureTime&&remTime(form.departureTime)&&(
-                      <div style={{fontSize:12,color:"#ff6b6b",fontWeight:700,marginTop:-8}}>🔔 הגעה לשדה עד {remTime(form.departureTime)}</div>
+                    {form.departureTime&&(
+                      <div style={{marginBottom:14}}>
+                        <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:8,color:W40,letterSpacing:"0.5px",textTransform:"uppercase"}}>🔔 תזכורת לפני הטיסה</label>
+                        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:6}}>
+                          {[2,3,4,5,6,8].map(h=>(
+                            <button key={h} onClick={()=>set({reminderHours:h})}
+                              style={{padding:"6px 12px",borderRadius:8,border:`0.5px solid ${(form.reminderHours||5)===h?TEAL:TBB}`,background:(form.reminderHours||5)===h?TBL:W05,color:(form.reminderHours||5)===h?TEAL:W40,fontFamily:RF,fontWeight:600,fontSize:12,cursor:"pointer"}}>
+                              {h} שעות
+                            </button>
+                          ))}
+                        </div>
+                        {remTime(form.departureTime,form.reminderHours||5)&&(
+                          <div style={{fontSize:11,color:"#ff6b6b",fontWeight:600}}>🔔 תזכורת ב-{remTime(form.departureTime,form.reminderHours||5)}</div>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
