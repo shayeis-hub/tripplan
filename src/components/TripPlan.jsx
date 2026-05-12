@@ -390,11 +390,14 @@ function exportTripPDF(trip,expenses){
   const CATS_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));
   const getAmt=e=>e.paid&&e.amountILSLocked?e.amountILSLocked:e.amountILS;
   const total=expenses.reduce((s,e)=>s+getAmt(e),0);
-  const paid=expenses.filter(e=>e.paid).reduce((s,e)=>s+e.amountILS,0);
+  const paid=expenses.filter(e=>e.paid).reduce((s,e)=>s+getAmt(e),0);
+  const unpaid=total-paid;
   const sharedExp=expenses.filter(e=>e.isShared!==false);
-  const byCat=CATS.map(cat=>{const ce=expenses.filter(e=>e.category===cat.id);return{...cat,total:ce.reduce((s,e)=>s+e.amountILS,0),count:ce.length};}).filter(c=>c.count>0);
-
-  // Group expenses by date
+  const sharedTotal=sharedExp.reduce((s,e)=>s+getAmt(e),0);
+  const byCat=CATS.map(cat=>{
+    const ce=expenses.filter(e=>e.category===cat.id);
+    return{...cat,total:ce.reduce((s,e)=>s+getAmt(e),0),count:ce.length};
+  }).filter(c=>c.count>0);
   const byDate={};
   expenses.forEach(e=>{
     const d=e.category==="hotel"?e.checkIn:e.date;
@@ -402,93 +405,146 @@ function exportTripPDF(trip,expenses){
     byDate[d].push(e);
   });
   const sortedDates=Object.keys(byDate).sort();
+  const people=trip.people||[];
+  const balances={};
+  sharedExp.forEach(exp=>{
+    if(!exp.paidBy) return;
+    const participants=[exp.paidBy,...(exp.splitWith||[])];
+    if(participants.length<2) return;
+    const share=getAmt(exp)/participants.length;
+    balances[exp.paidBy]=(balances[exp.paidBy]||0)+getAmt(exp)-share;
+    (exp.splitWith||[]).forEach(id=>{balances[id]=(balances[id]||0)-share;});
+  });
+  const creditors=[],debtors=[];
+  Object.entries(balances).forEach(([id,bal])=>{
+    const name=people.find(p=>p.id===id)?.name||id;
+    if(bal>0.5) creditors.push({name,amount:bal});
+    else if(bal<-0.5) debtors.push({name,amount:-bal});
+  });
+  const settlements=[];
+  const creds=[...creditors],depts=[...debtors];
+  while(creds.length&&depts.length){
+    const c=creds[0],d=depts[0];
+    const amt=Math.min(c.amount,d.amount);
+    settlements.push({from:d.name,to:c.name,amount:amt});
+    c.amount-=amt; d.amount-=amt;
+    if(c.amount<0.5) creds.shift();
+    if(d.amount<0.5) depts.shift();
+  }
+  const budget=trip.budget?parseFloat(trip.budget):null;
+  const budgetPct=budget?Math.min((total/budget)*100,100):null;
+  const budgetColor=budgetPct?budgetPct<70?"#4ade80":budgetPct<90?"#fbbf24":"#ff6b6b":"#64dfdf";
 
   const html=`<!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
 <meta charset="UTF-8">
+<title>טיולון – ${trip.destination||"טיול"}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;900&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Rubik', Arial, sans-serif; background: #fff; color: #1a2b35; padding: 32px; direction: rtl; }
-  .header { text-align: center; padding: 28px; background: linear-gradient(135deg, #0d2137, #0a3050); border-radius: 16px; margin-bottom: 24px; color: white; }
-  .logo { font-size: 36px; font-weight: 900; letter-spacing: -1px; }
-  .dest { font-size: 22px; font-weight: 700; margin-top: 8px; opacity: 0.9; }
-  .dates { font-size: 13px; opacity: 0.5; margin-top: 4px; }
-  .section { margin-bottom: 24px; }
-  .section-title { font-size: 16px; font-weight: 700; color: #0d2137; border-bottom: 2px solid #64dfdf; padding-bottom: 6px; margin-bottom: 12px; }
-  .kpi-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px; }
-  .kpi { background: #f8fafc; border-radius: 12px; padding: 14px; text-align: center; border-top: 3px solid #64dfdf; }
-  .kpi-val { font-size: 22px; font-weight: 800; color: #0d2137; }
-  .kpi-lbl { font-size: 11px; color: #7a9baa; margin-top: 4px; }
-  .bar-row { margin-bottom: 10px; }
-  .bar-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
-  .bar-track { height: 8px; background: #e8f4f8; border-radius: 999px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 999px; background: #64dfdf; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th { background: #0d2137; color: white; padding: 8px 12px; text-align: right; font-weight: 600; }
-  td { padding: 8px 12px; border-bottom: 1px solid #f0f4f8; }
-  tr:nth-child(even) td { background: #f8fafc; }
-  .day-header { background: #e8f4f8; font-weight: 700; padding: 8px 12px; border-radius: 8px; margin: 12px 0 6px; font-size: 13px; color: #0d2137; }
-  .badge-paid { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 999px; font-size: 10px; }
-  .badge-unpaid { background: #fef2f2; color: #991b1b; padding: 2px 8px; border-radius: 999px; font-size: 10px; }
-  .badge-shared { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 999px; font-size: 10px; }
-  .badge-personal { background: #f3e8ff; color: #7c3aed; padding: 2px 8px; border-radius: 999px; font-size: 10px; }
-  .settlement-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; }
-  .footer { text-align: center; color: #7a9baa; font-size: 11px; margin-top: 32px; padding-top: 16px; border-top: 1px solid #e8f4f8; }
-  @media print { body { padding: 16px; } }
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Rubik',Arial,sans-serif;background:#f8fafc;color:#1a2b35;direction:rtl;font-size:14px;line-height:1.5;}
+  .cover{background:linear-gradient(160deg,#091928,#0d2137,#0a3050);padding:36px 28px;color:white;}
+  .logo{font-size:38px;font-weight:900;letter-spacing:-1.5px;}
+  .logo-sub{font-size:11px;font-weight:300;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-top:3px;}
+  .dest{font-size:22px;font-weight:700;margin-top:18px;}
+  .dates{font-size:12px;color:rgba(255,255,255,0.4);margin-top:5px;}
+  .badge{display:inline-block;background:#64dfdf;color:#0d2137;font-size:11px;font-weight:700;padding:5px 16px;border-radius:999px;margin-top:12px;}
+  .content{padding:24px 20px;max-width:800px;margin:0 auto;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+  .kpi{background:white;border-radius:12px;padding:12px;text-align:center;border-top:3px solid #64dfdf;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+  .kpi-val{font-size:18px;font-weight:800;color:#0d2137;}
+  .kpi-lbl{font-size:10px;color:#7a9baa;margin-top:4px;}
+  .budget-box{background:white;border-radius:12px;padding:14px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+  .budget-header{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:10px;}
+  .budget-track{height:8px;background:#e8f4f8;border-radius:999px;overflow:hidden;margin-bottom:6px;}
+  .budget-fill{height:100%;border-radius:999px;}
+  .budget-footer{display:flex;justify-content:space-between;font-size:12px;font-weight:600;}
+  .section-title{font-size:14px;font-weight:700;color:#0d2137;border-bottom:2px solid #64dfdf;padding-bottom:6px;margin:20px 0 12px;}
+  .bar-row{margin-bottom:9px;}
+  .bar-header{display:flex;justify-content:space-between;font-size:12px;font-weight:500;margin-bottom:4px;}
+  .bar-track{height:6px;background:#e8f4f8;border-radius:999px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#64dfdf,#48b5c4);}
+  .day-header{background:#e8f4f8;font-weight:700;padding:8px 12px;border-radius:8px;margin:14px 0 6px;font-size:12px;color:#0d2137;border-right:3px solid #64dfdf;}
+  table{width:100%;border-collapse:collapse;font-size:11px;border-radius:8px;overflow:hidden;margin-bottom:4px;}
+  th{background:#0d2137;color:white;padding:7px 10px;text-align:right;font-weight:600;font-size:10px;}
+  td{padding:7px 10px;border-bottom:1px solid #f0f4f8;vertical-align:middle;}
+  tr:nth-child(even) td{background:#fafbfc;}
+  .b{padding:2px 7px;border-radius:999px;font-size:9px;font-weight:600;}
+  .bp{background:#dcfce7;color:#166534;}
+  .bu{background:#fef2f2;color:#991b1b;}
+  .bs{background:#e0f2fe;color:#0369a1;}
+  .bn{background:#f3e8ff;color:#7c3aed;}
+  .settlement-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:white;border-radius:10px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+  .settle-amount{font-size:16px;font-weight:800;color:#ff6b6b;}
+  .footer{background:#0d2137;color:rgba(255,255,255,0.35);text-align:center;padding:14px;font-size:10px;margin-top:28px;}
+  .footer span{color:#64dfdf;}
+  @media print{
+    body{background:white;}
+    .cover,.budget-fill,.day-header{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
 </style>
 </head>
 <body>
-<div class="header">
+<div class="cover">
   <div class="logo">טיולון</div>
+  <div class="logo-sub">מתכנן הטיולים שלי</div>
   <div class="dest">🌍 ${trip.destination||"טיול"}</div>
   <div class="dates">${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}</div>
+  <div class="badge">דוח הוצאות</div>
 </div>
-
-<div class="kpi-row">
-  <div class="kpi"><div class="kpi-val">₪${total.toFixed(0)}</div><div class="kpi-lbl">סה"כ הוצאות</div></div>
-  <div class="kpi"><div class="kpi-val">₪${paid.toFixed(0)}</div><div class="kpi-lbl">שולם</div></div>
-  <div class="kpi"><div class="kpi-val">${expenses.length}</div><div class="kpi-lbl">הוצאות</div></div>
-</div>
-
-<div class="section">
-  <div class="section-title">פירוט לפי קטגוריה</div>
-  ${byCat.map(cat=>`
-    <div class="bar-row">
-      <div class="bar-header"><span>${cat.icon} ${cat.label} (${cat.count})</span><span>₪${cat.total.toFixed(0)}</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${total>0?(cat.total/total*100).toFixed(0):0}%"></div></div>
+<div class="content">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-val">₪${total.toFixed(0)}</div><div class="kpi-lbl">סה"כ הוצאות</div></div>
+    <div class="kpi" style="border-top-color:#4ade80"><div class="kpi-val" style="color:#166534">₪${paid.toFixed(0)}</div><div class="kpi-lbl">שולם</div></div>
+    <div class="kpi" style="border-top-color:#ff6b6b"><div class="kpi-val" style="color:#991b1b">₪${unpaid.toFixed(0)}</div><div class="kpi-lbl">טרם שולם</div></div>
+    <div class="kpi" style="border-top-color:#fbbf24"><div class="kpi-val" style="color:#92400e">${expenses.length}</div><div class="kpi-lbl">הוצאות</div></div>
+  </div>
+  ${budget?`<div class="budget-box">
+    <div class="budget-header"><span>💰 עמידה בתקציב</span><span style="color:#64dfdf">₪${budget.toLocaleString()}</span></div>
+    <div class="budget-track"><div class="budget-fill" style="width:${budgetPct.toFixed(0)}%;background:${budgetColor}"></div></div>
+    <div class="budget-footer">
+      <span style="color:${budgetColor}">${budgetPct.toFixed(1)}% מהתקציב</span>
+      <span style="color:${total>budget?"#ff6b6b":"#4ade80"}">${total>budget?`חריגה: ₪${(total-budget).toFixed(0)}`:`נותרו: ₪${(budget-total).toFixed(0)}`}</span>
     </div>
-  `).join("")}
-</div>
-
-<div class="section">
-  <div class="section-title">הוצאות לפי יום</div>
+  </div>`:""}
+  <div class="section-title">📊 פירוט לפי קטגוריה</div>
+  ${byCat.map(cat=>`<div class="bar-row">
+    <div class="bar-header"><span>${cat.icon} ${cat.label} (${cat.count})</span><span style="font-weight:700">₪${cat.total.toFixed(0)}</span></div>
+    <div class="bar-track"><div class="bar-fill" style="width:${total>0?(cat.total/total*100).toFixed(0):0}%"></div></div>
+  </div>`).join("")}
+  <div class="section-title">📅 הוצאות לפי יום</div>
   ${sortedDates.map(d=>`
     <div class="day-header">${fmtDate(d)}</div>
     <table>
-      <tr><th>קטגוריה</th><th>תיאור</th><th>סכום</th><th>סטטוס</th><th>סוג</th></tr>
-      ${byDate[d].map(e=>`
-        <tr>
-          <td>${CATS_MAP[e.category]?.icon||""} ${CATS_MAP[e.category]?.label||e.category}</td>
-          <td>${e.description||"—"}</td>
-          <td>₪${e.amountILS.toFixed(0)}</td>
-          <td><span class="${e.paid?"badge-paid":"badge-unpaid"}">${e.paid?"שולם":"טרם"}</span></td>
-          <td><span class="${e.isShared===false?"badge-personal":"badge-shared"}">${e.isShared===false?"אישית":"משותפת"}</span></td>
-        </tr>
-      `).join("")}
+      <tr><th>קטגוריה</th><th>תיאור</th><th>סכום מקורי</th><th>₪</th><th>סטטוס</th><th>סוג</th></tr>
+      ${byDate[d].map(e=>`<tr>
+        <td>${CATS_MAP[e.category]?.icon||""} ${CATS_MAP[e.category]?.label||e.category}</td>
+        <td>${e.description||"—"}${e.address?`<br><span style="color:#7a9baa;font-size:10px">📍 ${e.address}</span>`:""}</td>
+        <td style="direction:ltr;text-align:left">${e.amount?.toFixed(2)||""} ${e.currency||""}</td>
+        <td style="font-weight:700">₪${getAmt(e).toFixed(0)}</td>
+        <td><span class="b ${e.paid?"bp":"bu"}">${e.paid?"✓ שולם":"⏳ טרם"}</span></td>
+        <td><span class="b ${e.isShared===false?"bn":"bs"}">${e.isShared===false?"👤 אישית":"👥 משותפת"}</span></td>
+      </tr>`).join("")}
     </table>
   `).join("")}
+  ${sharedExp.length>0?`
+  <div class="section-title">💸 התחשבנות סופית</div>
+  <p style="font-size:11px;color:#7a9baa;margin-bottom:10px">מבוסס על הוצאות משותפות בלבד (₪${sharedTotal.toFixed(0)})</p>
+  ${settlements.length>0?settlements.map(s=>`
+    <div class="settlement-row">
+      <span style="font-size:14px;font-weight:600">${s.from}</span>
+      <span style="color:#7a9baa;font-size:12px">חייב ל ← ${s.to}</span>
+      <span class="settle-amount">₪${s.amount.toFixed(0)}</span>
+    </div>`).join("")
+  :`<div style="text-align:center;color:#4ade80;padding:16px;font-weight:700">✅ אין חובות – כולם שווה!</div>`}
+  `:""}
 </div>
+<div class="footer">נוצר על ידי <span>טיולון</span> – מתכנן הטיולים שלי &nbsp;|&nbsp; ${new Date().toLocaleDateString("he-IL")}</div>
+</body></html>`;
 
-<div class="footer">
-  נוצר על ידי טיולון – מתכנן הטיולים שלי &nbsp;|&nbsp; ${new Date().toLocaleDateString("he-IL")}
-</div>
-</body>
-</html>`;
-
-  // Open in new window and trigger print
   const w=window.open("","_blank");
+  if(!w) return;
   w.document.write(html);
   w.document.close();
   w.focus();
@@ -1086,27 +1142,7 @@ function BudgetScreen({trip,expenses}){
   },[expenses,people]);
 
   // PDF export
-  const handlePDF=()=>{
-    const lines=[
-      `TripPlan – ${trip.destination||"טיול"}`,
-      `${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`,
-      "",
-      `סה"כ הוצאות: ₪${total.toFixed(0)}`,
-      `שולם: ₪${paid.toFixed(0)} | טרם שולם: ₪${unpaid.toFixed(0)}`,
-      "",
-      "── הוצאות לפי קטגוריה ──",
-      ...byCat.map(c=>`${c.icon} ${c.label}: ₪${c.total.toFixed(0)} (${c.count})`),
-      "",
-      "── כל ההוצאות ──",
-      ...expenses.map(e=>{
-        const cat=CATS.find(c=>c.id===e.category);
-        return`${fmtDate(e.date)} | ${cat?.label} | ${e.description||""} | ₪${e.amountILS.toFixed(0)} | ${e.paid?"שולם":"טרם שולם"}`;
-      }),
-      ...(settlement.length>0?["","── התחשבנות ──",...settlement.map(d=>`${d.from.name} חייב ל${d.to.name}: ₪${d.amount.toFixed(0)}`)]:[""])
-    ];
-    const blob=new Blob(["\uFEFF"+lines.join("\n")],{type:"text/plain;charset=utf-8"});
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`TripPlan-${trip.destination||"trip"}.txt`; a.click();
-  };
+  const handlePDF=()=>exportTripPDF(trip,expenses);
 
   return(
     <div>
