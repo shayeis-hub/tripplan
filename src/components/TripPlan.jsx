@@ -1781,14 +1781,15 @@ function CalendarScreen({trip,expenses}){
               return(
                 <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");}}
                   style={{
-                    position:"absolute",top,right:0,left:0,height,
+                    position:"absolute",top,right:0,left:0,minHeight:height,
                     background:`${col}18`,border:`0.5px solid ${col}50`,
                     borderRight:`3px solid ${col}`,borderRadius:8,
-                    padding:"4px 8px",display:"flex",alignItems:"center",justifyContent:"space-between",
+                    padding:"4px 8px",display:"flex",alignItems:"flex-start",justifyContent:"space-between",
                     zIndex:2,cursor:ev.data?.address?"pointer":"default",
+                    boxSizing:"border-box",
                   }}>
-                  <span style={{fontSize:12,fontWeight:600,color:col,fontFamily:RF,lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{label}</span>
-                  {ev.data?.address&&<span style={{fontSize:14,marginRight:4,flexShrink:0}}>🗺️</span>}
+                  <span style={{fontSize:12,fontWeight:600,color:col,fontFamily:RF,lineHeight:1.3,flex:1,wordBreak:"break-word",overflowWrap:"break-word",whiteSpace:"pre-wrap"}}>{label}</span>
+                  {ev.data?.address&&<span style={{fontSize:14,marginRight:4,flexShrink:0,marginTop:2}}>🗺️</span>}
                 </div>
               );
             })}
@@ -1816,7 +1817,7 @@ function CalendarScreen({trip,expenses}){
                 <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");}}
                   style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:10,marginBottom:6,cursor:ev.data?.address?"pointer":"default"}}>
                   <div style={{width:4,height:4,borderRadius:"50%",background:col,flexShrink:0}}/>
-                  <span style={{fontSize:13,color:W70,fontFamily:RF,flex:1}}>{label}</span>
+                  <span style={{fontSize:13,color:W70,fontFamily:RF,flex:1,wordBreak:"break-word",overflowWrap:"break-word"}}>{label}</span>
                   {ev.data?.address&&<span style={{fontSize:13}}>🗺️</span>}
                 </div>
               );
