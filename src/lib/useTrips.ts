@@ -84,14 +84,22 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
     await deleteDoc(doc(db, "trips", tripId));
   };
 
-  const shareTrip = async (tripId: string, email: string) => {
+  const shareTrip = async (tripId: string, email: string, viewOnly = false) => {
     const trip = trips.find(t => t.id === tripId);
     if (!trip) return;
+    const normalizedEmail = email.toLowerCase().trim();
     const sharedWith = [...(trip.sharedWith || [])];
-    if (!sharedWith.includes(email)) {
-      sharedWith.push(email.toLowerCase().trim());
-      await saveTrip({ ...trip, sharedWith });
+    if (!sharedWith.includes(normalizedEmail)) sharedWith.push(normalizedEmail);
+
+    // viewOnlyUsers: add or remove based on flag
+    let viewOnlyUsers: string[] = [...(trip.viewOnlyUsers || [])];
+    if (viewOnly) {
+      if (!viewOnlyUsers.includes(normalizedEmail)) viewOnlyUsers.push(normalizedEmail);
+    } else {
+      viewOnlyUsers = viewOnlyUsers.filter(e => e !== normalizedEmail);
     }
+
+    await saveTrip({ ...trip, sharedWith, viewOnlyUsers });
   };
 
   return { trips, loading, saveTrip, deleteTrip, shareTrip };

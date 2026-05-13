@@ -2115,9 +2115,14 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[trips,setTrips]=useState(initialTrips);
   const[activeId,setActiveId]=useState(null);
   const[screen,setScreen]=useState("destination");
+  // Redirect view-only users away from restricted screens
+  useEffect(()=>{
+    if(isViewOnly&&(screen==="expenses"||screen==="budget")) setScreen("destination");
+  },[isViewOnly,screen]);
   const[shareModal,setShareModal]=useState(null);
   const[shareEmail,setShareEmail]=useState("");
   const[shareMsg,setShareMsg]=useState("");
+  const[shareViewOnly,setShareViewOnly]=useState(false);
   const[inspireModal,setInspireModal]=useState(false);
   const[inspireHidden,setInspireHidden]=useState(new Set());
   const[inspireLink,setInspireLink]=useState(null);
@@ -2209,10 +2214,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const handleShare=async(tripId)=>{
     if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
     try{
-      await onShareTrip(tripId,shareEmail.trim());
+      await onShareTrip(tripId,shareEmail.trim(),shareViewOnly);
       setShareMsg("✅ הטיול שותף בהצלחה!");
       setShareEmail("");
-      // modal stays open until user closes manually
+      setShareViewOnly(false);
     }catch(e){setShareMsg("שגיאה, נסה שוב");}
   };
 
@@ -2247,7 +2252,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
 
   const isOwner=active?.owner===userId||!active?.owner;
-  const screens=["destination","expenses","budget","calendar","discover"];
+  const isViewOnly=!isOwner&&active?.viewOnlyUsers?.includes(userEmail);
+  const screens=(isViewOnly
+    ?["destination","calendar","discover"]
+    :["destination","expenses","budget","calendar","discover"]);
 
   if(!activeId){
     return(
@@ -2305,12 +2313,18 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               {trips.find(t=>t.id===shareModal)?.sharedWith?.length>0&&(
                 <div style={{marginBottom:14}}>
                   <div style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginBottom:8,fontFamily:RF,letterSpacing:"0.5px",textTransform:"uppercase"}}>{t("share_with",lang)}</div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                    {trips.find(t=>t.id===shareModal)?.sharedWith?.map(email=>(
-                      <div key={email} style={{fontSize:12,background:"rgba(100,223,223,0.1)",color:TEAL,border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:999,padding:"4px 10px",fontFamily:RF}}>
-                        {email}
-                      </div>
-                    ))}
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {trips.find(t=>t.id===shareModal)?.sharedWith?.map(email=>{
+                      const isVO=trips.find(t=>t.id===shareModal)?.viewOnlyUsers?.includes(email);
+                      return(
+                        <div key={email} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,padding:"7px 12px"}}>
+                          <span style={{fontSize:12,color:TEAL,fontFamily:RF,direction:"ltr"}}>{email}</span>
+                          <span style={{fontSize:11,color:isVO?"rgba(251,191,36,0.8)":"rgba(74,222,128,0.8)",background:isVO?"rgba(251,191,36,0.1)":"rgba(74,222,128,0.1)",borderRadius:999,padding:"2px 8px",fontFamily:RF,flexShrink:0}}>
+                            {isVO?(lang==="he"?"👁️ צפייה":"👁️ View"):(lang==="he"?"✏️ עריכה":"✏️ Edit")}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -2350,9 +2364,20 @@ ${url}`;
                   )}
                 </div>
               )}
+              {/* View-only toggle */}
+              <div onClick={()=>setShareViewOnly(v=>!v)}
+                style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:12,border:`0.5px solid ${shareViewOnly?"rgba(251,191,36,0.4)":"rgba(255,255,255,0.1)"}`,background:shareViewOnly?"rgba(251,191,36,0.07)":W05,cursor:"pointer",marginBottom:12,userSelect:"none"}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:shareViewOnly?"rgba(251,191,36,0.9)":"rgba(255,255,255,0.7)",fontFamily:RF}}>{lang==="he"?"👁️ לצפייה בלבד":"👁️ View only"}</div>
+                  <div style={{fontSize:11,color:W35,fontFamily:RF,marginTop:2}}>{lang==="he"?"לא יראה הוצאות ותקציב":"Won't see expenses & budget"}</div>
+                </div>
+                <div style={{width:36,height:20,borderRadius:999,background:shareViewOnly?"rgba(251,191,36,0.7)":"rgba(255,255,255,0.15)",position:"relative",transition:"background 0.2s",flexShrink:0}}>
+                  <div style={{position:"absolute",top:3,right:shareViewOnly?3:"auto",left:shareViewOnly?"auto":3,width:14,height:14,borderRadius:"50%",background:"#fff",transition:"all 0.2s"}}/>
+                </div>
+              </div>
               <div style={{display:"flex",gap:8}}>
                 <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{t("share",lang)} ✓</button>
-                <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{t("close",lang)}</button>
+                <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");setShareViewOnly(false);}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{t("close",lang)}</button>
               </div>
             </div>
           </div>
