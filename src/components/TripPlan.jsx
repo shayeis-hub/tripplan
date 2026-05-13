@@ -1115,7 +1115,6 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                   <button key={d} onClick={()=>setSel(d)} style={{minWidth:60,padding:"9px 7px",borderRadius:13,border:`0.5px solid ${sel===d?TEAL:"rgba(255,255,255,0.1)"}`,background:sel===d?TB:"rgba(255,255,255,0.04)",color:sel===d?"#ffffff":W40,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",textAlign:"center",flexShrink:0}}>
                     <div style={{fontSize:10,opacity:0.8}}>{new Date(d).toLocaleDateString(lang==="he"?"he-IL":"en-US",{weekday:"short"})}</div>
                     <div style={{fontSize:15}}>{new Date(d).getDate()}</div>
-                    <div style={{fontSize:9,fontWeight:700,marginTop:2,color:cnt>0?(sel===d?TEAL:"rgba(100,223,223,0.6)"):"transparent"}}>{cnt>0?cnt:"·"}</div>
                   </button>
                 );
               })}
