@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
 const ADMIN_EMAIL = "shayeis@gmail.com";
 
 export async function GET(req: Request) {
+  const adminAuth = getAdminAuth();
+  const adminDb   = getAdminDb();
+
   // Verify Firebase ID token
   const authHeader = req.headers.get("authorization");
   const token = authHeader?.replace("Bearer ", "");
