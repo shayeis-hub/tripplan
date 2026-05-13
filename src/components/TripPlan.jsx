@@ -1518,7 +1518,7 @@ function CalendarScreen({trip,expenses}){
     setActs(a=>({...a,[editD]:valid}));
     setEditD(null);
   };
-  const addActRow=()=>setEditActs(a=>[...a,{text:"",time:""}]);
+  const addActRow=()=>setEditActs(a=>[...a,{text:"",time:"",timeEnd:""}]);
   const updateAct=(i,field,val)=>setEditActs(a=>a.map((x,j)=>j===i?{...x,[field]:val}:x));
   const removeAct=i=>setEditActs(a=>a.filter((_,j)=>j!==i));
 
@@ -1838,12 +1838,19 @@ function CalendarScreen({trip,expenses}){
       <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:22,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"80vh",overflowY:"auto"}}>
         <h3 style={{fontFamily:RF,fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:14}}>✏️ {t("cal_edit_acts",lang)}{fmtDate(editD)}</h3>
         {editActs.map((act,i)=>(
-          <div key={i} style={{display:"flex",gap:8,marginBottom:10,alignItems:"center"}}>
-            <input value={act.time} onChange={e=>updateAct(i,"time",e.target.value)} type="time"
-              style={{width:88,padding:"9px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none",flexShrink:0}}/>
-            <input value={act.text} onChange={e=>updateAct(i,"text",e.target.value)} placeholder={t("cal_act_ph",lang)}
-              style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none",direction:"rtl"}}/>
-            <button onClick={()=>removeAct(i)} style={{background:"rgba(255,107,107,0.12)",border:"none",color:"#ff6b6b",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:14,flexShrink:0}}>✕</button>
+          <div key={i} style={{marginBottom:10}}>
+            <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:5}}>
+              <input value={act.text} onChange={e=>updateAct(i,"text",e.target.value)} placeholder={t("cal_act_ph",lang)}
+                style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none",direction:"rtl"}}/>
+              <button onClick={()=>removeAct(i)} style={{background:"rgba(255,107,107,0.12)",border:"none",color:"#ff6b6b",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:14,flexShrink:0}}>✕</button>
+            </div>
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              <input value={act.time||""} onChange={e=>updateAct(i,"time",e.target.value)} type="time"
+                style={{flex:1,padding:"8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none"}}/>
+              <span style={{color:"rgba(255,255,255,0.3)",fontSize:13,flexShrink:0}}>→</span>
+              <input value={act.timeEnd||""} onChange={e=>updateAct(i,"timeEnd",e.target.value)} type="time"
+                style={{flex:1,padding:"8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none"}}/>
+            </div>
           </div>
         ))}
         <button onClick={addActRow} style={{width:"100%",padding:"9px",borderRadius:10,border:"0.5px dashed rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.05)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",marginBottom:14}}>
