@@ -1861,12 +1861,14 @@ function CalendarScreen({trip,expenses,onSaveActs}){
                 style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none",direction:"rtl"}}/>
               <button onClick={()=>removeAct(i)} style={{background:"rgba(255,107,107,0.12)",border:"none",color:"#ff6b6b",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:14,flexShrink:0}}>✕</button>
             </div>
-            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <div style={{display:"flex",gap:6,alignItems:"center",direction:"ltr"}}>
+              <span style={{color:"rgba(255,255,255,0.35)",fontSize:11,flexShrink:0,fontFamily:RF}}>{lang==="he"?"מ-":"from"}</span>
               <input value={act.time||""} onChange={e=>updateAct(i,"time",e.target.value)} type="time"
                 style={{flex:1,padding:"8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none"}}/>
-              <span style={{color:"rgba(255,255,255,0.3)",fontSize:13,flexShrink:0}}>→</span>
+              <span style={{color:"rgba(255,255,255,0.3)",fontSize:13,flexShrink:0}}>–</span>
               <input value={act.timeEnd||""} onChange={e=>updateAct(i,"timeEnd",e.target.value)} type="time"
                 style={{flex:1,padding:"8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none"}}/>
+              <span style={{color:"rgba(255,255,255,0.35)",fontSize:11,flexShrink:0,fontFamily:RF}}>{lang==="he"?"עד":"to"}</span>
             </div>
           </div>
         ))}
