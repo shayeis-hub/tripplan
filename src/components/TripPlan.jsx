@@ -696,6 +696,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId}){
             {href:"/privacy",label:lang==="he"?"מדיניות פרטיות":"Privacy Policy"},
             {href:"/terms",label:lang==="he"?"תנאי שימוש":"Terms"},
             {href:"/contact",label:lang==="he"?"צור קשר":"Contact"},
+            {href:"/delete-account",label:lang==="he"?"מחיקת חשבון":"Delete Account"},
           ].map(l=>(
             <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer"
               style={{color:"rgba(255,255,255,0.2)",fontSize:11,textDecoration:"none",fontFamily:RF,transition:"color 0.15s"}}
