@@ -1832,8 +1832,8 @@ function CalendarScreen({trip,expenses}){
     );
   }
 
-  // ── EDIT MODAL ──────────────────────────────────────────────────────────────
-  const EditModal=()=>editD?(
+  // ── EDIT MODAL JSX (inline – NOT a sub-component, prevents keyboard dismiss on rerender) ──
+  const editModalJsx = editD ? (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:22,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"80vh",overflowY:"auto"}}>
         <h3 style={{fontFamily:RF,fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:14}}>✏️ {t("cal_edit_acts",lang)}{fmtDate(editD)}</h3>
@@ -1862,7 +1862,7 @@ function CalendarScreen({trip,expenses}){
         </div>
       </div>
     </div>
-  ):null;
+  ) : null;
 
   // ── RENDER ──────────────────────────────────────────────────────────────────
   return(
@@ -1897,7 +1897,7 @@ function CalendarScreen({trip,expenses}){
         )}
       </div>
 
-      <EditModal/>
+      {editModalJsx}
 
       <div style={{overflowY:"auto"}}>
         {view==="month"?<MonthView/>:<DayView/>}
