@@ -1478,6 +1478,14 @@ function BudgetScreen({trip,expenses}){
   );
 }
 
+const ACT_TYPES=[
+  {id:"general", icon:"📌", he:"כללי",    en:"General"},
+  {id:"tour",    icon:"🥾", he:"טיול",    en:"Tour"},
+  {id:"food",    icon:"🍽️", he:"מסעדה",  en:"Restaurant"},
+  {id:"drive",   icon:"🚗", he:"נסיעה",  en:"Transport"},
+];
+const actIcon=type=>ACT_TYPES.find(t=>t.id===type)?.icon||"📌";
+
 function CalendarScreen({trip,expenses,onSaveActs}){
   const{lang}=useLang();
   const dates=getRange(trip.startDate,trip.endDate);
@@ -1511,7 +1519,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
   const openEdit=d=>{
     setEditD(d);
     const existing=acts[d]||[];
-    setEditActs(existing.length>0?existing.map(a=>typeof a==="string"?{text:a,time:""}:a):[{text:"",time:""}]);
+    setEditActs(existing.length>0?existing.map(a=>typeof a==="string"?{text:a,time:"",timeEnd:"",type:"general"}:a):[{text:"",time:"",timeEnd:"",type:"general"}]);
   };
   const saveEdit=()=>{
     const valid=editActs.filter(a=>a.text.trim());
@@ -1520,7 +1528,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
     if(onSaveActs) onSaveActs(updated);
     setEditD(null);
   };
-  const addActRow=()=>setEditActs(a=>[...a,{text:"",time:"",timeEnd:""}]);
+  const addActRow=()=>setEditActs(a=>[...a,{text:"",time:"",timeEnd:"",type:"general"}]);
   const updateAct=(i,field,val)=>setEditActs(a=>a.map((x,j)=>j===i?{...x,[field]:val}:x));
   const removeAct=i=>setEditActs(a=>a.filter((_,j)=>j!==i));
 
@@ -1707,7 +1715,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
       "hotel-in":h=>`${t("cal_hotel_in",lang)} ${h.description||t("cat_hotel",lang)}`,
       "hotel-out":h=>`${t("cal_hotel_out",lang)} ${h.description||t("cat_hotel",lang)}`,
       "hotel-stay":h=>`🏨 ${h.description||t("cat_hotel",lang)}`,
-      activity:a=>`${a.text}${a.time&&a.timeEnd?` (${a.time}–${a.timeEnd})`:""}`,
+      activity:a=>`${actIcon(a.type)} ${a.text}${a.time&&a.timeEnd?` (${a.time}–${a.timeEnd})`:""}`,
       other:e=>`${CATS.find(c=>c.id===e.category)?.icon} ${e.description||catLabel(e.category,lang)}${e.time&&e.timeEnd?` · ${e.time}–${e.timeEnd}`:""}`,
     };
 
@@ -1843,6 +1851,12 @@ function CalendarScreen({trip,expenses,onSaveActs}){
         {editActs.map((act,i)=>(
           <div key={i} style={{marginBottom:10}}>
             <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:5}}>
+              <select value={act.type||"general"} onChange={e=>updateAct(i,"type",e.target.value)}
+                style={{padding:"9px 6px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:W07,color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",flexShrink:0,cursor:"pointer"}}>
+                {ACT_TYPES.map(tp=>(
+                  <option key={tp.id} value={tp.id}>{tp.icon} {lang==="he"?tp.he:tp.en}</option>
+                ))}
+              </select>
               <input value={act.text} onChange={e=>updateAct(i,"text",e.target.value)} placeholder={t("cal_act_ph",lang)}
                 style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none",direction:"rtl"}}/>
               <button onClick={()=>removeAct(i)} style={{background:"rgba(255,107,107,0.12)",border:"none",color:"#ff6b6b",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:14,flexShrink:0}}>✕</button>
