@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>טיולון – אין חיבור</title>
+  <link rel="icon" href="/icon-192.png"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{min-height:100vh;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Rubik',sans-serif;padding:24px;text-align:center;color:#fff;}
+    .icon{font-size:64px;margin-bottom:24px;}
+    h1{font-size:24px;font-weight:800;margin-bottom:12px;}
+    .sub{color:rgba(255,255,255,0.4);font-size:15px;margin-bottom:8px;}
+    .hint{color:rgba(255,255,255,0.25);font-size:13px;max-width:280px;line-height:1.6;margin:0 auto 32px;}
+    .btn{padding:12px 28px;border-radius:12px;border:none;background:#64dfdf;color:#0a1628;font-weight:700;font-size:15px;cursor:pointer;font-family:'Rubik',sans-serif;text-decoration:none;display:inline-block;}
+  </style>
+</head>
+<body>
+  <div class="icon">✈️</div>
+  <h1>אין חיבור לאינטרנט</h1>
+  <p class="sub">No internet connection</p>
+  <p class="hint">בדוק את החיבור שלך ונסה שוב</p>
+  <a class="btn" href="/" onclick="window.location.reload();return false;">נסה שוב</a>
+</body>
+</html>

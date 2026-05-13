@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>טיולון – מדריך למשתמש</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Rubik', Arial, sans-serif;
+    background: #f8fafc;
+    color: #1a2b35;
+    direction: rtl;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: linear-gradient(160deg, #091928 0%, #0d2137 60%, #0a3050 100%);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,223,223,0.08) 0%, transparent 70%);
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -60px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,223,223,0.06) 0%, transparent 70%);
+  }
+  .cover-inner { position: relative; z-index: 1; }
+  .cover h1 {
+    font-size: 52px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: #64dfdf;
+    color: #0d2137;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 24px;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+  }
+  .cover .version {
+    display: inline-block;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-top: 14px;
+    margin-right: 8px;
+  }
+
+  /* ── CONTENT ── */
+  .content { max-width: 800px; margin: 0 auto; padding: 40px 32px; }
+
+  /* ── INTRO BOX ── */
+  .intro-box {
+    background: #e8f4f8;
+    border-right: 4px solid #64dfdf;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 36px;
+    font-size: 14px;
+    color: #2d4050;
+    line-height: 1.7;
+  }
+
+  /* ── WHATS NEW ── */
+  .whats-new {
+    background: linear-gradient(135deg, #fef9c3, #fef3c7);
+    border-right: 4px solid #fbbf24;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 36px;
+  }
+  .whats-new-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #92400e;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .whats-new ul {
+    list-style: none;
+    padding: 0;
+  }
+  .whats-new li {
+    font-size: 13px;
+    color: #78350f;
+    padding: 4px 0;
+    padding-right: 22px;
+    position: relative;
+  }
+  .whats-new li::before {
+    content: '✨';
+    position: absolute;
+    right: 0;
+    top: 5px;
+    font-size: 11px;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 36px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #64dfdf;
+  }
+  .section-header h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0d2137;
+    letter-spacing: -0.3px;
+  }
+  .section-number {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: #0d2137;
+    color: #64dfdf;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── SCREEN CARDS ── */
+  .screen-card {
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .screen-card-header {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .screen-card-emoji {
+    font-size: 26px;
+    line-height: 1;
+  }
+  .screen-card-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.2px;
+  }
+  .screen-card-desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 3px;
+    font-weight: 400;
+  }
+  .screen-card-body {
+    background: #ffffff;
+    padding: 16px 20px;
+  }
+  .feature-row {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f4f8;
+    align-items: flex-start;
+  }
+  .feature-row:last-child { border-bottom: none; }
+  .feature-key {
+    font-weight: 700;
+    font-size: 13px;
+    color: #0d2137;
+    min-width: 140px;
+    flex-shrink: 0;
+  }
+  .feature-val {
+    font-size: 13px;
+    color: #4a5568;
+    line-height: 1.5;
+  }
+  .feature-val .new-badge {
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    margin-right: 6px;
+  }
+  .sub-header {
+    padding: 8px 0 4px;
+    font-size: 12px;
+    color: #64dfdf;
+    font-weight: 700;
+  }
+  .tip-box {
+    background: #f0fdf4;
+    border-right: 3px solid #4ade80;
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #166534;
+    font-style: italic;
+  }
+
+  /* ── STEPS TABLE ── */
+  .steps-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; border-radius: 12px; overflow: hidden; }
+  .steps-table th {
+    background: #0d2137;
+    color: #64dfdf;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+  }
+  .steps-table td {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f4f8;
+    vertical-align: top;
+  }
+  .steps-table tr:nth-child(even) td { background: #f8fafc; }
+  .steps-table .step-num {
+    width: 36px;
+    font-weight: 800;
+    color: #64dfdf;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  /* ── INFO TABLE ── */
+  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; border-radius: 12px; overflow: hidden; }
+  .info-table th {
+    background: #0d2137;
+    color: white;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+  }
+  .info-table td {
+    padding: 9px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f4f8;
+    vertical-align: top;
+  }
+  .info-table tr:nth-child(even) td { background: #f8fafc; }
+  .info-table .key-col { font-weight: 700; color: #2A7B8C; width: 35%; }
+
+  /* ── TIPS GRID ── */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .tip-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-top: 3px solid #64dfdf;
+  }
+  .tip-card .tip-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0d2137;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tip-card .tip-text {
+    font-size: 12px;
+    color: #4a5568;
+    line-height: 1.5;
+  }
+
+  /* ── FOOTER ── */
+  .guide-footer {
+    background: #0d2137;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    margin-top: 40px;
+  }
+  .guide-footer span { color: #64dfdf; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: white; font-size: 12px; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .screen-card-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .steps-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .info-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tip-card { break-inside: avoid; }
+    .screen-card { break-inside: avoid; }
+    .guide-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-inner">
+    <h1>טיולון</h1>
+    <div class="subtitle">מתכנן הטיולים שלי</div>
+    <div class="badge">מדריך למשתמש</div>
+    <div>
+      <span class="version">גרסה 5.0</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- INTRO -->
+  <div class="intro-box">
+    <strong>ברוך הבא לטיולון!</strong> האפליקציה עוזרת לך לתכנן טיולים, לעקוב אחר הוצאות, לנהל תקציב ולתאם עם חברי הטיול.
+    המדריך הזה יסביר כל מסך ופיצ'ר בצורה קצרה וברורה.
+  </div>
+
+  <!-- WHATS NEW -->
+  <div class="whats-new">
+    <div class="whats-new-title">🎉 מה חדש בגרסה 5.0</div>
+    <ul>
+      <li><strong>המלצות AI ✨</strong> – מסך חדש עם המלצות מ-Claude AI: אטרקציות, מסעדות וטיפ מקומי מותאמים ליעד שלך, בלחיצה אחת</li>
+      <li><strong>סריקת קבלות 📷</strong> – צלם קבלה ו-AI ימלא אוטומטית את הסכום, המטבע ואת התיאור</li>
+      <li><strong>מספר טיסה ושעת נחיתה ✈️</strong> – שדות חדשים בהוצאת טיסה: מספר טיסה ושעת נחיתה צפויה</li>
+      <li><strong>טווח שעות לפעילויות 🕐</strong> – הגדר שעת התחלה וסיום לכל פעילות/הוצאה – האפליקציה מחשבת משך אוטומטית</li>
+      <li><strong>סוויפ בין ימים 👆</strong> – החלק ימינה/שמאלה בתצוגת היום למעבר מהיר בין ימים</li>
+      <li><strong>UX משופר 💫</strong> – מעברי מסך חלקים, אנימציות לחיצה, רטט עדין, ספרייה מונפשת בתקציב וסקלטון לודר בהמלצות</li>
+      <li><strong>דפים משפטיים ⚖️</strong> – מדיניות פרטיות, תנאי שימוש וצור קשר – נגישים מהאפליקציה</li>
+      <li><strong>אפליקציית אנדרואיד 📱</strong> – זמין כעת בגוגל פליי! ניתן להתקין כאפליקציה מקומית</li>
+    </ul>
+  </div>
+
+  <!-- GETTING STARTED -->
+  <div class="section-header">
+    <div class="section-number">→</div>
+    <h2>איך מתחילים?</h2>
+  </div>
+
+  <table class="steps-table">
+    <tr>
+      <th class="step-num">#</th>
+      <th>פעולה</th>
+    </tr>
+    <tr>
+      <td class="step-num">1</td>
+      <td>פתח את <strong>www.tulon.co.il</strong> בדפדפן הנייד, במחשב, או הורד מגוגל פליי</td>
+    </tr>
+    <tr>
+      <td class="step-num">2</td>
+      <td>לחץ על <strong>"משתמש חדש? הירשם"</strong> והכנס אימייל וסיסמה</td>
+    </tr>
+    <tr>
+      <td class="step-num">3</td>
+      <td>לחץ על אייקון הפעמון 🔔 בסרגל העליון ואשר התראות כדי לקבל תזכורות</td>
+    </tr>
+    <tr>
+      <td class="step-num">4</td>
+      <td>לחץ על <strong>"+ טיול חדש"</strong> כדי ליצור את הטיול הראשון שלך</td>
+    </tr>
+    <tr>
+      <td class="step-num">5</td>
+      <td>שתף את הטיול עם חברים דרך כפתור <strong>👥 שתף</strong> בתוך הטיול</td>
+    </tr>
+    <tr>
+      <td class="step-num">6</td>
+      <td>לחץ על <strong>❓</strong> בכל עת לפתיחת מדריך זה בתוך האפליקציה</td>
+    </tr>
+  </table>
+
+  <!-- SCREENS -->
+  <div class="section-header">
+    <div class="section-number">📱</div>
+    <h2>5 המסכים הראשיים</h2>
+  </div>
+
+  <!-- Screen 1 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #1A5C6B, #2A7B8C);">
+      <div class="screen-card-emoji">🌴</div>
+      <div>
+        <div class="screen-card-title">מסך 1 – יעד והגדרות טיול</div>
+        <div class="screen-card-desc">המסך הראשון בכל טיול – פרטים בסיסיים</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">🌍 יעד</div><div class="feature-val">שם המקום שטסים אליו (למשל: תאילנד, פריז, ניו יורק)</div></div>
+      <div class="feature-row"><div class="feature-key">📅 תאריכים</div><div class="feature-val">תאריכי יציאה וחזרה – האפליקציה מחשבת את מספר הימים אוטומטית</div></div>
+      <div class="feature-row"><div class="feature-key">💱 מטבע ברירת מחדל</div><div class="feature-val">המטבע הראשי של הטיול; לחץ "הוסף מטבע" להוספת מטבעות נוספים עם שערים חיים</div></div>
+      <div class="feature-row"><div class="feature-key">👥 משתתפים</div><div class="feature-val">הוסף את שמות כל חברי הטיול – ישמש לחלוקת הוצאות והתחשבנות</div></div>
+      <div class="feature-row"><div class="feature-key">💰 תקציב מתוכנן</div><div class="feature-val">הזן סכום תקציב כולל לטיול בשקלים – תקבל מד התקדמות במסך התקציב עם התראה על חריגה</div></div>
+      <div class="tip-box">💡 טיפ: ניתן לערוך את כל הפרטים בכל שלב במהלך הטיול</div>
+    </div>
+  </div>
+
+  <!-- Screen 2 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #c0552a, #E8704A);">
+      <div class="screen-card-emoji">💳</div>
+      <div>
+        <div class="screen-card-title">מסך 2 – הוצאות</div>
+        <div class="screen-card-desc">מעקב אחר כל הוצאה במהלך הטיול</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">📂 קטגוריות</div><div class="feature-val">טיסה ✈️, מלון 🏨, אטרקציות 🎡, אוכל 🍜, מונית 🚕, אחר 📦</div></div>
+      <div class="feature-row"><div class="feature-key">💱 מולטי-מטבע</div><div class="feature-val">הכנס סכומים בכל מטבע – ממיר אוטומטית לשקלים לפי שער יציג</div></div>
+      <div class="feature-row"><div class="feature-key">📷 סריקת קבלה</div><div class="feature-val"><span class="new-badge">חדש</span>לחץ על אייקון המצלמה, צלם את הקבלה – AI ימלא את הסכום, המטבע והתיאור אוטומטית</div></div>
+
+      <div class="sub-header">✈️ טיסה בלבד</div>
+      <div class="feature-row"><div class="feature-key">✈️ מספר טיסה</div><div class="feature-val"><span class="new-badge">חדש</span>הכנס מספר טיסה (למשל: LY316) – יוצג בכרטיס ההוצאה ובציר השעות</div></div>
+      <div class="feature-row"><div class="feature-key">🛫 שעת המראה</div><div class="feature-val">הכנס שעת המראה לקבלת תזכורת אוטומטית לפני הטיסה</div></div>
+      <div class="feature-row"><div class="feature-key">🛬 שעת נחיתה</div><div class="feature-val"><span class="new-badge">חדש</span>הכנס שעת נחיתה צפויה – מוצגת בכרטיס הטיסה לצד שעת ההמראה</div></div>
+      <div class="feature-row"><div class="feature-key">🔔 זמן תזכורת</div><div class="feature-val">בחר כמה שעות לפני הטיסה לקבל תזכורת: 2 / 3 / 4 / 5 / 6 / 8 שעות</div></div>
+
+      <div class="sub-header">🏨 מלון בלבד</div>
+      <div class="feature-row"><div class="feature-key">צ'ק אין / אאוט</div><div class="feature-val">הכנס תאריכי שהייה – הסכום הוא לכל התקופה, המלון יופיע בכל ימי השהייה</div></div>
+
+      <div class="sub-header">🎡 פעילויות ואחר</div>
+      <div class="feature-row"><div class="feature-key">🕐 שעת התחלה</div><div class="feature-val"><span class="new-badge">חדש</span>הוסף שעת התחלה לציר השעות בלוח השנה היומי</div></div>
+      <div class="feature-row"><div class="feature-key">🕔 שעת סיום</div><div class="feature-val"><span class="new-badge">חדש</span>הוסף שעת סיום – האפליקציה מחשבת ומציגה את משך הפעילות אוטומטית</div></div>
+
+      <div class="sub-header">כל קטגוריה</div>
+      <div class="feature-row"><div class="feature-key">📍 כתובת</div><div class="feature-val">הוסף כתובת לניווט מהיר – לחיצה תפתח Google Maps ישירות לחיפוש המקום</div></div>
+      <div class="feature-row"><div class="feature-key">👥 / 👤 אישי/משותף</div><div class="feature-val">משותף = נכנס להתחשבנות הקבוצתית; אישי = רק אצלך, לא מחושב בהתחשבנות</div></div>
+      <div class="feature-row"><div class="feature-key">✅ שולם</div><div class="feature-val">סמן כ"שולם" לנעילת שער ההמרה – הסכום בשקלים לא ישתנה אם השער ישתנה</div></div>
+      <div class="feature-row"><div class="feature-key">✏️ עריכה</div><div class="feature-val">לחץ על אייקון העיפרון לעריכת הוצאה קיימת, או 🗑️ למחיקה</div></div>
+      <div class="feature-row"><div class="feature-key">🔍 חיפוש</div><div class="feature-val">שורת חיפוש לסינון הוצאות לפי תיאור, קטגוריה, או סטטוס תשלום</div></div>
+      <div class="tip-box">💡 טיפ: ניווט בין תאריכים דרך הסרגל העליון עם הנקודות הצבעוניות</div>
+    </div>
+  </div>
+
+  <!-- Screen 3 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #2d6b3e, #4A8C5C);">
+      <div class="screen-card-emoji">💰</div>
+      <div>
+        <div class="screen-card-title">מסך 3 – תקציב</div>
+        <div class="screen-card-desc">סיכום פיננסי מלא עם גרפים והתחשבנות</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">📊 עמידה בתקציב</div><div class="feature-val">מד התקדמות צבעוני: 🟢 עד 70%, 🟡 70–90%, 🔴 מעל 90%; מציג כמה נותר / חריגה ופירוט הוצאתי / שולם / נותר</div></div>
+      <div class="feature-row"><div class="feature-key">🔢 KPI מונפש</div><div class="feature-val"><span class="new-badge">חדש</span>סה"כ הוצאות, שולם, טרם שולם, ומספר הוצאות – עם אנימציית ספירה בכניסה למסך</div></div>
+      <div class="feature-row"><div class="feature-key">🥧 גרף עוגה</div><div class="feature-val">גרף אינטראקטיבי – לחץ/גע בפרוסה לראות פרטים; מחולק לפי קטגוריה</div></div>
+      <div class="feature-row"><div class="feature-key">📈 עמודות קטגוריה</div><div class="feature-val">פירוט ויזואלי של ההוצאות לפי קטגוריה עם אחוזים</div></div>
+      <div class="feature-row"><div class="feature-key">💸 התחשבנות</div><div class="feature-val">חישוב אוטומטי של מי חייב למי – מבוסס רק על הוצאות משותפות</div></div>
+      <div class="feature-row"><div class="feature-key">📤 ייצוא PDF</div><div class="feature-val">לחץ "📤 ייצוא" לדוח מעוצב עם תקציב, פירוט יומי והתחשבנות – הדוח יוצא <strong>בשפה הנוכחית</strong> מוכן להדפסה</div></div>
+      <div class="feature-row"><div class="feature-key">💱 ממיר מטבע</div><div class="feature-val">לחץ 💱 לפתיחת מחשבון המרה מהיר לכל זוג מטבעות</div></div>
+      <div class="tip-box">💡 טיפ: ההתחשבנות מחשבת רק הוצאות "משותפות" – הוצאות "אישיות" לא נכנסות לחישוב</div>
+    </div>
+  </div>
+
+  <!-- Screen 4 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #5B3E8C, #7B5EA7);">
+      <div class="screen-card-emoji">📅</div>
+      <div>
+        <div class="screen-card-title">מסך 4 – לוח שנה</div>
+        <div class="screen-card-desc">שתי תצוגות: חודשי ויומי עם ציר שעות</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="sub-header">📅 תצוגת חודש</div>
+      <div class="feature-row"><div class="feature-key">לוח חודשי</div><div class="feature-val">גריד שבועי עם נקודות צבעוניות: תכלת=טיסה, ירוק=מלון, צהוב=הוצאות, סגול=פעילויות</div></div>
+      <div class="feature-row"><div class="feature-key">ניווט חודשים</div><div class="feature-val">חצים ← → לניווט בין חודשים (רק חודשים בטווח הטיול)</div></div>
+      <div class="feature-row"><div class="feature-key">לחיצה על יום</div><div class="feature-val">לחץ על יום כדי לעבור לתצוגת היום עם ציר השעות</div></div>
+
+      <div class="sub-header">🕐 תצוגת יום</div>
+      <div class="feature-row"><div class="feature-key">ציר שעות</div><div class="feature-val">תצוגה של 05:00–23:00 – טיסות, צ'ק אין/אאוט, פעילויות ממוקמות בדיוק בציר</div></div>
+      <div class="feature-row"><div class="feature-key">🕐 משך פעילות</div><div class="feature-val"><span class="new-badge">חדש</span>פעילויות עם שעת התחלה וסיום מציגות את המשך בציר (למשל: "09:00–11:30 · 2.5 שעות")</div></div>
+      <div class="feature-row"><div class="feature-key">👆 סוויפ בין ימים</div><div class="feature-val"><span class="new-badge">חדש</span>החלק ימינה ליום הקודם, שמאלה ליום הבא – או השתמש בחצים ← → בכותרת</div></div>
+      <div class="feature-row"><div class="feature-key">🏨 ימי שהייה במלון</div><div class="feature-val">"המשך שהייה ב..." מוצג בחלק העליון של היום במקום בציר השעות – לא חוסם פעילויות</div></div>
+      <div class="feature-row"><div class="feature-key">🌤️ מזג אוויר</div><div class="feature-val">תחזית לכל יום: מזג אוויר, טמפרטורה מינ'/מקס', אחוז גשם (זמין עד 16 יום קדימה)</div></div>
+      <div class="feature-row"><div class="feature-key">🗺️ ניווט</div><div class="feature-val">אירועים עם כתובת מציגים אייקון מפה – לחץ לפתיחת Google Maps</div></div>
+      <div class="feature-row"><div class="feature-key">✏️ פעילויות</div><div class="feature-val">לחץ "✏️ פעילויות" על כל יום להוספת פעילויות מותאמות אישית עם שעת התחלה/סיום</div></div>
+      <div class="tip-box">💡 טיפ: פעילות עם שעה מופיעה בציר – בלי שעה מופיעה בסעיף "ללא שעה" בתחתית</div>
+    </div>
+  </div>
+
+  <!-- Screen 5 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #1a4a7a, #2563aa);">
+      <div class="screen-card-emoji">✨</div>
+      <div>
+        <div class="screen-card-title">מסך 5 – המלצות <span style="font-size:10px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:999px;margin-right:8px;">חדש לחלוטין</span></div>
+        <div class="screen-card-desc">המלצות AI + הזמנת מלונות ופעילויות</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">🤖 המלצות AI</div><div class="feature-val"><span class="new-badge">חדש</span>לחץ "קבל המלצות" – Claude AI מנתח את היעד ומחזיר המלצות באנגלית: אטרקציות must-see, מסעדות מומלצות וטיפ מקומי אחד</div></div>
+      <div class="feature-row"><div class="feature-key">🗺️ Google Maps</div><div class="feature-val"><span class="new-badge">חדש</span>כפתור "Open in Maps" ליד כל המלצה – פותח Google Maps לחיפוש המקום ישירות</div></div>
+      <div class="feature-row"><div class="feature-key">🏨 הזמנת מלון</div><div class="feature-val">קישורים ל-<strong>Agoda</strong> ו-<strong>Booking.com</strong> – נפתחים עם יעד ותאריכי הטיול ממולאים</div></div>
+      <div class="feature-row"><div class="feature-key">🎡 הזמנת פעילויות</div><div class="feature-val">קישורים ל-<strong>Viator</strong> ו-<strong>GetYourGuide</strong> – חיפוש סיורים ופעילויות ביעד</div></div>
+      <div class="feature-row"><div class="feature-key">⏳ סקלטון לודר</div><div class="feature-val">בזמן טעינת ההמלצות מוצגת אנימציית טעינה חלקה – ללא מסך ריק</div></div>
+      <div class="tip-box">💡 ההמלצות ניתנות תמיד באנגלית לאיכות מיטבית – גוגל מפס פותח לחיפוש בשפת ה-GPS שלך</div>
+    </div>
+  </div>
+
+  <!-- SHARING -->
+  <div class="section-header">
+    <div class="section-number">👥</div>
+    <h2>שיתוף טיולים</h2>
+  </div>
+
+  <div style="font-size:13px;font-weight:700;color:#0d2137;margin-bottom:10px;">👥 שיתוף לעריכה משותפת</div>
+  <table class="info-table">
+    <tr><th class="key-col">נושא</th><th>הסבר</th></tr>
+    <tr><td class="key-col">איך משתפים</td><td>פתח טיול → לחץ כפתור <strong>👥 שתף</strong> → הכנס כתובת אימייל של החבר</td></tr>
+    <tr><td class="key-col">מה החבר רואה</td><td>לאחר הרשמה/כניסה עם אותו אימייל – הטיול מופיע אוטומטית עם תג "משותף"</td></tr>
+    <tr><td class="key-col">עדכון בזמן אמת</td><td>כל שינוי (הוצאה, פעילות) מסונכרן מיידית לכל המשתתפים</td></tr>
+    <tr><td class="key-col">הרשאות</td><td>כל המשתתפים יכולים להוסיף ולערוך הוצאות</td></tr>
+    <tr><td class="key-col">שליחת הזמנה</td><td>לאחר השיתוף לחץ 📲 לשליחה בוואטסאפ או 📋 להעתקת הלינק</td></tr>
+  </table>
+
+  <div style="font-size:13px;font-weight:700;color:#0d2137;margin:18px 0 10px;">✨ שיתוף כהשראה</div>
+  <table class="info-table">
+    <tr><th class="key-col">נושא</th><th>הסבר</th></tr>
+    <tr><td class="key-col">מה זה?</td><td>שלח לחבר לינק לקריאה בלבד – הוא רואה מה עשית ומתי, <strong>ללא מחירים</strong></td></tr>
+    <tr><td class="key-col">איך מפעילים</td><td>פתח טיול → לחץ כפתור <strong>✨</strong> → בטל סימון פריטים שרוצים להסתיר → לחץ "צור לינק"</td></tr>
+    <tr><td class="key-col">פרטיות</td><td>ניתן להסתיר פריטים ספציפיים (למשל מחיר המלון) לפני יצירת הלינק</td></tr>
+    <tr><td class="key-col">מה המקבל יכול לעשות</td><td>לראות את הפריטים, לסמן בצ'קבוקס מה מעניין אותו, וללחוץ "ייבא" לטיול חדש אצלו</td></tr>
+    <tr><td class="key-col">האם צריך חשבון?</td><td>כדי לייבא – כן. כדי לצפות בלבד – לא, הלינק פתוח לכולם</td></tr>
+    <tr><td class="key-col">שליחה</td><td>לחץ 📲 לשליחה בוואטסאפ או 📋 להעתקת הלינק</td></tr>
+  </table>
+
+  <!-- NOTIFICATIONS -->
+  <div class="section-header">
+    <div class="section-number">🔔</div>
+    <h2>התראות Push</h2>
+  </div>
+
+  <table class="info-table">
+    <tr><th class="key-col">סוג התראה</th><th>מתי מגיעה</th></tr>
+    <tr><td class="key-col">✈️ תזכורת שדה</td><td><strong>מותאם אישית!</strong> 2 / 3 / 4 / 5 / 6 / 8 שעות לפני שעת ההמראה (לבחירתך בעת הזנת הטיסה)</td></tr>
+    <tr><td class="key-col">🏨 צ'ק אין</td><td>בבוקר יום הצ'ק אין (08:00)</td></tr>
+    <tr><td class="key-col">🏨 צ'ק אאוט</td><td>בבוקר יום הצ'ק אאוט (08:00) – תזכורת לפינוי חדר</td></tr>
+    <tr><td class="key-col">💳 הוצאה חדשה</td><td>כשחבר מוסיף הוצאה משותפת לטיול המשותף שלך</td></tr>
+  </table>
+
+  <div class="tip-box" style="margin-bottom: 24px;">
+    💡 להפעלת התראות: לחץ על אייקון 🔕 בסרגל הבית → אשר את בקשת ההרשאה בדפדפן
+  </div>
+
+  <!-- PDF REPORT -->
+  <div class="section-header">
+    <div class="section-number">📤</div>
+    <h2>דוח ייצוא PDF</h2>
+  </div>
+
+  <div class="intro-box" style="background: #f0f9ff; border-color: #0369a1;">
+    דוח ייצוא מעוצב – <strong>בעברית או באנגלית</strong> לפי שפת הממשק. לחץ על <strong>📤 ייצוא</strong> במסך התקציב, או על <strong>📄</strong> בסרגל העליון, לקבלת מסמך מלא:
+  </div>
+
+  <table class="info-table">
+    <tr><th class="key-col">סעיף בדוח</th><th>מה הוא כולל</th></tr>
+    <tr><td class="key-col">📌 כותרת</td><td>שם היעד, תאריכי הטיול, ולוגו טיולון</td></tr>
+    <tr><td class="key-col">📊 KPI</td><td>סה"כ הוצאות, שולם, טרם שולם, מספר הוצאות</td></tr>
+    <tr><td class="key-col">💰 תקציב</td><td>מד התקדמות עם אחוזים וחריגה (אם הוגדר תקציב)</td></tr>
+    <tr><td class="key-col">📈 קטגוריות</td><td>גרפי עמודות לפי קטגוריה</td></tr>
+    <tr><td class="key-col">📅 לפי יום</td><td>טבלת כל ההוצאות לפי תאריך – עם תיאור, כתובת, סכום מקורי וב-₪</td></tr>
+    <tr><td class="key-col">💸 התחשבנות</td><td>מי חייב למי על הוצאות משותפות</td></tr>
+  </table>
+
+  <div class="tip-box" style="margin-bottom: 24px;">
+    💡 לאחר פתיחת הדוח – Ctrl+P (Windows) או Command+P (Mac) לשמירה כ-PDF
+  </div>
+
+  <!-- LEGAL & HELP -->
+  <div class="section-header">
+    <div class="section-number">⚖️</div>
+    <h2>מידע ועזרה</h2>
+  </div>
+
+  <table class="info-table">
+    <tr><th class="key-col">נושא</th><th>איפה מוצאים</th></tr>
+    <tr><td class="key-col">❓ מדריך למשתמש</td><td>לחץ על כפתור ❓ בפינת מסך הבית – פותח את המדריך הזה בתוך האפליקציה</td></tr>
+    <tr><td class="key-col">🔒 מדיניות פרטיות</td><td>זמינה ב-<strong>www.tulon.co.il/privacy</strong> וגם מתפריט האפליקציה</td></tr>
+    <tr><td class="key-col">📋 תנאי שימוש</td><td>זמינים ב-<strong>www.tulon.co.il/terms</strong> וגם מתפריט האפליקציה</td></tr>
+    <tr><td class="key-col">📧 צור קשר</td><td>contact@tulon.co.il – או לחץ "צור קשר" בתחתית האפליקציה</td></tr>
+  </table>
+
+  <!-- TIPS -->
+  <div class="section-header">
+    <div class="section-number">⚡</div>
+    <h2>טיפים שימושיים</h2>
+  </div>
+
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-title">📱 גישה ממכשירים שונים</div>
+      <div class="tip-text">כנס עם אותו אימייל מכל מכשיר – הטיולים מסונכרנים אוטומטית בענן</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">📷 סריקת קבלות</div>
+      <div class="tip-text">צלם קבלה בהוספת הוצאה – AI ימלא את הסכום, המטבע והתיאור אוטומטית</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">✨ המלצות AI</div>
+      <div class="tip-text">לחץ "קבל המלצות" במסך ההמלצות לקבלת אטרקציות, מסעדות וטיפ מקומי מ-AI</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">👆 סוויפ בין ימים</div>
+      <div class="tip-text">בתצוגת היום: החלק ימינה/שמאלה לניווט מהיר בין ימים ללא לחיצות</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">💱 המרת מטבע מהירה</div>
+      <div class="tip-text">לחץ 💱 מכל מסך לפתיחת מחשבון המרה – שימושי בקניות בשוק</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🔒 נעילת שער המטבע</div>
+      <div class="tip-text">סמן הוצאה כ"שולם" כדי לנעול את שער ההמרה ברגע התשלום</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">📤 ייצוא PDF מעוצב</div>
+      <div class="tip-text">לחץ "ייצוא" במסך התקציב לדוח מלא ויפה בעברית</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🗺️ ניווט מהיר</div>
+      <div class="tip-text">הוסף כתובת לכל מסעדה/אטרקציה – לחיצה תפתח Google Maps</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🕐 טווח שעות</div>
+      <div class="tip-text">הוסף שעת התחלה וסיום לפעילות – האפליקציה מחשבת את המשך ומציגה בציר</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">✈️ פרטי טיסה</div>
+      <div class="tip-text">הכנס מספר טיסה ושעת נחיתה – יוצגו בכרטיס הטיסה ובציר השעות</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🔔 תזכורת מותאמת</div>
+      <div class="tip-text">בעת הזנת טיסה – בחר 2 עד 8 שעות לפני לקבלת תזכורת לשדה</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🌐 החלפת שפה</div>
+      <div class="tip-text">לחץ עב / EN בפינה של כל מסך לעבור בין עברית לאנגלית – ההעדפה נשמרת אוטומטית</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">✏️ עריכת הוצאה</div>
+      <div class="tip-text">טעית בסכום? לחץ על העיפרון על ההוצאה כדי לערוך</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">👤 הוצאות אישיות</div>
+      <div class="tip-text">סמן הוצאה כ"אישית" כדי שלא תיכנס להתחשבנות הקבוצתית</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">📱 אפליקציית אנדרואיד</div>
+      <div class="tip-text">הורד מגוגל פליי לחוויה מלאה כאפליקציה מקומית – עם אייקון במסך הבית</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🌍 ריבוי טיולים</div>
+      <div class="tip-text">נהל כמה טיולים במקביל – עבור ביניהם ממסך הבית</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="guide-footer">
+  <span>טיולון</span> – מתכנן הטיולים שלי &nbsp;|&nbsp; www.tulon.co.il &nbsp;|&nbsp; גרסה 5.0
+</div>
+
+</body>
+</html>

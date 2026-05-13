@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TUlon – User Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Rubik', Arial, sans-serif;
+    background: #f8fafc;
+    color: #1a2b35;
+    direction: ltr;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: linear-gradient(160deg, #091928 0%, #0d2137 60%, #0a3050 100%);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: -80px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,223,223,0.08) 0%, transparent 70%);
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; right: -60px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,223,223,0.06) 0%, transparent 70%);
+  }
+  .cover-inner { position: relative; z-index: 1; }
+  .cover h1 {
+    font-size: 52px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .cover h1 .tu { color: #64dfdf; }
+  .cover .subtitle {
+    font-size: 16px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: #64dfdf;
+    color: #0d2137;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 24px;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+  }
+  .cover .version {
+    display: inline-block;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-top: 14px;
+    margin-left: 8px;
+  }
+
+  /* ── CONTENT ── */
+  .content { max-width: 800px; margin: 0 auto; padding: 40px 32px; }
+
+  /* ── INTRO BOX ── */
+  .intro-box {
+    background: #e8f4f8;
+    border-left: 4px solid #64dfdf;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 36px;
+    font-size: 14px;
+    color: #2d4050;
+    line-height: 1.7;
+  }
+
+  /* ── WHATS NEW ── */
+  .whats-new {
+    background: linear-gradient(135deg, #fef9c3, #fef3c7);
+    border-left: 4px solid #fbbf24;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 36px;
+  }
+  .whats-new-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #92400e;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .whats-new ul { list-style: none; padding: 0; }
+  .whats-new li {
+    font-size: 13px;
+    color: #78350f;
+    padding: 4px 0;
+    padding-left: 22px;
+    position: relative;
+  }
+  .whats-new li::before {
+    content: '✨';
+    position: absolute;
+    left: 0;
+    top: 5px;
+    font-size: 11px;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 36px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #64dfdf;
+  }
+  .section-header h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0d2137;
+    letter-spacing: -0.3px;
+  }
+  .section-number {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: #0d2137;
+    color: #64dfdf;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── SCREEN CARDS ── */
+  .screen-card {
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .screen-card-header {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .screen-card-emoji { font-size: 26px; line-height: 1; }
+  .screen-card-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.2px;
+  }
+  .screen-card-desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 3px;
+    font-weight: 400;
+  }
+  .screen-card-body { background: #ffffff; padding: 16px 20px; }
+  .feature-row {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f4f8;
+    align-items: flex-start;
+  }
+  .feature-row:last-child { border-bottom: none; }
+  .feature-key {
+    font-weight: 700;
+    font-size: 13px;
+    color: #0d2137;
+    min-width: 150px;
+    flex-shrink: 0;
+  }
+  .feature-val { font-size: 13px; color: #4a5568; line-height: 1.5; }
+  .feature-val .new-badge {
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    margin-right: 6px;
+  }
+  .sub-header {
+    padding: 8px 0 4px;
+    font-size: 12px;
+    color: #64dfdf;
+    font-weight: 700;
+  }
+  .tip-box {
+    background: #f0fdf4;
+    border-left: 3px solid #4ade80;
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #166534;
+    font-style: italic;
+  }
+
+  /* ── STEPS TABLE ── */
+  .steps-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; border-radius: 12px; overflow: hidden; }
+  .steps-table th {
+    background: #0d2137;
+    color: #64dfdf;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+  }
+  .steps-table td {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f4f8;
+    vertical-align: top;
+  }
+  .steps-table tr:nth-child(even) td { background: #f8fafc; }
+  .steps-table .step-num {
+    width: 36px;
+    font-weight: 800;
+    color: #64dfdf;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  /* ── INFO TABLE ── */
+  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; border-radius: 12px; overflow: hidden; }
+  .info-table th {
+    background: #0d2137;
+    color: white;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+  }
+  .info-table td {
+    padding: 9px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f4f8;
+    vertical-align: top;
+  }
+  .info-table tr:nth-child(even) td { background: #f8fafc; }
+  .info-table .key-col { font-weight: 700; color: #2A7B8C; width: 35%; }
+
+  /* ── TIPS GRID ── */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .tip-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-top: 3px solid #64dfdf;
+  }
+  .tip-card .tip-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0d2137;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tip-card .tip-text { font-size: 12px; color: #4a5568; line-height: 1.5; }
+
+  /* ── FOOTER ── */
+  .guide-footer {
+    background: #0d2137;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    margin-top: 40px;
+  }
+  .guide-footer span { color: #64dfdf; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: white; font-size: 12px; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .screen-card-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .steps-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .info-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tip-card { break-inside: avoid; }
+    .screen-card { break-inside: avoid; }
+    .guide-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-inner">
+    <h1><span class="tu">TU</span>lon</h1>
+    <div class="subtitle">My Trip Planner</div>
+    <div class="badge">User Guide</div>
+    <div>
+      <span class="version">Version 5.0</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- INTRO -->
+  <div class="intro-box">
+    <strong>Welcome to TUlon!</strong> The app helps you plan trips, track expenses, manage your budget, and coordinate with travel companions.
+    This guide explains every screen and feature clearly and concisely.
+  </div>
+
+  <!-- WHATS NEW -->
+  <div class="whats-new">
+    <div class="whats-new-title">🎉 What's New in Version 5.0</div>
+    <ul>
+      <li><strong>AI Tips ✨</strong> – Brand-new Tips screen powered by Claude AI: get attraction recommendations, restaurant picks, and a local insider tip for your destination in one tap</li>
+      <li><strong>Receipt Scanning 📷</strong> – Photograph a receipt and AI automatically fills in the amount, currency, and description</li>
+      <li><strong>Flight Number &amp; Landing Time ✈️</strong> – New fields for flights: flight number and estimated landing time</li>
+      <li><strong>Time Range for Activities 🕐</strong> – Set a start and end time for any activity or expense – the app calculates duration automatically</li>
+      <li><strong>Swipe Between Days 👆</strong> – Swipe left/right in Day View to move quickly between days</li>
+      <li><strong>Smoother UX 💫</strong> – Animated screen transitions, button press effects, subtle haptic feedback, animated KPI counters, and skeleton loader in the Tips screen</li>
+      <li><strong>Legal Pages ⚖️</strong> – Privacy Policy, Terms of Service, and Contact – all accessible from within the app</li>
+      <li><strong>Android App 📱</strong> – Now available on Google Play! Install as a native app with a home-screen icon</li>
+    </ul>
+  </div>
+
+  <!-- GETTING STARTED -->
+  <div class="section-header">
+    <div class="section-number">→</div>
+    <h2>Getting Started</h2>
+  </div>
+
+  <table class="steps-table">
+    <tr>
+      <th class="step-num">#</th>
+      <th>Action</th>
+    </tr>
+    <tr>
+      <td class="step-num">1</td>
+      <td>Open <strong>www.tulon.co.il</strong> in your mobile browser, on your computer, or download from Google Play</td>
+    </tr>
+    <tr>
+      <td class="step-num">2</td>
+      <td>Tap <strong>"New user? Sign up"</strong> and enter your email and password</td>
+    </tr>
+    <tr>
+      <td class="step-num">3</td>
+      <td>Tap the bell icon 🔔 in the top bar and allow notifications to receive reminders</td>
+    </tr>
+    <tr>
+      <td class="step-num">4</td>
+      <td>Tap <strong>"+ New Trip"</strong> to create your first trip</td>
+    </tr>
+    <tr>
+      <td class="step-num">5</td>
+      <td>Share your trip with friends via the <strong>👥 Share</strong> button inside the trip</td>
+    </tr>
+    <tr>
+      <td class="step-num">6</td>
+      <td>Tap <strong>❓</strong> at any time to open this guide from within the app</td>
+    </tr>
+  </table>
+
+  <!-- SCREENS -->
+  <div class="section-header">
+    <div class="section-number">📱</div>
+    <h2>The 5 Main Screens</h2>
+  </div>
+
+  <!-- Screen 1 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #1A5C6B, #2A7B8C);">
+      <div class="screen-card-emoji">🌴</div>
+      <div>
+        <div class="screen-card-title">Screen 1 – Destination &amp; Trip Settings</div>
+        <div class="screen-card-desc">The first screen for every trip – basic details</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">🌍 Destination</div><div class="feature-val">The name of the place you're traveling to (e.g. Thailand, Paris, New York)</div></div>
+      <div class="feature-row"><div class="feature-key">📅 Dates</div><div class="feature-val">Departure and return dates – the app calculates the number of days automatically</div></div>
+      <div class="feature-row"><div class="feature-key">💱 Default Currency</div><div class="feature-val">The main currency for the trip; tap "Add currency" to add more currencies with live exchange rates</div></div>
+      <div class="feature-row"><div class="feature-key">👥 Participants</div><div class="feature-val">Add the names of all travel companions – used for expense splitting and settlement</div></div>
+      <div class="feature-row"><div class="feature-key">💰 Planned Budget</div><div class="feature-val">Enter a total budget in ILS – you'll get a progress bar in the Budget screen with an overage alert</div></div>
+      <div class="tip-box">💡 Tip: All details can be edited at any point during the trip</div>
+    </div>
+  </div>
+
+  <!-- Screen 2 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #c0552a, #E8704A);">
+      <div class="screen-card-emoji">💳</div>
+      <div>
+        <div class="screen-card-title">Screen 2 – Expenses</div>
+        <div class="screen-card-desc">Track every expense during your trip</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">📂 Categories</div><div class="feature-val">Flight ✈️, Hotel 🏨, Attractions 🎡, Food 🍜, Taxi 🚕, Other 📦</div></div>
+      <div class="feature-row"><div class="feature-key">💱 Multi-currency</div><div class="feature-val">Enter amounts in any currency – automatically converted to ILS at the live exchange rate</div></div>
+      <div class="feature-row"><div class="feature-key">📷 Receipt scanning</div><div class="feature-val"><span class="new-badge">new</span>Tap the camera icon, photograph your receipt – AI automatically fills in the amount, currency, and description</div></div>
+
+      <div class="sub-header">✈️ Flights only</div>
+      <div class="feature-row"><div class="feature-key">✈️ Flight number</div><div class="feature-val"><span class="new-badge">new</span>Enter the flight number (e.g. LY316) – displayed on the expense card and timeline</div></div>
+      <div class="feature-row"><div class="feature-key">🛫 Departure time</div><div class="feature-val">Enter the departure time to get an automatic reminder before the flight</div></div>
+      <div class="feature-row"><div class="feature-key">🛬 Landing time</div><div class="feature-val"><span class="new-badge">new</span>Enter the estimated landing time – displayed alongside the departure time on the flight card</div></div>
+      <div class="feature-row"><div class="feature-key">🔔 Reminder time</div><div class="feature-val">Choose how many hours before the flight to receive a reminder: 2 / 3 / 4 / 5 / 6 / 8 hours</div></div>
+
+      <div class="sub-header">🏨 Hotels only</div>
+      <div class="feature-row"><div class="feature-key">Check-in / Check-out</div><div class="feature-val">Enter stay dates – the amount covers the entire stay; the hotel appears on every night of the stay</div></div>
+
+      <div class="sub-header">🎡 Activities &amp; Other</div>
+      <div class="feature-row"><div class="feature-key">🕐 Start time</div><div class="feature-val"><span class="new-badge">new</span>Add a start time to place the event on the hourly timeline in Day View</div></div>
+      <div class="feature-row"><div class="feature-key">🕔 End time</div><div class="feature-val"><span class="new-badge">new</span>Add an end time – the app calculates and displays the activity duration automatically</div></div>
+
+      <div class="sub-header">All categories</div>
+      <div class="feature-row"><div class="feature-key">📍 Address</div><div class="feature-val">Add an address for quick navigation – tapping opens Google Maps directly</div></div>
+      <div class="feature-row"><div class="feature-key">👥 / 👤 Shared / Personal</div><div class="feature-val">Shared = enters the group settlement; Personal = yours only, not included in settlement</div></div>
+      <div class="feature-row"><div class="feature-key">✅ Paid</div><div class="feature-val">Mark as "Paid" to lock the exchange rate – the ILS amount won't change if the rate changes later</div></div>
+      <div class="feature-row"><div class="feature-key">✏️ Edit</div><div class="feature-val">Tap the pencil icon to edit an existing expense, or 🗑️ to delete it</div></div>
+      <div class="feature-row"><div class="feature-key">🔍 Search</div><div class="feature-val">Search bar for filtering expenses by description, category, or payment status</div></div>
+      <div class="tip-box">💡 Tip: Navigate between dates using the top bar with colored dots</div>
+    </div>
+  </div>
+
+  <!-- Screen 3 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #2d6b3e, #4A8C5C);">
+      <div class="screen-card-emoji">💰</div>
+      <div>
+        <div class="screen-card-title">Screen 3 – Budget</div>
+        <div class="screen-card-desc">Full financial summary with charts and settlement</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">📊 Budget Progress</div><div class="feature-val">Color-coded progress bar: 🟢 up to 70%, 🟡 70–90%, 🔴 above 90%; shows amount remaining / overage with a Spent / Paid / Remaining breakdown</div></div>
+      <div class="feature-row"><div class="feature-key">🔢 Animated KPIs</div><div class="feature-val"><span class="new-badge">new</span>Total expenses, paid, unpaid, and expense count – with a smooth counting animation when you open the screen</div></div>
+      <div class="feature-row"><div class="feature-key">🥧 Pie Chart</div><div class="feature-val">Interactive chart – tap a slice to see details; broken down by category</div></div>
+      <div class="feature-row"><div class="feature-key">📈 Category Bars</div><div class="feature-val">Visual breakdown of expenses by category with percentages</div></div>
+      <div class="feature-row"><div class="feature-key">💸 Settlement</div><div class="feature-val">Automatic calculation of who owes whom – based only on shared expenses</div></div>
+      <div class="feature-row"><div class="feature-key">📤 PDF Export</div><div class="feature-val">Tap "📤 Export" for a formatted report with budget, daily breakdown, and final settlement – exported in the current language, ready to print or save as PDF</div></div>
+      <div class="feature-row"><div class="feature-key">💱 Currency Converter</div><div class="feature-val">Tap 💱 to open a quick conversion calculator for any currency pair</div></div>
+      <div class="tip-box">💡 Tip: Settlement only counts "shared" expenses – "personal" expenses are excluded from the calculation</div>
+    </div>
+  </div>
+
+  <!-- Screen 4 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #5B3E8C, #7B5EA7);">
+      <div class="screen-card-emoji">📅</div>
+      <div>
+        <div class="screen-card-title">Screen 4 – Calendar</div>
+        <div class="screen-card-desc">Two views: monthly overview and hourly day timeline</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="sub-header">📅 Month View</div>
+      <div class="feature-row"><div class="feature-key">Monthly grid</div><div class="feature-val">Weekly grid with colored dots: teal = flight, green = hotel, yellow = expenses, purple = activities</div></div>
+      <div class="feature-row"><div class="feature-key">Month navigation</div><div class="feature-val">← → arrows to navigate months (restricted to months within the trip range)</div></div>
+      <div class="feature-row"><div class="feature-key">Tap a day</div><div class="feature-val">Tap any day to switch to the Day view with the hourly timeline</div></div>
+
+      <div class="sub-header">🕐 Day View</div>
+      <div class="feature-row"><div class="feature-key">Hourly timeline</div><div class="feature-val">05:00–23:00 view – flights, check-in/out, and time-stamped expenses placed precisely on the timeline</div></div>
+      <div class="feature-row"><div class="feature-key">🕐 Activity duration</div><div class="feature-val"><span class="new-badge">new</span>Activities with a start and end time show their duration on the timeline (e.g. "09:00–11:30 · 2.5 hrs")</div></div>
+      <div class="feature-row"><div class="feature-key">👆 Swipe between days</div><div class="feature-val"><span class="new-badge">new</span>Swipe right for the previous day, left for the next – or use the ← → arrows in the header</div></div>
+      <div class="feature-row"><div class="feature-key">🏨 Hotel stay days</div><div class="feature-val">"Continuing stay at…" shown as a banner at the top of the day instead of on the timeline – doesn't block activities</div></div>
+      <div class="feature-row"><div class="feature-key">🌤️ Weather</div><div class="feature-val">Daily forecast: weather, min/max temperature, rain probability (available up to 16 days ahead)</div></div>
+      <div class="feature-row"><div class="feature-key">🗺️ Navigation</div><div class="feature-val">Events with an address show a map icon – tap to open Google Maps</div></div>
+      <div class="feature-row"><div class="feature-key">✏️ Activities</div><div class="feature-val">Tap "✏️ Activities" on any day to add custom activities with an optional start/end time</div></div>
+      <div class="tip-box">💡 Tip: An activity with a time appears on the timeline – without a time it appears in the "No time set" section at the bottom</div>
+    </div>
+  </div>
+
+  <!-- Screen 5 -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #1a4a7a, #2563aa);">
+      <div class="screen-card-emoji">✨</div>
+      <div>
+        <div class="screen-card-title">Screen 5 – Tips <span style="font-size:10px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:999px;margin-left:8px;">all new</span></div>
+        <div class="screen-card-desc">AI recommendations + book hotels &amp; activities</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">🤖 AI Recommendations</div><div class="feature-val"><span class="new-badge">new</span>Tap "Get Recommendations" – Claude AI analyzes your destination and returns must-see attractions, top restaurants, and one local insider tip</div></div>
+      <div class="feature-row"><div class="feature-key">🗺️ Google Maps</div><div class="feature-val"><span class="new-badge">new</span>"Open in Maps" button next to each recommendation – opens Google Maps to search the place directly</div></div>
+      <div class="feature-row"><div class="feature-key">🏨 Book Hotels</div><div class="feature-val">Links to <strong>Agoda</strong> and <strong>Booking.com</strong> – open with your destination and trip dates pre-filled</div></div>
+      <div class="feature-row"><div class="feature-key">🎡 Book Activities</div><div class="feature-val">Links to <strong>Viator</strong> and <strong>GetYourGuide</strong> – search tours and activities at your destination</div></div>
+      <div class="feature-row"><div class="feature-key">⏳ Skeleton Loader</div><div class="feature-val">A smooth animation plays while recommendations load – no blank screen</div></div>
+      <div class="tip-box">💡 Recommendations are always in English for best quality – Google Maps opens in your device's GPS language</div>
+    </div>
+  </div>
+
+  <!-- SHARING -->
+  <div class="section-header">
+    <div class="section-number">👥</div>
+    <h2>Sharing Trips</h2>
+  </div>
+
+  <div style="font-size:13px;font-weight:700;color:#0d2137;margin-bottom:10px;">👥 Collaborative Sharing</div>
+  <table class="info-table">
+    <tr><th class="key-col">Topic</th><th>Details</th></tr>
+    <tr><td class="key-col">How to share</td><td>Open a trip → tap the <strong>👥 Share</strong> button → enter your friend's email address</td></tr>
+    <tr><td class="key-col">What the friend sees</td><td>After signing in with the same email – the trip appears automatically with a "Shared" badge</td></tr>
+    <tr><td class="key-col">Real-time sync</td><td>Every change (expense, activity) syncs instantly to all participants</td></tr>
+    <tr><td class="key-col">Permissions</td><td>All participants can add and edit expenses</td></tr>
+    <tr><td class="key-col">Sending the invite</td><td>After sharing, tap 📲 to send via WhatsApp or 📋 to copy the link</td></tr>
+  </table>
+
+  <div style="font-size:13px;font-weight:700;color:#0d2137;margin:18px 0 10px;">✨ Share as Inspiration</div>
+  <table class="info-table">
+    <tr><th class="key-col">Topic</th><th>Details</th></tr>
+    <tr><td class="key-col">What is it?</td><td>Send a friend a read-only link – they see what you did and when, <strong>without prices</strong></td></tr>
+    <tr><td class="key-col">How to use</td><td>Open a trip → tap the <strong>✨</strong> button → uncheck items to hide → tap "Create link"</td></tr>
+    <tr><td class="key-col">Privacy</td><td>Hide specific items (e.g. hotel price) before creating the link</td></tr>
+    <tr><td class="key-col">What the recipient can do</td><td>View the items, check what interests them, and tap "Import" to add them to their own trip</td></tr>
+    <tr><td class="key-col">Account required?</td><td>To import – yes. To view only – no, the link is open to everyone</td></tr>
+    <tr><td class="key-col">Sending</td><td>Tap 📲 to send via WhatsApp or 📋 to copy the link</td></tr>
+  </table>
+
+  <!-- NOTIFICATIONS -->
+  <div class="section-header">
+    <div class="section-number">🔔</div>
+    <h2>Push Notifications</h2>
+  </div>
+
+  <table class="info-table">
+    <tr><th class="key-col">Notification type</th><th>When it arrives</th></tr>
+    <tr><td class="key-col">✈️ Airport reminder</td><td><strong>Customizable!</strong> 2 / 3 / 4 / 5 / 6 / 8 hours before departure time (your choice when entering the flight)</td></tr>
+    <tr><td class="key-col">🏨 Check-in</td><td>On the morning of check-in day (08:00)</td></tr>
+    <tr><td class="key-col">🏨 Check-out</td><td>On the morning of check-out day (08:00) – a reminder to vacate the room</td></tr>
+    <tr><td class="key-col">💳 New expense</td><td>When a companion adds a shared expense to your joint trip</td></tr>
+  </table>
+
+  <div class="tip-box" style="margin-bottom: 24px;">
+    💡 To enable notifications: tap the 🔕 icon in the home bar → allow the browser permission request
+  </div>
+
+  <!-- PDF REPORT -->
+  <div class="section-header">
+    <div class="section-number">📤</div>
+    <h2>PDF Export Report</h2>
+  </div>
+
+  <div class="intro-box" style="background: #f0f9ff; border-color: #0369a1;">
+    A fully formatted export report – <strong>in English or Hebrew</strong> based on the current interface language. Tap <strong>📤 Export</strong> in the Budget screen, or <strong>📄</strong> in the top bar, to get a complete document:
+  </div>
+
+  <table class="info-table">
+    <tr><th class="key-col">Report section</th><th>Contents</th></tr>
+    <tr><td class="key-col">📌 Header</td><td>Destination name, trip dates, and TUlon logo</td></tr>
+    <tr><td class="key-col">📊 KPIs</td><td>Total expenses, paid, unpaid, expense count</td></tr>
+    <tr><td class="key-col">💰 Budget</td><td>Progress bar with percentage and overage (if a budget was set)</td></tr>
+    <tr><td class="key-col">📈 Categories</td><td>Bar charts by category</td></tr>
+    <tr><td class="key-col">📅 By day</td><td>Full expense table by date – with description, address, original amount, and ILS amount</td></tr>
+    <tr><td class="key-col">💸 Settlement</td><td>Who owes whom for shared expenses</td></tr>
+  </table>
+
+  <div class="tip-box" style="margin-bottom: 24px;">
+    💡 After the report opens – Ctrl+P (Windows) or Command+P (Mac) to save as PDF
+  </div>
+
+  <!-- LEGAL & HELP -->
+  <div class="section-header">
+    <div class="section-number">⚖️</div>
+    <h2>Help &amp; Legal</h2>
+  </div>
+
+  <table class="info-table">
+    <tr><th class="key-col">Topic</th><th>Where to find it</th></tr>
+    <tr><td class="key-col">❓ User Guide</td><td>Tap the ❓ button in the corner of the home screen – opens this guide within the app</td></tr>
+    <tr><td class="key-col">🔒 Privacy Policy</td><td>Available at <strong>www.tulon.co.il/privacy</strong> and from the app menu</td></tr>
+    <tr><td class="key-col">📋 Terms of Service</td><td>Available at <strong>www.tulon.co.il/terms</strong> and from the app menu</td></tr>
+    <tr><td class="key-col">📧 Contact</td><td>contact@tulon.co.il – or tap "Contact" at the bottom of the app</td></tr>
+  </table>
+
+  <!-- TIPS -->
+  <div class="section-header">
+    <div class="section-number">⚡</div>
+    <h2>Useful Tips</h2>
+  </div>
+
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-title">📱 Access from any device</div>
+      <div class="tip-text">Log in with the same email from any device – trips sync automatically in the cloud</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">📷 Scan receipts</div>
+      <div class="tip-text">Photograph a receipt when adding an expense – AI fills in amount, currency, and description instantly</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">✨ AI Tips</div>
+      <div class="tip-text">Tap "Get Recommendations" in the Tips screen for attractions, restaurants, and a local tip powered by AI</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">👆 Swipe between days</div>
+      <div class="tip-text">In Day View: swipe left or right to quickly navigate between days without extra taps</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">💱 Quick currency conversion</div>
+      <div class="tip-text">Tap 💱 from any screen to open the converter – handy when shopping at a market</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🔒 Lock the exchange rate</div>
+      <div class="tip-text">Mark an expense as "Paid" to lock the exchange rate at the moment of payment</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">📤 Formatted PDF export</div>
+      <div class="tip-text">Tap "Export" in the Budget screen for a full, beautiful report in your chosen language</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🗺️ Quick navigation</div>
+      <div class="tip-text">Add an address to any restaurant or attraction – tapping opens Google Maps</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🕐 Time range</div>
+      <div class="tip-text">Add start and end times to activities – the app calculates duration and displays it on the timeline</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">✈️ Flight details</div>
+      <div class="tip-text">Enter a flight number and landing time – both appear on the flight card and the timeline</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🔔 Custom reminder</div>
+      <div class="tip-text">When entering a flight – choose 2 to 8 hours ahead to receive an airport reminder</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🌐 Switch Language</div>
+      <div class="tip-text">Tap EN / עב in the corner of any screen to switch between English and Hebrew – saved automatically</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">✏️ Edit an expense</div>
+      <div class="tip-text">Made a mistake? Tap the pencil icon on any expense to edit it</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">👤 Personal expenses</div>
+      <div class="tip-text">Mark an expense as "Personal" so it's excluded from the group settlement</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">📱 Android App</div>
+      <div class="tip-text">Download from Google Play for a native app experience with a home-screen icon</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🌍 Multiple trips</div>
+      <div class="tip-text">Manage several trips at once – switch between them from the home screen</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="guide-footer">
+  <span>TUlon</span> – My Trip Planner &nbsp;|&nbsp; www.tulon.co.il &nbsp;|&nbsp; Version 5.0
+</div>
+
+</body>
+</html>

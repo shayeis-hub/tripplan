@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "il.co.tulon.www.twa",
+    "sha256_cert_fingerprints": ["5C:BB:58:AE:D3:56:68:18:50:45:D3:FE:7E:08:2D:20:3F:51:8C:6E:4A:D6:B6:42:51:F6:41:69:EC:1F:33:D3"]
+  }
+}]
