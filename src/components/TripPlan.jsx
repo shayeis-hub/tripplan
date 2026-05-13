@@ -1478,10 +1478,10 @@ function BudgetScreen({trip,expenses}){
   );
 }
 
-function CalendarScreen({trip,expenses}){
+function CalendarScreen({trip,expenses,onSaveActs}){
   const{lang}=useLang();
   const dates=getRange(trip.startDate,trip.endDate);
-  const[acts,setActs]=useState({});       // {date: [{text, time}]}
+  const[acts,setActs]=useState(trip.activities||{});       // {date: [{text, time}]}
   const[editD,setEditD]=useState(null);
   const[view,setView]=useState("month");  // "month" | "day"
   const[selDate,setSelDate]=useState(dates[0]||"");
@@ -1515,7 +1515,9 @@ function CalendarScreen({trip,expenses}){
   };
   const saveEdit=()=>{
     const valid=editActs.filter(a=>a.text.trim());
-    setActs(a=>({...a,[editD]:valid}));
+    const updated={...acts,[editD]:valid};
+    setActs(updated);
+    if(onSaveActs) onSaveActs(updated);
     setEditD(null);
   };
   const addActRow=()=>setEditActs(a=>[...a,{text:"",time:"",timeEnd:""}]);
@@ -1718,8 +1720,8 @@ function CalendarScreen({trip,expenses}){
       // Ignore if mostly vertical (scrolling) or too short
       if(Math.abs(dx)<90||Math.abs(dx)<Math.abs(dy)*2)return;
       const idx=dates.indexOf(selDate);
-      if(dx<0&&idx<dates.length-1)setSelDate(dates[idx+1]); // swipe left → next day
-      if(dx>0&&idx>0)setSelDate(dates[idx-1]);               // swipe right → prev day
+      if(dx>0&&idx<dates.length-1)setSelDate(dates[idx+1]); // swipe right → next day
+      if(dx<0&&idx>0)setSelDate(dates[idx-1]);               // swipe left → prev day
     };
 
     return(
@@ -2392,7 +2394,7 @@ ${url}`;
             {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
             {screen==="expenses"   &&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
             {screen==="budget"     &&<BudgetScreen trip={active} expenses={expenses}/>}
-            {screen==="calendar"   &&<CalendarScreen trip={active} expenses={expenses}/>}
+            {screen==="calendar"   &&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
             {screen==="discover"   &&<DiscoverScreen trip={active}/>}
           </div>
         </div>
