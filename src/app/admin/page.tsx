@@ -29,21 +29,23 @@ export default function AdminPage() {
   const [stats, setStats]     = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr]         = useState("");
-  const [secret, setSecret]   = useState("");
+  const [idToken, setIdToken] = useState("");
 
   const login = async () => {
     try {
       const cred = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pass);
       if (cred.user.email !== ADMIN_EMAIL) throw new Error("Not admin");
+      const token = await cred.user.getIdToken();
+      setIdToken(token);
       setAuthed(true);
       setErr("");
     } catch { setErr("סיסמה שגויה"); }
   };
 
-  const fetchStats = async (s: string) => {
+  const fetchStats = async (token: string) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/stats", { headers: { authorization: `Bearer ${s}` } });
+      const res = await fetch("/api/admin/stats", { headers: { authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setStats(data);
@@ -52,22 +54,25 @@ export default function AdminPage() {
     } finally { setLoading(false); }
   };
 
+  const refresh = async () => {
+    if (!auth.currentUser) return;
+    const token = await auth.currentUser.getIdToken(true);
+    fetchStats(token);
+  };
+
   useEffect(() => {
-    if (authed && secret) fetchStats(secret);
-  }, [authed, secret]);
+    if (authed && idToken) fetchStats(idToken);
+  }, [authed, idToken]);
 
   if (!authed) return (
     <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: RF }}>
       <div style={{ background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(100,223,223,0.2)", borderRadius: 24, padding: "40px 32px", width: 360 }}>
-        <div style={{ fontSize: 28, fontWeight: 900, color: "#fff", marginBottom: 6 }}>🛡️ Admin</div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 24 }}>טיולון Dashboard</div>
+        <div style={{ fontSize: 28, fontWeight: 900, color: "#fff", marginBottom: 6, textAlign: "center" }}>🛡️ Admin</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 24, textAlign: "center" }}>טיולון Dashboard</div>
         <input type="password" placeholder="סיסמת Firebase" value={pass}
           onChange={e => setPass(e.target.value)}
           onKeyDown={e => e.key === "Enter" && login()}
-          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "0.5px solid rgba(100,223,223,0.2)", background: "rgba(255,255,255,0.07)", color: "#fff", fontSize: 15, marginBottom: 8, fontFamily: RF, outline: "none" }} />
-        <input type="text" placeholder="CRON_SECRET" value={secret}
-          onChange={e => setSecret(e.target.value)}
-          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "0.5px solid rgba(100,223,223,0.2)", background: "rgba(255,255,255,0.07)", color: "#fff", fontSize: 15, marginBottom: 12, fontFamily: RF, outline: "none" }} />
+          style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "0.5px solid rgba(100,223,223,0.2)", background: "rgba(255,255,255,0.07)", color: "#fff", fontSize: 15, marginBottom: 12, fontFamily: RF, outline: "none", boxSizing: "border-box" }} />
         {err && <div style={{ color: "#ff6b6b", fontSize: 13, marginBottom: 10 }}>{err}</div>}
         <button onClick={login} style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", background: TEAL, color: BG, fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: RF }}>
           כניסה
@@ -84,7 +89,7 @@ export default function AdminPage() {
           <div style={{ fontSize: 24, fontWeight: 900 }}>🛡️ טיולון Admin</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Dashboard</div>
         </div>
-        <button onClick={() => fetchStats(secret)} disabled={loading}
+        <button onClick={refresh} disabled={loading}
           style={{ padding: "10px 20px", borderRadius: 10, border: `0.5px solid ${TEAL}40`, background: "rgba(100,223,223,0.08)", color: TEAL, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: RF }}>
           {loading ? "⏳ טוען..." : "🔄 רענן"}
         </button>

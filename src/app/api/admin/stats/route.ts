@@ -3,11 +3,21 @@ import { adminAuth, adminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
+const ADMIN_EMAIL = "shayeis@gmail.com";
+
 export async function GET(req: Request) {
-  // Verify admin
+  // Verify Firebase ID token
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const token = authHeader?.replace("Bearer ", "");
+  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    const decoded = await adminAuth.verifyIdToken(token);
+    if (decoded.email !== ADMIN_EMAIL) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  } catch {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
   try {
@@ -15,12 +25,12 @@ export async function GET(req: Request) {
     const userList = await adminAuth.listUsers(1000);
     const userCount = userList.users.length;
 
-    // Count by registration date (last 30 days)
+    // Count by registration date
     const now = Date.now();
     const day = 86400000;
-    const newUsersToday    = userList.users.filter(u => now - new Date(u.metadata.creationTime).getTime() < day).length;
-    const newUsersWeek     = userList.users.filter(u => now - new Date(u.metadata.creationTime).getTime() < 7 * day).length;
-    const newUsersMonth    = userList.users.filter(u => now - new Date(u.metadata.creationTime).getTime() < 30 * day).length;
+    const newUsersToday  = userList.users.filter(u => now - new Date(u.metadata.creationTime).getTime() < day).length;
+    const newUsersWeek   = userList.users.filter(u => now - new Date(u.metadata.creationTime).getTime() < 7 * day).length;
+    const newUsersMonth  = userList.users.filter(u => now - new Date(u.metadata.creationTime).getTime() < 30 * day).length;
 
     // Trips count
     const tripsSnap = await adminDb.collection("trips").get();
