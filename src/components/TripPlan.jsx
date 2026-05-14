@@ -2317,7 +2317,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                           <span style={{fontSize:12,color:TEAL,fontFamily:RF,direction:"ltr",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{email}</span>
                           <button onClick={()=>onShareTrip(shareModal,email,!isVO)}
                             style={{fontSize:11,color:isVO?"rgba(251,191,36,0.9)":"rgba(74,222,128,0.9)",background:isVO?"rgba(251,191,36,0.12)":"rgba(74,222,128,0.12)",border:`0.5px solid ${isVO?"rgba(251,191,36,0.3)":"rgba(74,222,128,0.3)"}`,borderRadius:999,padding:"3px 10px",fontFamily:RF,flexShrink:0,cursor:"pointer"}}>
-                            {isVO?(lang==="he"?"👁️ צפייה":"👁️ View"):(lang==="he"?"✏️ עריכה":"✏️ Edit")}
+                            {isVO?(lang==="he"?"🔓 אפשר עריכה":"🔓 Allow edit"):(lang==="he"?"🔒 הגבל לצפייה":"🔒 Limit to view")}
                           </button>
                           <button onClick={()=>onRemoveShare(shareModal,email)}
                             style={{background:"rgba(255,107,107,0.12)",border:"0.5px solid rgba(255,107,107,0.25)",color:"#ff6b6b",borderRadius:8,padding:"3px 8px",cursor:"pointer",fontSize:13,flexShrink:0}}>✕</button>
