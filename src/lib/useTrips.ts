@@ -102,5 +102,13 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
     await saveTrip({ ...trip, sharedWith, viewOnlyUsers });
   };
 
-  return { trips, loading, saveTrip, deleteTrip, shareTrip };
+  const removeShare = async (tripId: string, email: string) => {
+    const trip = trips.find(t => t.id === tripId);
+    if (!trip) return;
+    const sharedWith = (trip.sharedWith || []).filter((e: string) => e !== email);
+    const viewOnlyUsers = (trip.viewOnlyUsers || []).filter((e: string) => e !== email);
+    await saveTrip({ ...trip, sharedWith, viewOnlyUsers });
+  };
+
+  return { trips, loading, saveTrip, deleteTrip, shareTrip, removeShare };
 }

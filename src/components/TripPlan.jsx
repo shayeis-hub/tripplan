@@ -2110,7 +2110,7 @@ function DiscoverScreen({trip}){
 
 const newTrip=(ownerId)=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]});
 
-export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onLogout,userEmail,userId}){
+export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId}){
   const{lang}=useLang();
   const[trips,setTrips]=useState(initialTrips);
   const[activeId,setActiveId]=useState(null);
@@ -2313,12 +2313,14 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                     {trips.find(t=>t.id===shareModal)?.sharedWith?.map(email=>{
                       const isVO=trips.find(t=>t.id===shareModal)?.viewOnlyUsers?.includes(email);
                       return(
-                        <div key={email} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,padding:"7px 12px"}}>
-                          <span style={{fontSize:12,color:TEAL,fontFamily:RF,direction:"ltr",flex:1}}>{email}</span>
+                        <div key={email} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,padding:"7px 12px"}}>
+                          <span style={{fontSize:12,color:TEAL,fontFamily:RF,direction:"ltr",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{email}</span>
                           <button onClick={()=>onShareTrip(shareModal,email,!isVO)}
                             style={{fontSize:11,color:isVO?"rgba(251,191,36,0.9)":"rgba(74,222,128,0.9)",background:isVO?"rgba(251,191,36,0.12)":"rgba(74,222,128,0.12)",border:`0.5px solid ${isVO?"rgba(251,191,36,0.3)":"rgba(74,222,128,0.3)"}`,borderRadius:999,padding:"3px 10px",fontFamily:RF,flexShrink:0,cursor:"pointer"}}>
                             {isVO?(lang==="he"?"👁️ צפייה":"👁️ View"):(lang==="he"?"✏️ עריכה":"✏️ Edit")}
                           </button>
+                          <button onClick={()=>onRemoveShare(shareModal,email)}
+                            style={{background:"rgba(255,107,107,0.12)",border:"0.5px solid rgba(255,107,107,0.25)",color:"#ff6b6b",borderRadius:8,padding:"3px 8px",cursor:"pointer",fontSize:13,flexShrink:0}}>✕</button>
                         </div>
                       );
                     })}

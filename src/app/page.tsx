@@ -14,6 +14,7 @@ export default function Home() {
     saveTrip,
     deleteTrip,
     shareTrip,
+    removeShare,
   } = useTrips(user?.uid, user?.email ?? undefined);
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function Home() {
       onSaveTrip={saveTrip}
       onDeleteTrip={deleteTrip}
       onShareTrip={shareTrip}
+      onRemoveShare={removeShare}
       onLogout={logout}
       userEmail={user.email || ""}
       userId={user.uid}
