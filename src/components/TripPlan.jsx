@@ -2314,10 +2314,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                       const isVO=trips.find(t=>t.id===shareModal)?.viewOnlyUsers?.includes(email);
                       return(
                         <div key={email} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,padding:"7px 12px"}}>
-                          <span style={{fontSize:12,color:TEAL,fontFamily:RF,direction:"ltr"}}>{email}</span>
-                          <span style={{fontSize:11,color:isVO?"rgba(251,191,36,0.8)":"rgba(74,222,128,0.8)",background:isVO?"rgba(251,191,36,0.1)":"rgba(74,222,128,0.1)",borderRadius:999,padding:"2px 8px",fontFamily:RF,flexShrink:0}}>
+                          <span style={{fontSize:12,color:TEAL,fontFamily:RF,direction:"ltr",flex:1}}>{email}</span>
+                          <button onClick={()=>onShareTrip(shareModal,email,!isVO)}
+                            style={{fontSize:11,color:isVO?"rgba(251,191,36,0.9)":"rgba(74,222,128,0.9)",background:isVO?"rgba(251,191,36,0.12)":"rgba(74,222,128,0.12)",border:`0.5px solid ${isVO?"rgba(251,191,36,0.3)":"rgba(74,222,128,0.3)"}`,borderRadius:999,padding:"3px 10px",fontFamily:RF,flexShrink:0,cursor:"pointer"}}>
                             {isVO?(lang==="he"?"👁️ צפייה":"👁️ View"):(lang==="he"?"✏️ עריכה":"✏️ Edit")}
-                          </span>
+                          </button>
                         </div>
                       );
                     })}
