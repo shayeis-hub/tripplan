@@ -2115,10 +2115,6 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[trips,setTrips]=useState(initialTrips);
   const[activeId,setActiveId]=useState(null);
   const[screen,setScreen]=useState("destination");
-  // Redirect view-only users away from restricted screens
-  useEffect(()=>{
-    if(isViewOnly&&(screen==="expenses"||screen==="budget")) setScreen("destination");
-  },[isViewOnly,screen]);
   const[shareModal,setShareModal]=useState(null);
   const[shareEmail,setShareEmail]=useState("");
   const[shareMsg,setShareMsg]=useState("");
@@ -2253,6 +2249,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
 
   const isOwner=active?.owner===userId||!active?.owner;
   const isViewOnly=!isOwner&&active?.viewOnlyUsers?.includes(userEmail);
+  // Redirect view-only users away from restricted screens
+  useEffect(()=>{
+    if(isViewOnly&&(screen==="expenses"||screen==="budget")) setScreen("destination");
+  },[isViewOnly,screen]);
   const screens=(isViewOnly
     ?["destination","calendar","discover"]
     :["destination","expenses","budget","calendar","discover"]);
