@@ -2248,11 +2248,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
 
   const isOwner=active?.owner===userId||!active?.owner;
-  const isViewOnly=!isOwner&&active?.viewOnlyUsers?.includes(userEmail);
-  // Redirect view-only users away from restricted screens
-  useEffect(()=>{
-    if(isViewOnly&&(screen==="expenses"||screen==="budget")) setScreen("destination");
-  },[isViewOnly,screen]);
+  const isViewOnly=!isOwner&&!!active?.viewOnlyUsers?.includes(userEmail);
   const screens=(isViewOnly
     ?["destination","calendar","discover"]
     :["destination","expenses","budget","calendar","discover"]);
@@ -2433,8 +2429,8 @@ ${url}`;
         <div style={{flex:1,overflowY:"auto"}}>
           <div key={screen} className="screen-enter">
             {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
-            {screen==="expenses"   &&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
-            {screen==="budget"     &&<BudgetScreen trip={active} expenses={expenses}/>}
+            {screen==="expenses"   &&!isViewOnly&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
+            {screen==="budget"     &&!isViewOnly&&<BudgetScreen trip={active} expenses={expenses}/>}
             {screen==="calendar"   &&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
             {screen==="discover"   &&<DiscoverScreen trip={active}/>}
           </div>
