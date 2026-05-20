@@ -905,14 +905,14 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
   );
 }
 
-const mkForm=(dates,cur)=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",isShared:true});
+const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",isShared:true,participants:people.map(p=>p.id),payers:[]});
 
 function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo}){
   const{lang}=useLang();
   const dates=getRange(trip.startDate,trip.endDate);
   const people=trip.people||[];
   const[sel,setSel]=useState(dates[0]||"");
-  const[form,setForm]=useState(mkForm(dates,trip.defaultCurrency));
+  const[form,setForm]=useState(()=>mkForm(dates,trip.defaultCurrency,trip.people||[]));
   const[show,setShow]=useState(false);
   const[editId,setEditId]=useState(null); // expense being edited
   // search & filter
@@ -970,17 +970,28 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     const sw=form.splitWith.includes(id)?form.splitWith.filter(x=>x!==id):[...form.splitWith,id];
     set({splitWith:sw});
   };
+  const toggleParticipant=id=>set({participants:form.participants.includes(id)?form.participants.filter(x=>x!==id):[...form.participants,id]});
+  const addPayer=()=>set({payers:[...form.payers,{id:"",amount:""}]});
+  const removePayer=i=>set({payers:form.payers.filter((_,j)=>j!==i)});
+  const updatePayer=(i,field,val)=>set({payers:form.payers.map((p,j)=>j===i?{...p,[field]:val}:p)});
 
   const handleAdd=()=>{
     if(!form.amount)return;
     const date=form.category==="hotel"?form.checkIn:form.date;
     onAdd({id:uid(),...form,date,amount:parseFloat(form.amount),amountILS:toILS(parseFloat(form.amount),form.currency),amountILSLocked:form.paid?toILS(parseFloat(form.amount),form.currency):undefined});
-    setForm(mkForm(dates,trip.defaultCurrency));
+    setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
   };
 
   const handleEdit=(exp)=>{
+    // Derive participants & payers: support new format, fall back to old paidBy/splitWith
+    const expParticipants=exp.participants?.length>0
+      ?exp.participants
+      :exp.paidBy?[exp.paidBy,...(exp.splitWith||[])]:people.map(p=>p.id);
+    const expPayers=exp.payers?.length>0
+      ?exp.payers
+      :exp.paidBy?[{id:exp.paidBy,amount:exp.amountILS}]:[];
     setForm({
       category:exp.category,amount:String(exp.amount),currency:exp.currency,
       description:exp.description||"",paid:exp.paid,date:exp.date,
@@ -990,6 +1001,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       address:exp.address||"",reminderHours:exp.reminderHours||5,
       paidBy:exp.paidBy||"",splitWith:exp.splitWith||[],
       splitType:exp.splitType||"equal",isShared:exp.isShared!==false,
+      participants:expParticipants,payers:expPayers,
     });
     setEditId(exp.id);
     setShow(true);
@@ -1000,7 +1012,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     if(!form.amount)return;
     const date=form.category==="hotel"?form.checkIn:form.date;
     onEdit(editId,{...form,date,amount:parseFloat(form.amount),amountILS:toILS(parseFloat(form.amount),form.currency)});
-    setForm(mkForm(dates,trip.defaultCurrency));
+    setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
   };
@@ -1034,7 +1046,17 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           {exp.category==="flight"&&exp.departureTime&&<div style={{fontSize:11,color:TEAL,fontWeight:600}}>✈️{exp.flightNumber?` ${exp.flightNumber} ·`:""} {exp.departureTime}{exp.landingTime?` → ${exp.landingTime}`:""}</div>}
           {exp.description&&<div style={{fontSize:12,color:W35,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{exp.description}</div>}
           <div style={{fontSize:12,color:W35,marginTop:2}}>{sym(exp.currency)}{exp.amount.toFixed(2)} ≈ <span style={{color:TEAL,fontWeight:600}}>₪{exp.amountILS.toFixed(2)}</span></div>
-          {exp.paidBy&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
+          {/* New format: participants + payers */}
+          {exp.payers?.length>0&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
+            {exp.payers.map((py,i)=>(
+              <span key={i} style={{fontSize:11,background:personColor(py.id)+"25",color:personColor(py.id),borderRadius:6,padding:"2px 7px",fontWeight:700}}>💳 {personName(py.id)} ₪{parseFloat(py.amount||0).toFixed(0)}</span>
+            ))}
+            {exp.participants?.filter(id=>!exp.payers.find(py=>py.id===id)).map(id=>(
+              <span key={id} style={{fontSize:11,background:personColor(id)+"15",color:personColor(id),borderRadius:6,padding:"2px 7px",fontWeight:500}}>{personName(id)}</span>
+            ))}
+          </div>}
+          {/* Old format fallback */}
+          {!exp.payers?.length&&exp.paidBy&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
             <span style={{fontSize:11,background:personColor(exp.paidBy)+"25",color:personColor(exp.paidBy),borderRadius:6,padding:"2px 7px",fontWeight:700}}>{lang==="he"?"שילם":"Paid by"}: {personName(exp.paidBy)}</span>
             {exp.splitWith?.length>0&&exp.splitWith.map(id=>(
               <span key={id} style={{fontSize:11,background:personColor(id)+"20",color:personColor(id),borderRadius:6,padding:"2px 7px",fontWeight:600}}>{personName(id)}</span>
@@ -1128,7 +1150,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
               style={{display:"none"}}
               onChange={e=>{const f=e.target.files?.[0];e.target.value="";if(f)handleScan(f);}}/>
             <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{set({date:sel,checkIn:sel});setShow(true);}} style={{flex:1,padding:"14px",borderRadius:14,border:"0.5px dashed rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.06)",color:TEAL,fontSize:14,fontWeight:600,fontFamily:RF,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              <button onClick={()=>{setForm(f=>({...mkForm(dates,trip.defaultCurrency,people),date:sel,checkIn:sel}));setShow(true);}} style={{flex:1,padding:"14px",borderRadius:14,border:"0.5px dashed rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.06)",color:TEAL,fontSize:14,fontWeight:600,fontFamily:RF,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
                 {t("exp_add_btn",lang)}{fmtDate(sel)}
               </button>
               <button onClick={()=>document.getElementById("receipt-input").click()} disabled={scanning}
@@ -1248,33 +1270,59 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                   </SS>
                 )}
 
-                {/* People split – only if people defined */}
-                {people.length>0&&(
-                  <div style={{marginBottom:14,padding:"12px",background:`${C.purple}0A`,borderRadius:14,border:`1.5px solid ${C.purple}25`}}>
-                    <div style={{fontWeight:700,fontSize:13,color:"#a78bfa",marginBottom:10}}>{t("exp_people_split",lang)}</div>
-                    <SS label={t("exp_who_paid",lang)} value={form.paidBy} onChange={v=>set({paidBy:v})}>
-                      <option value="">{t("exp_not_defined",lang)}</option>
-                      {people.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
-                    </SS>
-                    <div style={{marginBottom:10}}>
-                      <FL>{t("exp_split_with",lang)}</FL>
-                      <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
-                        {people.filter(p=>p.id!==form.paidBy).map(p=>(
-                          <button key={p.id} onClick={()=>toggleSplitPerson(p.id)} style={{padding:"6px 12px",borderRadius:999,border:`2px solid ${form.splitWith.includes(p.id)?p.color:C.sandDark}`,background:form.splitWith.includes(p.id)?p.color+"20":C.white,color:form.splitWith.includes(p.id)?p.color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
-                            {p.name}
+                {/* People split – only if people defined and isShared */}
+                {people.length>0&&form.isShared&&(
+                  <div style={{marginBottom:14,padding:"14px",background:"rgba(167,139,250,0.06)",borderRadius:14,border:"1.5px solid rgba(167,139,250,0.2)"}}>
+                    {/* Who participates */}
+                    <div style={{fontWeight:700,fontSize:13,color:"#a78bfa",marginBottom:8}}>👥 {lang==="he"?"מי משתתף?":"Who participates?"}</div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:14}}>
+                      {people.map(p=>{
+                        const inPart=form.participants.includes(p.id);
+                        return(
+                          <button key={p.id} onClick={()=>toggleParticipant(p.id)}
+                            style={{padding:"7px 14px",borderRadius:999,border:`2px solid ${inPart?p.color:"rgba(255,255,255,0.15)"}`,background:inPart?p.color+"22":"transparent",color:inPart?p.color:"rgba(255,255,255,0.4)",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",transition:"all 0.15s"}}>
+                            {inPart?"✓ ":""}{p.name}
                           </button>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
-                    {form.splitWith.length>0&&(
-                      <div style={{display:"flex",gap:6}}>
-                        {[{id:"equal",label:t("exp_split_equal",lang)},{id:"payer",label:t("exp_split_payer",lang)}].map(o=>(
-                          <button key={o.id} onClick={()=>set({splitType:o.id})} style={{flex:1,padding:"7px",borderRadius:10,border:`1.5px solid ${form.splitType===o.id?C.purple:C.sandDark}`,background:form.splitType===o.id?`${C.purple}15`:C.white,color:form.splitType===o.id?C.purple:C.muted,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
-                            {o.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    {/* Who paid */}
+                    <div style={{fontWeight:700,fontSize:13,color:"#a78bfa",marginBottom:8}}>💳 {lang==="he"?"מי שילם?":"Who paid?"}</div>
+                    {form.payers.map((payer,i)=>{
+                      const pc=people.find(p=>p.id===payer.id)?.color||"rgba(255,255,255,0.3)";
+                      return(
+                        <div key={i} style={{display:"flex",gap:6,alignItems:"center",marginBottom:7}}>
+                          <select value={payer.id} onChange={e=>updatePayer(i,"id",e.target.value)}
+                            style={{flex:1,padding:"8px 10px",borderRadius:10,border:`1.5px solid ${payer.id?pc:"rgba(255,255,255,0.15)"}`,background:"rgba(0,0,0,0.2)",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",cursor:"pointer"}}>
+                            <option value="">{lang==="he"?"בחר...":"Select..."}</option>
+                            {people.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
+                          <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.2)",border:"1.5px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"0 10px",flex:1}}>
+                            <span style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>₪</span>
+                            <input type="number" value={payer.amount} onChange={e=>updatePayer(i,"amount",e.target.value)}
+                              placeholder="0" style={{flex:1,border:"none",background:"transparent",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",padding:"8px 0"}}/>
+                          </div>
+                          <button onClick={()=>removePayer(i)} style={{background:"rgba(255,107,107,0.12)",border:"none",color:"#ff6b6b",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:13,flexShrink:0}}>✕</button>
+                        </div>
+                      );
+                    })}
+                    <button onClick={addPayer}
+                      style={{width:"100%",padding:"8px",borderRadius:10,border:"1px dashed rgba(167,139,250,0.4)",background:"rgba(167,139,250,0.05)",color:"#a78bfa",fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",marginBottom:form.payers.length>0?8:0}}>
+                      + {lang==="he"?"הוסף משלם":"Add payer"}
+                    </button>
+                    {/* Total validation */}
+                    {form.payers.length>0&&form.amount&&(()=>{
+                      const totalPaid=form.payers.reduce((s,p)=>s+parseFloat(p.amount||0),0);
+                      const expAmt=toILS(parseFloat(form.amount),form.currency);
+                      const diff=Math.abs(totalPaid-expAmt);
+                      const ok=diff<1;
+                      return(
+                        <div style={{fontSize:12,color:ok?"#4ade80":"#fbbf24",fontFamily:RF,marginTop:4,textAlign:"center"}}>
+                          {ok?"✓ ":"⚠️ "}{lang==="he"?"שולם":"Paid"}: ₪{totalPaid.toFixed(0)} / ₪{expAmt.toFixed(0)}
+                          {!ok&&<span style={{opacity:0.7}}> ({lang==="he"?"הפרש":"diff"}: ₪{diff.toFixed(0)})</span>}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -1326,12 +1374,22 @@ function BudgetScreen({trip,expenses}){
     people.forEach(p=>balances[p.id]=0);
     // Only shared expenses enter settlement
     expenses.filter(e=>e.isShared!==false).forEach(exp=>{
-      if(!exp.paidBy)return;
-      const participants=[exp.paidBy,...(exp.splitWith||[])];
-      if(participants.length<2)return;
-      const share=exp.amountILS/participants.length;
-      balances[exp.paidBy]=(balances[exp.paidBy]||0)+exp.amountILS-share;
-      (exp.splitWith||[]).forEach(id=>{ balances[id]=(balances[id]||0)-share; });
+      // New format: participants + payers
+      if(exp.participants?.length>0&&exp.payers?.length>0){
+        const parts=exp.participants.filter(id=>balances[id]!==undefined);
+        if(parts.length===0)return;
+        const share=exp.amountILS/parts.length;
+        parts.forEach(id=>{ balances[id]=(balances[id]||0)-share; });
+        exp.payers.forEach(({id,amount})=>{ if(balances[id]!==undefined) balances[id]=(balances[id]||0)+parseFloat(amount||0); });
+      }
+      // Old format: paidBy + splitWith
+      else if(exp.paidBy){
+        const participants=[exp.paidBy,...(exp.splitWith||[])];
+        if(participants.length<2)return;
+        const share=exp.amountILS/participants.length;
+        balances[exp.paidBy]=(balances[exp.paidBy]||0)+exp.amountILS-share;
+        (exp.splitWith||[]).forEach(id=>{ balances[id]=(balances[id]||0)-share; });
+      }
     });
     const debts=[];
     const pos=people.filter(p=>balances[p.id]>0.01).map(p=>({...p,bal:balances[p.id]}));
