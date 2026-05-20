@@ -2034,14 +2034,14 @@ function DiscoverScreen({trip}){
 
   // 4 booking tiles
   const bookTiles=[
-    {name:"Agoda",icon:"🅰",color:"#e0455a",label:t("disc_book_hotels",lang),
+    {name:"Agoda",domain:"agoda.com",color:"#e0455a",label:t("disc_book_hotels",lang),
      url:`https://www.agoda.com/search?q=${encDest}${agodaDates}&adults=2&rooms=1${AGODA_CID?`&cid=${AGODA_CID}`:""}`},
-    {name:"Booking.com",icon:"🔵",color:"#003580",label:t("disc_book_hotels",lang),
+    {name:"Booking.com",domain:"booking.com",color:"#003580",label:t("disc_book_hotels",lang),
      url:`https://www.booking.com/search.html?ss=${encDest}${bookingDates}${BOOKING_AID?`&aid=${BOOKING_AID}`:""}`},
-    {name:"Viator",icon:"🎡",color:"#2d9cdb",label:t("disc_book_acts",lang),
+    {name:"Viator",domain:"viator.com",color:"#2d9cdb",label:t("disc_book_acts",lang),
      url:`https://www.viator.com/search/${encDest}${VIATOR_PID?`?pid=${VIATOR_PID}&mcid=42383`:""}`},
-    {name:"GetYourGuide",icon:"🗺️",color:"#ff6b35",label:t("disc_book_acts",lang),
-     url:`https://www.getyourguide.com/s/?q=${encDest}${GYG_ID?`&partner_id=${GYG_ID}`:""}`},
+    {name:"GetYourGuide",domain:"getyourguide.com",color:"#ff6b35",label:t("disc_book_acts",lang),
+     url:`https://www.getyourguide.com/s/?q=${encDest}${GYG_ID?`&partner_id=${GYG_ID}&cmp=share_to_earn`:""}`},
   ];
 
   return(
@@ -2148,10 +2148,15 @@ function DiscoverScreen({trip}){
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
               {bookTiles.map(tile=>(
                 <button key={tile.name} onClick={()=>open(tile.url)}
-                  style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,padding:"16px 10px",borderRadius:16,border:`0.5px solid ${tile.color}50`,background:`${tile.color}12`,cursor:"pointer",minHeight:80}}>
-                  <div style={{fontSize:26}}>{tile.icon}</div>
-                  <div style={{fontFamily:RF,fontSize:13,fontWeight:700,color:"#ffffff"}}>{tile.name}</div>
-                  <div style={{fontSize:10,color:W35,textAlign:"center",lineHeight:1.3}}>{tile.label}</div>
+                  style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,padding:"18px 12px",borderRadius:16,border:`0.5px solid ${tile.color}50`,background:`${tile.color}12`,cursor:"pointer",minHeight:110}}>
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${tile.domain}&sz=64`}
+                    alt={tile.name}
+                    style={{width:44,height:44,borderRadius:10,objectFit:"contain",background:"#fff",padding:4}}
+                    onError={e=>{e.currentTarget.style.display="none";}}
+                  />
+                  <div style={{fontFamily:RF,fontSize:14,fontWeight:800,color:"#ffffff"}}>{tile.name}</div>
+                  <div style={{fontSize:11,color:W60,textAlign:"center",lineHeight:1.4,fontWeight:600,padding:"0 4px"}}>{tile.label}</div>
                 </button>
               ))}
             </div>

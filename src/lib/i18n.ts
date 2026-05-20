@@ -189,8 +189,8 @@ export const translations = {
   disc_loading:       { he: "⏳ מביא המלצות...",        en: "⏳ Fetching recommendations..." },
   disc_load_err:      { he: "לא הצלחתי להביא המלצות. נסה שוב.", en: "Could not load recommendations. Try again." },
   disc_retry:         { he: "נסה שוב",                  en: "Try again" },
-  disc_book_hotels:   { he: "🏨 הזמן מלון",            en: "🏨 Book Hotel" },
-  disc_book_acts:     { he: "🎡 הזמן פעילות",           en: "🎡 Book Activity" },
+  disc_book_hotels:   { he: "לחץ להזמנת מלון ביעד שלך", en: "Tap to book a hotel at your destination" },
+  disc_book_acts:     { he: "לחץ לחיפוש סיורים ופעילויות", en: "Tap to find tours & activities" },
 
   // ── Share ─────────────────────────────────────────────
   share_title:      { he: "👥 שתף טיול",             en: "👥 Share Trip" },
