@@ -2156,7 +2156,7 @@ function DiscoverScreen({trip}){
                     onError={e=>{e.currentTarget.style.display="none";}}
                   />
                   <div style={{fontFamily:RF,fontSize:14,fontWeight:800,color:"#ffffff"}}>{tile.name}</div>
-                  <div style={{fontSize:11,color:W60,textAlign:"center",lineHeight:1.4,fontWeight:600,padding:"0 4px"}}>{tile.label}</div>
+                  <div style={{fontSize:13,color:"#ffffff",textAlign:"center",lineHeight:1.4,fontWeight:600,padding:"0 4px"}}>{tile.label}</div>
                 </button>
               ))}
             </div>
