@@ -148,6 +148,23 @@
     flex-shrink: 0;
   }
 
+  .app-structure {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .structure-box {
+    border-radius: 14px;
+    padding: 18px;
+    border: 2px solid;
+  }
+  .structure-box.budget { background: rgba(74,222,128,0.06); border-color: rgba(74,222,128,0.3); }
+  .structure-box.trip   { background: rgba(100,223,223,0.06); border-color: rgba(100,223,223,0.3); }
+  .structure-box-title  { font-size: 15px; font-weight: 800; color: #0d2137; margin-bottom: 10px; }
+  .structure-box ul     { list-style: none; padding: 0; }
+  .structure-box li     { font-size: 13px; color: #4a5568; padding: 3px 0; }
+
   .screen-card {
     border-radius: 16px;
     overflow: hidden;
@@ -215,6 +232,18 @@
     color: #166534;
     font-style: italic;
   }
+
+  .section-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+  .section-label.budget { background: rgba(74,222,128,0.12); color: #166534; border: 1px solid rgba(74,222,128,0.3); }
+  .section-label.trip   { background: rgba(100,223,223,0.12); color: #0d6b6b; border: 1px solid rgba(100,223,223,0.3); }
 
   .steps-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; border-radius: 12px; overflow: hidden; }
   .steps-table th {
@@ -324,7 +353,7 @@
     <div class="subtitle">מתכנן הטיולים שלי</div>
     <div class="badge">מדריך למשתמש</div>
     <div>
-      <span class="version">גרסה 6.0</span>
+      <span class="version">גרסה 7.0</span>
     </div>
   </div>
 </div>
@@ -339,14 +368,14 @@
 
   <!-- WHATS NEW -->
   <div class="whats-new">
-    <div class="whats-new-title">🎉 מה חדש בגרסה 6.0</div>
+    <div class="whats-new-title">🎉 מה חדש בגרסה 7.0</div>
     <ul>
-      <li><strong>חלוקת הוצאות חכמה 💸</strong> – לכל הוצאה משותפת אפשר לסמן בדיוק מי היה שם ומי שילם כמה. בסוף הטיול האפליקציה מחשבת מי חייב למי</li>
-      <li><strong>שיתוף "לצפייה בלבד" 👁️</strong> – שתף את הטיול עם אנשים שיראו רק את המסלול והיומן, בלי לראות הוצאות ותקציב</li>
-      <li><strong>ניהול משתתפים בשיתוף 👥</strong> – שנה הרשאות או הסר משתתפים מתוך חלון השיתוף בכל עת</li>
-      <li><strong>סוג פעילות ביומן 🥾</strong> – כשמוסיפים פעילות יומית אפשר לסמן אם זה טיול, מסעדה, נסיעה או כללי</li>
-      <li><strong>שעת התחלה וסיום לפעילות 🕐</strong> – הגדר מתי הפעילות מתחילה ומסתיימת – מופיעה בציר השעות</li>
-      <li><strong>פעילויות נשמרות ☁️</strong> – פעילויות שמוסיפים ביומן נשמרות לענן ולא נעלמות</li>
+      <li><strong>מבנה חדש – תקציב וטיול בנפרד 🗂️</strong> – כשנכנסים לטיול יש שני כפתורים גדולים: "ניהול תקציב" (הוצאות ותקציב) ו"ניהול טיול" (יומן, המלצות ועוד). הרבה יותר קל להתמצא</li>
+      <li><strong>רשימת אריזה 🎒</strong> – מסך חדש לניהול רשימת הציוד לטיול, עם קטגוריות ומד התקדמות</li>
+      <li><strong>מסך מפה 🗺️</strong> – ראה בלחיצה אחת את כל המקומות שהזנת בהוצאות על מפה</li>
+      <li><strong>לחיצה על פעילות ביומן 📅</strong> – לחץ על פעילות בתצוגת היום לראות פרטים מלאים וכפתור עריכה</li>
+      <li><strong>המלצות מעוצבות מחדש ✨</strong> – Agoda רחב בראש למלונות, Viator ו-GetYourGuide זה לצד זה לפעילויות, המלצות AI מתחת</li>
+      <li><strong>הזמנה בקישור 🔗</strong> – שלח קישור הזמנה לטיול בוואטסאפ — ללא צורך בהכנסת מייל. כל מי שיש לו את הקישור יכול להצטרף</li>
     </ul>
   </div>
 
@@ -361,138 +390,208 @@
     <tr><td class="step-num">1</td><td>פתח את <strong>www.tulon.co.il</strong> בדפדפן הנייד, במחשב, או הורד מגוגל פליי</td></tr>
     <tr><td class="step-num">2</td><td>לחץ <strong>"משתמש חדש? הירשם"</strong> והכנס אימייל וסיסמה</td></tr>
     <tr><td class="step-num">3</td><td>לחץ <strong>"+ טיול חדש"</strong> ליצירת הטיול הראשון שלך</td></tr>
-    <tr><td class="step-num">4</td><td>במסך <strong>יעד</strong>: הוסף את שמות כל המשפחות/אנשים שנוסעים (חשוב לחלוקת הוצאות)</td></tr>
-    <tr><td class="step-num">5</td><td>התחל להוסיף הוצאות, פעילויות ופרטי טיסות ומלונות</td></tr>
-    <tr><td class="step-num">6</td><td>שתף את הטיול עם חברי הקבוצה דרך כפתור <strong>👥 שתף</strong> בתוך הטיול</td></tr>
+    <tr><td class="step-num">4</td><td>לחץ על הטיול → בחר <strong>ניהול תקציב</strong> → לחץ <strong>⚙️ הגדרות טיול</strong> להוספת יעד, תאריכים ומשתתפים</td></tr>
+    <tr><td class="step-num">5</td><td>התחל להוסיף הוצאות, לתכנן פעילויות ביומן ולהכין רשימת אריזה</td></tr>
+    <tr><td class="step-num">6</td><td>שתף את הטיול דרך כפתור <strong>👥</strong> — עם מייל ספציפי או קישור פתוח לכל הקבוצה</td></tr>
   </table>
 
-  <!-- SCREENS -->
+  <!-- APP STRUCTURE -->
   <div class="section-header">
-    <div class="section-number">📱</div>
-    <h2>5 המסכים הראשיים</h2>
+    <div class="section-number">🗂️</div>
+    <h2>מבנה האפליקציה</h2>
   </div>
 
-  <!-- Screen 1 -->
+  <div class="intro-box">
+    כשנכנסים לטיול רואים <strong>מסך בית</strong> עם שני כפתורים גדולים. לחץ על מה שצריך עכשיו:
+  </div>
+
+  <div class="app-structure">
+    <div class="structure-box budget">
+      <div class="structure-box-title">💳 ניהול תקציב</div>
+      <ul>
+        <li>⚙️ הגדרות טיול (יעד, תאריכים, משתתפים)</li>
+        <li>💳 הוצאות</li>
+        <li>💰 תקציב והתחשבנות</li>
+      </ul>
+    </div>
+    <div class="structure-box trip">
+      <div class="structure-box-title">🌴 ניהול טיול</div>
+      <ul>
+        <li>📅 יומן</li>
+        <li>✨ המלצות</li>
+        <li>🎒 רשימת אריזה</li>
+        <li>🗺️ מפה</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip-box" style="margin-bottom:24px;">💡 כפתור 🏠 בכותרת חוזר תמיד למסך הבית של הטיול. כפתור ← חוזר לרשימת כל הטיולים</div>
+
+  <!-- BUDGET SECTION -->
+  <div class="section-header">
+    <div class="section-number">💳</div>
+    <h2>סקשן תקציב</h2>
+  </div>
+
+  <!-- Settings -->
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #1A5C6B, #2A7B8C);">
-      <div class="screen-card-emoji">🌴</div>
+      <div class="screen-card-emoji">⚙️</div>
       <div>
-        <div class="screen-card-title">מסך 1 – יעד והגדרות</div>
-        <div class="screen-card-desc">פרטי הטיול, המשתתפים והתקציב</div>
+        <div class="screen-card-title">הגדרות טיול</div>
+        <div class="screen-card-desc">פרטי הטיול, המשתתפים והתקציב המתוכנן</div>
       </div>
     </div>
     <div class="screen-card-body">
       <div class="feature-row"><div class="feature-key">🌍 יעד</div><div class="feature-val">שם המקום שטסים אליו — למשל: תאילנד, פריז, ניו יורק</div></div>
       <div class="feature-row"><div class="feature-key">📅 תאריכים</div><div class="feature-val">תאריכי יציאה וחזרה — האפליקציה מחשבת את מספר הימים אוטומטית</div></div>
-      <div class="feature-row"><div class="feature-key">💱 מטבע</div><div class="feature-val">בחר את המטבע הראשי של הטיול. אפשר להוסיף מטבעות נוספים — יומרו לשקלים אוטומטית</div></div>
-      <div class="feature-row"><div class="feature-key">👥 משתתפים</div><div class="feature-val"><strong>חשוב!</strong> הוסף כאן את שמות כל המשפחות או האנשים שנוסעים. זה הבסיס לחלוקת ההוצאות בסוף הטיול</div></div>
-      <div class="feature-row"><div class="feature-key">💰 תקציב מתוכנן</div><div class="feature-val">הכנס סכום תקציב בשקלים — תראה מד צבעוני במסך התקציב שמראה כמה נשאר</div></div>
-      <div class="tip-box">💡 אפשר לערוך את כל הפרטים בכל שלב, גם באמצע הטיול</div>
+      <div class="feature-row"><div class="feature-key">💱 מטבע</div><div class="feature-val">בחר מטבע ראשי. אפשר להוסיף מטבעות נוספים — יומרו לשקלים אוטומטית</div></div>
+      <div class="feature-row"><div class="feature-key">👥 משתתפים</div><div class="feature-val"><strong>חשוב!</strong> הוסף את שמות כל המשפחות או האנשים שנוסעים — הבסיס לחלוקת ההוצאות</div></div>
+      <div class="feature-row"><div class="feature-key">💰 תקציב מתוכנן</div><div class="feature-val">הכנס סכום — תראה מד צבעוני במסך התקציב שמראה כמה נשאר</div></div>
+      <div class="tip-box">💡 לגישה להגדרות — לחץ <strong>⚙️ הגדרות טיול</strong> בראש מסך ההוצאות</div>
     </div>
   </div>
 
-  <!-- Screen 2 -->
+  <!-- Expenses -->
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #c0552a, #E8704A);">
       <div class="screen-card-emoji">💳</div>
       <div>
-        <div class="screen-card-title">מסך 2 – הוצאות</div>
+        <div class="screen-card-title">הוצאות</div>
         <div class="screen-card-desc">רישום כל הוצאה במהלך הטיול</div>
       </div>
     </div>
     <div class="screen-card-body">
       <div class="feature-row"><div class="feature-key">📂 קטגוריות</div><div class="feature-val">טיסה ✈️, מלון 🏨, אטרקציות 🎡, אוכל 🍜, מונית 🚕, אחר 📦</div></div>
-      <div class="feature-row"><div class="feature-key">💱 מולטי-מטבע</div><div class="feature-val">הכנס סכום בכל מטבע — ממיר לשקלים אוטומטית לפי שער עדכני</div></div>
-      <div class="feature-row"><div class="feature-key">📷 סריקת קבלה</div><div class="feature-val">לחץ על אייקון המצלמה, צלם את הקבלה — הבינה המלאכותית תמלא את הסכום, המטבע והתיאור לבד</div></div>
+      <div class="feature-row"><div class="feature-key">💱 מולטי-מטבע</div><div class="feature-val">הכנס סכום בכל מטבע — ממיר לשקלים לפי שער עדכני</div></div>
+      <div class="feature-row"><div class="feature-key">📷 סריקת קבלה</div><div class="feature-val">לחץ על אייקון המצלמה, צלם קבלה — הבינה המלאכותית ממלאת סכום, מטבע ותיאור לבד</div></div>
 
       <div class="sub-header">✈️ הוצאת טיסה</div>
       <div class="feature-row"><div class="feature-key">✈️ מספר טיסה</div><div class="feature-val">למשל: LY316 — יוצג בכרטיס ובלוח השנה</div></div>
-      <div class="feature-row"><div class="feature-key">🛫 שעת המראה</div><div class="feature-val">לקבלת תזכורת לפני הטיסה</div></div>
-      <div class="feature-row"><div class="feature-key">🛬 שעת נחיתה</div><div class="feature-val">מוצגת לצד שעת ההמראה בכרטיס הטיסה</div></div>
-      <div class="feature-row"><div class="feature-key">🔔 תזכורת</div><div class="feature-val">בחר כמה שעות לפני ההמראה לקבל תזכורת — 2 עד 8 שעות</div></div>
+      <div class="feature-row"><div class="feature-key">🛫 שעת המראה / נחיתה</div><div class="feature-val">מוצגות בכרטיס הטיסה ומשמשות לתזכורת</div></div>
+      <div class="feature-row"><div class="feature-key">🔔 תזכורת</div><div class="feature-val">בחר 2–8 שעות לפני ההמראה לקבל תזכורת לצאת לשדה</div></div>
 
       <div class="sub-header">🏨 הוצאת מלון</div>
-      <div class="feature-row"><div class="feature-key">צ'ק אין / אאוט</div><div class="feature-val">הכנס תאריכי כניסה ויציאה — המלון יופיע בכל ימי השהייה</div></div>
+      <div class="feature-row"><div class="feature-key">צ'ק אין / אאוט</div><div class="feature-val">הכנס תאריכי כניסה ויציאה — המלון יופיע בכל ימי השהייה בלוח השנה</div></div>
 
       <div class="sub-header">💸 חלוקת הוצאות בין משפחות</div>
-      <div class="feature-row"><div class="feature-key">👥 משותפת / 👤 אישית</div><div class="feature-val"><strong>משותפת</strong> = נכנסת להתחשבנות הקבוצתית. <strong>אישית</strong> = רק אצלך, לא נחשבת לאחרים</div></div>
-      <div class="feature-row"><div class="feature-key">👥 מי משתתף?</div><div class="feature-val"><span class="new-badge">חדש</span>כשההוצאה "משותפת" — כל המשפחות מסומנות אוטומטית. לחץ על משפחה כדי להוציא אותה (למשל: 3 משפחות בטיול אך רק 2 יצאו למסעדה)</div></div>
-      <div class="feature-row"><div class="feature-key">💳 מי שילם?</div><div class="feature-val"><span class="new-badge">חדש</span>לחץ "+ הוסף משלם", בחר משפחה והכנס כמה שילמה. אפשר להוסיף כמה משלמים לאותה הוצאה</div></div>
+      <div class="feature-row"><div class="feature-key">👥 משותפת / 👤 אישית</div><div class="feature-val"><strong>משותפת</strong> = נכנסת להתחשבנות הקבוצתית. <strong>אישית</strong> = רק אצלך</div></div>
+      <div class="feature-row"><div class="feature-key">מי היה שם?</div><div class="feature-val">כל המשפחות מסומנות אוטומטית. לחץ על מי שלא היה כדי להוציא אותו</div></div>
+      <div class="feature-row"><div class="feature-key">💳 מי שילם?</div><div class="feature-val">לחץ "+ הוסף משלם", בחר משפחה והכנס כמה שילמה. אפשר כמה משלמים לאותה הוצאה</div></div>
 
       <div class="example-box">
-        <strong>דוגמה:</strong> יצאתם 3 משפחות לסיור שעלה ₪300.<br>
-        משתתפים: ✓ כהן ✓ לוי (הסרת את ישראלי שלא בא)<br>
-        שילם: כהן ₪300<br>
+        <strong>דוגמה:</strong> יצאתם 3 משפחות לסיור שעלה ₪300. רק כהן ולוי הגיעו. שילם: כהן ₪300<br>
         → בסוף הטיול: לוי חייב לכהן ₪150
       </div>
 
-      <div class="feature-row"><div class="feature-key">✅ שולם</div><div class="feature-val">סמן כ"שולם" כדי לנעול את שער ההמרה — הסכום בשקלים לא ישתנה אם השער ישתנה</div></div>
-      <div class="feature-row"><div class="feature-key">📍 כתובת</div><div class="feature-val">הוסף כתובת — לחיצה תפתח Google Maps ישירות למקום</div></div>
-      <div class="tip-box">💡 ניווט בין ימים דרך הסרגל העליון עם הנקודות הצבעוניות</div>
+      <div class="feature-row"><div class="feature-key">✅ שולם</div><div class="feature-val">סמן כ"שולם" לנעילת שער ההמרה — הסכום בשקלים לא ישתנה</div></div>
+      <div class="feature-row"><div class="feature-key">📍 כתובת</div><div class="feature-val">הוסף כתובת — לחיצה תפתח Google Maps, וגם תופיע במסך המפה</div></div>
     </div>
   </div>
 
-  <!-- Screen 3 -->
+  <!-- Budget -->
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #2d6b3e, #4A8C5C);">
       <div class="screen-card-emoji">💰</div>
       <div>
-        <div class="screen-card-title">מסך 3 – תקציב והתחשבנות</div>
+        <div class="screen-card-title">תקציב והתחשבנות</div>
         <div class="screen-card-desc">סיכום הוצאות ומי חייב למי</div>
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="feature-row"><div class="feature-key">📊 מד תקציב</div><div class="feature-val">רואים כמה מהתקציב כבר הוצא: 🟢 עד 70%, 🟡 70–90%, 🔴 מעל 90%</div></div>
+      <div class="feature-row"><div class="feature-key">📊 מד תקציב</div><div class="feature-val">כמה מהתקציב כבר הוצא: 🟢 עד 70%, 🟡 70–90%, 🔴 מעל 90%</div></div>
       <div class="feature-row"><div class="feature-key">🥧 גרף לפי קטגוריה</div><div class="feature-val">גרף עוגה עם פירוט — לחץ על כל פרוסה לראות פרטים</div></div>
-      <div class="feature-row"><div class="feature-key">💸 מי חייב למי</div><div class="feature-val"><span class="new-badge">חדש</span>חישוב אוטומטי מלא: כל הוצאה משותפת מחולקת לפי המשתתפים שסומנו. בסוף רואים בדיוק מי צריך לשלם למי ובכמה</div></div>
-      <div class="feature-row"><div class="feature-key">📤 ייצוא דוח</div><div class="feature-val">לחץ "📤 ייצוא" לקבלת דוח מסודר עם כל ההוצאות וההתחשבנות — מוכן להדפסה</div></div>
-      <div class="tip-box">💡 רק הוצאות "משותפות" נכנסות לחישוב ההתחשבנות. הוצאות "אישיות" לא נחשבות</div>
+      <div class="feature-row"><div class="feature-key">💸 מי חייב למי</div><div class="feature-val">חישוב אוטומטי מלא — בסוף רואים בדיוק מי צריך לשלם למי ובכמה</div></div>
+      <div class="feature-row"><div class="feature-key">📤 ייצוא דוח</div><div class="feature-val">לחץ 📄 בכותרת לדוח מסודר עם כל ההוצאות וההתחשבנות</div></div>
+      <div class="tip-box">💡 רק הוצאות "משותפות" נכנסות לחישוב. הוצאות "אישיות" לא נחשבות</div>
     </div>
   </div>
 
-  <!-- Screen 4 -->
+  <!-- TRIP SECTION -->
+  <div class="section-header">
+    <div class="section-number">🌴</div>
+    <h2>סקשן טיול</h2>
+  </div>
+
+  <!-- Calendar -->
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #5B3E8C, #7B5EA7);">
       <div class="screen-card-emoji">📅</div>
       <div>
-        <div class="screen-card-title">מסך 4 – לוח שנה</div>
+        <div class="screen-card-title">יומן</div>
         <div class="screen-card-desc">תצוגה חודשית ויומית עם ציר שעות</div>
       </div>
     </div>
     <div class="screen-card-body">
       <div class="sub-header">📅 תצוגת חודש</div>
       <div class="feature-row"><div class="feature-key">לוח חודשי</div><div class="feature-val">נקודות צבעוניות על כל יום: 🔵 טיסה, 🟢 מלון, 🟡 הוצאות, 🟣 פעילויות</div></div>
-      <div class="feature-row"><div class="feature-key">לחיצה על יום</div><div class="feature-val">לחץ על כל יום בטיול כדי לעבור לתצוגת היום המפורטת</div></div>
+      <div class="feature-row"><div class="feature-key">לחיצה על יום</div><div class="feature-val">עובר לתצוגת היום המפורטת עם ציר שעות</div></div>
 
       <div class="sub-header">🕐 תצוגת יום</div>
-      <div class="feature-row"><div class="feature-key">ציר שעות</div><div class="feature-val">מציג מה קורה בכל שעה — טיסות, צ'ק אין, פעילויות ממוקמות בדיוק על הציר</div></div>
-      <div class="feature-row"><div class="feature-key">👆 החלקה בין ימים</div><div class="feature-val">החלק שמאלה ליום הבא, ימינה ליום הקודם — גם חצים ← → בכותרת עובדים</div></div>
-      <div class="feature-row"><div class="feature-key">🌤️ מזג אוויר</div><div class="feature-val">תחזית לכל יום: טמפרטורה ומזג אוויר (זמין עד 16 יום קדימה)</div></div>
+      <div class="feature-row"><div class="feature-key">ציר שעות</div><div class="feature-val">מציג מה קורה בכל שעה — טיסות, צ'ק אין, פעילויות ממוקמות בדיוק</div></div>
+      <div class="feature-row"><div class="feature-key">👆 החלקה בין ימים</div><div class="feature-val">החלק שמאלה/ימינה בין ימים — גם חצים ← → בכותרת עובדים</div></div>
+      <div class="feature-row"><div class="feature-key">🌤️ מזג אוויר</div><div class="feature-val">תחזית לכל יום: טמפרטורה ותנאי מזג אוויר (עד 16 יום קדימה)</div></div>
+      <div class="feature-row"><div class="feature-key">👆 לחיצה על פעילות</div><div class="feature-val"><span class="new-badge">חדש</span>לחץ על פעילות סגולה לראות פרטים: שם, סוג, שעות — ועם כפתור עריכה</div></div>
 
       <div class="sub-header">✏️ הוספת פעילויות יומיות</div>
       <div class="feature-row"><div class="feature-key">איך מוסיפים</div><div class="feature-val">לחץ "✏️ פעילויות" בכל יום — נפתח חלון הוספה</div></div>
-      <div class="feature-row"><div class="feature-key">סוג הפעילות</div><div class="feature-val"><span class="new-badge">חדש</span>בחר סוג: 🥾 טיול, 🍽️ מסעדה, 🚗 נסיעה, 📌 כללי — מוצג כאייקון על ציר השעות</div></div>
-      <div class="feature-row"><div class="feature-key">שעת התחלה וסיום</div><div class="feature-val"><span class="new-badge">חדש</span>הכנס מאיזו שעה עד איזו שעה — הפעילות תתפוס את הזמן הנכון על ציר השעות</div></div>
-      <div class="feature-row"><div class="feature-key">פעילות ללא שעה</div><div class="feature-val">אפשר להשאיר ריק — תופיע בתחתית היום בסעיף "ללא שעה"</div></div>
-      <div class="tip-box">💡 הפעילויות נשמרות אוטומטית — לא ייעלמו גם אם תצא מהאפליקציה</div>
+      <div class="feature-row"><div class="feature-key">סוג הפעילות</div><div class="feature-val">בחר: 🥾 טיול, 🍽️ מסעדה, 🚗 נסיעה, 📌 כללי — מוצג כאייקון על הציר</div></div>
+      <div class="feature-row"><div class="feature-key">שעת התחלה וסיום</div><div class="feature-val">הכנס מאיזו שעה עד איזו שעה — תתפוס את הזמן הנכון על ציר השעות</div></div>
+      <div class="tip-box">💡 הפעילויות נשמרות אוטומטית לענן — לא ייעלמו</div>
     </div>
   </div>
 
-  <!-- Screen 5 -->
+  <!-- Discover -->
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #1a4a7a, #2563aa);">
       <div class="screen-card-emoji">✨</div>
       <div>
-        <div class="screen-card-title">מסך 5 – המלצות</div>
-        <div class="screen-card-desc">המלצות AI + הזמנת מלונות ופעילויות</div>
+        <div class="screen-card-title">המלצות</div>
+        <div class="screen-card-desc">הזמנת מלונות, פעילויות והמלצות AI</div>
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="feature-row"><div class="feature-key">🤖 המלצות AI</div><div class="feature-val">לחץ "קבל המלצות" — הבינה המלאכותית מחזירה המלצות מותאמות ליעד שלך: אטרקציות מומלצות, מסעדות וטיפ מקומי</div></div>
+      <div class="feature-row"><div class="feature-key">🏨 Agoda</div><div class="feature-val">כפתור רחב בראש המסך — לחיצה מחפשת מלונות ביעד עם תאריכי הטיול ממולאים מראש</div></div>
+      <div class="feature-row"><div class="feature-key">🎡 Viator / GetYourGuide</div><div class="feature-val">שני כפתורים זה לצד זה לחיפוש סיורים ופעילויות ביעד</div></div>
+      <div class="feature-row"><div class="feature-key">🤖 המלצות AI</div><div class="feature-val">אטרקציות ומסעדות מומלצות עם טיפ מקומי — מותאמות ליעד שלך</div></div>
       <div class="feature-row"><div class="feature-key">🗺️ Google Maps</div><div class="feature-val">כפתור "פתח במפה" ליד כל המלצה — פותח ניווט ישיר למקום</div></div>
-      <div class="feature-row"><div class="feature-key">🏨 הזמנת מלון</div><div class="feature-val">קישורים ל-Agoda ו-Booking.com עם תאריכי הטיול ממולאים מראש</div></div>
-      <div class="feature-row"><div class="feature-key">🎡 הזמנת סיורים</div><div class="feature-val">קישורים ל-Viator ו-GetYourGuide לחיפוש פעילויות ביעד</div></div>
       <div class="tip-box">💡 ההמלצות ניתנות באנגלית לאיכות מיטבית</div>
+    </div>
+  </div>
+
+  <!-- Packing List -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #7c3aed, #9f5cff);">
+      <div class="screen-card-emoji">🎒</div>
+      <div>
+        <div class="screen-card-title">רשימת אריזה <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:999px;margin-right:6px;">חדש</span></div>
+        <div class="screen-card-desc">ניהול ציוד לפני ובמהלך הטיול</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">📋 קטגוריות</div><div class="feature-val">מסמכים 📄, בגדים 👕, טכנולוגיה 💻, רפואה 💊, כללי 📦 — כל פריט תחת הקטגוריה המתאימה</div></div>
+      <div class="feature-row"><div class="feature-key">✅ סימון</div><div class="feature-val">לחץ על פריט לסימון כ"ארוז" — מד ההתקדמות בראש המסך מתעדכן בזמן אמת</div></div>
+      <div class="feature-row"><div class="feature-key">➕ הוספת פריט</div><div class="feature-val">הקלד שם הפריט, בחר קטגוריה ולחץ הוסף</div></div>
+      <div class="feature-row"><div class="feature-key">🗑️ מחיקה</div><div class="feature-val">לחץ ✕ ליד כל פריט למחיקתו</div></div>
+      <div class="feature-row"><div class="feature-key">☁️ שמירה</div><div class="feature-val">הרשימה נשמרת לענן — זמינה לכל חברי הטיול</div></div>
+      <div class="tip-box">💡 תכנן את רשימת האריזה מראש — תמיד נגישה גם בטיול עצמו</div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+      <div class="screen-card-emoji">🗺️</div>
+      <div>
+        <div class="screen-card-title">מפה <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:999px;margin-right:6px;">חדש</span></div>
+        <div class="screen-card-desc">כל המקומות בטיול במקום אחד</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">🗺️ פתח מפה</div><div class="feature-val">לחץ לפתיחת Google Maps מרוכז עם כל מקומות הטיול</div></div>
+      <div class="feature-row"><div class="feature-key">📍 רשימת מקומות</div><div class="feature-val">כל הוצאה עם כתובת מופיעה כאן — מסעדות, אטרקציות, בתי מלון</div></div>
+      <div class="feature-row"><div class="feature-key">🔗 לחיצה על מקום</div><div class="feature-val">לוחץ על כל מקום ברשימה ופותח ניווט ישיר ב-Google Maps</div></div>
+      <div class="tip-box">💡 הוסף כתובת לכל הוצאה (מסעדה, אטרקציה) — היא תופיע אוטומטית במסך המפה</div>
     </div>
   </div>
 
@@ -502,39 +601,39 @@
     <h2>שיתוף הטיול</h2>
   </div>
 
-  <div style="font-size:13px;font-weight:700;color:#0d2137;margin-bottom:10px;">👥 שיתוף לעריכה מלאה</div>
-  <table class="info-table">
-    <tr><th class="key-col">נושא</th><th>הסבר</th></tr>
-    <tr><td class="key-col">איך משתפים</td><td>פתח טיול → לחץ <strong>👥 שתף</strong> → הכנס את האימייל של החבר → לחץ שתף</td></tr>
-    <tr><td class="key-col">מה החבר רואה</td><td>את כל הטיול — הוצאות, תקציב, יומן — ויכול להוסיף ולערוך</td></tr>
-    <tr><td class="key-col">עדכון בזמן אמת</td><td>כל שינוי מסונכרן מיידית לכל המשתתפים</td></tr>
-    <tr><td class="key-col">שינוי הרשאות</td><td><span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;">חדש</span> לאחר השיתוף — לחץ על הכפתור ליד שם החבר לשנות בין עריכה לצפייה</td></tr>
-    <tr><td class="key-col">הסרת משתתף</td><td><span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;">חדש</span> לחץ ✕ ליד שם המשתמש להסרתו מהטיול</td></tr>
-    <tr><td class="key-col">שליחת הזמנה</td><td>לאחר השיתוף לחץ 📲 לשליחה בוואטסאפ או 📋 להעתקת הלינק</td></tr>
-  </table>
-
-  <div style="font-size:13px;font-weight:700;color:#0d2137;margin:18px 0 10px;">👁️ שיתוף לצפייה בלבד</div>
-  <div class="intro-box" style="background:#f5f3ff;border-color:#7c3aed;margin-bottom:12px;">
-    רוצה לשתף חברים שיראו את המסלול והיומן אבל <strong>לא</strong> את ההוצאות והתקציב? אפשר!
+  <div style="font-size:13px;font-weight:700;color:#0d2137;margin-bottom:10px;">🔗 הזמנה בקישור — הדרך הקלה ביותר</div>
+  <div class="intro-box" style="background:#f0fdf4;border-color:#4ade80;margin-bottom:12px;">
+    <strong>חדש!</strong> שלח קישור הזמנה לכל הקבוצה בוואטסאפ — כל מי שיש לו את הקישור יכול להצטרף. אין צורך להכניס מיילים בנפרד.
   </div>
   <table class="info-table">
     <tr><th class="key-col">נושא</th><th>הסבר</th></tr>
-    <tr><td class="key-col">איך מפעילים</td><td>בחלון השיתוף — הפעל את הטוגל <strong>"👁️ לצפייה בלבד"</strong> לפני לחיצת שתף</td></tr>
-    <tr><td class="key-col">מה הם רואים</td><td>יעד, לוח שנה, והמלצות בלבד</td></tr>
-    <tr><td class="key-col">מה הם לא רואים</td><td>הוצאות, תקציב ומחירים</td></tr>
-    <tr><td class="key-col">שינוי מאוחר</td><td>אפשר לשנות בכל עת דרך כפתור ההרשאות ליד שמם</td></tr>
+    <tr><td class="key-col">איך יוצרים קישור</td><td>פתח טיול ← לחץ 👥 ← גלול למטה ← לחץ <strong>"🔗 צור קישור הזמנה"</strong></td></tr>
+    <tr><td class="key-col">שליחה</td><td>לחץ 📲 לשליחה ישירה בוואטסאפ, או 📋 להעתקת הקישור</td></tr>
+    <tr><td class="key-col">מה קורה למוזמן</td><td>לוחץ על הקישור ← נכנס/נרשם ← הטיול מופיע אוטומטית אצלו</td></tr>
+    <tr><td class="key-col">צפייה בלבד</td><td>אפשר להגדיר שהמוזמנים יראו רק יומן והמלצות — בלי הוצאות ותקציב</td></tr>
+    <tr><td class="key-col">ביטול קישור</td><td>לחץ 🗑️ לביטול — מי שהצטרף כבר נשאר, אבל אף אחד חדש לא יוכל להצטרף</td></tr>
+  </table>
+
+  <div style="font-size:13px;font-weight:700;color:#0d2137;margin:18px 0 10px;">📧 שיתוף עם מייל ספציפי</div>
+  <table class="info-table">
+    <tr><th class="key-col">נושא</th><th>הסבר</th></tr>
+    <tr><td class="key-col">איך משתפים</td><td>פתח טיול ← לחץ 👥 ← הכנס אימייל ← לחץ שתף</td></tr>
+    <tr><td class="key-col">מה החבר רואה</td><td>את כל הטיול — הוצאות, תקציב, יומן — ויכול לערוך</td></tr>
+    <tr><td class="key-col">עדכון בזמן אמת</td><td>כל שינוי מסונכרן מיידית לכל המשתתפים</td></tr>
+    <tr><td class="key-col">שינוי הרשאות</td><td>לחץ על הכפתור ליד שם החבר לשנות בין עריכה לצפייה בלבד</td></tr>
+    <tr><td class="key-col">הסרת משתתף</td><td>לחץ ✕ ליד שם המשתמש להסרתו</td></tr>
   </table>
 
   <div style="font-size:13px;font-weight:700;color:#0d2137;margin:18px 0 10px;">✨ שיתוף כהשראה</div>
   <table class="info-table">
     <tr><th class="key-col">נושא</th><th>הסבר</th></tr>
-    <tr><td class="key-col">מה זה?</td><td>שלח לחבר לינק לקריאה בלבד — הוא רואה מה עשית ומתי, <strong>ללא מחירים</strong></td></tr>
-    <tr><td class="key-col">איך מפעילים</td><td>פתח טיול → לחץ כפתור <strong>✨</strong> → בטל סימון מה שרוצים להסתיר → לחץ "צור לינק"</td></tr>
-    <tr><td class="key-col">מה המקבל יכול לעשות</td><td>לצפות, לסמן מה מעניין אותו, וללחוץ "ייבא" לטיול חדש אצלו</td></tr>
+    <tr><td class="key-col">מה זה?</td><td>שלח לינק לצפייה בלבד — הצד השני רואה מה עשית ומתי, <strong>ללא מחירים</strong></td></tr>
+    <tr><td class="key-col">איך מפעילים</td><td>פתח טיול ← לחץ כפתור <strong>✨</strong> ← בטל סימון מה שרוצים להסתיר ← "צור לינק"</td></tr>
+    <tr><td class="key-col">מה המקבל יכול לעשות</td><td>לצפות ולייבא את הטיול אצלו — ללא מחירים</td></tr>
     <tr><td class="key-col">האם צריך חשבון?</td><td>לצפייה — לא. לייבוא — כן</td></tr>
   </table>
 
-  <!-- SETTLEMENT EXPLAINED -->
+  <!-- SETTLEMENT -->
   <div class="section-header">
     <div class="section-number">💸</div>
     <h2>התחשבנות בסוף הטיול</h2>
@@ -546,15 +645,15 @@
 
   <table class="steps-table">
     <tr><th class="step-num">#</th><th>מה עושים</th></tr>
-    <tr><td class="step-num">1</td><td>במסך <strong>יעד</strong> — הוסף את שמות כל המשפחות/אנשים שנוסעים</td></tr>
+    <tr><td class="step-num">1</td><td>ב<strong>הגדרות טיול</strong> — הוסף את שמות כל המשפחות/אנשים שנוסעים</td></tr>
     <tr><td class="step-num">2</td><td>בכל הוצאה משותפת — סמן <strong>מי היה שם</strong> (לחץ על מי שלא היה להוציא אותו)</td></tr>
     <tr><td class="step-num">3</td><td>לחץ <strong>"+ הוסף משלם"</strong> ורשום מי שילם ובכמה</td></tr>
-    <tr><td class="step-num">4</td><td>בסוף הטיול — פתח מסך <strong>תקציב</strong> וגלול למטה לראות מי חייב למי</td></tr>
+    <tr><td class="step-num">4</td><td>בסוף הטיול — פתח <strong>תקציב</strong> וגלול למטה לראות מי חייב למי</td></tr>
   </table>
 
   <div class="example-box">
-    <strong>דוגמה מלאה — 3 משפחות בטיול:</strong><br><br>
-    🍽️ מסעדה ₪300 — רק כהן ולוי יצאו. שילם: כהן ₪300<br>
+    <strong>דוגמה מלאה — 3 משפחות:</strong><br><br>
+    🍽️ מסעדה ₪300 — רק כהן ולוי. שילם: כהן ₪300<br>
     🚌 סיור ₪600 — שלושתם. שילמו: לוי ₪400, ישראלי ₪200<br>
     🏨 מלון ₪900 — שלושתם. שילם: כהן ₪900<br><br>
     <strong>חישוב אוטומטי:</strong><br>
@@ -588,60 +687,52 @@
 
   <div class="tips-grid">
     <div class="tip-card">
+      <div class="tip-title">🔗 הזמנה קלה</div>
+      <div class="tip-text">צור קישור הזמנה ושלח לכל הקבוצה בוואטסאפ — כל אחד לוחץ ומצטרף</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🎒 רשימת אריזה</div>
+      <div class="tip-text">הכן את הרשימה לפני הטיול — תוכל לסמן פריטים שארזת גם במהלך האריזה</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🗺️ מפה מרוכזת</div>
+      <div class="tip-text">הוסף כתובת לכל הוצאה — כולן יופיעו אוטומטית במסך המפה</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">📅 פרטי פעילות</div>
+      <div class="tip-text">לחץ על פעילות סגולה ביומן לראות פרטים מלאים ולערוך אותה במקום</div>
+    </div>
+    <div class="tip-card">
       <div class="tip-title">📱 גישה מכל מכשיר</div>
       <div class="tip-text">כנס עם אותו אימייל מכל טלפון או מחשב — הכל מסונכרן אוטומטית</div>
     </div>
     <div class="tip-card">
       <div class="tip-title">📷 סריקת קבלות</div>
-      <div class="tip-text">צלם קבלה — הבינה המלאכותית ממלאת את הסכום, המטבע והתיאור לבד</div>
+      <div class="tip-text">צלם קבלה — הבינה המלאכותית ממלאת סכום, מטבע ותיאור לבד</div>
     </div>
     <div class="tip-card">
       <div class="tip-title">💸 חלוקה חלקית</div>
       <div class="tip-text">לא כולם היו? לחץ על מי שלא היה בהוצאה להוציא אותו מהחלוקה</div>
     </div>
     <div class="tip-card">
-      <div class="tip-title">💳 כמה משלמים</div>
-      <div class="tip-text">אפשר לרשום שמשפחה אחת שילמה ₪200 ואחרת ₪100 לאותה הוצאה</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">👁️ שיתוף ללא מחירים</div>
-      <div class="tip-text">שתף חברים שרק יראו את המסלול — בלי שיידעו כמה שילמת</div>
-    </div>
-    <div class="tip-card">
       <div class="tip-title">💱 המרת מטבע מהירה</div>
-      <div class="tip-text">לחץ 💱 מכל מסך לפתיחת מחשבון המרה — שימושי בקניות בשוק</div>
+      <div class="tip-text">לחץ 💱 בכותרת לפתיחת מחשבון המרה — שימושי בקניות בשוק</div>
     </div>
     <div class="tip-card">
       <div class="tip-title">🔒 נעילת שער המטבע</div>
       <div class="tip-text">סמן הוצאה כ"שולם" כדי שהסכום בשקלים לא ישתנה אם השער יזוז</div>
     </div>
     <div class="tip-card">
-      <div class="tip-title">🗺️ ניווט מהיר</div>
-      <div class="tip-text">הוסף כתובת לכל מסעדה או אטרקציה — לחיצה תפתח Google Maps</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">🥾 סוג פעילות</div>
-      <div class="tip-text">בלוח השנה — בחר סוג (טיול/מסעדה/נסיעה/כללי) לאייקון על ציר השעות</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">🕐 שעות פעילות</div>
-      <div class="tip-text">הכנס שעת התחלה וסיום לפעילות — תופיע בדיוק במקום הנכון על ציר השעות</div>
+      <div class="tip-title">👁️ שיתוף ללא מחירים</div>
+      <div class="tip-text">שתף חברים שרק יראו את המסלול — בלי שיידעו כמה שילמת</div>
     </div>
     <div class="tip-card">
       <div class="tip-title">📤 ייצוא דוח</div>
-      <div class="tip-text">לחץ "ייצוא" במסך תקציב לדוח מסודר עם כל ההוצאות וההתחשבנות</div>
+      <div class="tip-text">לחץ 📄 בתקציב לדוח מסודר עם כל ההוצאות וההתחשבנות</div>
     </div>
     <div class="tip-card">
       <div class="tip-title">🌍 ריבוי טיולים</div>
       <div class="tip-text">נהל כמה טיולים במקביל — עבור ביניהם ממסך הבית</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">🌐 החלפת שפה</div>
-      <div class="tip-text">לחץ עב / EN בפינה של כל מסך לעבור בין עברית לאנגלית</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">✈️ פרטי טיסה</div>
-      <div class="tip-text">הכנס מספר טיסה ושעת נחיתה — יוצגו בכרטיס הטיסה ובלוח השנה</div>
     </div>
   </div>
 
@@ -663,7 +754,7 @@
 </div>
 
 <div class="guide-footer">
-  <span>טיולון</span> – מתכנן הטיולים שלי &nbsp;|&nbsp; www.tulon.co.il &nbsp;|&nbsp; גרסה 6.0
+  <span>טיולון</span> – מתכנן הטיולים שלי &nbsp;|&nbsp; www.tulon.co.il &nbsp;|&nbsp; גרסה 7.0
 </div>
 
 </body>
