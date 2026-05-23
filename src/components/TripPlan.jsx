@@ -2891,6 +2891,18 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     </div>
   ):null;
 
+  // ── LOADING GUARD: activeId set but trip not in state yet (Firestore not synced) ──
+  if(activeId&&!active){
+    return(
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:DARK_BG,fontFamily:RF}}>
+        <div style={{textAlign:"center",color:"white"}}>
+          <div style={{fontSize:42,fontWeight:900,letterSpacing:"-1px",marginBottom:10}}>טיולון</div>
+          <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",fontWeight:300}}>טוען...</div>
+        </div>
+      </div>
+    );
+  }
+
   // ── SPLASH SCREEN (section === null) ──
   if(activeId&&!section){
     return(
