@@ -5,27 +5,31 @@ function makeToken() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+// owner is stored as userId (UID), sharedWith is stored as emails
+function canAccess(tripData: any, userId: string, userEmail: string) {
+  const normalized = userEmail.toLowerCase().trim();
+  return (
+    tripData.owner === userId ||
+    (tripData.sharedWith || []).includes(normalized)
+  );
+}
+
 // POST /api/invite — create an invite token for a trip
 export async function POST(req: NextRequest) {
   try {
-    const { tripId, role, userEmail } = await req.json();
-    if (!tripId || !userEmail) {
+    const { tripId, role, userId, userEmail } = await req.json();
+    if (!tripId || !userId || !userEmail) {
       return NextResponse.json({ error: "Missing params" }, { status: 400 });
     }
 
     const db = getAdminDb();
 
-    // Verify the caller owns or has access to the trip
     const tripSnap = await db.collection("trips").doc(tripId).get();
     if (!tripSnap.exists) {
       return NextResponse.json({ error: "trip_not_found" }, { status: 404 });
     }
-    const tripData = tripSnap.data()!;
-    const normalized = userEmail.toLowerCase().trim();
-    if (
-      tripData.owner !== normalized &&
-      !(tripData.sharedWith || []).includes(normalized)
-    ) {
+
+    if (!canAccess(tripSnap.data()!, userId, userEmail)) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
@@ -46,32 +50,22 @@ export async function POST(req: NextRequest) {
 // DELETE /api/invite — revoke an invite token
 export async function DELETE(req: NextRequest) {
   try {
-    const { token, userEmail } = await req.json();
-    if (!token || !userEmail) {
+    const { token, userId, userEmail } = await req.json();
+    if (!token || !userId || !userEmail) {
       return NextResponse.json({ error: "Missing params" }, { status: 400 });
     }
 
     const db = getAdminDb();
 
-    // Verify token exists
     const inviteSnap = await db.collection("invites").doc(token).get();
     if (!inviteSnap.exists) {
-      return NextResponse.json({ ok: true }); // already gone — that's fine
+      return NextResponse.json({ ok: true }); // already gone
     }
 
     const { tripId } = inviteSnap.data()!;
-
-    // Verify the caller owns or has access to the trip
     const tripSnap = await db.collection("trips").doc(tripId).get();
-    if (tripSnap.exists) {
-      const tripData = tripSnap.data()!;
-      const normalized = userEmail.toLowerCase().trim();
-      if (
-        tripData.owner !== normalized &&
-        !(tripData.sharedWith || []).includes(normalized)
-      ) {
-        return NextResponse.json({ error: "forbidden" }, { status: 403 });
-      }
+    if (tripSnap.exists && !canAccess(tripSnap.data()!, userId, userEmail)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
     await db.collection("invites").doc(token).delete();

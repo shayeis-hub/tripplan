@@ -2491,6 +2491,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[inviteViewOnly,setInviteViewOnly]=useState(false);
   const[inviteGenerating,setInviteGenerating]=useState(false);
   const[inviteDeleting,setInviteDeleting]=useState(false);
+  const[inviteCopied,setInviteCopied]=useState(false);
   const[inviteJoinMsg,setInviteJoinMsg]=useState(null);
   const{rates,allCodes,info,toILS}=useRates();
   const{permission,subscribed,subscribe}=usePushNotifications(userId);
@@ -2534,13 +2535,16 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       const res=await fetch("/api/invite",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({tripId,role:role||"edit",userEmail}),
+        body:JSON.stringify({tripId,role:role||"edit",userId,userEmail}),
       });
       const data=await res.json();
       if(data.token){
         const trip=trips.find(t=>t.id===tripId);
         if(trip) onSaveTrip({...trip,inviteToken:data.token,inviteTokenRole:role||"edit",updatedAt:Date.now()});
         setTrips(ts=>ts.map(t=>t.id===tripId?{...t,inviteToken:data.token,inviteTokenRole:role||"edit"}:t));
+        // Auto-copy to clipboard
+        const url=`https://tulon.co.il?invite=${data.token}`;
+        try{await navigator.clipboard.writeText(url);setInviteCopied(true);setTimeout(()=>setInviteCopied(false),2500);}catch(_){}
       }else{console.error("invite create failed",data);}
     }catch(e){console.error(e);}
     setInviteGenerating(false);
@@ -2555,7 +2559,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         await fetch("/api/invite",{
           method:"DELETE",
           headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({token:trip.inviteToken,userEmail}),
+          body:JSON.stringify({token:trip.inviteToken,userId,userEmail}),
         });
       }
       const{inviteToken:_,inviteTokenRole:__,...rest}=trip||{};
@@ -2800,16 +2804,32 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                 </>
               ):(
                 <div style={{background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:14,padding:"14px"}}>
-                  <div style={{fontSize:11,color:W35,fontFamily:RF,marginBottom:8}}>{lang==="he"?"כל מי שיש לו את הקישור יכול להצטרף":"Anyone with this link can join"} · {shareTripObj?.inviteTokenRole==="view"?(lang==="he"?"צפייה בלבד":"View only"):(lang==="he"?"עריכה":"Edit")}</div>
-                  <div style={{fontFamily:"monospace",fontSize:11,color:TEAL,wordBreak:"break-all",marginBottom:12,background:W05,padding:"8px 10px",borderRadius:8,direction:"ltr"}}>{inviteUrl}</div>
+                  <div style={{fontSize:11,color:W35,fontFamily:RF,marginBottom:6}}>{lang==="he"?"כל מי שיש לו את הקישור יכול להצטרף":"Anyone with this link can join"} · {shareTripObj?.inviteTokenRole==="view"?(lang==="he"?"צפייה בלבד":"View only"):(lang==="he"?"עריכה":"Edit")}</div>
+                  {/* URL display — tap to copy */}
+                  <div onClick={async()=>{try{await navigator.clipboard.writeText(inviteUrl);setInviteCopied(true);setTimeout(()=>setInviteCopied(false),2500);}catch(_){}}}
+                    style={{fontFamily:"monospace",fontSize:11,color:TEAL,wordBreak:"break-all",marginBottom:10,background:W05,padding:"8px 10px",borderRadius:8,direction:"ltr",cursor:"pointer",userSelect:"all"}}>
+                    {inviteUrl}
+                  </div>
+                  {/* Copied confirmation */}
+                  {inviteCopied&&<div style={{fontSize:12,color:"#4ade80",fontFamily:RF,fontWeight:600,textAlign:"center",marginBottom:8}}>✓ {lang==="he"?"הועתק ללוח!":"Copied to clipboard!"}</div>}
                   <div style={{display:"flex",gap:8}}>
-                    <button onClick={()=>navigator.clipboard.writeText(inviteUrl)}
-                      style={{flex:1,padding:"9px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>📋 {lang==="he"?"העתק":"Copy"}</button>
-                    <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`${lang==="he"?`הוזמנת להצטרף לטיול לטיולון${dest?` ל${dest}`:""}! לחץ על הקישור:`:`You're invited to join a trip on Tulon${dest?` to ${dest}`:""}! Click the link:`}\n${inviteUrl}`)}`,"_blank")}
-                      style={{flex:1,padding:"9px",borderRadius:10,border:"none",background:"#25D366",color:"#fff",fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>📲 {lang==="he"?"וואטסאפ":"WhatsApp"}</button>
+                    <button onClick={async()=>{try{await navigator.clipboard.writeText(inviteUrl);setInviteCopied(true);setTimeout(()=>setInviteCopied(false),2500);}catch(_){}}}
+                      style={{flex:1,padding:"9px",borderRadius:10,border:`0.5px solid ${inviteCopied?"rgba(74,222,128,0.5)":"rgba(100,223,223,0.3)"}`,background:inviteCopied?"rgba(74,222,128,0.1)":"rgba(100,223,223,0.08)",color:inviteCopied?"#4ade80":TEAL,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",transition:"all 0.2s"}}>
+                      {inviteCopied?(lang==="he"?"✓ הועתק":"✓ Copied"):`📋 ${lang==="he"?"העתק":"Copy"}`}
+                    </button>
+                    <button onClick={()=>{
+                      const waText=lang==="he"
+                        ?`הוזמנת להצטרף לטיול${dest?` ל${dest}`:""}! לחץ על הקישור:\n${inviteUrl}`
+                        :`You're invited to join a trip${dest?` to ${dest}`:""}! Click the link:\n${inviteUrl}`;
+                      window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`,"_blank");
+                    }}
+                      style={{flex:1,padding:"9px",borderRadius:10,border:"none",background:"#25D366",color:"#fff",fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
+                      📲 {lang==="he"?"וואטסאפ":"WhatsApp"}
+                    </button>
                     <button onClick={()=>deleteInviteToken(shareModal)} disabled={inviteDeleting}
                       style={{padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(255,107,107,0.3)",background:"rgba(255,107,107,0.08)",color:"#ff6b6b",fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",opacity:inviteDeleting?0.6:1}}>
-                      {inviteDeleting?"...":"🗑️"}</button>
+                      {inviteDeleting?"...":"🗑️"}
+                    </button>
                   </div>
                 </div>
               )}
