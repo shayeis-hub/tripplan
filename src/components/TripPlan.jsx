@@ -202,18 +202,29 @@ function WaveHeader({title,subtitle,action}){
   );
 }
 
+const NAV_CFG={
+  destination:{icon:"🌴",he:"יעד",en:"Destination"},
+  expenses:   {icon:"💳",he:"הוצאות",en:"Expenses"},
+  budget:     {icon:"💰",he:"תקציב",en:"Budget"},
+  calendar:   {icon:"📅",he:"יומן",en:"Calendar"},
+  discover:   {icon:"✨",he:"המלצות",en:"Tips"},
+  packing:    {icon:"🎒",he:"אריזה",en:"Packing"},
+  map:        {icon:"🗺️",he:"מפה",en:"Map"},
+};
+
 function NavBar({screens,current,onNav}){
   const{lang}=useLang();
-  const labels=[t("nav_destination",lang),t("nav_expenses",lang),t("nav_budget",lang),t("nav_calendar",lang),t("nav_discover",lang)];
-  const icons=["🌴","💳","💰","📅","🏨"];
   return(
     <div style={{display:"flex",background:"rgba(0,0,0,0.35)",borderTop:"0.5px solid rgba(100,223,223,0.1)",position:"sticky",bottom:0,zIndex:100,backdropFilter:"blur(10px)"}}>
-      {screens.map((s,i)=>(
-        <button key={s} onClick={()=>{haptic();onNav(s);}} className="nav-btn" style={{flex:1,padding:"10px 4px 8px",border:"none",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,borderTop:current===s?"2px solid #64dfdf":"2px solid transparent",transition:"border-color 0.2s,color 0.2s,background 0.2s"}}>
-          <div style={{width:32,height:32,borderRadius:10,background:current===s?TBL:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,transition:"background 0.2s"}}>{icons[i]}</div>
-          <span style={{fontSize:10,fontWeight:600,color:current===s?TEAL:W25,fontFamily:RF,letterSpacing:"0.3px",transition:"color 0.2s"}}>{labels[i]}</span>
-        </button>
-      ))}
+      {screens.map(s=>{
+        const cfg=NAV_CFG[s]||{icon:"●",he:s,en:s};
+        return(
+          <button key={s} onClick={()=>{haptic();onNav(s);}} className="nav-btn" style={{flex:1,padding:"10px 4px 8px",border:"none",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,borderTop:current===s?"2px solid #64dfdf":"2px solid transparent",transition:"border-color 0.2s,color 0.2s,background 0.2s"}}>
+            <div style={{width:32,height:32,borderRadius:10,background:current===s?TBL:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,transition:"background 0.2s"}}>{cfg.icon}</div>
+            <span style={{fontSize:10,fontWeight:600,color:current===s?TEAL:W25,fontFamily:RF,letterSpacing:"0.3px",transition:"color 0.2s"}}>{lang==="he"?cfg.he:cfg.en}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -1552,6 +1563,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
   const[view,setView]=useState("month");  // "month" | "day"
   const[selDate,setSelDate]=useState(dates[0]||"");
   const[editActs,setEditActs]=useState([]); // [{text,time}] being edited
+  const[actPopup,setActPopup]=useState(null); // activity detail popup {act, date}
   const{wx,loading:wLoad,error:wErr}=useWeather(trip.destination,trip.startDate,trip.endDate);
 
   const wxMap={};
@@ -1846,18 +1858,23 @@ function CalendarScreen({trip,expenses,onSaveActs}){
               const height=Math.max(ev.duration*56,28);
               const col=eventColor[ev.type]||TEAL;
               const label=eventLabel[ev.type]?.(ev.data)||"";
+              const isAct=ev.type==="activity";
+              const handleEvClick=()=>{
+                if(isAct){setActPopup({act:ev.data,date:selDate});}
+                else if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");
+              };
               return(
-                <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");}}
+                <div key={i} onClick={handleEvClick}
                   style={{
                     position:"absolute",top,right:0,left:0,minHeight:height,
                     background:`${col}18`,border:`0.5px solid ${col}50`,
                     borderRight:`3px solid ${col}`,borderRadius:8,
                     padding:"4px 8px",display:"flex",alignItems:"flex-start",justifyContent:"space-between",
-                    zIndex:2,cursor:ev.data?.address?"pointer":"default",
+                    zIndex:2,cursor:isAct||ev.data?.address?"pointer":"default",
                     boxSizing:"border-box",
                   }}>
                   <span style={{fontSize:12,fontWeight:600,color:col,fontFamily:RF,lineHeight:1.3,flex:1,wordBreak:"break-word",overflowWrap:"break-word",whiteSpace:"pre-wrap"}}>{label}</span>
-                  {ev.data?.address&&<span style={{fontSize:14,marginRight:4,flexShrink:0,marginTop:2}}>🗺️</span>}
+                  {ev.data?.address&&!isAct&&<span style={{fontSize:14,marginRight:4,flexShrink:0,marginTop:2}}>🗺️</span>}
                 </div>
               );
             })}
@@ -1881,12 +1898,17 @@ function CalendarScreen({trip,expenses,onSaveActs}){
             {untimed.map((ev,i)=>{
               const col=eventColor[ev.type]||TEAL;
               const label=eventLabel[ev.type]?.(ev.data)||"";
+              const isAct=ev.type==="activity";
+              const handleEvClick=()=>{
+                if(isAct){setActPopup({act:ev.data,date:selDate});}
+                else if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");
+              };
               return(
-                <div key={i} onClick={()=>{if(ev.data?.address)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.data.address)}`,"_blank");}}
-                  style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:10,marginBottom:6,cursor:ev.data?.address?"pointer":"default"}}>
+                <div key={i} onClick={handleEvClick}
+                  style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:10,marginBottom:6,cursor:isAct||ev.data?.address?"pointer":"default"}}>
                   <div style={{width:4,height:4,borderRadius:"50%",background:col,flexShrink:0}}/>
                   <span style={{fontSize:13,color:W70,fontFamily:RF,flex:1,wordBreak:"break-word",overflowWrap:"break-word"}}>{label}</span>
-                  {ev.data?.address&&<span style={{fontSize:13}}>🗺️</span>}
+                  {ev.data?.address&&!isAct&&<span style={{fontSize:13}}>🗺️</span>}
                 </div>
               );
             })}
@@ -1941,6 +1963,36 @@ function CalendarScreen({trip,expenses,onSaveActs}){
     </div>
   ) : null;
 
+  // ── ACTIVITY POPUP ──────────────────────────────────────────────────────────
+  const actPopupJsx=actPopup?(()=>{
+    const{act,date}=actPopup;
+    const tp=ACT_TYPES.find(x=>x.id===(act.type||"general"))||ACT_TYPES[0];
+    return(
+      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:250,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setActPopup(null)}>
+        <div onClick={e=>e.stopPropagation()} style={{background:"#0d2f4a",border:"0.5px solid rgba(167,139,250,0.35)",borderRadius:20,padding:24,width:"100%",maxWidth:380,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+            <div style={{width:52,height:52,borderRadius:14,background:"rgba(167,139,250,0.12)",border:"0.5px solid rgba(167,139,250,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0}}>{tp.icon}</div>
+            <div>
+              <div style={{fontFamily:RF,fontSize:11,color:"rgba(167,139,250,0.7)",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",marginBottom:2}}>{lang==="he"?tp.he:tp.en}</div>
+              <div style={{fontFamily:RF,fontSize:17,fontWeight:700,color:"#ffffff"}}>{act.text}</div>
+            </div>
+          </div>
+          {(act.time||act.timeEnd)&&(
+            <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",borderRadius:12,background:"rgba(167,139,250,0.07)",border:"0.5px solid rgba(167,139,250,0.2)",marginBottom:12}}>
+              <span style={{fontSize:16}}>🕐</span>
+              <span style={{fontFamily:RF,fontSize:14,color:"#ffffff",direction:"ltr"}}>{act.time||""}{act.time&&act.timeEnd?" – ":""}{act.timeEnd||""}</span>
+            </div>
+          )}
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",fontFamily:RF,marginBottom:16}}>{fmtDate(date)}</div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>{setActPopup(null);openEdit(date);}} style={{flex:1,padding:"11px",borderRadius:12,border:"0.5px solid rgba(167,139,250,0.4)",background:"rgba(167,139,250,0.1)",color:"#a78bfa",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>✏️ {lang==="he"?"עריכה":"Edit"}</button>
+            <button onClick={()=>setActPopup(null)} style={{flex:1,padding:"11px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{lang==="he"?"סגור":"Close"}</button>
+          </div>
+        </div>
+      </div>
+    );
+  })():null;
+
   // ── RENDER ──────────────────────────────────────────────────────────────────
   return(
     <div>
@@ -1975,6 +2027,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
       </div>
 
       {editModalJsx}
+      {actPopupJsx}
 
       <div style={{overflowY:"auto"}}>
         {view==="month"?<MonthView/>:<DayView/>}
@@ -2032,12 +2085,9 @@ function DiscoverScreen({trip}){
 
   const mapsUrl=name=>`https://www.google.com/maps/search/${encodeURIComponent(name+" "+(dest||trip.destination||""))}`;
 
-  // 4 booking tiles
-  const bookTiles=[
-    {name:"Agoda",domain:"agoda.com",color:"#e0455a",label:t("disc_book_hotels",lang),
-     url:`https://www.agoda.com/search?q=${encDest}${agodaDates}&adults=2&rooms=1${AGODA_CID?`&cid=${AGODA_CID}`:""}`},
-    {name:"Booking.com",domain:"booking.com",color:"#003580",label:t("disc_book_hotels",lang),
-     url:`https://www.booking.com/search.html?ss=${encDest}${bookingDates}${BOOKING_AID?`&aid=${BOOKING_AID}`:""}`},
+  const agodaTile={name:"Agoda",domain:"agoda.com",color:"#e0455a",label:t("disc_book_hotels",lang),
+   url:`https://www.agoda.com/search?q=${encDest}${agodaDates}&adults=2&rooms=1${AGODA_CID?`&cid=${AGODA_CID}`:""}`};
+  const actTiles=[
     {name:"Viator",domain:"viator.com",color:"#2d9cdb",label:t("disc_book_acts",lang),
      url:`https://www.viator.com/search/${encDest}${VIATOR_PID?`?pid=${VIATOR_PID}&mcid=42383`:""}`},
     {name:"GetYourGuide",domain:"getyourguide.com",color:"#ff6b35",label:t("disc_book_acts",lang),
@@ -2061,7 +2111,34 @@ function DiscoverScreen({trip}){
               {checkIn&&checkOut?` · ${fmtDate(checkIn)} – ${fmtDate(checkOut)}`:""}
             </div>
 
-            {/* AI Recommendations — skeleton while loading */}
+            {/* ── Agoda — full-width hotel booking ── */}
+            <button onClick={()=>open(agodaTile.url)}
+              style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"18px 20px",borderRadius:18,border:`0.5px solid ${agodaTile.color}55`,background:`linear-gradient(135deg,${agodaTile.color}18,${agodaTile.color}08)`,cursor:"pointer"}}>
+              <img src={`https://www.google.com/s2/favicons?domain=${agodaTile.domain}&sz=64`} alt="Agoda"
+                style={{width:48,height:48,borderRadius:12,objectFit:"contain",background:"#fff",padding:4,flexShrink:0}}
+                onError={e=>{e.currentTarget.style.display="none";}}/>
+              <div style={{textAlign:"right",flex:1}}>
+                <div style={{fontFamily:RF,fontSize:16,fontWeight:800,color:"#ffffff"}}>{agodaTile.name}</div>
+                <div style={{fontSize:13,color:"#ffffff",fontWeight:600,marginTop:3,lineHeight:1.4,opacity:0.9}}>{agodaTile.label}</div>
+              </div>
+              <div style={{fontSize:20,flexShrink:0}}>🏨</div>
+            </button>
+
+            {/* ── Activities — Viator + GYG side by side ── */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {actTiles.map(tile=>(
+                <button key={tile.name} onClick={()=>open(tile.url)}
+                  style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,padding:"18px 12px",borderRadius:16,border:`0.5px solid ${tile.color}50`,background:`${tile.color}12`,cursor:"pointer",minHeight:110}}>
+                  <img src={`https://www.google.com/s2/favicons?domain=${tile.domain}&sz=64`} alt={tile.name}
+                    style={{width:44,height:44,borderRadius:10,objectFit:"contain",background:"#fff",padding:4}}
+                    onError={e=>{e.currentTarget.style.display="none";}}/>
+                  <div style={{fontFamily:RF,fontSize:14,fontWeight:800,color:"#ffffff"}}>{tile.name}</div>
+                  <div style={{fontSize:13,color:"#ffffff",textAlign:"center",lineHeight:1.4,fontWeight:600,padding:"0 4px"}}>{tile.label}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* ── AI Recommendations ── */}
             {recsLoading&&(
               <>
                 <Card>
@@ -2144,23 +2221,6 @@ function DiscoverScreen({trip}){
               </>
             )}
 
-            {/* 4 booking tiles */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              {bookTiles.map(tile=>(
-                <button key={tile.name} onClick={()=>open(tile.url)}
-                  style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,padding:"18px 12px",borderRadius:16,border:`0.5px solid ${tile.color}50`,background:`${tile.color}12`,cursor:"pointer",minHeight:110}}>
-                  <img
-                    src={`https://www.google.com/s2/favicons?domain=${tile.domain}&sz=64`}
-                    alt={tile.name}
-                    style={{width:44,height:44,borderRadius:10,objectFit:"contain",background:"#fff",padding:4}}
-                    onError={e=>{e.currentTarget.style.display="none";}}
-                  />
-                  <div style={{fontFamily:RF,fontSize:14,fontWeight:800,color:"#ffffff"}}>{tile.name}</div>
-                  <div style={{fontSize:13,color:"#ffffff",textAlign:"center",lineHeight:1.4,fontWeight:600,padding:"0 4px"}}>{tile.label}</div>
-                </button>
-              ))}
-            </div>
-
             <div style={{fontSize:11,color:"rgba(255,255,255,0.18)",textAlign:"center",fontFamily:RF,lineHeight:1.6}}>
               {t("disc_disclaimer",lang)}
             </div>
@@ -2173,11 +2233,249 @@ function DiscoverScreen({trip}){
 
 const newTrip=(ownerId)=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]});
 
+// ── TRIP SPLASH SCREEN ────────────────────────────────────────────────────────
+function TripSplashScreen({trip,onBudget,onTrip,isViewOnly,lang}){
+  return(
+    <div style={{padding:"32px 20px",display:"flex",flexDirection:"column",gap:16,minHeight:"55vh",justifyContent:"center"}}>
+      <div style={{textAlign:"center",marginBottom:8}}>
+        <div style={{fontSize:48,marginBottom:8}}>🌴</div>
+        <div style={{fontSize:22,fontWeight:800,color:"#ffffff",fontFamily:RF,letterSpacing:"-0.5px"}}>{trip.destination||(lang==="he"?"הטיול שלי":"My Trip")}</div>
+        {trip.startDate&&trip.endDate&&(
+          <div style={{fontSize:13,color:W35,marginTop:5,fontFamily:RF}}>{fmtDate(trip.startDate)} – {fmtDate(trip.endDate)}</div>
+        )}
+        {(trip.people||[]).length>0&&(
+          <div style={{fontSize:12,color:W35,marginTop:3,fontFamily:RF}}>👥 {(trip.people||[]).map(p=>p.name||p).join(" · ")}</div>
+        )}
+      </div>
+
+      {!isViewOnly&&(
+        <button onClick={onBudget} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(74,222,128,0.35)",background:"linear-gradient(135deg,rgba(74,222,128,0.12),rgba(74,222,128,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"right"}}>
+          <div style={{width:56,height:56,borderRadius:16,background:"rgba(74,222,128,0.15)",border:"0.5px solid rgba(74,222,128,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0}}>💳</div>
+          <div>
+            <div style={{fontSize:18,fontWeight:800,color:"#ffffff",fontFamily:RF}}>{lang==="he"?"ניהול תקציב":"Budget Management"}</div>
+            <div style={{fontSize:13,color:W40,marginTop:3,fontFamily:RF}}>{lang==="he"?"הוצאות, תקציב והתחשבנות":"Expenses, budget & settlement"}</div>
+          </div>
+        </button>
+      )}
+
+      <button onClick={onTrip} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(100,223,223,0.35)",background:"linear-gradient(135deg,rgba(100,223,223,0.12),rgba(100,223,223,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"right"}}>
+        <div style={{width:56,height:56,borderRadius:16,background:"rgba(100,223,223,0.15)",border:"0.5px solid rgba(100,223,223,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0}}>🗺️</div>
+        <div>
+          <div style={{fontSize:18,fontWeight:800,color:"#ffffff",fontFamily:RF}}>{lang==="he"?"ניהול טיול":"Trip Management"}</div>
+          <div style={{fontSize:13,color:W40,marginTop:3,fontFamily:RF}}>{lang==="he"?"יומן, המלצות, מפה ואריזה":"Calendar, tips, map & packing"}</div>
+        </div>
+      </button>
+    </div>
+  );
+}
+
+// ── PACKING LIST SCREEN ───────────────────────────────────────────────────────
+const PACK_CATS=[
+  {id:"docs",   icon:"📄",he:"מסמכים",    en:"Documents"},
+  {id:"clothes",icon:"👕",he:"ביגוד",     en:"Clothing"},
+  {id:"tech",   icon:"📱",he:"אלקטרוניקה",en:"Electronics"},
+  {id:"medical",icon:"💊",he:"תרופות",    en:"Medical"},
+  {id:"other",  icon:"🎒",he:"אחר",       en:"Other"},
+];
+const DEFAULT_PACK=(lang)=>[
+  {id:"d1",text:lang==="he"?"דרכון":"Passport",           category:"docs",   checked:false},
+  {id:"d2",text:lang==="he"?"כרטיסי טיסה":"Flight tickets",category:"docs",   checked:false},
+  {id:"d3",text:lang==="he"?"ביטוח נסיעות":"Travel insurance",category:"docs", checked:false},
+  {id:"d4",text:lang==="he"?"ארנק/כסף מזומן":"Wallet/cash",category:"docs",   checked:false},
+  {id:"c1",text:lang==="he"?"חולצות":"T-shirts",          category:"clothes", checked:false},
+  {id:"c2",text:lang==="he"?"נעלי ספורט":"Sneakers",      category:"clothes", checked:false},
+  {id:"c3",text:lang==="he"?"בגד ים":"Swimwear",          category:"clothes", checked:false},
+  {id:"t1",text:lang==="he"?"מטען":"Charger",             category:"tech",    checked:false},
+  {id:"t2",text:lang==="he"?"אוזניות":"Headphones",       category:"tech",    checked:false},
+  {id:"t3",text:lang==="he"?"מצלמה":"Camera",             category:"tech",    checked:false},
+  {id:"m1",text:lang==="he"?"תרופות שגרתיות":"Regular medication",category:"medical",checked:false},
+  {id:"m2",text:lang==="he"?"קרם הגנה":"Sunscreen",       category:"medical", checked:false},
+  {id:"m3",text:lang==="he"?"משחת שיניים":"Toothpaste",   category:"medical", checked:false},
+  {id:"o1",text:lang==="he"?"מטריה":"Umbrella",           category:"other",   checked:false},
+  {id:"o2",text:lang==="he"?"קרם גוף":"Body lotion",      category:"other",   checked:false},
+];
+
+function PackingListScreen({trip,onUpdate}){
+  const{lang}=useLang();
+  const[items,setItems]=useState(()=>trip.packingList||DEFAULT_PACK(lang));
+  const[newText,setNewText]=useState("");
+  const[newCat,setNewCat]=useState("other");
+
+  const save=updated=>{setItems(updated);onUpdate({packingList:updated});};
+
+  const toggle=id=>save(items.map(it=>it.id===id?{...it,checked:!it.checked}:it));
+  const del=id=>save(items.filter(it=>it.id!==id));
+  const addItem=()=>{
+    if(!newText.trim())return;
+    save([...items,{id:uid(),text:newText.trim(),category:newCat,checked:false}]);
+    setNewText("");
+  };
+  const resetAll=()=>save(items.map(it=>({...it,checked:false})));
+
+  const total=items.length;
+  const done=items.filter(it=>it.checked).length;
+  const pct=total?Math.round(done/total*100):0;
+
+  return(
+    <div>
+      <WaveHeader title={lang==="he"?"🎒 רשימת אריזה":"🎒 Packing List"} subtitle={`${done}/${total} ${lang==="he"?"סומן":"packed"}`}/>
+      <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:16}}>
+
+        {/* Progress */}
+        <div style={{background:W05,border:`0.5px solid ${W08}`,borderRadius:14,padding:"14px 16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+            <span style={{color:"#ffffff",fontWeight:700,fontSize:14,fontFamily:RF}}>{lang==="he"?"התקדמות":"Progress"}</span>
+            <span style={{color:pct===100?"#4ade80":TEAL,fontWeight:700,fontSize:14}}>{pct}%</span>
+          </div>
+          <div style={{height:6,background:W12,borderRadius:999,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${pct}%`,background:pct===100?"#4ade80":TEAL,borderRadius:999,transition:"width 0.3s"}}/>
+          </div>
+          {done>0&&<button onClick={resetAll} style={{marginTop:10,fontSize:11,color:W35,background:"none",border:"none",cursor:"pointer",fontFamily:RF}}>↺ {lang==="he"?"אפס הכל":"Reset all"}</button>}
+        </div>
+
+        {/* Items by category */}
+        {PACK_CATS.map(cat=>{
+          const catItems=items.filter(it=>it.category===cat.id);
+          if(!catItems.length)return null;
+          return(
+            <div key={cat.id}>
+              <div style={{fontSize:11,fontWeight:700,color:W35,letterSpacing:"1px",textTransform:"uppercase",marginBottom:8,fontFamily:RF}}>{cat.icon} {lang==="he"?cat.he:cat.en}</div>
+              {catItems.map(item=>(
+                <div key={item.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:item.checked?"rgba(74,222,128,0.06)":W05,border:`0.5px solid ${item.checked?"rgba(74,222,128,0.2)":W12}`,borderRadius:10,marginBottom:6}}>
+                  <div onClick={()=>toggle(item.id)} style={{width:22,height:22,borderRadius:6,border:`2px solid ${item.checked?"#4ade80":W35}`,background:item.checked?"#4ade80":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                    {item.checked&&<span style={{color:DARK_BG,fontSize:13,fontWeight:900}}>✓</span>}
+                  </div>
+                  <span style={{flex:1,fontSize:14,color:item.checked?W35:"#ffffff",fontFamily:RF,textDecoration:item.checked?"line-through":"none"}}>{item.text}</span>
+                  <button onClick={()=>del(item.id)} style={{background:"none",border:"none",color:"rgba(255,107,107,0.4)",fontSize:15,cursor:"pointer",padding:"2px 4px",flexShrink:0}}>✕</button>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+
+        {/* Add item */}
+        <div style={{background:W05,border:"0.5px dashed rgba(100,223,223,0.25)",borderRadius:14,padding:"14px"}}>
+          <div style={{fontSize:11,color:W35,fontWeight:600,marginBottom:10,fontFamily:RF}}>{lang==="he"?"+ הוסף פריט":"+ Add item"}</div>
+          <div style={{display:"flex",gap:8,marginBottom:8}}>
+            <select value={newCat} onChange={e=>setNewCat(e.target.value)}
+              style={{padding:"9px 6px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:W07,color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",flexShrink:0}}>
+              {PACK_CATS.map(c=><option key={c.id} value={c.id}>{c.icon} {lang==="he"?c.he:c.en}</option>)}
+            </select>
+            <input value={newText} onChange={e=>setNewText(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&addItem()}
+              placeholder={lang==="he"?"פריט חדש...":"New item..."}
+              style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:W07,color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none"}}/>
+          </div>
+          <button onClick={addItem} style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>
+            {lang==="he"?"הוסף":"Add"}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ── MAP SCREEN ────────────────────────────────────────────────────────────────
+function MapScreen({trip,expenses}){
+  const{lang}=useLang();
+  const dest=trip.destination||"";
+  const encDest=encodeURIComponent(dest);
+
+  // Collect all places with addresses
+  const places=[];
+  (expenses||[]).forEach(e=>{
+    if(e.address){
+      const cat=CATS.find(c=>c.id===e.category);
+      places.push({icon:cat?.icon||"📍",label:e.description||cat?.label||e.category,address:e.address,date:e.date||""});
+    }
+  });
+  // Activities (no address but show as list)
+  const actPlaces=[];
+  Object.entries(trip.activities||{}).forEach(([date,acts])=>{
+    (acts||[]).forEach(a=>{
+      const act=typeof a==="string"?{text:a}:a;
+      if(act.text) actPlaces.push({icon:actIcon(act.type),label:act.text,date});
+    });
+  });
+
+  // Group places by date
+  const byDate={};
+  places.forEach(p=>{
+    const d=p.date||"";
+    if(!byDate[d])byDate[d]=[];
+    byDate[d].push(p);
+  });
+
+  return(
+    <div>
+      <WaveHeader title={lang==="he"?"🗺️ מפה":"🗺️ Map"} subtitle={dest}/>
+      <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:12}}>
+
+        {/* Open destination in Google Maps */}
+        <button onClick={()=>window.open(`https://www.google.com/maps/search/${encDest}`,"_blank")}
+          style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:"linear-gradient(135deg,#4285F4,#34A853)",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          🗺️ {lang==="he"?`פתח מפה של ${dest}`:`Open map of ${dest}`}
+        </button>
+
+        {/* Places with addresses */}
+        {places.length>0&&(
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:W35,letterSpacing:"0.5px",marginBottom:10,fontFamily:RF,textTransform:"uppercase"}}>
+              {lang==="he"?"📍 מקומות עם כתובת":"📍 Places with address"}
+            </div>
+            {Object.entries(byDate).sort().map(([date,ps])=>(
+              <div key={date} style={{marginBottom:12}}>
+                {date&&<div style={{fontSize:11,color:TEAL,fontWeight:600,marginBottom:6,fontFamily:RF}}>{fmtDate(date)}</div>}
+                {ps.map((p,i)=>(
+                  <div key={i} onClick={()=>window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address)}`,"_blank")}
+                    style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:W05,border:`0.5px solid ${W08}`,borderRadius:10,marginBottom:6,cursor:"pointer"}}>
+                    <span style={{fontSize:18,flexShrink:0}}>{p.icon}</span>
+                    <span style={{flex:1,fontSize:13,color:"#ffffff",fontFamily:RF}}>{p.label}</span>
+                    <span style={{fontSize:13,color:W35}}>🗺️</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Activities (no address) */}
+        {actPlaces.length>0&&(
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:W35,letterSpacing:"0.5px",marginBottom:10,fontFamily:RF,textTransform:"uppercase"}}>
+              {lang==="he"?"📋 פעילויות מתוכננות":"📋 Planned activities"}
+            </div>
+            {actPlaces.map((p,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:W05,border:`0.5px solid ${W08}`,borderRadius:10,marginBottom:6}}>
+                <span style={{fontSize:16,flexShrink:0}}>{p.icon}</span>
+                <span style={{flex:1,fontSize:13,color:"#ffffff",fontFamily:RF}}>{p.label}</span>
+                {p.date&&<span style={{fontSize:11,color:W35}}>{fmtDate(p.date)}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {places.length===0&&actPlaces.length===0&&(
+          <div style={{textAlign:"center",padding:"48px 0",color:W35}}>
+            <div style={{fontSize:44,marginBottom:12}}>🗺️</div>
+            <div style={{fontSize:14,fontWeight:600,fontFamily:RF,color:W40}}>
+              {lang==="he"?"הוסף כתובות להוצאות כדי לראות מקומות במפה":"Add addresses to expenses to see places on the map"}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
 export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId}){
   const{lang}=useLang();
   const[trips,setTrips]=useState(initialTrips);
   const[activeId,setActiveId]=useState(null);
-  const[screen,setScreen]=useState("destination");
+  const[section,setSection]=useState(null); // null=splash | "budget" | "trip"
+  const[screen,setScreen]=useState("expenses");
   const[shareModal,setShareModal]=useState(null);
   const[shareEmail,setShareEmail]=useState("");
   const[shareMsg,setShareMsg]=useState("");
@@ -2303,18 +2601,19 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     setTrips((ts)=>[...ts,t]);
     onSaveTrip(t);
     setActiveId(t.id);
-    setScreen("destination");
+    setSection(null);
+    setScreen("expenses");
   };
 
-  const handleSelect=id=>{setActiveId(id);setScreen("destination");};
-  const handleBack=()=>{setActiveId(null);setScreen("destination");};
+  const handleSelect=id=>{setActiveId(id);setSection(null);setScreen("expenses");};
+  const handleBack=()=>{setActiveId(null);setSection(null);setScreen("expenses");};
+  const handleHome=()=>{setSection(null);};
   const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
 
   const isOwner=active?.owner===userId||!active?.owner;
   const isViewOnly=!isOwner&&!!active?.viewOnlyUsers?.includes(userEmail);
-  const screens=(isViewOnly
-    ?["destination","calendar","discover"]
-    :["destination","expenses","budget","calendar","discover"]);
+  const budgetScreens=["expenses","budget"];
+  const tripScreens=["calendar","discover","packing","map"];
 
   if(!activeId){
     return(
@@ -2341,168 +2640,214 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     );
   }
 
-  return(
-    <>
-      <style>{GS}</style>
-      <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
-        <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
-          <button onClick={handleBack} className="tap-btn" style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 12px",cursor:"pointer",letterSpacing:"0.3px"}}>← {t("app_name",lang)}</button>
-          <div style={{flex:1,textAlign:"center"}}>
-            <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
-            {active?.sharedWith?.length>0&&<div style={{fontSize:9,color:"rgba(100,223,223,0.6)",marginTop:1}}>👥 {active.sharedWith.length} משתתפים</div>}
-          </div>
-          <div style={{display:"flex",gap:6}}>
-            <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>💱</button>
-            <button onClick={()=>exportTripPDF(active,expenses,lang)} className="tap-btn" style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>📄</button>
-            {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} className="tap-btn" style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>👥 {t("share",lang)}</button>}
-            {isOwner&&<button onClick={()=>{setInspireModal(true);setInspireLink(null);setInspireHidden(new Set());}} className="tap-btn" style={{background:"rgba(251,191,36,0.1)",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:8,color:"#fbbf24",fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer"}}>✨</button>}
-          </div>
-        </div>
-        {/* Currency Converter in trip view */}
-        {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
+  // ── Shared header button style ──
+  const hBtn=(extra={})=>({background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,padding:"5px 10px",cursor:"pointer",...extra});
 
-        {/* Share modal */}
-        {shareModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-            <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:24,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
-              <h3 style={{fontFamily:RF,fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>{t("share_title",lang)}</h3>
-              <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>{t("share_email_sub",lang)}</p>
-              
-              {/* Current shared list */}
-              {trips.find(t=>t.id===shareModal)?.sharedWith?.length>0&&(
-                <div style={{marginBottom:14}}>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginBottom:8,fontFamily:RF,letterSpacing:"0.5px",textTransform:"uppercase"}}>{t("share_with",lang)}</div>
-                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                    {trips.find(t=>t.id===shareModal)?.sharedWith?.map(email=>{
-                      const isVO=trips.find(t=>t.id===shareModal)?.viewOnlyUsers?.includes(email);
-                      return(
-                        <div key={email} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,padding:"7px 12px"}}>
-                          <span style={{fontSize:12,color:TEAL,fontFamily:RF,direction:"ltr",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{email}</span>
-                          <button onClick={()=>onShareTrip(shareModal,email,!isVO)}
-                            style={{fontSize:11,color:isVO?"rgba(251,191,36,0.9)":"rgba(74,222,128,0.9)",background:isVO?"rgba(251,191,36,0.12)":"rgba(74,222,128,0.12)",border:`0.5px solid ${isVO?"rgba(251,191,36,0.3)":"rgba(74,222,128,0.3)"}`,borderRadius:999,padding:"3px 10px",fontFamily:RF,flexShrink:0,cursor:"pointer"}}>
-                            {isVO?(lang==="he"?"🔓 אפשר עריכה":"🔓 Allow edit"):(lang==="he"?"🔒 הגבל לצפייה":"🔒 Limit to view")}
-                          </button>
-                          <button onClick={()=>onRemoveShare(shareModal,email)}
-                            style={{background:"rgba(255,107,107,0.12)",border:"0.5px solid rgba(255,107,107,0.25)",color:"#ff6b6b",borderRadius:8,padding:"3px 8px",cursor:"pointer",fontSize:13,flexShrink:0}}>✕</button>
-                        </div>
-                      );
-                    })}
+  // ── Share modal renderer ──
+  const renderShareModal=()=>shareModal&&(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:24,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+        <h3 style={{fontFamily:RF,fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>{t("share_title",lang)}</h3>
+        <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>{t("share_email_sub",lang)}</p>
+        {trips.find(tr=>tr.id===shareModal)?.sharedWith?.length>0&&(
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginBottom:8,fontFamily:RF,letterSpacing:"0.5px",textTransform:"uppercase"}}>{t("share_with",lang)}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {trips.find(tr=>tr.id===shareModal)?.sharedWith?.map(email=>{
+                const isVO=trips.find(tr=>tr.id===shareModal)?.viewOnlyUsers?.includes(email);
+                return(
+                  <div key={email} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,padding:"7px 12px"}}>
+                    <span style={{fontSize:12,color:TEAL,fontFamily:RF,direction:"ltr",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{email}</span>
+                    <button onClick={()=>onShareTrip(shareModal,email,!isVO)}
+                      style={{fontSize:11,color:isVO?"rgba(251,191,36,0.9)":"rgba(74,222,128,0.9)",background:isVO?"rgba(251,191,36,0.12)":"rgba(74,222,128,0.12)",border:`0.5px solid ${isVO?"rgba(251,191,36,0.3)":"rgba(74,222,128,0.3)"}`,borderRadius:999,padding:"3px 10px",fontFamily:RF,flexShrink:0,cursor:"pointer"}}>
+                      {isVO?(lang==="he"?"🔓 אפשר עריכה":"🔓 Allow edit"):(lang==="he"?"🔒 הגבל לצפייה":"🔒 Limit to view")}
+                    </button>
+                    <button onClick={()=>onRemoveShare(shareModal,email)}
+                      style={{background:"rgba(255,107,107,0.12)",border:"0.5px solid rgba(255,107,107,0.25)",color:"#ff6b6b",borderRadius:8,padding:"3px 8px",cursor:"pointer",fontSize:13,flexShrink:0}}>✕</button>
                   </div>
-                </div>
-              )}
-
-              <input
-                value={shareEmail}
-                onChange={e=>setShareEmail(e.target.value)}
-                onKeyDown={e=>e.key==="Enter"&&handleShare(shareModal)}
-                placeholder="אימייל@example.com"
-                type="email"
-                style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,direction:"ltr",color:"#ffffff",background:W07,outline:"none",marginBottom:10}}
-                onFocus={e=>(e.target.style.borderColor=TEAL)}
-                onBlur={e=>(e.target.style.borderColor=TBB)}
-              />
-              {shareMsg&&(
-                <div style={{marginBottom:10}}>
-                  <div style={{fontSize:12,color:shareMsg.startsWith("✅")?"#4ade80":"#ff6b6b",marginBottom:shareMsg.startsWith("✅")?10:0,fontFamily:RF,fontWeight:500}}>{shareMsg}</div>
-                  {shareMsg.startsWith("✅")&&(
-                    <div style={{display:"flex",gap:8,marginTop:8}}>
-                      <button onClick={()=>{
-                        const url=`https://tulon.co.il`;
-                        const text=`הוזמנת לטיול "${trips.find(t=>t.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} :
-${url}`;
-                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");
-                      }} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-                        📲 שלח בוואטסאפ
-                      </button>
-                      <button onClick={()=>{
-                        const url=`https://tulon.co.il`;
-                        const text=`הוזמנת לטיול "${trips.find(t=>t.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} : ${url}`;
-                        navigator.clipboard.writeText(text);
-                        setShareMsg("✅ הועתק ללוח!");
-                      }} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-                        📋 העתק לינק
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* View-only toggle */}
-              <div onClick={()=>setShareViewOnly(v=>!v)}
-                style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:12,border:`0.5px solid ${shareViewOnly?"rgba(251,191,36,0.4)":"rgba(255,255,255,0.1)"}`,background:shareViewOnly?"rgba(251,191,36,0.07)":W05,cursor:"pointer",marginBottom:12,userSelect:"none"}}>
-                <div>
-                  <div style={{fontSize:13,fontWeight:600,color:shareViewOnly?"rgba(251,191,36,0.9)":"rgba(255,255,255,0.7)",fontFamily:RF}}>{lang==="he"?"👁️ לצפייה בלבד":"👁️ View only"}</div>
-                  <div style={{fontSize:11,color:W35,fontFamily:RF,marginTop:2}}>{lang==="he"?"לא יראה הוצאות ותקציב":"Won't see expenses & budget"}</div>
-                </div>
-                <div style={{width:36,height:20,borderRadius:999,background:shareViewOnly?"rgba(251,191,36,0.7)":"rgba(255,255,255,0.15)",position:"relative",transition:"background 0.2s",flexShrink:0}}>
-                  <div style={{position:"absolute",top:3,right:shareViewOnly?3:"auto",left:shareViewOnly?"auto":3,width:14,height:14,borderRadius:"50%",background:"#fff",transition:"all 0.2s"}}/>
-                </div>
-              </div>
-              <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{t("share",lang)} ✓</button>
-                <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");setShareViewOnly(false);}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{t("close",lang)}</button>
-              </div>
+                );
+              })}
             </div>
           </div>
         )}
-
-        {/* Inspiration share modal */}
-        {inspireModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-            <div style={{background:"#0d2f4a",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:20,padding:24,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"85vh",overflowY:"auto"}}>
-              <h3 style={{fontFamily:RF,fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>{t("inspire_title",lang)}</h3>
-              <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>{t("inspire_sub",lang)}</p>
-              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-                {expenses.length===0&&<div style={{color:W35,fontSize:13,textAlign:"center",padding:"12px 0"}}>{t("inspire_no_exp",lang)}</div>}
-                {expenses.map(e=>{
-                  const cat=CATS.find(c=>c.id===e.category);
-                  const hidden=inspireHidden.has(e.id);
-                  return(
-                    <div key={e.id} onClick={()=>setInspireHidden(prev=>{const n=new Set(prev);n.has(e.id)?n.delete(e.id):n.add(e.id);return n;})}
-                      style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:12,background:hidden?"rgba(255,255,255,0.03)":"rgba(100,223,223,0.07)",border:`0.5px solid ${hidden?"rgba(255,255,255,0.08)":"rgba(100,223,223,0.2)"}`,cursor:"pointer",opacity:hidden?0.45:1,transition:"all 0.15s"}}>
-                      <div style={{width:20,height:20,borderRadius:5,border:`2px solid ${hidden?W25:TEAL}`,background:hidden?"transparent":TEAL,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                        {!hidden&&<span style={{color:DARK_BG,fontSize:12,fontWeight:900}}>✓</span>}
-                      </div>
-                      <span style={{fontSize:14}}>{cat?.icon||"📦"}</span>
-                      <span style={{fontFamily:RF,fontSize:13,color:"#ffffff",flex:1}}>{e.description||cat?.label||e.category}</span>
-                      {e.date&&<span style={{fontSize:11,color:W35}}>{fmtDate(e.date)}</span>}
-                    </div>
-                  );
-                })}
+        <input value={shareEmail} onChange={e=>setShareEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleShare(shareModal)}
+          placeholder="אימייל@example.com" type="email"
+          style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,direction:"ltr",color:"#ffffff",background:W07,outline:"none",marginBottom:10}}
+          onFocus={e=>(e.target.style.borderColor=TEAL)} onBlur={e=>(e.target.style.borderColor=TBB)}/>
+        {shareMsg&&(
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:12,color:shareMsg.startsWith("✅")?"#4ade80":"#ff6b6b",marginBottom:shareMsg.startsWith("✅")?10:0,fontFamily:RF,fontWeight:500}}>{shareMsg}</div>
+            {shareMsg.startsWith("✅")&&(
+              <div style={{display:"flex",gap:8,marginTop:8}}>
+                <button onClick={()=>{const url="https://tulon.co.il";const text=`הוזמנת לטיול "${trips.find(tr=>tr.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} :\n${url}`;window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");}} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>📲 שלח בוואטסאפ</button>
+                <button onClick={()=>{const url="https://tulon.co.il";const text=`הוזמנת לטיול "${trips.find(tr=>tr.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} : ${url}`;navigator.clipboard.writeText(text);setShareMsg("✅ הועתק ללוח!");}} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>📋 העתק לינק</button>
               </div>
-              {!inspireLink?(
-                <button onClick={createInspireLink} disabled={inspireSaving||expenses.length===0}
-                  style={{width:"100%",padding:"13px",borderRadius:12,border:"none",background:"#fbbf24",color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:15,cursor:"pointer",marginBottom:10,opacity:inspireSaving?0.6:1}}>
-                  {inspireSaving?t("inspire_saving",lang):t("inspire_btn",lang)}
-                </button>
-              ):(
-                <div style={{background:"rgba(251,191,36,0.1)",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:14,padding:"14px",marginBottom:12}}>
-                  <div style={{fontSize:11,color:"rgba(251,191,36,0.7)",fontFamily:RF,marginBottom:8}}>{t("inspire_ready",lang)}</div>
-                  <div style={{fontFamily:"monospace",fontSize:12,color:TEAL,wordBreak:"break-all",marginBottom:12,background:W05,padding:"8px 12px",borderRadius:8}}>{inspireLink}</div>
-                  <div style={{display:"flex",gap:8}}>
-                    <button onClick={()=>navigator.clipboard.writeText(inspireLink)}
-                      style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>{t("copy_link",lang)}</button>
-                    <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`${t("inspire_wa",lang)}${active?.destination||""}${t("inspire_wa2",lang)} ${inspireLink}`)}`,"_blank")}
-                      style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>{t("whatsapp",lang)}</button>
-                  </div>
-                </div>
-              )}
-              <button onClick={()=>{setInspireModal(false);setInspireLink(null);setInspireHidden(new Set());}}
-                style={{width:"100%",padding:"11px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{t("close",lang)}</button>
-            </div>
+            )}
           </div>
         )}
-
-        <div style={{flex:1,overflowY:"auto"}}>
-          <div key={screen} className="screen-enter">
-            {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
-            {screen==="expenses"   &&!isViewOnly&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
-            {screen==="budget"     &&!isViewOnly&&<BudgetScreen trip={active} expenses={expenses}/>}
-            {screen==="calendar"   &&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
-            {screen==="discover"   &&<DiscoverScreen trip={active}/>}
+        <div onClick={()=>setShareViewOnly(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:12,border:`0.5px solid ${shareViewOnly?"rgba(251,191,36,0.4)":"rgba(255,255,255,0.1)"}`,background:shareViewOnly?"rgba(251,191,36,0.07)":W05,cursor:"pointer",marginBottom:12,userSelect:"none"}}>
+          <div>
+            <div style={{fontSize:13,fontWeight:600,color:shareViewOnly?"rgba(251,191,36,0.9)":"rgba(255,255,255,0.7)",fontFamily:RF}}>{lang==="he"?"👁️ לצפייה בלבד":"👁️ View only"}</div>
+            <div style={{fontSize:11,color:W35,fontFamily:RF,marginTop:2}}>{lang==="he"?"לא יראה הוצאות ותקציב":"Won't see expenses & budget"}</div>
+          </div>
+          <div style={{width:36,height:20,borderRadius:999,background:shareViewOnly?"rgba(251,191,36,0.7)":"rgba(255,255,255,0.15)",position:"relative",transition:"background 0.2s",flexShrink:0}}>
+            <div style={{position:"absolute",top:3,right:shareViewOnly?3:"auto",left:shareViewOnly?"auto":3,width:14,height:14,borderRadius:"50%",background:"#fff",transition:"all 0.2s"}}/>
           </div>
         </div>
-        <NavBar screens={screens} current={screen} onNav={setScreen}/>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{t("share",lang)} ✓</button>
+          <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");setShareViewOnly(false);}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{t("close",lang)}</button>
+        </div>
       </div>
-    </>
+    </div>
   );
+
+  // ── Inspire modal renderer ──
+  const renderInspireModal=()=>inspireModal&&(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{background:"#0d2f4a",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:20,padding:24,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"85vh",overflowY:"auto"}}>
+        <h3 style={{fontFamily:RF,fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>{t("inspire_title",lang)}</h3>
+        <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>{t("inspire_sub",lang)}</p>
+        <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+          {expenses.length===0&&<div style={{color:W35,fontSize:13,textAlign:"center",padding:"12px 0"}}>{t("inspire_no_exp",lang)}</div>}
+          {expenses.map(e=>{
+            const cat=CATS.find(c=>c.id===e.category);
+            const hidden=inspireHidden.has(e.id);
+            return(
+              <div key={e.id} onClick={()=>setInspireHidden(prev=>{const n=new Set(prev);n.has(e.id)?n.delete(e.id):n.add(e.id);return n;})}
+                style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:12,background:hidden?"rgba(255,255,255,0.03)":"rgba(100,223,223,0.07)",border:`0.5px solid ${hidden?"rgba(255,255,255,0.08)":"rgba(100,223,223,0.2)"}`,cursor:"pointer",opacity:hidden?0.45:1,transition:"all 0.15s"}}>
+                <div style={{width:20,height:20,borderRadius:5,border:`2px solid ${hidden?W25:TEAL}`,background:hidden?"transparent":TEAL,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  {!hidden&&<span style={{color:DARK_BG,fontSize:12,fontWeight:900}}>✓</span>}
+                </div>
+                <span style={{fontSize:14}}>{cat?.icon||"📦"}</span>
+                <span style={{fontFamily:RF,fontSize:13,color:"#ffffff",flex:1}}>{e.description||cat?.label||e.category}</span>
+                {e.date&&<span style={{fontSize:11,color:W35}}>{fmtDate(e.date)}</span>}
+              </div>
+            );
+          })}
+        </div>
+        {!inspireLink?(
+          <button onClick={createInspireLink} disabled={inspireSaving||expenses.length===0}
+            style={{width:"100%",padding:"13px",borderRadius:12,border:"none",background:"#fbbf24",color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:15,cursor:"pointer",marginBottom:10,opacity:inspireSaving?0.6:1}}>
+            {inspireSaving?t("inspire_saving",lang):t("inspire_btn",lang)}
+          </button>
+        ):(
+          <div style={{background:"rgba(251,191,36,0.1)",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontSize:11,color:"rgba(251,191,36,0.7)",fontFamily:RF,marginBottom:8}}>{t("inspire_ready",lang)}</div>
+            <div style={{fontFamily:"monospace",fontSize:12,color:TEAL,wordBreak:"break-all",marginBottom:12,background:W05,padding:"8px 12px",borderRadius:8}}>{inspireLink}</div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>navigator.clipboard.writeText(inspireLink)} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>{t("copy_link",lang)}</button>
+              <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`${t("inspire_wa",lang)}${active?.destination||""}${t("inspire_wa2",lang)} ${inspireLink}`)}`,"_blank")} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>{t("whatsapp",lang)}</button>
+            </div>
+          </div>
+        )}
+        <button onClick={()=>{setInspireModal(false);setInspireLink(null);setInspireHidden(new Set());}} style={{width:"100%",padding:"11px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{t("close",lang)}</button>
+      </div>
+    </div>
+  );
+
+  // ── SPLASH SCREEN (section === null) ──
+  if(activeId&&!section){
+    return(
+      <>
+        <style>{GS}</style>
+        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
+          {/* Header */}
+          <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
+            <button onClick={handleBack} className="tap-btn" style={hBtn()}>← {t("app_name",lang)}</button>
+            <div style={{flex:1,textAlign:"center"}}>
+              <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
+            </div>
+            <div style={{display:"flex",gap:6}}>
+              {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} className="tap-btn" style={hBtn()}>👥</button>}
+              {isOwner&&<button onClick={()=>{setInspireModal(true);setInspireLink(null);setInspireHidden(new Set());}} className="tap-btn" style={hBtn({background:"rgba(251,191,36,0.1)",border:"0.5px solid rgba(251,191,36,0.3)",color:"#fbbf24"})}>✨</button>}
+            </div>
+          </div>
+          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
+          {shareModal&&renderShareModal()}
+          {inspireModal&&renderInspireModal()}
+          <div style={{flex:1,overflowY:"auto"}}>
+            <TripSplashScreen trip={active} onBudget={()=>{setSection("budget");setScreen("expenses");}} onTrip={()=>{setSection("trip");setScreen("calendar");}} isViewOnly={isViewOnly} lang={lang}/>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ── BUDGET SECTION ──
+  if(activeId&&section==="budget"){
+    return(
+      <>
+        <style>{GS}</style>
+        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
+          {/* Header */}
+          <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
+            <button onClick={handleHome} className="tap-btn" style={hBtn()}>🏠</button>
+            <div style={{flex:1,textAlign:"center"}}>
+              <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
+            </div>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn()}>💱</button>
+              <button onClick={()=>exportTripPDF(active,expenses,lang)} className="tap-btn" style={hBtn()}>📄</button>
+            </div>
+          </div>
+          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
+          {shareModal&&renderShareModal()}
+          {inspireModal&&renderInspireModal()}
+          <div style={{flex:1,overflowY:"auto"}}>
+            {/* Trip settings button */}
+            {screen!=="destination"&&(
+              <div style={{padding:"12px 14px 0"}}>
+                <button onClick={()=>setScreen("destination")} style={{width:"100%",padding:"12px 16px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(100,223,223,0.06)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                  ⚙️ {lang==="he"?"הגדרות טיול":"Trip Settings"}
+                </button>
+              </div>
+            )}
+            <div key={screen} className="screen-enter">
+              {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
+              {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
+              {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses}/>}
+            </div>
+          </div>
+          {screen!=="destination"&&<NavBar screens={budgetScreens} current={screen} onNav={setScreen}/>}
+        </div>
+      </>
+    );
+  }
+
+  // ── TRIP SECTION ──
+  if(activeId&&section==="trip"){
+    return(
+      <>
+        <style>{GS}</style>
+        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
+          {/* Header */}
+          <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
+            <button onClick={handleHome} className="tap-btn" style={hBtn()}>🏠</button>
+            <div style={{flex:1,textAlign:"center"}}>
+              <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
+            </div>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn()}>💱</button>
+            </div>
+          </div>
+          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
+          {shareModal&&renderShareModal()}
+          {inspireModal&&renderInspireModal()}
+          <div style={{flex:1,overflowY:"auto"}}>
+            <div key={screen} className="screen-enter">
+              {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
+              {screen==="discover"&&<DiscoverScreen trip={active}/>}
+              {screen==="packing"&&<PackingListScreen trip={active} onUpdate={updTrip}/>}
+              {screen==="map"&&<MapScreen trip={active} expenses={expenses}/>}
+            </div>
+          </div>
+          <NavBar screens={tripScreens} current={screen} onNav={setScreen}/>
+        </div>
+      </>
+    );
+  }
+
+  // fallback
+  return null;
 }
