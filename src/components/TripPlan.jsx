@@ -23,7 +23,7 @@ const DARK_BG = "#0d2137";
 import { useState, useEffect, useCallback, useMemo, useRef, useReducer } from "react";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
-import { setDoc, doc, deleteDoc } from "firebase/firestore";
+import { setDoc, doc } from "firebase/firestore";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 
@@ -2527,25 +2527,37 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     }).catch(()=>{});
   },[userEmail]);
 
-  // ── Generate invite link ──
+  // ── Generate invite link (via server API to avoid Firestore client perms) ──
   const generateInviteToken=async(tripId,role)=>{
     setInviteGenerating(true);
     try{
-      const token=uid().slice(0,14);
-      await setDoc(doc(db,"invites",token),{tripId,role,createdAt:Date.now()});
-      const trip=trips.find(t=>t.id===tripId);
-      if(trip) onSaveTrip({...trip,inviteToken:token,inviteTokenRole:role,updatedAt:Date.now()});
-      setTrips(ts=>ts.map(t=>t.id===tripId?{...t,inviteToken:token,inviteTokenRole:role}:t));
+      const res=await fetch("/api/invite",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({tripId,role:role||"edit",userEmail}),
+      });
+      const data=await res.json();
+      if(data.token){
+        const trip=trips.find(t=>t.id===tripId);
+        if(trip) onSaveTrip({...trip,inviteToken:data.token,inviteTokenRole:role||"edit",updatedAt:Date.now()});
+        setTrips(ts=>ts.map(t=>t.id===tripId?{...t,inviteToken:data.token,inviteTokenRole:role||"edit"}:t));
+      }else{console.error("invite create failed",data);}
     }catch(e){console.error(e);}
     setInviteGenerating(false);
   };
 
-  // ── Delete invite link ──
+  // ── Delete invite link (via server API) ──
   const deleteInviteToken=async(tripId)=>{
     setInviteDeleting(true);
     try{
       const trip=trips.find(t=>t.id===tripId);
-      if(trip?.inviteToken) await deleteDoc(doc(db,"invites",trip.inviteToken));
+      if(trip?.inviteToken){
+        await fetch("/api/invite",{
+          method:"DELETE",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({token:trip.inviteToken,userEmail}),
+        });
+      }
       const{inviteToken:_,inviteTokenRole:__,...rest}=trip||{};
       onSaveTrip({...rest,id:tripId,updatedAt:Date.now()});
       setTrips(ts=>ts.map(t=>t.id===tripId?{...t,inviteToken:undefined,inviteTokenRole:undefined}:t));
