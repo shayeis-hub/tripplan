@@ -18,7 +18,13 @@ export default function Home() {
   } = useTrips(user?.uid, user?.email ?? undefined);
 
   useEffect(() => {
-    if (!loading && !user) router.push("/login");
+    if (!loading && !user) {
+      // Preserve invite token across login redirect
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("invite");
+      if (token) localStorage.setItem("pendingInvite", token);
+      router.push("/login");
+    }
   }, [user, loading]);
 
   if (loading || tripsLoading) return (

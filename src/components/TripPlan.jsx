@@ -23,7 +23,7 @@ const DARK_BG = "#0d2137";
 import { useState, useEffect, useCallback, useMemo, useRef, useReducer } from "react";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, deleteDoc } from "firebase/firestore";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 
@@ -2488,6 +2488,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[convAmount,setConvAmount]=useState("");
   const[convFrom,setConvFrom]=useState("USD");
   const[convTo,setConvTo]=useState("ILS");
+  const[inviteViewOnly,setInviteViewOnly]=useState(false);
+  const[inviteGenerating,setInviteGenerating]=useState(false);
+  const[inviteDeleting,setInviteDeleting]=useState(false);
+  const[inviteJoinMsg,setInviteJoinMsg]=useState(null);
   const{rates,allCodes,info,toILS}=useRates();
   const{permission,subscribed,subscribe}=usePushNotifications(userId);
 
@@ -2495,6 +2499,59 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   useEffect(()=>{
     setTrips(initialTrips);
   },[initialTrips]);
+
+  // ── Process invite token from URL or localStorage ──
+  useEffect(()=>{
+    if(!userEmail) return;
+    const params=new URLSearchParams(window.location.search);
+    let token=params.get("invite");
+    if(!token){
+      token=localStorage.getItem("pendingInvite");
+      if(token) localStorage.removeItem("pendingInvite");
+    }
+    if(!token) return;
+    window.history.replaceState({},"",window.location.pathname);
+    fetch("/api/join-trip",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({token,userEmail}),
+    }).then(r=>r.json()).then(data=>{
+      if(data.tripId){
+        setInviteJoinMsg(data.destination
+          ? (lang==="he"?`הצטרפת לטיול ל${data.destination}! 🎉`:`Joined trip to ${data.destination}! 🎉`)
+          : (lang==="he"?"הצטרפת לטיול! 🎉":"Joined the trip! 🎉"));
+        setActiveId(data.tripId);
+        setSection(null);
+        setTimeout(()=>setInviteJoinMsg(null),4000);
+      }
+    }).catch(()=>{});
+  },[userEmail]);
+
+  // ── Generate invite link ──
+  const generateInviteToken=async(tripId,role)=>{
+    setInviteGenerating(true);
+    try{
+      const token=uid().slice(0,14);
+      await setDoc(doc(db,"invites",token),{tripId,role,createdAt:Date.now()});
+      const trip=trips.find(t=>t.id===tripId);
+      if(trip) onSaveTrip({...trip,inviteToken:token,inviteTokenRole:role,updatedAt:Date.now()});
+      setTrips(ts=>ts.map(t=>t.id===tripId?{...t,inviteToken:token,inviteTokenRole:role}:t));
+    }catch(e){console.error(e);}
+    setInviteGenerating(false);
+  };
+
+  // ── Delete invite link ──
+  const deleteInviteToken=async(tripId)=>{
+    setInviteDeleting(true);
+    try{
+      const trip=trips.find(t=>t.id===tripId);
+      if(trip?.inviteToken) await deleteDoc(doc(db,"invites",trip.inviteToken));
+      const{inviteToken:_,inviteTokenRole:__,...rest}=trip||{};
+      onSaveTrip({...rest,id:tripId,updatedAt:Date.now()});
+      setTrips(ts=>ts.map(t=>t.id===tripId?{...t,inviteToken:undefined,inviteTokenRole:undefined}:t));
+    }catch(e){console.error(e);}
+    setInviteDeleting(false);
+  };
 
   const active=trips.find(t=>t.id===activeId);
   const expenses=active?.expenses||[];
@@ -2646,7 +2703,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   // ── Share modal renderer ──
   const renderShareModal=()=>shareModal&&(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:24,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+      <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:24,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"88vh",overflowY:"auto"}}>
         <h3 style={{fontFamily:RF,fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>{t("share_title",lang)}</h3>
         <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>{t("share_email_sub",lang)}</p>
         {trips.find(tr=>tr.id===shareModal)?.sharedWith?.length>0&&(
@@ -2698,6 +2755,55 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{t("share",lang)} ✓</button>
           <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");setShareViewOnly(false);}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{t("close",lang)}</button>
         </div>
+
+        {/* ── Invite link section ── */}
+        {(()=>{
+          const shareTripObj=trips.find(tr=>tr.id===shareModal);
+          const existingToken=shareTripObj?.inviteToken;
+          const inviteUrl=existingToken?`https://tulon.co.il?invite=${existingToken}`:"";
+          const dest=shareTripObj?.destination||"";
+          return(
+            <>
+              <div style={{margin:"18px 0 14px",height:"0.5px",background:"rgba(255,255,255,0.1)"}}/>
+              <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.6)",fontFamily:RF,marginBottom:10}}>
+                🔗 {lang==="he"?"קישור הזמנה פתוח":"Open Invite Link"}
+              </div>
+              {!existingToken?(
+                <>
+                  <div onClick={()=>setInviteViewOnly(v=>!v)}
+                    style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:12,border:`0.5px solid ${inviteViewOnly?"rgba(251,191,36,0.4)":"rgba(255,255,255,0.1)"}`,background:inviteViewOnly?"rgba(251,191,36,0.07)":W05,cursor:"pointer",marginBottom:10,userSelect:"none"}}>
+                    <div>
+                      <div style={{fontSize:13,fontWeight:600,color:inviteViewOnly?"rgba(251,191,36,0.9)":"rgba(255,255,255,0.7)",fontFamily:RF}}>👁️ {lang==="he"?"לצפייה בלבד":"View only"}</div>
+                      <div style={{fontSize:11,color:W35,fontFamily:RF,marginTop:2}}>{lang==="he"?"לא יראו הוצאות ותקציב":"Won't see expenses & budget"}</div>
+                    </div>
+                    <div style={{width:36,height:20,borderRadius:999,background:inviteViewOnly?"rgba(251,191,36,0.7)":"rgba(255,255,255,0.15)",position:"relative",flexShrink:0}}>
+                      <div style={{position:"absolute",top:3,right:inviteViewOnly?3:"auto",left:inviteViewOnly?"auto":3,width:14,height:14,borderRadius:"50%",background:"#fff"}}/>
+                    </div>
+                  </div>
+                  <button onClick={()=>generateInviteToken(shareModal,inviteViewOnly?"view":"edit")}
+                    disabled={inviteGenerating}
+                    style={{width:"100%",padding:"11px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",opacity:inviteGenerating?0.6:1}}>
+                    {inviteGenerating?(lang==="he"?"יוצר...":"Creating..."):`🔗 ${lang==="he"?"צור קישור הזמנה":"Generate Invite Link"}`}
+                  </button>
+                </>
+              ):(
+                <div style={{background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:14,padding:"14px"}}>
+                  <div style={{fontSize:11,color:W35,fontFamily:RF,marginBottom:8}}>{lang==="he"?"כל מי שיש לו את הקישור יכול להצטרף":"Anyone with this link can join"} · {shareTripObj?.inviteTokenRole==="view"?(lang==="he"?"צפייה בלבד":"View only"):(lang==="he"?"עריכה":"Edit")}</div>
+                  <div style={{fontFamily:"monospace",fontSize:11,color:TEAL,wordBreak:"break-all",marginBottom:12,background:W05,padding:"8px 10px",borderRadius:8,direction:"ltr"}}>{inviteUrl}</div>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={()=>navigator.clipboard.writeText(inviteUrl)}
+                      style={{flex:1,padding:"9px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>📋 {lang==="he"?"העתק":"Copy"}</button>
+                    <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`${lang==="he"?`הוזמנת להצטרף לטיול לטיולון${dest?` ל${dest}`:""}! לחץ על הקישור:`:`You're invited to join a trip on Tulon${dest?` to ${dest}`:""}! Click the link:`}\n${inviteUrl}`)}`,"_blank")}
+                      style={{flex:1,padding:"9px",borderRadius:10,border:"none",background:"#25D366",color:"#fff",fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>📲 {lang==="he"?"וואטסאפ":"WhatsApp"}</button>
+                    <button onClick={()=>deleteInviteToken(shareModal)} disabled={inviteDeleting}
+                      style={{padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(255,107,107,0.3)",background:"rgba(255,107,107,0.08)",color:"#ff6b6b",fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",opacity:inviteDeleting?0.6:1}}>
+                      {inviteDeleting?"...":"🗑️"}</button>
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
     </div>
   );
@@ -2746,11 +2852,19 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     </div>
   );
 
+  // ── Joined-trip toast banner ──
+  const joinBanner=inviteJoinMsg?(
+    <div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",zIndex:999,background:"rgba(74,222,128,0.92)",backdropFilter:"blur(10px)",color:"#0d2137",fontFamily:RF,fontWeight:700,fontSize:14,padding:"12px 24px",borderRadius:14,boxShadow:"0 8px 32px rgba(0,0,0,0.3)",whiteSpace:"nowrap",textAlign:"center",pointerEvents:"none"}}>
+      {inviteJoinMsg}
+    </div>
+  ):null;
+
   // ── SPLASH SCREEN (section === null) ──
   if(activeId&&!section){
     return(
       <>
         <style>{GS}</style>
+        {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
@@ -2779,6 +2893,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     return(
       <>
         <style>{GS}</style>
+        {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
@@ -2820,6 +2935,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     return(
       <>
         <style>{GS}</style>
+        {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
