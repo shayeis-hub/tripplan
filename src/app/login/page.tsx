@@ -110,19 +110,6 @@ export default function LoginPage() {
             <div className="greeting">{isNew ? t("login_greeting_new", lang) : t("login_greeting_existing", lang)}</div>
           </div>
 
-          {/* Google Sign-In */}
-          <button className="btn-google" onClick={doGoogle} disabled={busy}>
-            <svg width="18" height="18" viewBox="0 0 48 48">
-              <path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.85l6.1-6.1C34.46 3.09 29.53 1 24 1 14.82 1 7.07 6.48 3.62 14.22l7.14 5.54C12.44 13.61 17.76 9.5 24 9.5z"/>
-              <path fill="#4285F4" d="M46.1 24.5c0-1.64-.15-3.22-.42-4.74H24v8.98h12.42c-.54 2.9-2.17 5.36-4.63 7.01l7.14 5.54C43.19 37.26 46.1 31.33 46.1 24.5z"/>
-              <path fill="#FBBC05" d="M10.76 28.24A14.54 14.54 0 0 1 9.5 24c0-1.48.25-2.91.7-4.24l-7.14-5.54A23.93 23.93 0 0 0 0 24c0 3.87.92 7.53 2.56 10.78l8.2-6.54z"/>
-              <path fill="#34A853" d="M24 47c5.53 0 10.17-1.83 13.56-4.97l-7.14-5.54C28.65 38.1 26.45 39 24 39c-6.24 0-11.56-4.11-13.24-9.76l-8.2 6.54C6.07 43.52 14.43 47 24 47z"/>
-            </svg>
-            {t("login_google", lang)}
-          </button>
-
-          <div className="or-divider"><span>{t("login_or", lang)}</span></div>
-
           <input className="inp" type="email" value={emailVal}
             onChange={ev => setEmailVal(ev.target.value)}
             placeholder={t("login_email", lang)}
@@ -140,6 +127,19 @@ export default function LoginPage() {
           <button className="btn-main" onClick={doSubmit} disabled={busy}>
             {busy ? "⏳" : isNew ? t("login_register_btn", lang) : t("login_btn", lang)}
           </button>
+
+          <div className="or-divider"><span>{t("login_or", lang)}</span></div>
+
+          <button className="btn-google" onClick={doGoogle} disabled={busy}>
+            <svg width="18" height="18" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.85l6.1-6.1C34.46 3.09 29.53 1 24 1 14.82 1 7.07 6.48 3.62 14.22l7.14 5.54C12.44 13.61 17.76 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.1 24.5c0-1.64-.15-3.22-.42-4.74H24v8.98h12.42c-.54 2.9-2.17 5.36-4.63 7.01l7.14 5.54C43.19 37.26 46.1 31.33 46.1 24.5z"/>
+              <path fill="#FBBC05" d="M10.76 28.24A14.54 14.54 0 0 1 9.5 24c0-1.48.25-2.91.7-4.24l-7.14-5.54A23.93 23.93 0 0 0 0 24c0 3.87.92 7.53 2.56 10.78l8.2-6.54z"/>
+              <path fill="#34A853" d="M24 47c5.53 0 10.17-1.83 13.56-4.97l-7.14-5.54C28.65 38.1 26.45 39 24 39c-6.24 0-11.56-4.11-13.24-9.76l-8.2 6.54C6.07 43.52 14.43 47 24 47z"/>
+            </svg>
+            {t("login_google", lang)}
+          </button>
+
           <div className="div"/>
           <button className="btn-sec" onClick={() => { setIsNew(n => !n); setErrMsg(""); }}>
             {isNew ? t("login_switch_existing", lang) : t("login_switch_new", lang)}
