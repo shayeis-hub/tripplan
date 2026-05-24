@@ -156,6 +156,16 @@ function useRates(){
   return{rates,allCodes,info,toILS};
 }
 
+// ── Currency display helpers ──────────────────────────────────────────────────
+const DISPLAY_SYMS={ILS:"₪",USD:"$",EUR:"€"};
+const symFor=cur=>DISPLAY_SYMS[cur]||(cur+" ");
+// Convert a stored ILS amount to the trip's display currency
+const fromILS=(amtILS,displayCur,rates)=>
+  (!displayCur||displayCur==="ILS")?amtILS:amtILS/(rates[displayCur]||1);
+// Format a display amount with symbol
+const fmtAmt=(amtILS,displayCur,rates,decimals=0)=>
+  `${symFor(displayCur??'ILS')}${fromILS(amtILS,displayCur??'ILS',rates).toFixed(decimals)}`;
+
 function useWeather(destination,startDate,endDate){
   const[wx,setWx]=useState(null);const[loading,setLoading]=useState(false);const[wxError,setWxError]=useState(null);
   useEffect(()=>{
@@ -258,9 +268,9 @@ function useCountUp(target,duration=750){
 }
 
 // ── KPI card with animated counter ───────────────────────────────
-function KpiCard({label,value,color,icon,noFmt}){
+function KpiCard({label,value,color,icon,noFmt,sym="₪"}){
   const animated=useCountUp(value);
-  const display=noFmt?Math.round(animated):`₪${animated.toFixed(0)}`;
+  const display=noFmt?Math.round(animated):`${sym}${animated.toFixed(0)}`;
   return(
     <div style={{background:W05,border:"0.5px solid rgba(255,255,255,0.08)",borderTop:`2px solid ${color}`,borderRadius:14,padding:"14px",textAlign:"center"}}>
       <div style={{fontSize:22,marginBottom:6}}>{icon}</div>
@@ -645,7 +655,7 @@ function exportTripPDF(trip,expenses,lang="he"){
   setTimeout(()=>w.print(),800);
 }
 
-function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId}){
+function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
   const{lang}=useLang();
   return(
     <div style={{minHeight:"100vh",background:DARK_BG}}>
@@ -678,6 +688,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId}){
 
         {trips.map(trip=>{
           const nights=trip.startDate&&trip.endDate?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
+          const dc=trip.displayCurrency||"ILS";
           const total=trip.expenses?.reduce((s,e)=>s+e.amountILS,0)||0;
           return(
             <div key={trip.id} onClick={()=>onSelect(trip.id)} style={{background:W05,border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"14px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,transition:"all 0.2s"}}
@@ -694,7 +705,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId}){
                   {trip.startDate?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:(lang==="he"?"תאריכים לא מוגדרים":"Dates not set")}
                   {nights>0&&` · ${nights} ${t("days",lang)}`}
                 </div>
-                {total>0&&<div style={{fontSize:12,color:TEAL,fontWeight:600,marginTop:4}}>₪{total.toFixed(0)}</div>}
+                {total>0&&<div style={{fontSize:12,color:TEAL,fontWeight:600,marginTop:4}}>{fmtAmt(total,dc,rates)}</div>}
               </div>
               <button onClick={ev=>{ev.stopPropagation();if(window.confirm(t("confirm_delete",lang)))onDelete(trip.id);}} style={{padding:"6px 9px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.12)",color:"#ff6b6b",fontSize:14,cursor:"pointer"}}>🗑️</button>
             </div>
@@ -895,6 +906,23 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
           )}
         </Card>
 
+        {/* Display currency selector */}
+        <Card>
+          <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:4,color:"rgba(255,255,255,0.85)"}}>💱 {lang==="he"?"מטבע תצוגה":"Display Currency"}</h2>
+          <p style={{fontSize:12,color:W35,marginBottom:12,fontFamily:RF}}>{lang==="he"?"סיכומים, סה\"כ והתחשבנות יוצגו במטבע זה":"Totals, summaries and settlement shown in this currency"}</p>
+          <div style={{display:"flex",gap:8}}>
+            {[{code:"ILS",label:"₪ שקל",labelEn:"₪ ILS"},{code:"USD",label:"$ דולר",labelEn:"$ USD"},{code:"EUR",label:"€ יורו",labelEn:"€ EUR"}].map(({code,label,labelEn})=>{
+              const active=(trip.displayCurrency||"ILS")===code;
+              return(
+                <button key={code} onClick={()=>onUpdate({displayCurrency:code})}
+                  style={{flex:1,padding:"10px 6px",borderRadius:12,border:`1.5px solid ${active?"#64dfdf":"rgba(100,223,223,0.2)"}`,background:active?"rgba(100,223,223,0.15)":"rgba(255,255,255,0.03)",color:active?TEAL:W35,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer",transition:"all 0.15s"}}>
+                  {lang==="he"?label:labelEn}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
         <Card>
           <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:14,color:"rgba(255,255,255,0.85)"}}>{t("dest_budget",lang)}</h2>
           <p style={{fontSize:12,color:W35,marginBottom:12,fontFamily:RF}}>{t("dest_budget_sub",lang)}</p>
@@ -903,9 +931,9 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
               placeholder={t("dest_budget_ph",lang)}
               style={{flex:1,padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:15,color:"#ffffff",background:W07,outline:"none",direction:"ltr"}}
               onFocus={e=>(e.target.style.borderColor=TEAL)} onBlur={e=>(e.target.style.borderColor=TBB)}/>
-            <span style={{color:W50,fontFamily:RF,fontSize:15,flexShrink:0}}>₪</span>
+            <span style={{color:W50,fontFamily:RF,fontSize:15,flexShrink:0}}>{symFor(trip.displayCurrency||"ILS")}</span>
           </div>
-          {trip.budget>0&&<div style={{fontSize:12,color:TEAL,marginTop:8,fontFamily:RF}}>{t("dest_budget_set",lang)}: ₪{parseFloat(trip.budget).toLocaleString()}</div>}
+          {trip.budget>0&&<div style={{fontSize:12,color:TEAL,marginTop:8,fontFamily:RF}}>{t("dest_budget_set",lang)}: {symFor(trip.displayCurrency||"ILS")}{parseFloat(trip.budget).toLocaleString()}</div>}
         </Card>
 
         <Btn onClick={onNext} disabled={!valid} style={{width:"100%",fontSize:17,padding:"16px",borderRadius:16,boxShadow:valid?`0 6px 20px ${C.ocean}40`:"none"}}>
@@ -1056,7 +1084,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           {exp.category==="hotel"&&exp.checkIn&&<div style={{fontSize:11,color:TEAL,fontWeight:600}}>{fmtDate(exp.checkIn)} → {fmtDate(exp.checkOut)} · {Math.round((new Date(exp.checkOut).getTime()-new Date(exp.checkIn).getTime())/86400000)} {t("nights",lang)}</div>}
           {exp.category==="flight"&&exp.departureTime&&<div style={{fontSize:11,color:TEAL,fontWeight:600}}>✈️{exp.flightNumber?` ${exp.flightNumber} ·`:""} {exp.departureTime}{exp.landingTime?` → ${exp.landingTime}`:""}</div>}
           {exp.description&&<div style={{fontSize:12,color:W35,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{exp.description}</div>}
-          <div style={{fontSize:12,color:W35,marginTop:2}}>{sym(exp.currency)}{exp.amount.toFixed(2)} ≈ <span style={{color:TEAL,fontWeight:600}}>₪{exp.amountILS.toFixed(2)}</span></div>
+          <div style={{fontSize:12,color:W35,marginTop:2}}>{sym(exp.currency)}{exp.amount.toFixed(2)} ≈ <span style={{color:TEAL,fontWeight:600}}>{fmtAmt(exp.amountILS,trip.displayCurrency||"ILS",rates,2)}</span></div>
           {/* New format: participants + payers */}
           {exp.payers?.length>0&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
             {exp.payers.map((py,i)=>(
@@ -1365,8 +1393,12 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   );
 }
 
-function BudgetScreen({trip,expenses}){
+function BudgetScreen({trip,expenses,rates={}}){
   const{lang}=useLang();
+  const dc=trip.displayCurrency||"ILS";
+  const sym=symFor(dc);
+  const fmt=(amt,dec=0)=>`${sym}${fromILS(amt,dc,rates).toFixed(dec)}`;
+  const fmtN=(amt)=>fromILS(amt,dc,rates); // numeric only
   const people=trip.people||[];
   const sharedExp=expenses.filter(e=>e.isShared!==false);
   const personalExp=expenses.filter(e=>e.isShared===false);
@@ -1431,7 +1463,7 @@ function BudgetScreen({trip,expenses}){
           <div style={{background:W05,border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"16px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
               <div style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{t("budget_progress",lang)}</div>
-              <div style={{fontFamily:RF,fontSize:13,fontWeight:700,color:TEAL}}>₪{parseFloat(trip.budget).toLocaleString()}</div>
+              <div style={{fontFamily:RF,fontSize:13,fontWeight:700,color:TEAL}}>{fmt(trip.budget)}</div>
             </div>
             {(()=>{
               const pct=Math.min((total/trip.budget)*100,100);
@@ -1445,14 +1477,14 @@ function BudgetScreen({trip,expenses}){
                 <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontFamily:RF,marginBottom:8}}>
                   <span style={{color:barColor,fontWeight:700}}>{pct.toFixed(1)}% {lang==="he"?"מהתקציב":"of budget"}</span>
                   <span style={{color:over?"#ff6b6b":"#4ade80",fontWeight:700}}>
-                    {over?`${t("budget_over",lang)} ₪${Math.abs(remaining).toLocaleString()}`:`${t("budget_left",lang)} ₪${remaining.toLocaleString()}`}
+                    {over?`${t("budget_over",lang)} ${fmt(Math.abs(remaining))}`:`${t("budget_left",lang)} ${fmt(remaining)}`}
                   </span>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
                   {[
-                    {label:t("budget_spent",lang),value:`₪${total.toFixed(0)}`,color:TEAL},
-                    {label:t("budget_paid",lang),value:`₪${paid.toFixed(0)}`,color:"#4ade80"},
-                    {label:t("budget_remaining",lang),value:over?`-₪${Math.abs(remaining).toFixed(0)}`:`₪${remaining.toFixed(0)}`,color:over?"#ff6b6b":"#4ade80"},
+                    {label:t("budget_spent",lang),value:fmt(total),color:TEAL},
+                    {label:t("budget_paid",lang),value:fmt(paid),color:"#4ade80"},
+                    {label:t("budget_remaining",lang),value:over?`-${fmt(Math.abs(remaining))}`:fmt(remaining),color:over?"#ff6b6b":"#4ade80"},
                   ].map(item=>(
                     <div key={item.label} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px",textAlign:"center"}}>
                       <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:item.color}}>{item.value}</div>
@@ -1467,7 +1499,7 @@ function BudgetScreen({trip,expenses}){
 
         {/* KPI */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          {[{label:t("budget_total",lang),value:total,color:TEAL,icon:"📊"},{label:t("budget_paid",lang),value:paid,color:"#4ade80",icon:"✅"},{label:t("budget_unpaid",lang),value:unpaid,color:"#ff6b6b",icon:"⏳"},{label:t("budget_count",lang),value:expenses.length,color:"#fbbf24",icon:"🧾",noFmt:true}].map(item=>(
+          {[{label:t("budget_total",lang),value:fmtN(total),color:TEAL,icon:"📊",sym},{label:t("budget_paid",lang),value:fmtN(paid),color:"#4ade80",icon:"✅",sym},{label:t("budget_unpaid",lang),value:fmtN(unpaid),color:"#ff6b6b",icon:"⏳",sym},{label:t("budget_count",lang),value:expenses.length,color:"#fbbf24",icon:"🧾",noFmt:true}].map(item=>(
             <KpiCard key={item.label} {...item}/>
           ))}
         </div>
@@ -1485,7 +1517,7 @@ function BudgetScreen({trip,expenses}){
                 <div key={cat.id} style={{marginBottom:16}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                     <div style={{fontWeight:700,fontSize:15,display:"flex",gap:6,alignItems:"center"}}><span>{cat.icon}</span><span>{catLabel(cat.id,lang)}</span><span style={{fontSize:11,color:W35}}>({cat.count})</span></div>
-                    <div style={{fontFamily:RF,fontWeight:700,fontSize:15,color:TEAL}}>₪{cat.total.toFixed(0)}</div>
+                    <div style={{fontFamily:RF,fontWeight:700,fontSize:15,color:TEAL}}>{fmt(cat.total)}</div>
                   </div>
                   <div style={{height:5,background:W08,borderRadius:999,overflow:"hidden"}}>
                     <div style={{height:"100%",width:`${(cat.total/maxT)*100}%`,background:cat.color,borderRadius:999,transition:"width 0.5s"}}/>
@@ -1506,7 +1538,7 @@ function BudgetScreen({trip,expenses}){
               <div style={{flex:unpaid,background:C.coral,transition:"flex 0.5s"}}/>
             </div>
             <div style={{display:"flex",gap:16}}>
-              {[{color:"#4ade80",label:`${t("budget_paid",lang)}: ₪${paid.toFixed(0)}`},{color:"#ff6b6b",label:`${t("budget_unpaid",lang)}: ₪${unpaid.toFixed(0)}`}].map(i=>(
+              {[{color:"#4ade80",label:`${t("budget_paid",lang)}: ${fmt(paid)}`},{color:"#ff6b6b",label:`${t("budget_unpaid",lang)}: ${fmt(unpaid)}`}].map(i=>(
                 <div key={i.label} style={{display:"flex",alignItems:"center",gap:6}}>
                   <div style={{width:12,height:12,borderRadius:3,background:i.color}}/><span style={{fontSize:13,fontWeight:700}}>{i.label}</span>
                 </div>
@@ -1532,7 +1564,7 @@ function BudgetScreen({trip,expenses}){
                   <span style={{color:W35,fontSize:13}}> {t("budget_owes",lang)} </span>
                   <span style={{fontWeight:700,color:d.to.color}}>{d.to.name}</span>
                 </div>
-                <div style={{fontFamily:RF,fontSize:16,fontWeight:700,color:"#ff6b6b"}}>₪{d.amount.toFixed(0)}</div>
+                <div style={{fontFamily:RF,fontSize:16,fontWeight:700,color:"#ff6b6b"}}>{fmt(d.amount,1)}</div>
                 <div style={{width:32,height:32,borderRadius:"50%",background:d.to.color+"30",border:`2px solid ${d.to.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:d.to.color,flexShrink:0}}>
                   {d.to.name[0]}
                 </div>
@@ -2231,7 +2263,7 @@ function DiscoverScreen({trip}){
   );
 }
 
-const newTrip=(ownerId)=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]});
+const newTrip=(ownerId)=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",displayCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]});
 
 // ── TRIP SPLASH SCREEN ────────────────────────────────────────────────────────
 function TripSplashScreen({trip,onBudget,onTrip,isViewOnly,lang}){
@@ -2805,7 +2837,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           </div>
           {/* Currency Converter */}
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]}/>}
-          <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} userId={userId}/>
+          <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} userId={userId} rates={rates}/>
         </div>
       </>
     );
@@ -3066,7 +3098,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             <div key={screen} className="screen-enter">
               {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
               {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
-              {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses}/>}
+              {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates}/>}
             </div>
           </div>
           {screen!=="destination"&&<NavBar screens={budgetScreens} current={screen} onNav={setScreen}/>}
