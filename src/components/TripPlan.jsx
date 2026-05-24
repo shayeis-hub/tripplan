@@ -2471,7 +2471,7 @@ function MapScreen({trip,expenses}){
 }
 
 export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId}){
-  const{lang}=useLang();
+  const{lang,setLang}=useLang();
   const[trips,setTrips]=useState(initialTrips);
   const[activeId,setActiveId]=useState(null);
   const[section,setSection]=useState(null); // null=splash | "budget" | "trip"
