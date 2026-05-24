@@ -44,6 +44,8 @@ export const translations = {
   login_register_btn: { he: "צור חשבון ✓",       en: "Create account ✓" },
   login_switch_new: { he: "משתמש חדש? הירשם",   en: "New user? Sign up" },
   login_switch_existing: { he: "יש לי חשבון – התחבר", en: "I have an account – Sign in" },
+  login_google:         { he: "המשך עם Google",   en: "Continue with Google" },
+  login_or:             { he: "או",               en: "or" },
   login_err_not_found:  { he: "משתמש לא נמצא",   en: "User not found" },
   login_err_password:   { he: "סיסמה שגויה",     en: "Wrong password" },
   login_err_credential: { he: "אימייל או סיסמה שגויים", en: "Incorrect email or password" },

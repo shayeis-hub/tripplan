@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 
@@ -29,6 +29,20 @@ export default function LoginPage() {
   useEffect(() => {
     try { const s = localStorage.getItem("tayalon_email"); if (s) setEmailVal(s); } catch {}
   }, []);
+
+  const doGoogle = async () => {
+    setBusy(true); setErrMsg("");
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      window.location.href = "/";
+    } catch (firebaseErr: any) {
+      if (firebaseErr.code !== "auth/popup-closed-by-user") {
+        setErrMsg(lang === "he" ? `שגיאה: ${firebaseErr.code}` : `Error: ${firebaseErr.code}`);
+      }
+      setBusy(false);
+    }
+  };
 
   const doSubmit = async () => {
     if (!emailVal || !passVal) return;
@@ -75,6 +89,12 @@ export default function LoginPage() {
         .legal a{color:rgba(255,255,255,0.25);font-size:11px;text-decoration:none;font-family:'Rubik',sans-serif;transition:color 0.15s;}
         .legal a:hover{color:rgba(100,223,223,0.6);}
         .legal span{color:rgba(255,255,255,0.1);font-size:11px;}
+        .btn-google{width:100%;padding:14px;border-radius:14px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.95);color:#1f1f1f;font-size:15px;font-weight:600;cursor:pointer;font-family:'Rubik',sans-serif;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.15s;}
+        .btn-google:hover{background:#fff;}
+        .btn-google:disabled{opacity:0.5;cursor:default;}
+        .or-divider{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+        .or-divider span{color:rgba(255,255,255,0.2);font-size:12px;white-space:nowrap;}
+        .or-divider::before,.or-divider::after{content:'';flex:1;height:0.5px;background:rgba(255,255,255,0.08);}
       `}</style>
       <div className="page" dir={dir}>
         <div className="card">
@@ -89,6 +109,19 @@ export default function LoginPage() {
             <div className="logo-sub">{t("login_subtitle", lang)}</div>
             <div className="greeting">{isNew ? t("login_greeting_new", lang) : t("login_greeting_existing", lang)}</div>
           </div>
+
+          {/* Google Sign-In */}
+          <button className="btn-google" onClick={doGoogle} disabled={busy}>
+            <svg width="18" height="18" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.85l6.1-6.1C34.46 3.09 29.53 1 24 1 14.82 1 7.07 6.48 3.62 14.22l7.14 5.54C12.44 13.61 17.76 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.1 24.5c0-1.64-.15-3.22-.42-4.74H24v8.98h12.42c-.54 2.9-2.17 5.36-4.63 7.01l7.14 5.54C43.19 37.26 46.1 31.33 46.1 24.5z"/>
+              <path fill="#FBBC05" d="M10.76 28.24A14.54 14.54 0 0 1 9.5 24c0-1.48.25-2.91.7-4.24l-7.14-5.54A23.93 23.93 0 0 0 0 24c0 3.87.92 7.53 2.56 10.78l8.2-6.54z"/>
+              <path fill="#34A853" d="M24 47c5.53 0 10.17-1.83 13.56-4.97l-7.14-5.54C28.65 38.1 26.45 39 24 39c-6.24 0-11.56-4.11-13.24-9.76l-8.2 6.54C6.07 43.52 14.43 47 24 47z"/>
+            </svg>
+            {t("login_google", lang)}
+          </button>
+
+          <div className="or-divider"><span>{t("login_or", lang)}</span></div>
 
           <input className="inp" type="email" value={emailVal}
             onChange={ev => setEmailVal(ev.target.value)}
