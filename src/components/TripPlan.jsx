@@ -2493,6 +2493,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[inviteDeleting,setInviteDeleting]=useState(false);
   const[inviteCopied,setInviteCopied]=useState(false);
   const[inviteJoinMsg,setInviteJoinMsg]=useState(null);
+  const[sideMenu,setSideMenu]=useState(false);
   const{rates,allCodes,info,toILS}=useRates();
   const{permission,subscribed,subscribe}=usePushNotifications(userId);
 
@@ -2702,11 +2703,12 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>💱</button>
               <button onClick={subscribe} title={subscribed?t("notif_active",lang):t("notif_enable",lang)} style={{background:subscribed?"rgba(74,222,128,0.12)":"rgba(100,223,223,0.1)",border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(100,223,223,0.25)"}`,borderRadius:8,color:subscribed?"#4ade80":TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>{subscribed?"🔔":"🔕"}</button>
-              <button onClick={onLogout} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 12px",cursor:"pointer"}}>{t("logout",lang)}</button>
+              <button onClick={()=>setSideMenu(true)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:700,fontSize:18,padding:"3px 10px",cursor:"pointer",lineHeight:1}}>☰</button>
             </div>
           </div>
           {/* Currency Converter */}
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]}/>}
+          {sideMenu&&renderSideMenu()}
           <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} userId={userId}/>
         </div>
       </>
@@ -2885,6 +2887,106 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   );
 
   // ── Joined-trip toast banner ──
+  // ── Side menu (hamburger drawer) ──
+  const navToScreen=(sec,scr)=>{
+    if(activeId){setSection(sec);setScreen(scr);}
+    setSideMenu(false);
+  };
+  const guideUrl=lang==="he"?"/guide-he.html":"/guide-en.html";
+  const menuScreens=[
+    {icon:"📅",label:lang==="he"?"יומן":"Calendar",sec:"trip",scr:"calendar"},
+    {icon:"🔍",label:lang==="he"?"גלה":"Discover",sec:"trip",scr:"discover"},
+    {icon:"🗺️",label:lang==="he"?"מפה":"Map",sec:"trip",scr:"map"},
+    {icon:"🎒",label:lang==="he"?"אריזה":"Packing",sec:"trip",scr:"packing"},
+    {icon:"💰",label:lang==="he"?"הוצאות":"Expenses",sec:"budget",scr:"expenses"},
+    {icon:"📊",label:lang==="he"?"תקציב":"Budget",sec:"budget",scr:"budget"},
+  ];
+  const renderSideMenu=()=>(
+    <>
+      {/* Backdrop */}
+      <div onClick={()=>setSideMenu(false)}
+        style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:400,backdropFilter:"blur(2px)"}}/>
+      {/* Drawer */}
+      <div style={{position:"fixed",top:0,right:0,bottom:0,width:280,background:"#0a2035",borderLeft:"0.5px solid rgba(100,223,223,0.15)",zIndex:401,display:"flex",flexDirection:"column",boxShadow:"-8px 0 40px rgba(0,0,0,0.5)",overflowY:"auto"}}>
+        {/* Header */}
+        <div style={{padding:"20px 20px 16px",borderBottom:"0.5px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+          <div>
+            <div style={{fontFamily:RF,fontSize:22,fontWeight:900,color:"#fff",letterSpacing:"-0.5px"}}>טיולון</div>
+            <div style={{fontFamily:RF,fontSize:11,color:W35,marginTop:2,direction:"ltr",textAlign:"right"}}>{userEmail}</div>
+          </div>
+          <button onClick={()=>setSideMenu(false)}
+            style={{background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.1)",borderRadius:8,color:W40,fontSize:16,width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+        </div>
+
+        {/* Body */}
+        <div style={{flex:1,padding:"12px 0"}}>
+          {/* Trip-specific items */}
+          {activeId&&(
+            <>
+              <div style={{padding:"4px 20px 8px",fontFamily:RF,fontSize:10,color:"rgba(100,223,223,0.4)",letterSpacing:"1px",textTransform:"uppercase"}}>
+                {active?.destination||(lang==="he"?"הטיול":"Trip")}
+              </div>
+              <button onClick={()=>navToScreen("budget","destination")}
+                style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
+                <span style={{fontSize:18}}>⚙️</span>{lang==="he"?"הגדרות טיול":"Trip Settings"}
+              </button>
+              <button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");setSideMenu(false);}}
+                style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
+                <span style={{fontSize:18}}>🔗</span>{lang==="he"?"שתף טיול":"Share Trip"}
+              </button>
+              <div style={{margin:"10px 20px",height:"0.5px",background:"rgba(255,255,255,0.06)"}}/>
+              <div style={{padding:"4px 20px 8px",fontFamily:RF,fontSize:10,color:"rgba(100,223,223,0.4)",letterSpacing:"1px",textTransform:"uppercase"}}>
+                {lang==="he"?"מסכים":"Screens"}
+              </div>
+              {menuScreens.map(({icon,label,sec,scr})=>{
+                const isCur=section===sec&&screen===scr;
+                return(
+                  <button key={scr} onClick={()=>navToScreen(sec,scr)}
+                    style={{width:"100%",padding:"10px 20px",background:isCur?"rgba(100,223,223,0.08)":"none",border:"none",borderRight:isCur?`3px solid ${TEAL}`:"3px solid transparent",color:isCur?TEAL:"rgba(255,255,255,0.7)",fontFamily:RF,fontSize:14,fontWeight:isCur?700:400,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right",transition:"all 0.15s"}}>
+                    <span style={{fontSize:17}}>{icon}</span>{label}
+                  </button>
+                );
+              })}
+              <div style={{margin:"10px 20px",height:"0.5px",background:"rgba(255,255,255,0.06)"}}/>
+            </>
+          )}
+
+          {/* Guide */}
+          <button onClick={()=>{window.open(guideUrl,"_blank");setSideMenu(false);}}
+            style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
+            <span style={{fontSize:18}}>📖</span>{lang==="he"?"חוברת הסבר":"User Guide"}
+          </button>
+
+          {/* Lang toggle */}
+          <div style={{padding:"10px 20px",display:"flex",gap:8}}>
+            {["he","en"].map(l=>(
+              <button key={l} onClick={()=>{setLang(l);setSideMenu(false);}}
+                style={{flex:1,padding:"8px",borderRadius:10,border:`0.5px solid ${lang===l?"rgba(100,223,223,0.5)":"rgba(255,255,255,0.1)"}`,background:lang===l?"rgba(100,223,223,0.1)":"transparent",color:lang===l?TEAL:W40,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>
+                {l==="he"?"🇮🇱 עברית":"🇬🇧 English"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{padding:"12px 0",borderTop:"0.5px solid rgba(255,255,255,0.06)",flexShrink:0}}>
+          <button onClick={()=>{window.open("/privacy","_blank");setSideMenu(false);}}
+            style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
+            <span>🔒</span>{lang==="he"?"מדיניות פרטיות":"Privacy Policy"}
+          </button>
+          <button onClick={()=>{window.open("/contact","_blank");setSideMenu(false);}}
+            style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
+            <span>✉️</span>{lang==="he"?"צור קשר":"Contact"}
+          </button>
+          <button onClick={()=>{onLogout();setSideMenu(false);}}
+            style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:"rgba(255,107,107,0.7)",fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
+            <span>🚪</span>{lang==="he"?"התנתקות":"Sign out"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
   const joinBanner=inviteJoinMsg?(
     <div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",zIndex:999,background:"rgba(74,222,128,0.92)",backdropFilter:"blur(10px)",color:"#0d2137",fontFamily:RF,fontWeight:700,fontSize:14,padding:"12px 24px",borderRadius:14,boxShadow:"0 8px 32px rgba(0,0,0,0.3)",whiteSpace:"nowrap",textAlign:"center",pointerEvents:"none"}}>
       {inviteJoinMsg}
@@ -2919,11 +3021,13 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             <div style={{display:"flex",gap:6}}>
               {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} className="tap-btn" style={hBtn()}>👥</button>}
               {isOwner&&<button onClick={()=>{setInspireModal(true);setInspireLink(null);setInspireHidden(new Set());}} className="tap-btn" style={hBtn({background:"rgba(251,191,36,0.1)",border:"0.5px solid rgba(251,191,36,0.3)",color:"#fbbf24"})}>✨</button>}
+              <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({fontSize:18,fontWeight:700,padding:"3px 10px"})}>☰</button>
             </div>
           </div>
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
+          {sideMenu&&renderSideMenu()}
           <div style={{flex:1,overflowY:"auto"}}>
             <TripSplashScreen trip={active} onBudget={()=>{setSection("budget");setScreen("expenses");}} onTrip={()=>{setSection("trip");setScreen("calendar");}} isViewOnly={isViewOnly} lang={lang}/>
           </div>
@@ -2948,11 +3052,13 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn()}>💱</button>
               <button onClick={()=>exportTripPDF(active,expenses,lang)} className="tap-btn" style={hBtn()}>📄</button>
+              <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({fontSize:18,fontWeight:700,padding:"3px 10px"})}>☰</button>
             </div>
           </div>
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
+          {sideMenu&&renderSideMenu()}
           <div style={{flex:1,overflowY:"auto"}}>
             {/* Trip settings button */}
             {screen!=="destination"&&(
@@ -2989,11 +3095,13 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             </div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn()}>💱</button>
+              <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({fontSize:18,fontWeight:700,padding:"3px 10px"})}>☰</button>
             </div>
           </div>
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
+          {sideMenu&&renderSideMenu()}
           <div style={{flex:1,overflowY:"auto"}}>
             <div key={screen} className="screen-enter">
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
