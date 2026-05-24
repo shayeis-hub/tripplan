@@ -2793,6 +2793,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               <span style={{fontFamily:RF,color:"#ffffff",fontSize:20,fontWeight:800,letterSpacing:"-0.5px",lineHeight:1}}>{t("app_name",lang)}</span>
               <span style={{fontFamily:RF,color:W35,fontSize:10,fontWeight:300,letterSpacing:"0.5px",marginTop:3}}>{t("app_subtitle",lang)}</span>
             </div>
+            <button onClick={()=>setLang(lang==="he"?"en":"he")} title={lang==="he"?"Switch to English":"עבור לעברית"}
+              style={{background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:20,padding:"4px 10px",cursor:"pointer",fontSize:18,lineHeight:1,display:"flex",alignItems:"center",gap:5}}>
+              <span>{lang==="he"?"🇮🇱":"🇺🇸"}</span>
+              <span style={{fontFamily:RF,fontSize:10,color:W35,fontWeight:500}}>{lang==="he"?"EN":"עב"}</span>
+            </button>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>💱</button>
               <button onClick={subscribe} title={subscribed?t("notif_active",lang):t("notif_enable",lang)} style={{background:subscribed?"rgba(74,222,128,0.12)":"rgba(100,223,223,0.1)",border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(100,223,223,0.25)"}`,borderRadius:8,color:subscribed?"#4ade80":TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>{subscribed?"🔔":"🔕"}</button>
