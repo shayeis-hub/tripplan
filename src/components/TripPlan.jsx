@@ -112,6 +112,28 @@ const CURR_SYMBOLS={
   CHF:"Fr",CAD:"C$",AUD:"A$",INR:"₹",BRL:"R$",SGD:"S$",HKD:"HK$",
   SEK:"kr",NOK:"kr",DKK:"kr",PLN:"zł",CNY:"¥",KRW:"₩",RUB:"₽",
 };
+// Flag emoji per currency code (ISO 4217 → ISO 3166-1 alpha-2)
+const CURR_FLAG={
+  ILS:"🇮🇱",USD:"🇺🇸",EUR:"🇪🇺",GBP:"🇬🇧",JPY:"🇯🇵",CHF:"🇨🇭",
+  CAD:"🇨🇦",AUD:"🇦🇺",NZD:"🇳🇿",SGD:"🇸🇬",HKD:"🇭🇰",
+  CNY:"🇨🇳",KRW:"🇰🇷",TWD:"🇹🇼",
+  INR:"🇮🇳",THB:"🇹🇭",MYR:"🇲🇾",IDR:"🇮🇩",PHP:"🇵🇭",VND:"🇻🇳",
+  PKR:"🇵🇰",BDT:"🇧🇩",LKR:"🇱🇰",
+  AED:"🇦🇪",SAR:"🇸🇦",QAR:"🇶🇦",KWD:"🇰🇼",BHD:"🇧🇭",OMR:"🇴🇲",JOD:"🇯🇴",
+  EGP:"🇪🇬",MAD:"🇲🇦",TND:"🇹🇳",
+  TRY:"🇹🇷",RUB:"🇷🇺",UAH:"🇺🇦",GEL:"🇬🇪",AMD:"🇦🇲",AZN:"🇦🇿",
+  SEK:"🇸🇪",NOK:"🇳🇴",DKK:"🇩🇰",ISK:"🇮🇸",
+  PLN:"🇵🇱",CZK:"🇨🇿",HUF:"🇭🇺",RON:"🇷🇴",BGN:"🇧🇬",HRK:"🇭🇷",
+  MXN:"🇲🇽",BRL:"🇧🇷",ARS:"🇦🇷",CLP:"🇨🇱",COP:"🇨🇴",PEN:"🇵🇪",
+  ZAR:"🇿🇦",KES:"🇰🇪",NGN:"🇳🇬",GHS:"🇬🇭",
+  RSD:"🇷🇸",MKD:"🇲🇰",ALL:"🇦🇱",
+};
+// Returns "🇮🇱 ILS – שקל ישראלי" or "🇺🇸 USD – US Dollar"
+const currLabel=(code,lang)=>{
+  const flag=CURR_FLAG[code]||"";
+  const name=(lang==="he"?CURRENCY_NAMES[code]:CURRENCY_NAMES_EN[code])||"";
+  return flag?`${flag} ${code}${name?` – ${name}`:""}`:`${code}${name?` – ${name}`:""}`;
+};
 const getCurrLabel=(code,lang="he")=>(lang==="en"?CURRENCY_NAMES_EN[code]:CURRENCY_NAMES[code])||code;
 const getCurrSymbol=(code)=>CURR_SYMBOLS[code]||code;
 // Common Hebrew destination names to English
@@ -495,20 +517,20 @@ function CurrencyConverter({rates,onClose,tripCurrencies}){
         {/* From / swap / To */}
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <select value={from} onChange={e=>setFrom(e.target.value)}
-            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
-            {allCodes.map(c=><option key={c} value={c}>{c}</option>)}
+            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            {allCodes.map(c=><option key={c} value={c}>{currLabel(c,lang)}</option>)}
           </select>
           <button onClick={swap} style={{padding:"8px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.08)",color:TEAL,fontSize:16,cursor:"pointer",flexShrink:0}}>⇄</button>
           <select value={to} onChange={e=>setTo(e.target.value)}
-            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
-            {allCodes.map(c=><option key={c} value={c}>{c}</option>)}
+            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            {allCodes.map(c=><option key={c} value={c}>{currLabel(c,lang)}</option>)}
           </select>
         </div>
         {converted&&(
           <div style={{marginTop:10,padding:"10px 14px",background:"rgba(100,223,223,0.1)",borderRadius:10,textAlign:"center"}}>
             <span style={{fontFamily:RF,fontSize:22,fontWeight:800,color:TEAL}}>{converted} {to}</span>
             <div style={{fontSize:11,color:W35,marginTop:3,fontFamily:RF}}>
-              1 {from} = {rates[from]&&rates[to]?(rates[from]/rates[to]).toFixed(4):""} {to}
+              {CURR_FLAG[from]||""} 1 {from} = {rates[from]&&rates[to]?(rates[from]/rates[to]).toFixed(4):""} {to} {CURR_FLAG[to]||""}
             </div>
           </div>
         )}
