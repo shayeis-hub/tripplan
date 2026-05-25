@@ -32,7 +32,7 @@ import {
   Users, User, ChevronRight, Shirt, FileText, Zap, Heart, Package,
   AlertCircle, Loader, Link as LinkIcon, Ticket, Utensils, Car,
   Building2, Search, Clock, Menu, ArrowLeftRight, FileDown, BarChart2,
-  Moon, Copy, Lock, Bug, Lightbulb, Bell, BellOff, Globe,
+  Moon, Copy, Lock, Bug, Lightbulb, Bell, BellOff, Globe, Settings,
 } from "lucide-react";
 
 const catLabel=(id,lang)=>t(`cat_${id}`,lang)||id;
@@ -2877,8 +2877,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     setTrips((ts)=>[...ts,t]);
     onSaveTrip(t);
     setActiveId(t.id);
-    setSection(null);
-    setScreen("expenses");
+    setSection("budget");
+    setScreen("destination");
   };
 
   const handleSelect=id=>{setActiveId(id);setSection(null);setScreen("expenses");};
@@ -2930,7 +2930,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               </div>
               <button onClick={()=>navToScreen("budget","destination")}
                 style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
-                <span style={{fontSize:18}}>⚙️</span>{lang==="he"?"הגדרות טיול":"Trip Settings"}
+                <Settings size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"הגדרות טיול":"Trip Settings"}
               </button>
               <button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");setSideMenu(false);}}
                 style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
@@ -3279,7 +3279,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             {screen!=="destination"&&(
               <div style={{padding:"12px 14px 0"}}>
                 <button onClick={()=>setScreen("destination")} style={{width:"100%",padding:"12px 16px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(100,223,223,0.06)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-                  ⚙️ {lang==="he"?"הגדרות טיול":"Trip Settings"}
+                  <Settings size={15} color={TEAL} strokeWidth={1.5}/> {lang==="he"?"הגדרות טיול":"Trip Settings"}
                 </button>
               </div>
             )}
