@@ -1233,25 +1233,30 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         <div style={{fontSize:22,fontWeight:800,color:TEAL,letterSpacing:"-0.5px",fontFamily:RF}}>{fmtAmt(totalILS,trip.displayCurrency||"ILS",rates)}</div>
       </div>
 
-      {/* Category filter tabs — all visible, wrap to two rows */}
-      <div style={{padding:"12px 16px 4px",display:"flex",flexWrap:"wrap",gap:8}}>
-        {[{id:"all",label:lang==="he"?"הכל":"All",Icon:null,color:TEAL,bg:"rgba(100,223,223,0.12)"},...CATS].map(cat=>{
-          const isActive=filterCat===cat.id;
-          const color=cat.color||TEAL;
-          const bg=cat.bg||"rgba(100,223,223,0.12)";
-          return(
-            <button key={cat.id} onClick={()=>setFilterCat(cat.id)}
-              style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,padding:"10px 13px",borderRadius:14,
-                border:`0.5px solid ${isActive?color+"80":"rgba(255,255,255,0.08)"}`,
-                background:isActive?bg:"rgba(255,255,255,0.04)",
-                flexShrink:0,cursor:"pointer",
-                boxShadow:isActive?`0 0 14px ${color}30`:"none",
-                transition:"all 0.15s"}}>
-              {cat.Icon?<cat.Icon size={20} color={isActive?color:W35} strokeWidth={1.5}/>:<Receipt size={20} color={isActive?TEAL:W35} strokeWidth={1.5}/>}
-              <span style={{fontFamily:RF,fontSize:10,fontWeight:700,color:isActive?color:W35,whiteSpace:"nowrap"}}>{cat.label||(lang==="he"?"הכל":"All")}</span>
-            </button>
-          );
-        })}
+      {/* Category filter tabs — single scrollable row */}
+      <div style={{position:"relative",padding:"10px 16px 4px"}}>
+        <style>{`.exp-filter::-webkit-scrollbar{display:none}`}</style>
+        <div className="exp-filter" style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
+          {[{id:"all",label:lang==="he"?"הכל":"All",Icon:null,color:TEAL,bg:"rgba(100,223,223,0.12)"},...CATS].map(cat=>{
+            const isActive=filterCat===cat.id;
+            const color=cat.color||TEAL;
+            const bg=cat.bg||"rgba(100,223,223,0.12)";
+            return(
+              <button key={cat.id} onClick={()=>setFilterCat(cat.id)}
+                style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"6px 8px",borderRadius:12,
+                  border:`0.5px solid ${isActive?color+"80":"rgba(255,255,255,0.08)"}`,
+                  background:isActive?bg:"rgba(255,255,255,0.04)",
+                  flexShrink:0,cursor:"pointer",minWidth:44,
+                  boxShadow:isActive?`0 0 10px ${color}30`:"none",
+                  transition:"all 0.15s"}}>
+                {cat.Icon?<cat.Icon size={16} color={isActive?color:W35} strokeWidth={1.5}/>:<Receipt size={16} color={isActive?TEAL:W35} strokeWidth={1.5}/>}
+                <span style={{fontFamily:RF,fontSize:9,fontWeight:700,color:isActive?color:W35,whiteSpace:"nowrap"}}>{cat.label||(lang==="he"?"הכל":"All")}</span>
+              </button>
+            );
+          })}
+        </div>
+        {/* fade hint — indicates more content to the left (RTL) */}
+        <div style={{position:"absolute",top:0,left:16,bottom:4,width:24,background:"linear-gradient(to left,transparent,#0d2137)",pointerEvents:"none"}}/>
       </div>
 
       {scanMsg&&(
