@@ -105,15 +105,15 @@ export default function MapLeaflet({ destination, places, lang }) {
       <div style={{
         flex: 1, display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
-        background: "#0d2137", gap: 12,
+        background: "#e8edf2", gap: 12,
       }}>
         <div style={{
           width: 44, height: 44, borderRadius: "50%",
-          border: "3px solid rgba(100,223,223,0.15)",
-          borderTopColor: "#64dfdf",
+          border: "3px solid rgba(13,33,55,0.15)",
+          borderTopColor: "#0d2137",
           animation: "spin 0.8s linear infinite",
         }}/>
-        <span style={{ color: "rgba(100,223,223,0.7)", fontSize: 13, fontFamily: RF }}>
+        <span style={{ color: "rgba(13,33,55,0.5)", fontSize: 13, fontFamily: RF }}>
           {lang === "he" ? "טוען מפה…" : "Loading map…"}
         </span>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -125,7 +125,7 @@ export default function MapLeaflet({ destination, places, lang }) {
     return (
       <div style={{
         flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-        background: "#0d2137", color: "rgba(255,255,255,0.4)", fontSize: 14, fontFamily: RF,
+        background: "#e8edf2", color: "rgba(13,33,55,0.4)", fontSize: 14, fontFamily: RF,
       }}>
         {lang === "he" ? "לא נמצא יעד" : "Destination not found"}
       </div>
@@ -135,7 +135,7 @@ export default function MapLeaflet({ destination, places, lang }) {
   return (
     <>
       <style>{`
-        .leaflet-container { background: #0d2137; font-family: ${RF}; }
+        .leaflet-container { background: #e8edf2; font-family: ${RF}; }
         .leaflet-popup-content-wrapper {
           background: #0d2137 !important;
           border: 0.5px solid rgba(100,223,223,0.2) !important;
@@ -146,8 +146,8 @@ export default function MapLeaflet({ destination, places, lang }) {
         }
         .leaflet-popup-tip { background: #0d2137 !important; }
         .leaflet-popup-close-button { color: rgba(255,255,255,0.4) !important; font-size: 18px !important; }
-        .leaflet-control-attribution { background: rgba(9,25,40,0.8) !important; color: rgba(255,255,255,0.3) !important; }
-        .leaflet-control-attribution a { color: rgba(100,223,223,0.5) !important; }
+        .leaflet-control-attribution { background: rgba(255,255,255,0.7) !important; color: rgba(0,0,0,0.4) !important; font-size: 10px !important; }
+        .leaflet-control-attribution a { color: #64dfdf !important; }
       `}</style>
       <MapContainer
         center={center}
@@ -155,10 +155,10 @@ export default function MapLeaflet({ destination, places, lang }) {
         style={{ width: "100%", height: "100%" }}
         zoomControl={false}
       >
-        {/* Dark CartoDB tiles — perfect for our dark UI */}
+        {/* CartoDB Voyager — clean colorful style, great contrast with dark UI chrome */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           subdomains="abcd"
           maxZoom={20}
         />
