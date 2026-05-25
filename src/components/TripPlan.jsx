@@ -2919,7 +2919,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
 
   const isOwner=active?.owner===userId||!active?.owner;
-  const isViewOnly=!isOwner&&!!active?.viewOnlyUsers?.includes(userEmail);
+  const normalizedUserEmail=(userEmail||"").toLowerCase().trim();
+  const isViewOnly=!isOwner&&!!(active?.viewOnlyUsers||[]).some(e=>e.toLowerCase().trim()===normalizedUserEmail);
   const budgetScreens=["expenses","budget"];
   const tripScreens=["calendar","discover","packing","map"];
 
@@ -3093,9 +3094,18 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                 return(
                   <div key={email} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,padding:"7px 12px"}}>
                     <span style={{fontSize:12,color:TEAL,fontFamily:RF,direction:"ltr",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{email}</span>
-                    <button onClick={()=>onShareTrip(shareModal,email,!isVO)}
-                      style={{fontSize:11,color:isVO?"rgba(251,191,36,0.9)":"rgba(74,222,128,0.9)",background:isVO?"rgba(251,191,36,0.12)":"rgba(74,222,128,0.12)",border:`0.5px solid ${isVO?"rgba(251,191,36,0.3)":"rgba(74,222,128,0.3)"}`,borderRadius:999,padding:"3px 10px",fontFamily:RF,flexShrink:0,cursor:"pointer"}}>
-                      {isVO?(lang==="he"?"🔓 אפשר עריכה":"🔓 Allow edit"):(lang==="he"?"🔒 הגבל לצפייה":"🔒 Limit to view")}
+                    {/* Current role badge — clearly shows CURRENT STATE */}
+                    <span style={{fontSize:11,fontWeight:700,color:isVO?"rgba(251,191,36,0.9)":"rgba(74,222,128,0.9)",background:isVO?"rgba(251,191,36,0.1)":"rgba(74,222,128,0.1)",border:`0.5px solid ${isVO?"rgba(251,191,36,0.3)":"rgba(74,222,128,0.3)"}`,borderRadius:999,padding:"3px 10px",fontFamily:RF,flexShrink:0,whiteSpace:"nowrap"}}>
+                      {isVO?(lang==="he"?"👁 צפייה בלבד":"👁 View only"):(lang==="he"?"✏️ עריכה":"✏️ Edit")}
+                    </span>
+                    {/* Toggle button — clearly shows what clicking WILL DO */}
+                    <button onClick={()=>{
+                      const action=isVO?(lang==="he"?"לאפשר עריכה למשתמש זה?":"Allow this user to edit?"):(lang==="he"?"להגביל משתמש זה לצפייה בלבד?":"Limit this user to view only?");
+                      if(window.confirm(action)) onShareTrip(shareModal,email,!isVO);
+                    }}
+                      style={{fontSize:18,background:"none",border:"none",cursor:"pointer",padding:"2px 4px",flexShrink:0,opacity:0.6,lineHeight:1}}
+                      title={isVO?(lang==="he"?"שנה לעריכה":"Switch to edit"):(lang==="he"?"שנה לצפייה בלבד":"Switch to view only")}>
+                      ⇄
                     </button>
                     <button onClick={()=>onRemoveShare(shareModal,email)}
                       style={{background:"rgba(255,107,107,0.12)",border:"0.5px solid rgba(255,107,107,0.25)",color:"#ff6b6b",borderRadius:8,padding:"3px 8px",cursor:"pointer",fontSize:13,flexShrink:0}}>✕</button>
