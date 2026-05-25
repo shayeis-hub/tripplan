@@ -21,6 +21,7 @@ const TEAL = "#64dfdf";
 const DARK_BG = "#0d2137";
 
 import { useState, useEffect, useCallback, useMemo, useRef, useReducer } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
@@ -1232,9 +1233,8 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         <div style={{fontSize:22,fontWeight:800,color:TEAL,letterSpacing:"-0.5px",fontFamily:RF}}>{fmtAmt(totalILS,trip.displayCurrency||"ILS",rates)}</div>
       </div>
 
-      {/* Category filter tabs — always visible */}
-      <div style={{padding:"12px 16px 4px",display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"none"}}>
-        <style>{`.exp-tabs::-webkit-scrollbar{display:none}`}</style>
+      {/* Category filter tabs — all visible, wrap to two rows */}
+      <div style={{padding:"12px 16px 4px",display:"flex",flexWrap:"wrap",gap:8}}>
         {[{id:"all",label:lang==="he"?"הכל":"All",Icon:null,color:TEAL,bg:"rgba(100,223,223,0.12)"},...CATS].map(cat=>{
           const isActive=filterCat===cat.id;
           const color=cat.color||TEAL;
@@ -1269,8 +1269,8 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           <select value={sel} onChange={e=>setSel(e.target.value)}>{dates.map(d=><option key={d} value={d}>{d}</option>)}</select>
         </div>
 
-            {show&&(
-              <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.72)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px"}}
+            {show&&typeof document!=="undefined"&&createPortal(
+              <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.72)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",direction:"rtl"}}
                 onClick={e=>{if(e.target===e.currentTarget){setShow(false);setEditId(null);}}}>
                 <div style={{background:"#0d2137",borderRadius:20,width:"100%",maxWidth:460,maxHeight:"88vh",overflowY:"auto",direction:"rtl",fontFamily:RF,border:"0.5px solid rgba(100,223,223,0.15)",boxShadow:"0 24px 64px rgba(0,0,0,0.6)"}}>
                   {/* Modal header */}
@@ -1288,7 +1288,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                 {/* category */}
                 <div style={{marginBottom:18}}>
                   <div style={{fontSize:11,fontWeight:600,color:W40,letterSpacing:"0.8px",textTransform:"uppercase",marginBottom:10}}>{t("exp_category",lang)}</div>
-                  <div style={{display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:8,paddingBottom:4}}>
                     {CATS.map(cat=>{
                       const isActive=form.category===cat.id;
                       return(
@@ -1471,7 +1471,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                   </div>
                 </div>
               </div>
-            )}
+            ,document.body)}
 
             {allFiltered.length===0
               ?(<div style={{textAlign:"center",color:W25,padding:"28px 0",fontSize:14,fontFamily:RF}}>
