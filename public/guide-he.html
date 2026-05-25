@@ -11,8 +11,8 @@
 
   body {
     font-family: 'Rubik', Arial, sans-serif;
-    background: #091928;
-    color: rgba(255,255,255,0.85);
+    background: #f4f7fa;
+    color: #1a2b35;
     direction: rtl;
     font-size: 14px;
     line-height: 1.6;
@@ -21,11 +21,10 @@
   /* ── Cover ─────────────────────────────────────────── */
   .cover {
     background: linear-gradient(160deg, #050f1a 0%, #0d2137 55%, #0a2a45 100%);
-    padding: 70px 40px 60px;
+    padding: 64px 40px 56px;
     text-align: center;
     position: relative;
     overflow: hidden;
-    border-bottom: 1px solid rgba(100,223,223,0.15);
   }
   .cover::before {
     content: '';
@@ -34,12 +33,12 @@
     transform: translateX(-50%);
     width: 600px; height: 600px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(100,223,223,0.07) 0%, transparent 65%);
+    background: radial-gradient(circle, rgba(100,223,223,0.08) 0%, transparent 65%);
     pointer-events: none;
   }
   .cover-inner { position: relative; z-index: 1; }
   .cover-logo {
-    font-size: 64px;
+    font-size: 60px;
     font-weight: 900;
     color: #ffffff;
     letter-spacing: -3px;
@@ -48,11 +47,11 @@
   }
   .cover-logo span { color: #64dfdf; }
   .cover-sub {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 300;
     color: rgba(255,255,255,0.35);
     letter-spacing: 2px;
-    margin-bottom: 28px;
+    margin-bottom: 26px;
   }
   .cover-badge {
     display: inline-block;
@@ -62,104 +61,105 @@
     font-weight: 800;
     padding: 8px 28px;
     border-radius: 999px;
-    letter-spacing: 0.5px;
   }
   .cover-version {
     display: inline-block;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
     color: rgba(255,255,255,0.35);
     font-size: 11px;
     padding: 4px 14px;
     border-radius: 999px;
-    margin-top: 16px;
+    margin-top: 14px;
   }
 
   /* ── Layout ─────────────────────────────────────────── */
-  .content { max-width: 800px; margin: 0 auto; padding: 40px 24px 60px; }
+  .content { max-width: 800px; margin: 0 auto; padding: 36px 24px 60px; }
 
   /* ── Intro box ──────────────────────────────────────── */
   .intro-box {
-    background: rgba(100,223,223,0.07);
-    border: 1px solid rgba(100,223,223,0.2);
-    border-radius: 16px;
-    padding: 18px 22px;
-    margin-bottom: 40px;
+    background: #e8f4f8;
+    border-right: 4px solid #64dfdf;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 36px;
     font-size: 14px;
-    color: rgba(255,255,255,0.7);
+    color: #2d4050;
     line-height: 1.8;
   }
-  .intro-box strong { color: #64dfdf; }
 
   /* ── Section header ─────────────────────────────────── */
   .section-header {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin: 44px 0 16px;
+    margin: 40px 0 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #64dfdf;
   }
   .section-icon-wrap {
-    width: 40px; height: 40px;
-    border-radius: 12px;
-    background: rgba(100,223,223,0.12);
-    border: 1px solid rgba(100,223,223,0.25);
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    background: #0d2137;
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px; flex-shrink: 0;
+    flex-shrink: 0;
+    color: #64dfdf;
   }
+  .section-icon-wrap svg { width: 20px; height: 20px; stroke: #64dfdf; stroke-width: 1.8; fill: none; flex-shrink: 0; }
   .section-header h2 {
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 800;
-    color: #ffffff;
-  }
-  .section-divider {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(to left, transparent, rgba(100,223,223,0.2));
-    margin-right: 8px;
+    color: #0d2137;
   }
 
   /* ── Card ───────────────────────────────────────────── */
   .card {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px;
+    background: #ffffff;
+    border-radius: 16px;
     overflow: hidden;
     margin-bottom: 16px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.07);
   }
   .card-header {
-    padding: 14px 20px;
+    padding: 13px 18px;
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
-  .card-emoji { font-size: 26px; line-height: 1; flex-shrink: 0; }
+  .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-icon svg { width: 20px; height: 20px; stroke: #ffffff; stroke-width: 1.8; fill: none; }
   .card-title { font-size: 16px; font-weight: 800; color: #ffffff; }
-  .card-desc  { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 2px; }
-  .card-body  { padding: 6px 20px 14px; }
+  .card-desc  { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 2px; }
+  .card-body  { padding: 6px 18px 14px; }
 
   /* ── Row ────────────────────────────────────────────── */
   .row {
     display: flex;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid #f0f4f8;
     align-items: flex-start;
   }
   .row:last-child { border-bottom: none; }
   .row-key {
     font-weight: 700;
     font-size: 13px;
-    color: rgba(255,255,255,0.9);
+    color: #0d2137;
     min-width: 140px;
     flex-shrink: 0;
   }
-  .row-val { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.6; }
-  .row-val strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+  .row-val { font-size: 13px; color: #4a5568; line-height: 1.6; }
+  .row-val strong { color: #0d2137; }
 
   /* ── Sub label ──────────────────────────────────────── */
   .sub {
-    padding: 12px 0 4px;
+    padding: 10px 0 3px;
     font-size: 11px;
     color: #64dfdf;
     font-weight: 700;
@@ -169,100 +169,87 @@
 
   /* ── Tip / Note ─────────────────────────────────────── */
   .tip {
-    background: rgba(74,222,128,0.07);
-    border: 1px solid rgba(74,222,128,0.2);
-    border-radius: 12px;
-    padding: 10px 16px;
-    margin-top: 12px;
-    font-size: 13px;
-    color: rgba(74,222,128,0.9);
-    line-height: 1.6;
+    background: #f0fdf4;
+    border-right: 3px solid #4ade80;
+    border-radius: 8px;
+    padding: 9px 14px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #166534;
   }
   .note {
-    background: rgba(100,223,223,0.06);
-    border: 1px solid rgba(100,223,223,0.18);
-    border-radius: 12px;
-    padding: 10px 16px;
-    margin-top: 12px;
-    font-size: 13px;
-    color: rgba(100,223,223,0.85);
-    line-height: 1.6;
+    background: #e8f4f8;
+    border-right: 3px solid #64dfdf;
+    border-radius: 8px;
+    padding: 9px 14px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #1a4a5c;
   }
 
   /* ── Example ────────────────────────────────────────── */
   .example {
-    background: rgba(99,102,241,0.08);
-    border: 1px solid rgba(99,102,241,0.22);
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin: 12px 0;
+    background: #f0f4ff;
+    border-right: 3px solid #6366f1;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
     font-size: 13px;
-    color: rgba(255,255,255,0.65);
+    color: #3730a3;
     line-height: 1.8;
   }
-  .example strong { color: #818cf8; }
 
   /* ── Steps table ────────────────────────────────────── */
-  .steps { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-radius: 16px; overflow: hidden; }
-  .steps th {
-    background: rgba(100,223,223,0.1);
-    color: #64dfdf;
-    padding: 10px 16px;
-    font-size: 12px;
-    font-weight: 700;
-    text-align: right;
-    border-bottom: 1px solid rgba(100,223,223,0.15);
-  }
-  .steps td { padding: 11px 16px; font-size: 13px; color: rgba(255,255,255,0.65); border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+  .steps { width: 100%; border-collapse: collapse; margin-bottom: 16px; border-radius: 12px; overflow: hidden; }
+  .steps th { background: #0d2137; color: #64dfdf; padding: 10px 14px; font-size: 12px; font-weight: 700; text-align: right; }
+  .steps td { background: #fff; padding: 10px 14px; font-size: 13px; color: #4a5568; border-bottom: 1px solid #f0f4f8; vertical-align: top; }
   .steps tr:last-child td { border-bottom: none; }
-  .steps .n { width: 36px; font-weight: 900; color: #64dfdf; font-size: 16px; text-align: center; }
-  .steps td strong { color: rgba(255,255,255,0.9); }
+  .steps td strong { color: #0d2137; }
+  .steps .n { width: 36px; font-weight: 900; color: #64dfdf; font-size: 16px; text-align: center; background: #f8fafc; }
 
   /* ── Two col ────────────────────────────────────────── */
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-  .col-box {
-    border-radius: 16px;
-    padding: 18px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-  }
-  .col-box.teal { border-color: rgba(100,223,223,0.2); background: rgba(100,223,223,0.05); }
-  .col-box.green { border-color: rgba(74,222,128,0.2); background: rgba(74,222,128,0.05); }
-  .col-box-title { font-size: 14px; font-weight: 800; color: #ffffff; margin-bottom: 10px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .col-box { border-radius: 14px; padding: 16px; border: 2px solid; background: #fff; }
+  .col-box.green { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.04); }
+  .col-box.teal  { border-color: rgba(100,223,223,0.4); background: rgba(100,223,223,0.04); }
+  .col-box-title { font-size: 14px; font-weight: 800; color: #0d2137; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .col-box-title svg { width: 16px; height: 16px; stroke-width: 2; fill: none; flex-shrink: 0; }
   .col-box ul { list-style: none; padding: 0; }
-  .col-box li { font-size: 13px; color: rgba(255,255,255,0.55); padding: 3px 0; }
+  .col-box li { font-size: 13px; color: #4a5568; padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+  .col-box li svg { width: 13px; height: 13px; stroke-width: 2; fill: none; opacity: 0.6; flex-shrink: 0; }
 
-  /* ── Pill tags ──────────────────────────────────────── */
-  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  /* ── Tags ───────────────────────────────────────────── */
+  .tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
   .tag {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: #f0f4f8;
+    border: 1px solid #e2e8f0;
     border-radius: 999px;
-    padding: 4px 14px;
+    padding: 3px 12px;
     font-size: 12px;
-    color: rgba(255,255,255,0.7);
+    color: #2d4050;
     font-weight: 600;
+    display: flex; align-items: center; gap: 5px;
   }
+  .tag svg { width: 12px; height: 12px; stroke-width: 2; fill: none; }
 
   /* ── Footer ─────────────────────────────────────────── */
   .guide-footer {
-    background: #050f1a;
-    border-top: 1px solid rgba(100,223,223,0.1);
-    color: rgba(255,255,255,0.25);
+    background: #0d2137;
+    color: rgba(255,255,255,0.35);
     text-align: center;
-    padding: 24px 20px;
+    padding: 22px 20px;
     font-size: 12px;
   }
   .guide-footer span { color: #64dfdf; font-weight: 700; }
 
   /* ── Mobile ─────────────────────────────────────────── */
   @media (max-width: 600px) {
-    .cover { padding: 50px 20px 44px; }
-    .cover-logo { font-size: 48px; }
+    .cover { padding: 48px 20px 42px; }
+    .cover-logo { font-size: 46px; }
     .two-col { grid-template-columns: 1fr; }
-    .row { flex-direction: column; gap: 4px; }
+    .row { flex-direction: column; gap: 3px; }
     .row-key { min-width: unset; }
-    .content { padding: 28px 16px 48px; }
+    .content { padding: 24px 14px 48px; }
   }
 </style>
 </head>
@@ -286,9 +273,10 @@
 
   <!-- ─── איך מתחילים ───────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">🚀</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+    </div>
     <h2>איך מתחילים?</h2>
-    <div class="section-divider"></div>
   </div>
 
   <table class="steps">
@@ -302,27 +290,55 @@
 
   <!-- ─── מבנה האפליקציה ───────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">🗂️</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+    </div>
     <h2>מבנה האפליקציה</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="two-col">
     <div class="col-box green">
-      <div class="col-box-title">💳 ניהול כספים</div>
+      <div class="col-box-title">
+        <svg stroke="#16a34a" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        ניהול כספים
+      </div>
       <ul>
-        <li>⚙️ הגדרות טיול</li>
-        <li>💳 הוצאות</li>
-        <li>💰 תקציב והתחשבנות</li>
+        <li>
+          <svg stroke="#64dfdf" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          הגדרות טיול
+        </li>
+        <li>
+          <svg stroke="#64dfdf" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          הוצאות
+        </li>
+        <li>
+          <svg stroke="#64dfdf" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.18 13.72A10 10 0 1 0 10.28 2.82"/></svg>
+          תקציב והתחשבנות
+        </li>
       </ul>
     </div>
     <div class="col-box teal">
-      <div class="col-box-title">🌴 ניהול טיול</div>
+      <div class="col-box-title">
+        <svg stroke="#0891b2" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+        ניהול טיול
+      </div>
       <ul>
-        <li>📅 יומן</li>
-        <li>✨ המלצות</li>
-        <li>🎒 רשימת אריזה</li>
-        <li>🗺️ מפה</li>
+        <li>
+          <svg stroke="#64dfdf" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          יומן
+        </li>
+        <li>
+          <svg stroke="#64dfdf" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/></svg>
+          המלצות
+        </li>
+        <li>
+          <svg stroke="#64dfdf" viewBox="0 0 24 24"><path d="M4 20V10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="12" x2="12" y1="11" y2="17"/><line x1="9" x2="15" y1="14" y2="14"/></svg>
+          רשימת אריזה
+        </li>
+        <li>
+          <svg stroke="#64dfdf" viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
+          מפה
+        </li>
       </ul>
     </div>
   </div>
@@ -330,14 +346,17 @@
 
   <!-- ─── הגדרות טיול ──────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">⚙️</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
     <h2>הגדרות טיול</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(26,92,107,0.6), rgba(42,123,140,0.6));">
-      <div class="card-emoji">⚙️</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #1A5C6B, #2A7B8C);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
       <div>
         <div class="card-title">הגדרות טיול</div>
         <div class="card-desc">הבסיס של כל הטיול — מלא לפני שמתחילים</div>
@@ -354,14 +373,17 @@
 
   <!-- ─── הוצאות ───────────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">💳</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+    </div>
     <h2>הוצאות</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(192,85,42,0.5), rgba(232,112,74,0.5));">
-      <div class="card-emoji">💳</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #c0552a, #E8704A);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+      </div>
       <div>
         <div class="card-title">רישום הוצאות</div>
         <div class="card-desc">כל הוצאה במהלך הטיול</div>
@@ -369,52 +391,68 @@
     </div>
     <div class="card-body">
       <div class="row">
-        <div class="row-key">📂 קטגוריות</div>
+        <div class="row-key">קטגוריות</div>
         <div class="row-val">
           <div class="tags">
-            <span class="tag">✈️ טיסה</span>
-            <span class="tag">🏨 מלון</span>
-            <span class="tag">🎡 אטרקציה</span>
-            <span class="tag">🍜 אוכל</span>
-            <span class="tag">🚕 מונית</span>
-            <span class="tag">📦 אחר</span>
+            <span class="tag">
+              <svg viewBox="0 0 24 24" stroke="#64dfdf"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21 4 21 4s-2 0-3.5 1.5L14 9l-8.2-1.8L4 8.9l6.8 2.4-1.8 4.5L7 16.5l-1.5-1.5-1.5 1.5L5.5 18l1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5-1.5-1.5 4.5-1.8 2.4 6.8z"/></svg>
+              טיסה
+            </span>
+            <span class="tag">
+              <svg viewBox="0 0 24 24" stroke="#818cf8"><path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/><path d="m9 22 .5-4"/><path d="m14.5 22-.5-4"/><path d="M6 11h12"/><path d="M6 7h12"/></svg>
+              מלון
+            </span>
+            <span class="tag">
+              <svg viewBox="0 0 24 24" stroke="#f472b6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+              אטרקציה
+            </span>
+            <span class="tag">
+              <svg viewBox="0 0 24 24" stroke="#fbbf24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+              אוכל
+            </span>
+            <span class="tag">
+              <svg viewBox="0 0 24 24" stroke="#4ade80"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="8" y="13" rx="2" ry="2"/><circle cx="5" cy="13" r="2"/><circle cx="19" cy="17" r="2"/></svg>
+              מונית
+            </span>
+            <span class="tag">
+              <svg viewBox="0 0 24 24" stroke="#94a3b8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              אחר
+            </span>
           </div>
         </div>
       </div>
       <div class="row"><div class="row-key">💱 מולטי-מטבע</div><div class="row-val">הכנס סכום בכל מטבע — ממיר לשקלים אוטומטית לפי שער עדכני</div></div>
       <div class="row"><div class="row-key">📷 סריקת קבלה</div><div class="row-val">לחץ על אייקון המצלמה, צלם קבלה — הבינה המלאכותית ממלאת סכום, מטבע ותיאור אוטומטית</div></div>
-
       <div class="sub">✈️ הוצאת טיסה</div>
       <div class="row"><div class="row-key">מספר טיסה ושעות</div><div class="row-val">מוצגים בכרטיס הטיסה וביומן — וגם משמשים לתזכורת יציאה לשדה</div></div>
-
       <div class="sub">🏨 הוצאת מלון</div>
       <div class="row"><div class="row-key">צ'ק אין / אאוט</div><div class="row-val">המלון מופיע בכל ימי השהייה ביומן</div></div>
-
-      <div class="sub">💸 חלוקת הוצאות בין משתתפים</div>
+      <div class="sub">💸 חלוקת הוצאות</div>
       <div class="row"><div class="row-key">👥 משותפת / 👤 אישית</div><div class="row-val"><strong>משותפת</strong> — נכנסת להתחשבנות הקבוצתית. <strong>אישית</strong> — לא נכנסת לחישוב</div></div>
       <div class="row"><div class="row-key">מי היה שם?</div><div class="row-val">כולם מסומנים אוטומטית. לחץ על מי שלא היה להוציא אותו מהחלוקה</div></div>
       <div class="row"><div class="row-key">💳 מי שילם?</div><div class="row-val">לחץ "+ הוסף משלם" ← בחר אדם ← הכנס סכום. אפשר כמה משלמים לאותה הוצאה</div></div>
-
       <div class="example">
         <strong>דוגמה:</strong> יצאתם 3 משפחות לסיור שעלה ₪300. רק כהן ולוי הגיעו. שילם כהן ₪300<br>
         → בסוף הטיול: לוי חייב לכהן ₪150
       </div>
-
-      <div class="row"><div class="row-key">📍 כתובת</div><div class="row-val">הוסף כתובת — לחיצה תפתח Google Maps, והמקום יופיע אוטומטית במסך המפה</div></div>
+      <div class="row"><div class="row-key">📍 כתובת</div><div class="row-val">הוסף כתובת — המקום יופיע אוטומטית במסך המפה עם סיכה צבעונית</div></div>
       <div class="row"><div class="row-key">✅ שולם</div><div class="row-val">סמן כ"שולם" לנעילת שער ההמרה — הסכום בשקלים לא ישתנה</div></div>
     </div>
   </div>
 
   <!-- ─── תקציב ─────────────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">💰</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.18 13.72A10 10 0 1 0 10.28 2.82"/></svg>
+    </div>
     <h2>תקציב והתחשבנות</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(45,107,62,0.5), rgba(74,140,92,0.5));">
-      <div class="card-emoji">💰</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #2d6b3e, #4A8C5C);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.18 13.72A10 10 0 1 0 10.28 2.82"/></svg>
+      </div>
       <div>
         <div class="card-title">תקציב והתחשבנות</div>
         <div class="card-desc">סיכום הוצאות ומי חייב למי</div>
@@ -446,14 +484,17 @@
 
   <!-- ─── יומן ──────────────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">📅</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+    </div>
     <h2>יומן</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(91,62,140,0.5), rgba(123,94,167,0.5));">
-      <div class="card-emoji">📅</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #5B3E8C, #7B5EA7);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+      </div>
       <div>
         <div class="card-title">יומן</div>
         <div class="card-desc">תצוגה חודשית ויומית עם ציר שעות</div>
@@ -469,14 +510,17 @@
 
   <!-- ─── המלצות ────────────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">✨</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/></svg>
+    </div>
     <h2>המלצות</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(26,74,122,0.5), rgba(37,99,170,0.5));">
-      <div class="card-emoji">✨</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #1a4a7a, #2563aa);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/></svg>
+      </div>
       <div>
         <div class="card-title">המלצות</div>
         <div class="card-desc">הזמנת מלונות, פעילויות והמלצות AI</div>
@@ -491,14 +535,17 @@
 
   <!-- ─── אריזה ────────────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">🎒</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M4 20V10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="12" x2="12" y1="11" y2="17"/><line x1="9" x2="15" y1="14" y2="14"/></svg>
+    </div>
     <h2>רשימת אריזה</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(159,92,255,0.5));">
-      <div class="card-emoji">🎒</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #7c3aed, #9f5cff);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M4 20V10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="12" x2="12" y1="11" y2="17"/><line x1="9" x2="15" y1="14" y2="14"/></svg>
+      </div>
       <div>
         <div class="card-title">רשימת אריזה</div>
         <div class="card-desc">ניהול ציוד לפני ובמהלך הטיול</div>
@@ -507,28 +554,31 @@
     <div class="card-body">
       <div class="row"><div class="row-key">📋 קטגוריות</div><div class="row-val">מסמכים · בגדים · טכנולוגיה · רפואה · כללי</div></div>
       <div class="row"><div class="row-key">✅ סימון פריטים</div><div class="row-val">לחץ על פריט לסימון כ"ארוז" — מד ההתקדמות מתעדכן בראש המסך</div></div>
-      <div class="row"><div class="row-key">➕ הוספה / 🗑️ מחיקה</div><div class="row-val">הקלד שם, בחר קטגוריה ולחץ הוסף. לחץ ✕ ליד פריט למחיקה</div></div>
+      <div class="row"><div class="row-key">הוספה / מחיקה</div><div class="row-val">הקלד שם, בחר קטגוריה ולחץ הוסף. לחץ ✕ ליד פריט למחיקה</div></div>
     </div>
   </div>
 
   <!-- ─── מפה ───────────────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">🗺️</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
+    </div>
     <h2>מפה</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(15,118,110,0.5), rgba(20,184,166,0.5));">
-      <div class="card-emoji">🗺️</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
+      </div>
       <div>
         <div class="card-title">מפה אינטראקטיבית</div>
         <div class="card-desc">כל מקומות הטיול במקום אחד</div>
       </div>
     </div>
     <div class="card-body">
-      <div class="row"><div class="row-key">📍 מקומות</div><div class="row-val">כל הוצאה עם כתובת מופיעה כסיכה צבעונית לפי קטגוריה — ✈️ ☑ 🏨 🍜 🚕</div></div>
-      <div class="row"><div class="row-key">🔍 זום אוטומטי</div><div class="row-val">המפה מתכווננת לגודל היעד — מדינה (תאילנד) תוצג ברמת מדינה, עיר (פראג) ברמת עיר</div></div>
+      <div class="row"><div class="row-key">📍 מקומות</div><div class="row-val">כל הוצאה עם כתובת מופיעה כסיכה צבעונית לפי קטגוריה</div></div>
+      <div class="row"><div class="row-key">🔍 זום אוטומטי</div><div class="row-val">המפה מתכווננת לגודל היעד — מדינה (תאילנד) ברמת מדינה, עיר (פראג) ברמת עיר</div></div>
       <div class="row"><div class="row-key">🤏 צביטה להגדלה</div><div class="row-val">השתמש בשתי אצבעות לזום פנימה/החוצה על המפה</div></div>
       <div class="row"><div class="row-key">↗️ ניווט</div><div class="row-val">לחץ על סיכה ← לחץ "ניווט" לפתיחת Google Maps עם ניווט ישיר</div></div>
     </div>
@@ -536,14 +586,17 @@
 
   <!-- ─── שיתוף ─────────────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">👥</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
     <h2>שיתוף הטיול</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(26,58,92,0.6), rgba(45,92,138,0.6));">
-      <div class="card-emoji">🔗</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #1a3a5c, #2d5c8a);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
       <div>
         <div class="card-title">הזמנה בקישור</div>
         <div class="card-desc">הדרך הקלה ביותר לשתף עם הקבוצה</div>
@@ -560,14 +613,17 @@
 
   <!-- ─── ממיר מטבעות ───────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">💱</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="m17 1 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="m7 23-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    </div>
     <h2>ממיר מטבעות</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(26,92,92,0.5), rgba(15,128,128,0.5));">
-      <div class="card-emoji">💱</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #1a5c5c, #0f8080);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="m17 1 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="m7 23-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </div>
       <div>
         <div class="card-title">ממיר מטבעות מהיר</div>
         <div class="card-desc">זמין בכל מסך — לא תלוי בטיול פעיל</div>
@@ -583,14 +639,17 @@
 
   <!-- ─── תזכורות ───────────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">🔔</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    </div>
     <h2>תזכורות אוטומטיות</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(146,64,14,0.5), rgba(180,83,9,0.5));">
-      <div class="card-emoji">🔔</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #92400e, #b45309);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      </div>
       <div>
         <div class="card-title">תזכורות</div>
         <div class="card-desc">לחץ 🔔 בדף הבית להפעלה</div>
@@ -605,14 +664,17 @@
 
   <!-- ─── כפתור אחורה ───────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">◀️</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
     <h2>כפתור "אחורה" באנדרואיד</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="card">
-    <div class="card-header" style="background: linear-gradient(135deg, rgba(55,65,81,0.6), rgba(75,85,99,0.6));">
-      <div class="card-emoji">◀️</div>
+    <div class="card-header" style="background: linear-gradient(135deg, #374151, #4b5563);">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
       <div>
         <div class="card-title">ניווט חכם לאחור</div>
         <div class="card-desc">כפתור הפיזי של הטלפון עובד כמצופה</div>
@@ -629,9 +691,10 @@
 
   <!-- ─── עזרה ──────────────────────────────────────── -->
   <div class="section-header">
-    <div class="section-icon-wrap">📞</div>
+    <div class="section-icon-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+    </div>
     <h2>עזרה ויצירת קשר</h2>
-    <div class="section-divider"></div>
   </div>
 
   <div class="note" style="margin-bottom:12px;">
