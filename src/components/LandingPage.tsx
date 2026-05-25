@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { Wallet, Users, Calendar, Building2, Backpack, Share2 } from "lucide-react";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -82,7 +83,7 @@ export default function LandingPage() {
           transition: all 0.2s;
         }
         .feat:hover { background: rgba(100,223,223,0.06); border-color: rgba(100,223,223,0.25); }
-        .feat-icon { font-size: 30px; margin-bottom: 10px; }
+        .feat-icon { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 14px; margin-bottom: 10px; }
         .feat-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
         .feat-desc { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; }
 
@@ -150,32 +151,32 @@ export default function LandingPage() {
           <div className="section-sub">מניהול תקציב ועד יומן פעילויות — הכל במקום אחד</div>
           <div className="features">
             <div className="feat">
-              <div className="feat-icon">💳</div>
+              <div className="feat-icon" style={{background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.25)"}}><Wallet size={22} color="#64dfdf" strokeWidth={1.5}/></div>
               <div className="feat-title">ניהול הוצאות</div>
               <div className="feat-desc">רשום כל הוצאה בכל מטבע — האפליקציה ממירה לשקלים אוטומטית לפי שער חי</div>
             </div>
             <div className="feat">
-              <div className="feat-icon">💸</div>
+              <div className="feat-icon" style={{background:"rgba(129,140,248,0.12)",border:"0.5px solid rgba(129,140,248,0.25)"}}><Share2 size={22} color="#818cf8" strokeWidth={1.5}/></div>
               <div className="feat-title">התחשבנות קבוצתית</div>
               <div className="feat-desc">בסוף הטיול — מי חייב כמה למי, חישוב אוטומטי מלא</div>
             </div>
             <div className="feat">
-              <div className="feat-icon">📅</div>
+              <div className="feat-icon" style={{background:"rgba(244,114,182,0.12)",border:"0.5px solid rgba(244,114,182,0.25)"}}><Calendar size={22} color="#f472b6" strokeWidth={1.5}/></div>
               <div className="feat-title">יומן ומסלול</div>
               <div className="feat-desc">תכנן פעילויות לכל יום, ראה מה קורה בכל שעה עם תחזית מזג אוויר</div>
             </div>
             <div className="feat">
-              <div className="feat-icon">🏨</div>
+              <div className="feat-icon" style={{background:"rgba(251,191,36,0.12)",border:"0.5px solid rgba(251,191,36,0.25)"}}><Building2 size={22} color="#fbbf24" strokeWidth={1.5}/></div>
               <div className="feat-title">המלצות מלונות ופעילויות</div>
               <div className="feat-desc">חיפוש מלונות ב-Agoda ופעילויות ב-Viator — ישירות מתוך האפליקציה</div>
             </div>
             <div className="feat">
-              <div className="feat-icon">👥</div>
+              <div className="feat-icon" style={{background:"rgba(74,222,128,0.12)",border:"0.5px solid rgba(74,222,128,0.25)"}}><Users size={22} color="#4ade80" strokeWidth={1.5}/></div>
               <div className="feat-title">שיתוף קבוצתי</div>
               <div className="feat-desc">שלח קישור הזמנה לוואטסאפ — כל חברי הטיול מצטרפים בלחיצה אחת</div>
             </div>
             <div className="feat">
-              <div className="feat-icon">🎒</div>
+              <div className="feat-icon" style={{background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.25)"}}><Backpack size={22} color="#64dfdf" strokeWidth={1.5}/></div>
               <div className="feat-title">רשימת אריזה ומפה</div>
               <div className="feat-desc">ניהול ציוד לפני הטיול, וכל מקומות הטיול על מפה אחת</div>
             </div>

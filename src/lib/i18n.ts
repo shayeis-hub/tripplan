@@ -31,7 +31,8 @@ export const translations = {
   days:            { he: "ימי טיול",              en: "days" },
   nights:          { he: "לילות",                en: "nights" },
   shared_badge:    { he: "משותף",                en: "Shared" },
-  welcome_back:    { he: "ברוך השב 👋",           en: "Welcome back 👋" },
+  welcome_back:    { he: "ברוכים הבאים",           en: "Welcome back" },
+  home_trips:      { he: "הטיולים שלי",            en: "My Trips" },
 
   // ── Login ─────────────────────────────────────────────
   login_title:      { he: "טיולון",              en: "TUlon" },

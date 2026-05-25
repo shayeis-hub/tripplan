@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/AuthContext";
+import { Sparkles, Loader, AlertCircle, MapPin, Plane, Building2, Ticket, Utensils, Car, Package, Check, Smartphone } from "lucide-react";
 
 const RF = "'Rubik',sans-serif";
 const TEAL = "#64dfdf";
@@ -11,13 +12,13 @@ const DARK_BG = "#0d2137";
 const W35 = "rgba(255,255,255,0.35)";
 const W07 = "rgba(255,255,255,0.07)";
 
-const CATS: Record<string, { label: string; icon: string }> = {
-  flight:     { label: "טיסה",       icon: "✈️" },
-  hotel:      { label: "מלון",       icon: "🏨" },
-  attraction: { label: "אטרקציות",   icon: "🎡" },
-  food:       { label: "אוכל",       icon: "🍜" },
-  taxi:       { label: "מונית",      icon: "🚕" },
-  other:      { label: "אחר",        icon: "📦" },
+const CATS: Record<string, { label: string; icon: string; Icon: React.ElementType; color: string; bg: string }> = {
+  flight:     { label: "טיסה",     icon: "✈️", Icon: Plane,     color: "#64dfdf", bg: "rgba(100,223,223,0.13)" },
+  hotel:      { label: "מלון",     icon: "🏨", Icon: Building2, color: "#818cf8", bg: "rgba(129,140,248,0.13)" },
+  attraction: { label: "אטרקציות", icon: "🎡", Icon: Ticket,    color: "#f472b6", bg: "rgba(244,114,182,0.13)" },
+  food:       { label: "אוכל",     icon: "🍜", Icon: Utensils,  color: "#fbbf24", bg: "rgba(251,191,36,0.13)"  },
+  taxi:       { label: "מונית",    icon: "🚕", Icon: Car,       color: "#4ade80", bg: "rgba(74,222,128,0.13)"  },
+  other:      { label: "אחר",      icon: "📦", Icon: Package,   color: "#94a3b8", bg: "rgba(148,163,184,0.13)" },
 };
 
 const fmtDate = (d: string) =>
@@ -107,20 +108,25 @@ export default function SharePage() {
         {/* Header */}
         <div style={{ background: "linear-gradient(160deg,#091928,#0d2137)", padding: "24px 20px 20px", borderBottom: "0.5px solid rgba(100,223,223,0.12)" }}>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>טיולון</div>
-          <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: "-0.5px" }}>✨ טיול בהשראה</div>
+          <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: "-0.5px", display: "flex", alignItems: "center", gap: 10 }}><Sparkles size={22} color={TEAL} strokeWidth={1.5}/> טיול בהשראה</div>
           <div style={{ fontSize: 12, color: W35, marginTop: 4 }}>בחר מה לקחת לטיול שלך</div>
         </div>
 
         {loading && (
           <div style={{ textAlign: "center", padding: "60px 0", color: W35 }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+              <Loader size={36} color={TEAL} strokeWidth={1.5} style={{ animation: "spin 1s linear infinite" }}/>
+            </div>
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             <div>טוען...</div>
           </div>
         )}
 
         {error && (
           <div style={{ textAlign: "center", padding: "60px 20px", color: "#ff6b6b" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>😕</div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+              <AlertCircle size={40} color="#ff6b6b" strokeWidth={1.5}/>
+            </div>
             <div style={{ fontSize: 16, fontWeight: 700 }}>{error}</div>
           </div>
         )}
@@ -130,7 +136,7 @@ export default function SharePage() {
 
             {/* Trip summary */}
             <div style={{ background: "rgba(100,223,223,0.07)", border: "0.5px solid rgba(100,223,223,0.2)", borderRadius: 16, padding: "18px" }}>
-              <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>🌍 {tripData.destination}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}><MapPin size={20} color={TEAL} strokeWidth={1.5}/> {tripData.destination}</div>
               <div style={{ fontSize: 13, color: W35 }}>
                 {fmtDate(tripData.startDate)} – {fmtDate(tripData.endDate)}
                 {nights > 0 && ` · ${nights} ימים`}
@@ -150,7 +156,7 @@ export default function SharePage() {
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {tripData.expenses?.map((e: any) => {
-                  const cat = CATS[e.category] ?? { label: e.category, icon: "📦" };
+                  const cat = CATS[e.category] ?? { label: e.category, icon: "📦", Icon: Package, color: "#94a3b8", bg: "rgba(148,163,184,0.13)" };
                   const isSelected = selected.has(e.id);
                   return (
                     <div key={e.id} onClick={() => toggleItem(e.id)}
@@ -160,13 +166,15 @@ export default function SharePage() {
                         cursor: "pointer", transition: "all 0.15s", opacity: isSelected ? 1 : 0.45 }}>
                       <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${isSelected ? TEAL : W35}`,
                         background: isSelected ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        {isSelected && <span style={{ color: DARK_BG, fontSize: 13, fontWeight: 900 }}>✓</span>}
+                        {isSelected && <Check size={13} color={DARK_BG} strokeWidth={3}/>}
                       </div>
-                      <span style={{ fontSize: 18 }}>{cat.icon}</span>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: cat.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <cat.Icon size={18} color={cat.color} strokeWidth={1.5}/>
+                      </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600 }}>{e.description || cat.label}</div>
                         {e.date && <div style={{ fontSize: 11, color: W35, marginTop: 2 }}>{fmtDate(e.date)}</div>}
-                        {e.address && <div style={{ fontSize: 11, color: W35 }}>📍 {e.address}</div>}
+                        {e.address && <div style={{ fontSize: 11, color: W35, display: "flex", alignItems: "center", gap: 4 }}><MapPin size={10} color={W35} strokeWidth={1.5}/> {e.address}</div>}
                       </div>
                     </div>
                   );
@@ -176,15 +184,20 @@ export default function SharePage() {
 
             {/* Import button */}
             {imported ? (
-              <div style={{ textAlign: "center", padding: "16px", background: "rgba(74,222,128,0.1)", border: "0.5px solid rgba(74,222,128,0.3)", borderRadius: 14, color: "#4ade80", fontWeight: 700 }}>
-                ✅ הפריטים נוספו לטיולון! מעביר אותך...
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "16px", background: "rgba(74,222,128,0.1)", border: "0.5px solid rgba(74,222,128,0.3)", borderRadius: 14, color: "#4ade80", fontWeight: 700 }}>
+                <Check size={18} color="#4ade80" strokeWidth={2.5}/> הפריטים נוספו לטיולון! מעביר אותך...
               </div>
             ) : (
               <button onClick={handleImport} disabled={importing || selected.size === 0}
                 style={{ padding: "16px", borderRadius: 14, border: "none", background: selected.size > 0 ? TEAL : W35,
                   color: DARK_BG, fontFamily: RF, fontWeight: 700, fontSize: 16, cursor: selected.size > 0 ? "pointer" : "default",
-                  opacity: importing ? 0.6 : 1 }}>
-                {importing ? "⏳ מייבא..." : !user ? "📲 התחבר וייבא לטיול שלי" : `✨ ייבא ${selected.size} פריטים לטיול חדש`}
+                  opacity: importing ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                {importing
+                  ? <><Loader size={18} color={DARK_BG} strokeWidth={2} style={{ animation: "spin 1s linear infinite" }}/> מייבא...</>
+                  : !user
+                    ? <><Smartphone size={18} color={DARK_BG} strokeWidth={2}/> התחבר וייבא לטיול שלי</>
+                    : <><Sparkles size={18} color={DARK_BG} strokeWidth={2}/> ייבא {selected.size} פריטים לטיול חדש</>
+                }
               </button>
             )}
 

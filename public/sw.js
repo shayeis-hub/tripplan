@@ -1,5 +1,5 @@
 // ── טיולון Service Worker ─────────────────────────────────────────
-const CACHE = "tulon-v1";
+const CACHE = "tulon-v2";
 
 // נכסים שנרצה לשמור ב-cache מיד בהתקנה
 const PRECACHE = [

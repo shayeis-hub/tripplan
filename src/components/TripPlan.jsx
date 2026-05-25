@@ -28,10 +28,11 @@ import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
-  Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane,
+  Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send,
   Users, User, ChevronRight, Shirt, FileText, Zap, Heart, Package,
   AlertCircle, Loader, Link as LinkIcon, Ticket, Utensils, Car,
-  Building2, Search, Clock,
+  Building2, Search, Clock, Menu, ArrowLeftRight, FileDown, BarChart2,
+  Moon, Copy, Lock, Bug, Lightbulb,
 } from "lucide-react";
 
 const catLabel=(id,lang)=>t(`cat_${id}`,lang)||id;
@@ -280,12 +281,14 @@ function KpiCard({label,value,color,icon,Icon,noFmt,sym="₪"}){
   const animated=useCountUp(value);
   const display=noFmt?Math.round(animated):`${sym}${animated.toFixed(0)}`;
   return(
-    <div style={{background:W05,border:"0.5px solid rgba(255,255,255,0.08)",borderTop:`2px solid ${color}`,borderRadius:14,padding:"14px",textAlign:"center"}}>
-      <div style={{marginBottom:6,display:"flex",alignItems:"center",justifyContent:"center",height:26}}>
-        {Icon?<Icon size={20} color={color} strokeWidth={1.5}/>:<span style={{fontSize:20}}>{icon}</span>}
+    <div style={{background:"rgba(255,255,255,0.04)",border:`0.5px solid ${color}30`,borderRadius:16,padding:"14px 16px",display:"flex",flexDirection:"column",justifyContent:"space-between",minHeight:88}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+        <div style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.4)",fontFamily:RF}}>{label}</div>
+        <div style={{width:28,height:28,borderRadius:8,background:`${color}20`,border:`0.5px solid ${color}50`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          {Icon?<Icon size={13} color={color} strokeWidth={1.5}/>:<span style={{fontSize:13}}>{icon}</span>}
+        </div>
       </div>
-      <div style={{fontFamily:RF,fontSize:20,fontWeight:700,color}}>{display}</div>
-      <div style={{fontSize:10,fontWeight:400,color:"rgba(255,255,255,0.3)",marginTop:4,letterSpacing:"0.3px"}}>{label}</div>
+      <div style={{fontFamily:RF,fontSize:22,fontWeight:800,color,marginTop:8,letterSpacing:"-0.5px"}}>{display}</div>
     </div>
   );
 }
@@ -676,34 +679,34 @@ function exportTripPDF(trip,expenses,lang="he"){
 
 function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
   const{lang}=useLang();
+  const[showJoin,setShowJoin]=useState(false);
+  const[joinLink,setJoinLink]=useState("");
+
+  const handleJoin=()=>{
+    if(!joinLink.trim())return;
+    // Extract shareId from URL or use raw value
+    const match=joinLink.trim().match(/\/trip\/([^/?#]+)/);
+    const shareId=match?match[1]:joinLink.trim();
+    window.location.href=`/trip/${shareId}`;
+  };
+
   return(
-    <div style={{minHeight:"100vh",background:DARK_BG}}>
-      <div style={{background:"linear-gradient(160deg,#091928 0%,#0d2137 100%)",padding:"36px 20px 28px",borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
-        <div style={{fontSize:10,fontWeight:400,color:"rgba(255,255,255,0.2)",letterSpacing:"1.5px",textTransform:"uppercase",marginBottom:8}}>{t("welcome_back",lang)}</div>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
-          <h1 style={{fontFamily:RF,color:"#ffffff",fontSize:38,fontWeight:900,letterSpacing:"-1px",lineHeight:1}}>{t("app_name",lang)}</h1>
-          <a href={lang==="he"?"/guide-he.html":"/guide-en.html"} target="_blank" rel="noopener noreferrer"
-            className="tap-btn"
-            style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:12,background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.3)",textDecoration:"none",flexShrink:0}}>
-            <BookOpen size={13} color={TEAL}/>
-            <span style={{fontFamily:RF,fontSize:12,fontWeight:700,color:TEAL,whiteSpace:"nowrap"}}>{lang==="he"?"מדריך למשתמש":"User Guide"}</span>
-          </a>
-        </div>
-        <p style={{fontFamily:RF,color:"rgba(255,255,255,0.3)",marginTop:6,fontSize:12,fontWeight:300,letterSpacing:"0.5px"}}>{t("app_subtitle",lang)}</p>
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)"}}>
+      {/* Header */}
+      <div style={{padding:"44px 22px 28px"}}>
+        <div style={{fontSize:10,fontWeight:400,color:"rgba(255,255,255,0.25)",letterSpacing:"1.8px",textTransform:"uppercase",marginBottom:10}}>{t("welcome_back",lang)}</div>
+        <h1 style={{fontFamily:RF,color:"#ffffff",fontSize:42,fontWeight:900,letterSpacing:"-1.5px",lineHeight:1,marginBottom:6}}>{t("app_name",lang)}</h1>
+        <p style={{fontFamily:RF,color:"rgba(255,255,255,0.3)",fontSize:13,fontWeight:300}}>{t("app_subtitle",lang)}</p>
       </div>
 
-      <div style={{padding:"20px 18px",display:"flex",flexDirection:"column",gap:10}}>
-        <button onClick={onCreate} style={{padding:"16px",borderRadius:14,border:"0.5px dashed rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.06)",color:TEAL,fontSize:15,fontWeight:600,fontFamily:RF,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-          <Plus size={15} color={TEAL} strokeWidth={2.2}/> {t("new_trip",lang)}
-        </button>
-
+      <div style={{padding:"0 18px 20px",display:"flex",flexDirection:"column",gap:10}}>
         {trips.length===0&&(
-          <div style={{textAlign:"center",padding:"40px 0",color:W35}}>
-            <div style={{width:110,height:110,borderRadius:28,background:"rgba(100,223,223,0.07)",border:"0.5px solid rgba(100,223,223,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>
-              <Plane size={48} color="rgba(100,223,223,0.4)" strokeWidth={1}/>
+          <div style={{textAlign:"center",padding:"40px 0 32px",color:W35}}>
+            <div style={{width:100,height:100,borderRadius:26,background:"rgba(100,223,223,0.07)",border:"0.5px solid rgba(100,223,223,0.18)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
+              <Send size={44} color="rgba(100,223,223,0.5)" strokeWidth={1}/>
             </div>
-            <div style={{fontSize:16,fontWeight:600,color:"#ffffff"}}>{t("no_trips",lang)}</div>
-            <div style={{fontSize:13,marginTop:6}}>{t("no_trips_sub",lang)}</div>
+            <div style={{fontSize:22,fontWeight:800,color:"#ffffff",letterSpacing:"-0.5px",marginBottom:8}}>{t("no_trips",lang)}</div>
+            <div style={{fontSize:13,color:W35,lineHeight:1.6,maxWidth:240,margin:"0 auto"}}>{t("no_trips_sub",lang)}</div>
           </div>
         )}
 
@@ -714,15 +717,13 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
           const dc=trip.displayCurrency||"ILS";
           const total=trip.expenses?.reduce((s,e)=>s+e.amountILS,0)||0;
           return(
-            <div key={trip.id} style={{borderRadius:18,overflow:"hidden",border:"0.5px solid rgba(255,255,255,0.07)",cursor:"pointer"}}
+            <div key={trip.id} style={{borderRadius:18,overflow:"hidden",border:"0.5px solid rgba(255,255,255,0.07)",cursor:"pointer",display:"flex"}}
               onClick={()=>onSelect(trip.id)}>
-              <div style={{height:3,background:`linear-gradient(90deg,${accent}ee,${accent}33)`}}/>
-              <div style={{background:W05,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,transition:"background 0.2s"}}
+              {/* Vertical accent bar on left */}
+              <div style={{width:4,flexShrink:0,background:`linear-gradient(180deg,${accent}ee,${accent}44)`}}/>
+              <div style={{flex:1,background:W05,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,transition:"background 0.2s",minWidth:0}}
                 onMouseEnter={e=>e.currentTarget.style.background=W08}
                 onMouseLeave={e=>e.currentTarget.style.background=W05}>
-                <div style={{width:46,height:46,borderRadius:14,background:`${accent}18`,border:`0.5px solid ${accent}38`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <MapPin size={20} color={accent} strokeWidth={1.5}/>
-                </div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                     <div style={{fontFamily:RF,fontSize:16,fontWeight:700,color:"#ffffff",letterSpacing:"-0.2px"}}>{trip.destination||(lang==="he"?"יעד לא מוגדר":"No destination")}</div>
@@ -733,18 +734,56 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
                     <Calendar size={10} color="rgba(255,255,255,0.28)"/>
                     <span>{trip.startDate?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:(lang==="he"?"תאריכים לא מוגדרים":"Dates not set")}{nights>0&&` · ${nights} ${t("days",lang)}`}</span>
                   </div>
-                  {total>0&&<div style={{fontSize:12,color:TEAL,fontWeight:600,marginTop:4}}>{fmtAmt(total,dc,rates)}</div>}
+                  {total>0&&<div style={{fontSize:12,color:accent,fontWeight:600,marginTop:4}}>{fmtAmt(total,dc,rates)}</div>}
                 </div>
-                <button onClick={ev=>{ev.stopPropagation();if(window.confirm(t("confirm_delete",lang)))onDelete(trip.id);}} style={{padding:"7px 9px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.12)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <Trash2 size={14} color="#ff6b6b"/>
-                </button>
+                <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                  <div style={{width:44,height:44,borderRadius:14,background:`${accent}18`,border:`0.5px solid ${accent}38`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <MapPin size={20} color={accent} strokeWidth={1.5}/>
+                  </div>
+                  <button onClick={ev=>{ev.stopPropagation();if(window.confirm(t("confirm_delete",lang)))onDelete(trip.id);}} style={{padding:"7px 8px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.12)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <Trash2 size={13} color="#ff6b6b"/>
+                  </button>
+                </div>
               </div>
             </div>
           );
         })}
 
+        {/* Action buttons */}
+        <button onClick={onCreate}
+          style={{width:"100%",padding:"16px",borderRadius:16,border:"none",background:TEAL,color:DARK_BG,fontSize:16,fontWeight:700,fontFamily:RF,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginTop:4}}>
+          <Plus size={18} color={DARK_BG} strokeWidth={2.5}/> {t("new_trip",lang)}
+        </button>
+
+        {/* OR divider */}
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{flex:1,height:"0.5px",background:"rgba(255,255,255,0.08)"}}/>
+          <span style={{fontFamily:RF,fontSize:12,color:"rgba(255,255,255,0.2)"}}>{lang==="he"?"או":"or"}</span>
+          <div style={{flex:1,height:"0.5px",background:"rgba(255,255,255,0.08)"}}/>
+        </div>
+
+        <button onClick={()=>setShowJoin(v=>!v)}
+          style={{width:"100%",padding:"14px",borderRadius:16,border:"0.5px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.04)",color:"rgba(255,255,255,0.5)",fontSize:14,fontWeight:600,fontFamily:RF,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+          <Share2 size={16} color="rgba(255,255,255,0.4)" strokeWidth={1.5}/>
+          {lang==="he"?"הצטרף לטיול משותף":"Join a shared trip"}
+        </button>
+
+        {showJoin&&(
+          <div style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:14,padding:"14px"}}>
+            <div style={{fontSize:12,color:W35,marginBottom:8,fontFamily:RF}}>{lang==="he"?"הדבק קישור שיתוף:":"Paste share link:"}</div>
+            <input value={joinLink} onChange={e=>setJoinLink(e.target.value)}
+              placeholder="https://tulon.co.il/trip/..."
+              dir="ltr"
+              style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(255,255,255,0.06)",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",marginBottom:8}}/>
+            <button onClick={handleJoin} disabled={!joinLink.trim()}
+              style={{width:"100%",padding:"12px",borderRadius:12,border:"none",background:joinLink.trim()?TEAL:"rgba(255,255,255,0.1)",color:joinLink.trim()?DARK_BG:W25,fontFamily:RF,fontWeight:700,fontSize:14,cursor:joinLink.trim()?"pointer":"default"}}>
+              {lang==="he"?"הצטרף":"Join"}
+            </button>
+          </div>
+        )}
+
         {/* Legal footer */}
-        <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",paddingTop:8,paddingBottom:4,marginTop:8}}>
+        <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",paddingTop:8,paddingBottom:4,marginTop:4}}>
           {[
             {href:"/privacy",label:lang==="he"?"מדיניות פרטיות":"Privacy Policy"},
             {href:"/terms",label:lang==="he"?"תנאי שימוש":"Terms"},
@@ -1110,156 +1149,154 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const ExpenseRow=({exp})=>{
     const cat=CATS.find(c=>c.id===exp.category);
     return(
-      <div style={{background:W05,border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"13px",borderRight:`3px solid ${cat?.color||"rgba(255,255,255,0.2)"}`,display:"flex",alignItems:"flex-start",gap:10}}>
-        <div style={{position:"relative",flexShrink:0,marginTop:2}}>
-          <div style={{width:38,height:38,borderRadius:11,background:cat?.bg||W05,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            {cat?.Icon?<cat.Icon size={19} color={cat.color} strokeWidth={1.5}/>:<span style={{fontSize:18}}>{cat?.icon}</span>}
+      <div onClick={()=>handleEdit(exp)}
+        style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"14px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",transition:"background 0.15s"}}
+        onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.07)"}
+        onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"}>
+        {/* Icon + paid badge — RTL start (physical RIGHT) */}
+        <div style={{position:"relative",flexShrink:0}}>
+          <div style={{width:46,height:46,borderRadius:13,background:cat?.bg||W05,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            {cat?.Icon?<cat.Icon size={22} color={cat?.color} strokeWidth={1.5}/>:<Package size={22} color={W35} strokeWidth={1.5}/>}
           </div>
-          <div style={{position:"absolute",bottom:-2,right:-2,width:14,height:14,borderRadius:4,background:exp.paid?"#4ade80":"#fbbf24",border:"2px solid #0d2137",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            {exp.paid?<Check size={7} color="#0d2137" strokeWidth={3}/>:<X size={7} color="#0d2137" strokeWidth={3}/>}
+          <div onClick={e=>{e.stopPropagation();onTogglePaid(exp.id);}}
+            style={{position:"absolute",bottom:-3,right:-3,width:17,height:17,borderRadius:5,background:exp.paid?"#4ade80":"#ff6b6b",border:"2.5px solid #0d2137",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            {exp.paid?<Check size={8} color="#0d2137" strokeWidth={3}/>:<X size={8} color="#0d2137" strokeWidth={3}/>}
           </div>
         </div>
+        {/* Text — middle */}
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontWeight:600,fontSize:13,color:"#ffffff",display:"flex",alignItems:"center",gap:6}}>{catLabel(cat?.id,lang)}{exp.isShared===false&&<span style={{fontSize:9,background:"rgba(167,139,250,0.15)",color:"#a78bfa",border:"0.5px solid rgba(167,139,250,0.3)",borderRadius:999,padding:"1px 6px"}}>{t("exp_personal",lang)}</span>}{exp.isShared!==false&&<span style={{fontSize:9,background:"rgba(100,223,223,0.1)",color:TEAL,border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:999,padding:"1px 6px"}}>{t("exp_shared",lang)}</span>}</div>
-          {exp.category==="hotel"&&exp.checkIn&&<div style={{fontSize:11,color:TEAL,fontWeight:600}}>{fmtDate(exp.checkIn)} → {fmtDate(exp.checkOut)} · {Math.round((new Date(exp.checkOut).getTime()-new Date(exp.checkIn).getTime())/86400000)} {t("nights",lang)}</div>}
-          {exp.category==="flight"&&exp.departureTime&&<div style={{fontSize:11,color:TEAL,fontWeight:600}}>✈️{exp.flightNumber?` ${exp.flightNumber} ·`:""} {exp.departureTime}{exp.landingTime?` → ${exp.landingTime}`:""}</div>}
-          {exp.description&&<div style={{fontSize:12,color:W35,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{exp.description}</div>}
-          <div style={{fontSize:12,color:W35,marginTop:2}}>{sym(exp.currency)}{exp.amount.toFixed(2)} ≈ <span style={{color:TEAL,fontWeight:600}}>{fmtAmt(exp.amountILS,trip.displayCurrency||"ILS",rates,2)}</span></div>
-          {/* New format: participants + payers */}
-          {exp.payers?.length>0&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
-            {exp.payers.map((py,i)=>(
-              <span key={i} style={{fontSize:11,background:personColor(py.id)+"25",color:personColor(py.id),borderRadius:6,padding:"2px 7px",fontWeight:700}}>💳 {personName(py.id)} ₪{parseFloat(py.amount||0).toFixed(0)}</span>
-            ))}
-            {exp.participants?.filter(id=>!exp.payers.find(py=>py.id===id)).map(id=>(
-              <span key={id} style={{fontSize:11,background:personColor(id)+"15",color:personColor(id),borderRadius:6,padding:"2px 7px",fontWeight:500}}>{personName(id)}</span>
-            ))}
-          </div>}
-          {/* Old format fallback */}
-          {!exp.payers?.length&&exp.paidBy&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
-            <span style={{fontSize:11,background:personColor(exp.paidBy)+"25",color:personColor(exp.paidBy),borderRadius:6,padding:"2px 7px",fontWeight:700}}>{lang==="he"?"שילם":"Paid by"}: {personName(exp.paidBy)}</span>
-            {exp.splitWith?.length>0&&exp.splitWith.map(id=>(
-              <span key={id} style={{fontSize:11,background:personColor(id)+"20",color:personColor(id),borderRadius:6,padding:"2px 7px",fontWeight:600}}>{personName(id)}</span>
-            ))}
-          </div>}
+          <div style={{fontWeight:700,fontSize:14,color:"#ffffff",fontFamily:RF}}>{catLabel(cat?.id,lang)}</div>
+          {exp.description&&<div style={{fontSize:12,color:W40,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{exp.description}</div>}
+          {exp.payers?.length>0&&(
+            <div style={{marginTop:4,display:"flex",gap:4,flexWrap:"wrap"}}>
+              {exp.payers.map((py,i)=>(
+                <span key={i} style={{fontSize:10,background:personColor(py.id)+"25",color:personColor(py.id),borderRadius:6,padding:"2px 6px",fontWeight:700,display:"inline-flex",alignItems:"center",gap:3}}>
+                  <Wallet size={8} strokeWidth={2}/>{personName(py.id)}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0}}>
-          <button onClick={()=>onTogglePaid(exp.id)} style={{padding:"5px 9px",borderRadius:8,border:"none",background:exp.paid?"rgba(74,222,128,0.12)":"rgba(255,107,107,0.12)",color:exp.paid?"#4ade80":"#ff6b6b",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>{exp.paid?(lang==="he"?"שולם":"Paid"):(lang==="he"?"ממתין":"Pending")}</button>
-          <button onClick={()=>handleEdit(exp)} style={{padding:"5px 7px",borderRadius:8,border:"none",background:"rgba(100,223,223,0.1)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,cursor:"pointer"}}>✏️</button>
-          <button onClick={()=>onDelete(exp.id)} style={{padding:"5px 7px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.1)",color:"#ff6b6b",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><Trash2 size={12} color="#ff6b6b"/></button>
+        {/* Amount + delete — RTL end (physical LEFT) */}
+        <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+          <div style={{fontWeight:700,fontSize:17,color:"#ffffff",fontFamily:RF,letterSpacing:"-0.3px"}}>{fmtAmt(exp.amountILS,trip.displayCurrency||"ILS",rates)}</div>
+          <button onClick={e=>{e.stopPropagation();onDelete(exp.id);}}
+            style={{padding:"3px 7px",borderRadius:6,border:"none",background:"rgba(255,107,107,0.1)",cursor:"pointer",display:"flex",alignItems:"center"}}>
+            <Trash2 size={11} color="#ff6b6b"/>
+          </button>
         </div>
       </div>
     );
   };
 
+  const nights=trip.startDate&&trip.endDate?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
+  const totalILS=expenses.reduce((s,e)=>s+e.amountILS,0);
+
   return(
     <div>
-      <WaveHeader title={t("exp_title",lang)} subtitle={trip.destination?`${lang==="he"?"הטיול ל":"Trip to "}${trip.destination}`:""}/>
+      <WaveHeader title={t("exp_title",lang)}
+        subtitle={trip.destination?`${trip.destination}${nights>0?` · ${nights} ${t("days",lang)}`:""}`:""}
+        action={
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>document.getElementById("receipt-input").click()} disabled={scanning}
+              style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:scanning?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:scanning?"default":"pointer",opacity:scanning?0.5:1}}>
+              {scanning?<Loader size={16} color={W40} strokeWidth={1.5} style={{animation:"spin 1s linear infinite"}}/>:<Search size={16} color={W40} strokeWidth={1.5}/>}
+            </button>
+            <button onClick={()=>{setForm(f=>({...mkForm(dates,trip.defaultCurrency,people),date:dates[0]||"",checkIn:dates[0]||""}));setShow(true);setEditId(null);}}
+              style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.12)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <Plus size={18} color={TEAL} strokeWidth={2.5}/>
+            </button>
+          </div>
+        }
+      />
 
-      <div style={{margin:"14px 16px 0",padding:"9px 14px",background:W05,borderRadius:12,fontSize:12,color:W35,display:"flex",gap:10,flexWrap:"wrap",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
-        <span>💱 {(trip.currencies||[]).filter(c=>c!=="ILS").map(code=>`1 ${code} = ₪${(rates[code]||0).toFixed(3)}`).join(" | ")}</span>
-        {ratesInfo.updated&&<span style={{color:"#4ade80"}}>✓ {ratesInfo.updated}</span>}
-        {ratesInfo.error&&<span style={{color:"#ff6b6b"}}>{ratesInfo.error}</span>}
+      {/* hidden file input for camera */}
+      <input id="receipt-input" type="file" accept="image/*" capture="environment"
+        style={{display:"none"}}
+        onChange={e=>{const f=e.target.files?.[0];e.target.value="";if(f)handleScan(f);}}/>
+
+      {/* Total card */}
+      <div style={{margin:"14px 16px 0",padding:"16px 18px",background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{fontSize:12,color:W40,fontFamily:RF}}>{lang==="he"?"סה\"כ הוצאות":"Total expenses"}</div>
+        <div style={{fontSize:22,fontWeight:800,color:TEAL,letterSpacing:"-0.5px",fontFamily:RF}}>{fmtAmt(totalILS,trip.displayCurrency||"ILS",rates)}</div>
       </div>
 
-      {/* Search bar */}
-      <div style={{padding:"12px 16px 0",display:"flex",gap:8}}>
-        <div style={{flex:1,position:"relative"}}>
-          <span style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:15,pointerEvents:"none"}}>🔍</span>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t("exp_search",lang)}
-            style={{width:"100%",padding:"10px 36px 10px 12px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,direction:"rtl",background:W07,color:"#ffffff",outline:"none"}}
-            onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
-        </div>
-        <button onClick={()=>setShowFilters(f=>!f)} style={{padding:"10px 14px",borderRadius:12,border:`0.5px solid ${showFilters||filterCat!=="all"||filterPaid!=="all"?TEAL:W15}`,background:showFilters||filterCat!=="all"||filterPaid!=="all"?TBL:"rgba(255,255,255,0.06)",color:showFilters||filterCat!=="all"||filterPaid!=="all"?TEAL:W35,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
-          <Filter size={14}/>{t("exp_filter",lang)}
-        </button>
+      {/* Category filter tabs — always visible */}
+      <div style={{padding:"12px 16px 4px",display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"none"}}>
+        <style>{`.exp-tabs::-webkit-scrollbar{display:none}`}</style>
+        {[{id:"all",label:lang==="he"?"הכל":"All",Icon:null,color:TEAL,bg:"rgba(100,223,223,0.12)"},...CATS].map(cat=>{
+          const isActive=filterCat===cat.id;
+          const color=cat.color||TEAL;
+          const bg=cat.bg||"rgba(100,223,223,0.12)";
+          return(
+            <button key={cat.id} onClick={()=>setFilterCat(cat.id)}
+              style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,padding:"10px 13px",borderRadius:14,
+                border:`0.5px solid ${isActive?color+"80":"rgba(255,255,255,0.08)"}`,
+                background:isActive?bg:"rgba(255,255,255,0.04)",
+                flexShrink:0,cursor:"pointer",
+                boxShadow:isActive?`0 0 14px ${color}30`:"none",
+                transition:"all 0.15s"}}>
+              {cat.Icon?<cat.Icon size={20} color={isActive?color:W35} strokeWidth={1.5}/>:<Receipt size={20} color={isActive?TEAL:W35} strokeWidth={1.5}/>}
+              <span style={{fontFamily:RF,fontSize:10,fontWeight:700,color:isActive?color:W35,whiteSpace:"nowrap"}}>{cat.label||(lang==="he"?"הכל":"All")}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {showFilters&&(
-        <div style={{margin:"8px 16px 0",padding:"12px",background:W05,border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:14}}>
-          <div style={{marginBottom:10}}>
-            <div style={{fontSize:12,fontWeight:700,color:W60,marginBottom:6}}>{t("exp_category",lang)}</div>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {[{id:"all",label:lang==="he"?"הכל":"All",Icon:null},...CATS].map(c=>(
-                <button key={c.id} onClick={()=>setFilterCat(c.id)} style={{padding:"5px 10px",borderRadius:999,border:`0.5px solid ${filterCat===c.id?TEAL:W12}`,background:filterCat===c.id?TB:W05,color:filterCat===c.id?TEAL:W50,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
-                  {c.Icon?<c.Icon size={11} color={filterCat===c.id?TEAL:W50}/>:<span style={{fontSize:11}}>📋</span>} {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div style={{fontSize:12,fontWeight:700,color:W60,marginBottom:6}}>{t("exp_pay_status",lang)}</div>
-            <div style={{display:"flex",gap:6}}>
-              {[{id:"all",label:lang==="he"?"הכל":"All"},{id:"paid",label:t("exp_paid",lang)},{id:"unpaid",label:t("exp_unpaid",lang)}].map(o=>(
-                <button key={o.id} onClick={()=>setFilterPaid(o.id)} style={{padding:"5px 12px",borderRadius:999,border:`0.5px solid ${filterPaid===o.id?TEAL:W12}`,background:filterPaid===o.id?TB:W05,color:filterPaid===o.id?TEAL:W50,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
-                  {o.label}
-                </button>
-              ))}
-            </div>
-          </div>
+      {scanMsg&&(
+        <div style={{margin:"8px 16px 0",borderRadius:10,padding:"8px 14px",fontSize:12,fontFamily:RF,
+          background:scanMsg.type==="ok"?"rgba(74,222,128,0.1)":"rgba(255,107,107,0.1)",
+          border:`0.5px solid ${scanMsg.type==="ok"?"rgba(74,222,128,0.4)":"rgba(255,107,107,0.4)"}`,
+          color:scanMsg.type==="ok"?"#4ade80":"#ff6b6b"}}>
+          {scanMsg.text}
         </div>
       )}
 
-      {/* Search results mode */}
-      {isFiltering?(
-        <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}>
-          <div style={{fontSize:13,color:W35,fontWeight:600}}>{t("exp_found",lang)} {allFiltered.length} {t("exp_found_suffix",lang)}</div>
-          {allFiltered.length===0?<div style={{textAlign:"center",color:W35,padding:"24px 0",fontSize:15}}>{t("exp_no_results",lang)}</div>
-          :allFiltered.map(exp=><ExpenseRow key={exp.id} exp={exp}/>)}
+      <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}>
+        {/* hidden date selector kept for form */}
+        <div style={{display:"none"}}>
+          <select value={sel} onChange={e=>setSel(e.target.value)}>{dates.map(d=><option key={d} value={d}>{d}</option>)}</select>
         </div>
-      ):(
-        <>
-          {/* Date strip */}
-          <div style={{padding:"12px 16px 0"}}>
-            <div style={{display:"flex",gap:7,overflowX:"auto",paddingBottom:6}}>
-              {dates.map(d=>{
-                const cnt=expenses.filter(e=>e.category==="hotel"?e.checkIn<=d&&e.checkOut>=d:e.date===d).length;
-                return(
-                  <button key={d} onClick={()=>setSel(d)} style={{minWidth:60,padding:"9px 7px",borderRadius:13,border:`0.5px solid ${sel===d?TEAL:"rgba(255,255,255,0.1)"}`,background:sel===d?TB:"rgba(255,255,255,0.04)",color:sel===d?"#ffffff":W40,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",textAlign:"center",flexShrink:0}}>
-                    <div style={{fontSize:10,opacity:0.8}}>{new Date(d).toLocaleDateString(lang==="he"?"he-IL":"en-US",{weekday:"short"})}</div>
-                    <div style={{fontSize:15}}>{new Date(d).getDate()}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:12}}>
-            {/* hidden file input for camera/photo */}
-            <input id="receipt-input" type="file" accept="image/*" capture="environment"
-              style={{display:"none"}}
-              onChange={e=>{const f=e.target.files?.[0];e.target.value="";if(f)handleScan(f);}}/>
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{setForm(f=>({...mkForm(dates,trip.defaultCurrency,people),date:sel,checkIn:sel}));setShow(true);}} style={{flex:1,padding:"14px",borderRadius:14,border:"0.5px dashed rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.06)",color:TEAL,fontSize:14,fontWeight:600,fontFamily:RF,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-                {t("exp_add_btn",lang)}{fmtDate(sel)}
-              </button>
-              <button onClick={()=>document.getElementById("receipt-input").click()} disabled={scanning}
-                style={{padding:"14px 16px",borderRadius:14,border:"0.5px dashed rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.06)",color:TEAL,fontSize:13,fontWeight:600,fontFamily:RF,cursor:scanning?"default":"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,opacity:scanning?0.6:1,flexShrink:0,minWidth:72}}>
-                <span style={{fontSize:20}}>{scanning?"⏳":"📷"}</span>
-                <span style={{fontSize:10,opacity:0.8}}>{scanning?t("scan_loading",lang).replace("⏳ ",""):t("scan_btn",lang).replace("📷 ","")}</span>
-              </button>
-            </div>
-            {scanMsg&&(
-              <div style={{borderRadius:10,padding:"8px 14px",fontSize:12,fontFamily:RF,
-                background:scanMsg.type==="ok"?"rgba(74,222,128,0.1)":"rgba(255,107,107,0.1)",
-                border:`0.5px solid ${scanMsg.type==="ok"?"rgba(74,222,128,0.4)":"rgba(255,107,107,0.4)"}`,
-                color:scanMsg.type==="ok"?"#4ade80":"#ff6b6b"}}>
-                {scanMsg.text}
-              </div>
-            )}
 
             {show&&(
-              <Card>
-                <h3 style={{fontFamily:RF,fontSize:17,fontWeight:700,marginBottom:14,color:"#0a3050"}}>{editId?t("exp_edit",lang):t("exp_new",lang)}</h3>
+              <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.65)",zIndex:1000,display:"flex",flexDirection:"column",justifyContent:"flex-end"}}
+                onClick={e=>{if(e.target===e.currentTarget){setShow(false);setEditId(null);}}}>
+                <div style={{background:"#0d2137",borderRadius:"24px 24px 0 0",maxHeight:"92vh",overflowY:"auto",direction:"rtl",fontFamily:RF}}>
+                  {/* Handle */}
+                  <div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}>
+                    <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.18)"}}/>
+                  </div>
+                  {/* Sheet header */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 20px 16px"}}>
+                    <button onClick={()=>{setShow(false);setEditId(null);}}
+                      style={{width:32,height:32,borderRadius:10,border:"none",background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                      <X size={17} color={W50} strokeWidth={2}/>
+                    </button>
+                    <div style={{fontSize:17,fontWeight:700,color:"#ffffff"}}>{editId?t("exp_edit",lang):t("exp_new",lang)}</div>
+                    <div style={{width:32}}/>
+                  </div>
+
+                  <div style={{padding:"0 20px 32px"}}>
 
                 {/* category */}
-                <div style={{marginBottom:14}}>
-                  <FL>{t("exp_category",lang)}</FL>
-                  <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-                    {CATS.map(cat=>(
-                      <button key={cat.id} onClick={()=>set({category:cat.id})} style={{padding:"7px 11px",borderRadius:999,border:`0.5px solid ${form.category===cat.id?cat.color:'rgba(255,255,255,0.15)'}`,background:form.category===cat.id?cat.color+'20':'rgba(255,255,255,0.05)',color:form.category===cat.id?cat.color:'rgba(255,255,255,0.6)',fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:5,boxShadow:form.category===cat.id?`0 0 0 2px ${cat.color}40`:"none"}}>
-                        {cat.Icon?<cat.Icon size={12} color={form.category===cat.id?cat.color:'rgba(255,255,255,0.6)'} strokeWidth={1.5}/>:<span style={{fontSize:12}}>{cat.icon}</span>} {catLabel(cat.id,lang)}
-                      </button>
-                    ))}
+                <div style={{marginBottom:18}}>
+                  <div style={{fontSize:11,fontWeight:600,color:W40,letterSpacing:"0.8px",textTransform:"uppercase",marginBottom:10}}>{t("exp_category",lang)}</div>
+                  <div style={{display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
+                    {CATS.map(cat=>{
+                      const isActive=form.category===cat.id;
+                      return(
+                        <button key={cat.id} onClick={()=>set({category:cat.id})}
+                          style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"10px 14px",borderRadius:16,flexShrink:0,
+                            border:`1.5px solid ${isActive?cat.color:"rgba(255,255,255,0.1)"}`,
+                            background:isActive?cat.bg:"rgba(255,255,255,0.04)",cursor:"pointer",
+                            boxShadow:isActive?`0 0 16px ${cat.color}30`:"none",transition:"all 0.15s"}}>
+                          <div style={{width:38,height:38,borderRadius:12,background:isActive?cat.bg:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                            <cat.Icon size={20} color={isActive?cat.color:W35} strokeWidth={1.5}/>
+                          </div>
+                          <span style={{fontSize:11,fontWeight:700,color:isActive?cat.color:W35,whiteSpace:"nowrap"}}>{catLabel(cat.id,lang)}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1270,7 +1307,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                     <SI label={t("hotel_checkin",lang)}  value={form.checkIn}  onChange={v=>set({checkIn:v})}  type="date" min={trip.startDate} max={trip.endDate}/>
                     <SI label={t("hotel_checkout",lang)} value={form.checkOut} onChange={v=>set({checkOut:v})} type="date" min={form.checkIn}  max={trip.endDate}/>
                     {form.checkIn&&form.checkOut&&form.checkOut>form.checkIn&&(
-                      <div style={{fontSize:12,color:TEAL,fontWeight:700,marginTop:-8,marginBottom:6}}>🌙 {Math.round((new Date(form.checkOut).getTime()-new Date(form.checkIn).getTime())/86400000)} {t("nights",lang)}</div>
+                      <div style={{fontSize:12,color:TEAL,fontWeight:700,marginTop:-8,marginBottom:6,display:"flex",alignItems:"center",gap:5}}><Moon size={12} color={TEAL} strokeWidth={1.5}/> {Math.round((new Date(form.checkOut).getTime()-new Date(form.checkIn).getTime())/86400000)} {t("nights",lang)}</div>
                     )}
                     <div style={{fontSize:11,color:W35}}>{t("hotel_total",lang)}</div>
                   </div>
@@ -1336,8 +1373,8 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                       </div>
                     </div>
                     {form.time&&form.timeEnd&&form.timeEnd>form.time&&(
-                      <div style={{fontSize:11,color:TEAL,fontWeight:600,marginTop:6}}>
-                        ⏱ {(()=>{const[sh,sm]=form.time.split(":").map(Number);const[eh,em]=form.timeEnd.split(":").map(Number);const diff=(eh*60+em)-(sh*60+sm);const h=Math.floor(diff/60),m=diff%60;return h>0?`${h}${lang==="he"?"ש׳":"h"} ${m>0?`${m}${lang==="he"?"ד׳":"m"}`:""}`.trim():`${m}${lang==="he"?"ד׳":"m"}`;})()}
+                      <div style={{fontSize:11,color:TEAL,fontWeight:600,marginTop:6,display:"flex",alignItems:"center",gap:4}}>
+                        <Clock size={11} color={TEAL} strokeWidth={2}/> {(()=>{const[sh,sm]=form.time.split(":").map(Number);const[eh,em]=form.timeEnd.split(":").map(Number);const diff=(eh*60+em)-(sh*60+sm);const h=Math.floor(diff/60),m=diff%60;return h>0?`${h}${lang==="he"?"ש׳":"h"} ${m>0?`${m}${lang==="he"?"ד׳":"m"}`:""}`.trim():`${m}${lang==="he"?"ד׳":"m"}`;})()}
                       </div>
                     )}
                   </div>
@@ -1353,7 +1390,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                 {people.length>0&&form.isShared&&(
                   <div style={{marginBottom:14,padding:"14px",background:"rgba(167,139,250,0.06)",borderRadius:14,border:"1.5px solid rgba(167,139,250,0.2)"}}>
                     {/* Who participates */}
-                    <div style={{fontWeight:700,fontSize:13,color:"#a78bfa",marginBottom:8}}>👥 {lang==="he"?"מי משתתף?":"Who participates?"}</div>
+                    <div style={{fontWeight:700,fontSize:13,color:"#a78bfa",marginBottom:8,display:"flex",alignItems:"center",gap:6}}><Users size={13} strokeWidth={2}/>{lang==="he"?"מי משתתף?":"Who participates?"}</div>
                     <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:14}}>
                       {people.map(p=>{
                         const inPart=form.participants.includes(p.id);
@@ -1366,7 +1403,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                       })}
                     </div>
                     {/* Who paid */}
-                    <div style={{fontWeight:700,fontSize:13,color:"#a78bfa",marginBottom:8}}>💳 {lang==="he"?"מי שילם?":"Who paid?"}</div>
+                    <div style={{fontWeight:700,fontSize:13,color:"#a78bfa",marginBottom:8,display:"flex",alignItems:"center",gap:6}}><Wallet size={13} strokeWidth={2}/>{lang==="he"?"מי שילם?":"Who paid?"}</div>
                     {form.payers.map((payer,i)=>{
                       const pc=people.find(p=>p.id===payer.id)?.color||"rgba(255,255,255,0.3)";
                       return(
@@ -1407,28 +1444,36 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
                 {/* Shared / Personal toggle */}
                 <div style={{display:"flex",gap:8,marginBottom:12}}>
-                  <button onClick={()=>set({isShared:true})} style={{flex:1,padding:"10px",borderRadius:12,border:`0.5px solid ${form.isShared?TEAL:W12}`,background:form.isShared?TBL:"rgba(255,255,255,0.04)",color:form.isShared?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer"}}>
-                    {t("exp_shared",lang)}
+                  <button onClick={()=>set({isShared:false})}
+                    style={{flex:1,padding:"11px 10px",borderRadius:13,border:`0.5px solid ${!form.isShared?"#a78bfa":W12}`,background:!form.isShared?"rgba(167,139,250,0.12)":"rgba(255,255,255,0.04)",color:!form.isShared?"#a78bfa":W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                    <Backpack size={14} color={!form.isShared?"#a78bfa":W35} strokeWidth={1.5}/>{t("exp_personal",lang)}
                   </button>
-                  <button onClick={()=>set({isShared:false})} style={{flex:1,padding:"10px",borderRadius:12,border:`0.5px solid ${!form.isShared?"#a78bfa":W12}`,background:!form.isShared?"rgba(167,139,250,0.12)":"rgba(255,255,255,0.04)",color:!form.isShared?"#a78bfa":W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer"}}>
-                    {t("exp_personal",lang)}
+                  <button onClick={()=>set({isShared:true})}
+                    style={{flex:1,padding:"11px 10px",borderRadius:13,border:`0.5px solid ${form.isShared?TEAL:W12}`,background:form.isShared?TBL:"rgba(255,255,255,0.04)",color:form.isShared?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                    <Users size={14} color={form.isShared?TEAL:W35} strokeWidth={1.5}/>{t("exp_shared",lang)}
                   </button>
                 </div>
-                <button onClick={()=>set({paid:!form.paid})} style={{width:"100%",padding:"11px",borderRadius:12,border:`0.5px solid ${form.paid?'#4ade80':'rgba(255,255,255,0.15)'}`,background:form.paid?'rgba(74,222,128,0.1)':'rgba(255,255,255,0.05)',color:form.paid?'#4ade80':'rgba(255,255,255,0.4)',fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-                  {form.paid?t("exp_paid",lang):t("exp_unpaid",lang)}
+                <button onClick={()=>set({paid:!form.paid})} style={{width:"100%",padding:"11px",borderRadius:12,border:`0.5px solid ${form.paid?'#4ade80':'rgba(255,255,255,0.15)'}`,background:form.paid?'rgba(74,222,128,0.1)':'rgba(255,255,255,0.05)',color:form.paid?'#4ade80':'rgba(255,255,255,0.4)',fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer",marginBottom:14,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                  {form.paid?<><Check size={14} color="#4ade80" strokeWidth={2.5}/>{t("exp_paid",lang)}</>:<><X size={14} color="rgba(255,255,255,0.4)" strokeWidth={2}/>{t("exp_unpaid",lang)}</>}
                 </button>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={editId?handleSaveEdit:handleAdd} style={{flex:2,padding:"13px",borderRadius:13,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:15,cursor:"pointer"}}>{editId?`${t("save",lang)} ✓`:`${t("add",lang)} ✓`}</button>
-                  <button onClick={()=>setShow(false)} style={{flex:1,padding:"13px",borderRadius:13,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer",color:W50}}>{t("cancel",lang)}</button>
+                <button onClick={editId?handleSaveEdit:handleAdd}
+                  style={{width:"100%",padding:"15px",borderRadius:14,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                  <Check size={18} color={DARK_BG} strokeWidth={2.5}/>{editId?t("save",lang):t("exp_new",lang)}
+                </button>
+
+                  </div>
                 </div>
-              </Card>
+              </div>
             )}
 
-            {dayExp.length===0?(<div style={{textAlign:"center",color:W25,padding:"28px 0",fontSize:14,fontFamily:RF}}><div style={{fontSize:36,marginBottom:10}}>🌊</div>{t("exp_none",lang)}</div>)
-            :dayExp.map(exp=><ExpenseRow key={exp.id} exp={exp}/>)}
+            {allFiltered.length===0
+              ?(<div style={{textAlign:"center",color:W25,padding:"28px 0",fontSize:14,fontFamily:RF}}>
+                  <Wallet size={36} color="rgba(255,255,255,0.1)" strokeWidth={1} style={{margin:"0 auto 10px",display:"block"}}/>
+                  {t("exp_none",lang)}
+                </div>)
+              :allFiltered.map(exp=><ExpenseRow key={exp.id} exp={exp}/>)
+            }
           </div>
-        </>
-      )}
     </div>
   );
 }
@@ -1492,128 +1537,113 @@ function BudgetScreen({trip,expenses,rates={}}){
   // PDF export
   const handlePDF=()=>exportTripPDF(trip,expenses,lang);
 
+  const budgetRemaining=trip.budget>0?trip.budget-total:null;
+  const budgetPct=trip.budget>0?Math.min((total/trip.budget)*100,100):0;
+  const barColor=budgetPct<70?"#4ade80":budgetPct<90?"#fbbf24":"#ff6b6b";
+
   return(
     <div>
-      <WaveHeader title={t("budget_title",lang)} subtitle={trip.destination?(lang==="he"?`סיכום הטיול ל${trip.destination}`:`Trip summary – ${trip.destination}`):""}
-        action={<button onClick={handlePDF} style={{padding:"8px 18px",borderRadius:10,border:"2px solid rgba(255,255,255,0.5)",background:W15,color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><Share2 size={13}/>{t("budget_export",lang)}</button>}/>
-      <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:14}}>
+      <WaveHeader title={t("budget_title",lang)}
+        subtitle={trip.destination?`${trip.destination}${trip.startDate&&trip.endDate?` · ${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}`:""}
+        action={<button onClick={handlePDF} style={{padding:"7px 14px",borderRadius:10,border:"0.5px solid rgba(255,255,255,0.2)",background:"rgba(255,255,255,0.07)",color:"rgba(255,255,255,0.7)",fontFamily:RF,fontWeight:600,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><FileDown size={13}/>{t("budget_export",lang)}</button>}/>
 
-        {/* Budget progress bar */}
+      <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:12}}>
+
+        {/* KPI 2x2 */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <KpiCard label={t("budget_paid",lang)}    value={fmtN(paid)}   color="#4ade80" Icon={Check}   sym={sym}/>
+          <KpiCard label={t("budget_total",lang)}   value={fmtN(total)}  color={TEAL}    Icon={Receipt} sym={sym}/>
+          {budgetRemaining!==null
+            ?<KpiCard label={t("budget_remaining",lang)} value={fmtN(Math.abs(budgetRemaining))} color="#818cf8" Icon={Wallet} sym={sym}/>
+            :<KpiCard label={t("budget_count",lang)} value={expenses.length} color="#818cf8" Icon={Wallet} noFmt/>
+          }
+          <KpiCard label={t("budget_unpaid",lang)}  value={fmtN(unpaid)} color="#fbbf24" Icon={Clock}   sym={sym}/>
+        </div>
+
+        {/* Budget progress */}
         {trip.budget>0&&(
-          <div style={{background:W05,border:"0.5px solid rgba(100,223,223,0.18)",borderRadius:16,padding:"16px"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <div style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{t("budget_progress",lang)}</div>
-              <div style={{fontFamily:RF,fontSize:13,fontWeight:700,color:TEAL}}>{fmt(trip.budget)}</div>
+          <div style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{width:32,height:32,borderRadius:9,background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <Wallet size={15} color={TEAL} strokeWidth={1.5}/>
+                </div>
+                <span style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff"}}>{t("budget_progress",lang)}</span>
+              </div>
+              <div style={{fontFamily:RF,fontSize:15,fontWeight:800,color:"rgba(255,255,255,0.7)"}}>{fmt(trip.budget)}</div>
             </div>
-            {(()=>{
-              const pct=Math.min((total/trip.budget)*100,100);
-              const over=total>trip.budget;
-              const remaining=trip.budget-total;
-              const barColor=pct<70?"#4ade80":pct<90?"#fbbf24":"#ff6b6b";
-              return(<>
-                <div style={{height:12,background:W08,borderRadius:999,overflow:"hidden",marginBottom:10}}>
-                  <div style={{height:"100%",width:`${pct}%`,background:barColor,borderRadius:999,transition:"width 0.6s"}}/>
-                </div>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontFamily:RF,marginBottom:8}}>
-                  <span style={{color:barColor,fontWeight:700}}>{pct.toFixed(1)}% {lang==="he"?"מהתקציב":"of budget"}</span>
-                  <span style={{color:over?"#ff6b6b":"#4ade80",fontWeight:700}}>
-                    {over?`${t("budget_over",lang)} ${fmt(Math.abs(remaining))}`:`${t("budget_left",lang)} ${fmt(remaining)}`}
-                  </span>
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                  {[
-                    {label:t("budget_spent",lang),value:fmt(total),color:TEAL},
-                    {label:t("budget_paid",lang),value:fmt(paid),color:"#4ade80"},
-                    {label:t("budget_remaining",lang),value:over?`-${fmt(Math.abs(remaining))}`:fmt(remaining),color:over?"#ff6b6b":"#4ade80"},
-                  ].map(item=>(
-                    <div key={item.label} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px",textAlign:"center"}}>
-                      <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:item.color}}>{item.value}</div>
-                      <div style={{fontFamily:RF,fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:2}}>{item.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </>);
-            })()}
+            <div style={{height:8,background:"rgba(255,255,255,0.08)",borderRadius:999,overflow:"hidden",marginBottom:8}}>
+              <div style={{height:"100%",width:`${budgetPct}%`,background:barColor,borderRadius:999,transition:"width 0.6s"}}/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:12,fontFamily:RF}}>
+              <span style={{color:"rgba(255,255,255,0.4)"}}>{lang==="he"?"נותרו":"Remaining"} {fmt(Math.abs(budgetRemaining||0))}</span>
+              <span style={{color:barColor,fontWeight:700}}>{budgetPct.toFixed(0)}% {lang==="he"?"מהתקציב":"of budget"}</span>
+            </div>
           </div>
         )}
 
-        {/* KPI */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          {[{label:t("budget_total",lang),value:fmtN(total),color:TEAL,Icon:Receipt,sym},{label:t("budget_paid",lang),value:fmtN(paid),color:"#4ade80",Icon:Check,sym},{label:t("budget_unpaid",lang),value:fmtN(unpaid),color:"#ff6b6b",Icon:Clock,sym},{label:t("budget_count",lang),value:expenses.length,color:"#fbbf24",Icon:Wallet,noFmt:true}].map(item=>(
-            <KpiCard key={item.label} {...item}/>
-          ))}
-        </div>
-
-        {/* Pie */}
-        {pieData.length>0&&<Card><h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:16,color:"#0a3050",textAlign:"center"}}>{t("budget_pie",lang)}</h2><PieChart data={pieData}/></Card>}
-
-        {/* Bars */}
+        {/* Category breakdown: bars + donut */}
         {byCat.length>0&&(
-          <Card>
-            <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:16,color:"#0a3050"}}>{t("budget_by_cat",lang)}</h2>
-            {byCat.map(cat=>{
-              const maxT=Math.max(...byCat.map(c=>c.total),1);
-              return(
-                <div key={cat.id} style={{marginBottom:16}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                    <div style={{fontWeight:700,fontSize:15,display:"flex",gap:6,alignItems:"center"}}>{cat.Icon?<cat.Icon size={14} color={cat.color} strokeWidth={1.5}/>:<span>{cat.icon}</span>}<span>{catLabel(cat.id,lang)}</span><span style={{fontSize:11,color:W35}}>({cat.count})</span></div>
-                    <div style={{fontFamily:RF,fontWeight:700,fontSize:15,color:TEAL}}>{fmt(cat.total)}</div>
-                  </div>
-                  <div style={{height:5,background:W08,borderRadius:999,overflow:"hidden"}}>
-                    <div style={{height:"100%",width:`${(cat.total/maxT)*100}%`,background:cat.color,borderRadius:999,transition:"width 0.5s"}}/>
-                  </div>
-                  <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:3}}>{total>0?((cat.total/total)*100).toFixed(1):0}%</div>
-                </div>
-              );
-            })}
-          </Card>
-        )}
-
-        {/* Paid bar */}
-        {expenses.length>0&&(
-          <Card>
-            <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:12,color:"#0a3050"}}>{t("budget_pay_status",lang)}</h2>
-            <div style={{display:"flex",height:6,borderRadius:999,overflow:"hidden",marginBottom:12}}>
-              <div style={{flex:paid,background:C.palm,transition:"flex 0.5s"}}/>
-              <div style={{flex:unpaid,background:C.coral,transition:"flex 0.5s"}}/>
+          <div style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <div style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{t("budget_by_cat",lang)}</div>
+              <Filter size={14} color={W35} strokeWidth={1.5}/>
             </div>
-            <div style={{display:"flex",gap:16}}>
-              {[{color:"#4ade80",label:`${t("budget_paid",lang)}: ${fmt(paid)}`},{color:"#ff6b6b",label:`${t("budget_unpaid",lang)}: ${fmt(unpaid)}`}].map(i=>(
-                <div key={i.label} style={{display:"flex",alignItems:"center",gap:6}}>
-                  <div style={{width:12,height:12,borderRadius:3,background:i.color}}/><span style={{fontSize:13,fontWeight:700}}>{i.label}</span>
-                </div>
-              ))}
+            <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+              {/* Bars */}
+              <div style={{flex:1,display:"flex",flexDirection:"column",gap:10}}>
+                {byCat.map(cat=>{
+                  const maxT=Math.max(...byCat.map(c=>c.total),1);
+                  return(
+                    <div key={cat.id}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:8,height:8,borderRadius:3,background:cat.color,flexShrink:0}}/>
+                          <span style={{fontFamily:RF,fontSize:12,color:"rgba(255,255,255,0.7)"}}>{catLabel(cat.id,lang)}</span>
+                        </div>
+                        <span style={{fontFamily:RF,fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.85)"}}>{fmt(cat.total)}</span>
+                      </div>
+                      <div style={{height:5,background:"rgba(255,255,255,0.07)",borderRadius:999,overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${(cat.total/maxT)*100}%`,background:cat.color,borderRadius:999}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Donut */}
+              <div style={{flexShrink:0}}>
+                <PieChart data={pieData}/>
+              </div>
             </div>
-          </Card>
+          </div>
         )}
 
         {/* Settlement */}
-        {people.length>=2&&(
-          <Card>
-            <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:4,color:"#0a3050"}}>{t("budget_settle",lang)}</h2>
-            <p style={{fontSize:12,color:W35,marginBottom:14}}>{t("budget_settle_sub",lang)}</p>
-            {settlement.length===0?(
-              <div style={{textAlign:"center",color:"#4ade80",padding:"16px 0",fontWeight:700,fontSize:14}}>{t("budget_balanced",lang)}</div>
-            ):settlement.map((d,i)=>(
+        {people.length>=2&&settlement.length>0&&(
+          <div style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px"}}>
+            <div style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff",marginBottom:4}}>{t("budget_settle",lang)}</div>
+            <div style={{fontSize:12,color:W35,marginBottom:12}}>{t("budget_settle_sub",lang)}</div>
+            {settlement.map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"12px",background:"rgba(255,255,255,0.04)",borderRadius:12,marginBottom:8}}>
-                <div style={{width:32,height:32,borderRadius:"50%",background:d.from.color+"30",border:`2px solid ${d.from.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:d.from.color,flexShrink:0}}>
-                  {d.from.name[0]}
-                </div>
+                <div style={{width:32,height:32,borderRadius:"50%",background:d.from.color+"30",border:`1.5px solid ${d.from.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:d.from.color,flexShrink:0}}>{d.from.name[0]}</div>
                 <div style={{flex:1}}>
                   <span style={{fontWeight:700,color:d.from.color}}>{d.from.name}</span>
-                  <span style={{color:W35,fontSize:13}}> {t("budget_owes",lang)} </span>
+                  <span style={{color:W35,fontSize:12}}> {t("budget_owes",lang)} </span>
                   <span style={{fontWeight:700,color:d.to.color}}>{d.to.name}</span>
                 </div>
-                <div style={{fontFamily:RF,fontSize:16,fontWeight:700,color:"#ff6b6b"}}>{fmt(d.amount,1)}</div>
-                <div style={{width:32,height:32,borderRadius:"50%",background:d.to.color+"30",border:`2px solid ${d.to.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:d.to.color,flexShrink:0}}>
-                  {d.to.name[0]}
-                </div>
+                <div style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ff6b6b"}}>{fmt(d.amount,1)}</div>
+                <div style={{width:32,height:32,borderRadius:"50%",background:d.to.color+"30",border:`1.5px solid ${d.to.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:d.to.color,flexShrink:0}}>{d.to.name[0]}</div>
               </div>
             ))}
-          </Card>
+          </div>
         )}
 
-        {expenses.length===0&&<div style={{textAlign:"center",color:W35,padding:"32px 0"}}><div style={{fontSize:40,marginBottom:10}}>🌺</div><div style={{fontSize:15}}>{t("budget_no_exp",lang)}</div></div>}
+        {expenses.length===0&&(
+          <div style={{textAlign:"center",color:W35,padding:"32px 0"}}>
+            <BarChart2 size={40} color="rgba(255,255,255,0.1)" strokeWidth={1} style={{margin:"0 auto 10px",display:"block"}}/>
+            <div style={{fontSize:15}}>{t("budget_no_exp",lang)}</div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1946,7 +1976,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
                     boxSizing:"border-box",
                   }}>
                   <span style={{fontSize:12,fontWeight:600,color:col,fontFamily:RF,lineHeight:1.3,flex:1,wordBreak:"break-word",overflowWrap:"break-word",whiteSpace:"pre-wrap"}}>{label}</span>
-                  {ev.data?.address&&!isAct&&<span style={{fontSize:14,marginRight:4,flexShrink:0,marginTop:2}}>🗺️</span>}
+                  {ev.data?.address&&!isAct&&<MapPin size={13} color={col} strokeWidth={1.5} style={{flexShrink:0,marginTop:2}}/>}
                 </div>
               );
             })}
@@ -1980,7 +2010,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
                   style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:10,marginBottom:6,cursor:isAct||ev.data?.address?"pointer":"default"}}>
                   <div style={{width:4,height:4,borderRadius:"50%",background:col,flexShrink:0}}/>
                   <span style={{fontSize:13,color:W70,fontFamily:RF,flex:1,wordBreak:"break-word",overflowWrap:"break-word"}}>{label}</span>
-                  {ev.data?.address&&!isAct&&<span style={{fontSize:13}}>🗺️</span>}
+                  {ev.data?.address&&!isAct&&<MapPin size={13} color={W35} strokeWidth={1.5} style={{flexShrink:0}}/>}
                 </div>
               );
             })}
@@ -2006,7 +2036,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
               <select value={act.type||"general"} onChange={e=>updateAct(i,"type",e.target.value)}
                 style={{padding:"9px 6px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:W07,color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",flexShrink:0,cursor:"pointer"}}>
                 {ACT_TYPES.map(tp=>(
-                  <option key={tp.id} value={tp.id}>{tp.icon} {lang==="he"?tp.he:tp.en}</option>
+                  <option key={tp.id} value={tp.id}>{lang==="he"?tp.he:tp.en}</option>
                 ))}
               </select>
               <input value={act.text} onChange={e=>updateAct(i,"text",e.target.value)} placeholder={t("cal_act_ph",lang)}
@@ -2043,7 +2073,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
       <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:250,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setActPopup(null)}>
         <div onClick={e=>e.stopPropagation()} style={{background:"#0d2f4a",border:"0.5px solid rgba(167,139,250,0.35)",borderRadius:20,padding:24,width:"100%",maxWidth:380,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
-            <div style={{width:52,height:52,borderRadius:14,background:"rgba(167,139,250,0.12)",border:"0.5px solid rgba(167,139,250,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0}}>{tp.icon}</div>
+            <div style={{width:52,height:52,borderRadius:14,background:"rgba(167,139,250,0.12)",border:"0.5px solid rgba(167,139,250,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><tp.Icon size={24} color="#a78bfa" strokeWidth={1.5}/></div>
             <div>
               <div style={{fontFamily:RF,fontSize:11,color:"rgba(167,139,250,0.7)",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",marginBottom:2}}>{lang==="he"?tp.he:tp.en}</div>
               <div style={{fontFamily:RF,fontSize:17,fontWeight:700,color:"#ffffff"}}>{act.text}</div>
@@ -2310,19 +2340,21 @@ function TripSplashScreen({trip,onBudget,onTrip,isViewOnly,lang}){
   return(
     <div style={{padding:"32px 20px",display:"flex",flexDirection:"column",gap:16,minHeight:"55vh",justifyContent:"center"}}>
       <div style={{textAlign:"center",marginBottom:8}}>
-        <div style={{fontSize:48,marginBottom:8}}>🌴</div>
+        <div style={{width:64,height:64,borderRadius:20,background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px"}}>
+          <MapPin size={30} color="#64dfdf" strokeWidth={1.5}/>
+        </div>
         <div style={{fontSize:22,fontWeight:800,color:"#ffffff",fontFamily:RF,letterSpacing:"-0.5px"}}>{trip.destination||(lang==="he"?"הטיול שלי":"My Trip")}</div>
         {trip.startDate&&trip.endDate&&(
           <div style={{fontSize:13,color:W35,marginTop:5,fontFamily:RF}}>{fmtDate(trip.startDate)} – {fmtDate(trip.endDate)}</div>
         )}
         {(trip.people||[]).length>0&&(
-          <div style={{fontSize:12,color:W35,marginTop:3,fontFamily:RF}}>👥 {(trip.people||[]).map(p=>p.name||p).join(" · ")}</div>
+          <div style={{fontSize:12,color:W35,marginTop:3,fontFamily:RF,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Users size={12} color={W35} strokeWidth={1.5}/> {(trip.people||[]).map(p=>p.name||p).join(" · ")}</div>
         )}
       </div>
 
       {!isViewOnly&&(
         <button onClick={onBudget} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(74,222,128,0.35)",background:"linear-gradient(135deg,rgba(74,222,128,0.12),rgba(74,222,128,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"right"}}>
-          <div style={{width:56,height:56,borderRadius:16,background:"rgba(74,222,128,0.15)",border:"0.5px solid rgba(74,222,128,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0}}>💳</div>
+          <div style={{width:56,height:56,borderRadius:16,background:"rgba(74,222,128,0.15)",border:"0.5px solid rgba(74,222,128,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Wallet size={26} color="#4ade80" strokeWidth={1.5}/></div>
           <div>
             <div style={{fontSize:18,fontWeight:800,color:"#ffffff",fontFamily:RF}}>{lang==="he"?"ניהול תקציב":"Budget Management"}</div>
             <div style={{fontSize:13,color:W40,marginTop:3,fontFamily:RF}}>{lang==="he"?"הוצאות, תקציב והתחשבנות":"Expenses, budget & settlement"}</div>
@@ -2331,7 +2363,7 @@ function TripSplashScreen({trip,onBudget,onTrip,isViewOnly,lang}){
       )}
 
       <button onClick={onTrip} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(100,223,223,0.35)",background:"linear-gradient(135deg,rgba(100,223,223,0.12),rgba(100,223,223,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"right"}}>
-        <div style={{width:56,height:56,borderRadius:16,background:"rgba(100,223,223,0.15)",border:"0.5px solid rgba(100,223,223,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0}}>🗺️</div>
+        <div style={{width:56,height:56,borderRadius:16,background:"rgba(100,223,223,0.15)",border:"0.5px solid rgba(100,223,223,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Map size={26} color="#64dfdf" strokeWidth={1.5}/></div>
         <div>
           <div style={{fontSize:18,fontWeight:800,color:"#ffffff",fontFamily:RF}}>{lang==="he"?"ניהול טיול":"Trip Management"}</div>
           <div style={{fontSize:13,color:W40,marginTop:3,fontFamily:RF}}>{lang==="he"?"יומן, המלצות, מפה ואריזה":"Calendar, tips, map & packing"}</div>
@@ -2343,11 +2375,11 @@ function TripSplashScreen({trip,onBudget,onTrip,isViewOnly,lang}){
 
 // ── PACKING LIST SCREEN ───────────────────────────────────────────────────────
 const PACK_CATS=[
-  {id:"docs",   icon:"📄", Icon:FileText, he:"מסמכים",     en:"Documents"},
-  {id:"clothes",icon:"👕", Icon:Shirt,    he:"ביגוד",      en:"Clothing"},
-  {id:"tech",   icon:"📱", Icon:Zap,      he:"אלקטרוניקה", en:"Electronics"},
-  {id:"medical",icon:"💊", Icon:Heart,    he:"תרופות",     en:"Medical"},
-  {id:"other",  icon:"🎒", Icon:Package,  he:"אחר",        en:"Other"},
+  {id:"clothes",Icon:Shirt,    he:"בגדים",       en:"Clothing",    color:"#64dfdf", bg:"rgba(100,223,223,0.12)"},
+  {id:"docs",   Icon:FileText, he:"מסמכים",      en:"Documents",   color:"#fbbf24", bg:"rgba(251,191,36,0.12)"},
+  {id:"tech",   Icon:Zap,      he:"אלקטרוניקה",  en:"Electronics", color:"#fbbf24", bg:"rgba(251,191,36,0.12)"},
+  {id:"medical",Icon:Heart,    he:"בריאות",       en:"Health",      color:"#f472b6", bg:"rgba(244,114,182,0.12)"},
+  {id:"other",  Icon:Package,  he:"אחר",          en:"Other",       color:"#94a3b8", bg:"rgba(148,163,184,0.12)"},
 ];
 const DEFAULT_PACK=(lang)=>[
   {id:"d1",text:lang==="he"?"דרכון":"Passport",           category:"docs",   checked:false},
@@ -2370,79 +2402,123 @@ const DEFAULT_PACK=(lang)=>[
 function PackingListScreen({trip,onUpdate}){
   const{lang}=useLang();
   const[items,setItems]=useState(()=>trip.packingList||DEFAULT_PACK(lang));
+  const[expanded,setExpanded]=useState(()=>{
+    const obj={};
+    PACK_CATS.forEach((c,i)=>{obj[c.id]=i<2;});
+    return obj;
+  });
+  const[addingTo,setAddingTo]=useState(null);
   const[newText,setNewText]=useState("");
-  const[newCat,setNewCat]=useState("other");
 
   const save=updated=>{setItems(updated);onUpdate({packingList:updated});};
-
   const toggle=id=>save(items.map(it=>it.id===id?{...it,checked:!it.checked}:it));
   const del=id=>save(items.filter(it=>it.id!==id));
-  const addItem=()=>{
+  const addItem=(catId)=>{
     if(!newText.trim())return;
-    save([...items,{id:uid(),text:newText.trim(),category:newCat,checked:false}]);
+    save([...items,{id:uid(),text:newText.trim(),category:catId,checked:false}]);
     setNewText("");
+    setAddingTo(null);
   };
-  const resetAll=()=>save(items.map(it=>({...it,checked:false})));
+  const toggleCat=id=>setExpanded(ex=>({...ex,[id]:!ex[id]}));
 
   const total=items.length;
   const done=items.filter(it=>it.checked).length;
   const pct=total?Math.round(done/total*100):0;
+  const nights=trip.startDate&&trip.endDate?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
 
   return(
-    <div>
-      <WaveHeader title={lang==="he"?"רשימת אריזה":"Packing List"} subtitle={`${done}/${total} ${lang==="he"?"סומן":"packed"}`}/>
-      <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:16}}>
-
-        {/* Progress */}
-        <div style={{background:W05,border:`0.5px solid ${W08}`,borderRadius:14,padding:"14px 16px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-            <span style={{color:"#ffffff",fontWeight:700,fontSize:14,fontFamily:RF}}>{lang==="he"?"התקדמות":"Progress"}</span>
-            <span style={{color:pct===100?"#4ade80":TEAL,fontWeight:700,fontSize:14}}>{pct}%</span>
-          </div>
-          <div style={{height:6,background:W12,borderRadius:999,overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${pct}%`,background:pct===100?"#4ade80":TEAL,borderRadius:999,transition:"width 0.3s"}}/>
-          </div>
-          {done>0&&<button onClick={resetAll} style={{marginTop:10,fontSize:11,color:W35,background:"none",border:"none",cursor:"pointer",fontFamily:RF}}>↺ {lang==="he"?"אפס הכל":"Reset all"}</button>}
+    <div style={{minHeight:"100vh",background:DARK_BG,fontFamily:RF}}>
+      {/* Header */}
+      <div style={{background:"linear-gradient(160deg,#091928 0%,#0d2137 100%)",padding:"20px 20px 18px",borderBottom:"0.5px solid rgba(100,223,223,0.08)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div style={{fontSize:26,fontWeight:800,color:TEAL,letterSpacing:"-0.5px"}}>{done}/{total}</div>
+          <div style={{fontSize:26,fontWeight:800,color:"#ffffff",letterSpacing:"-0.5px"}}>{lang==="he"?"אריזה":"Packing"}</div>
         </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <div style={{fontSize:12,color:W35,fontWeight:500}}>{pct}% {lang==="he"?"הושלם":"complete"}</div>
+          <div style={{fontSize:12,color:W35,display:"flex",alignItems:"center",gap:4}}>
+            {trip.destination}{nights>0&&` • ${nights} ${lang==="he"?"ימים":"days"}`}
+          </div>
+        </div>
+        <div style={{height:5,background:"rgba(255,255,255,0.08)",borderRadius:999,overflow:"hidden"}}>
+          <div style={{height:"100%",width:`${pct}%`,background:pct===100?"#4ade80":TEAL,borderRadius:999,transition:"width 0.4s ease"}}/>
+        </div>
+      </div>
 
-        {/* Items by category */}
+      {/* Category accordions */}
+      <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:8}}>
         {PACK_CATS.map(cat=>{
           const catItems=items.filter(it=>it.category===cat.id);
-          if(!catItems.length)return null;
+          const catDone=catItems.filter(it=>it.checked).length;
+          const isOpen=!!expanded[cat.id];
+          const allDone=catItems.length>0&&catDone===catItems.length;
           return(
-            <div key={cat.id}>
-              <div style={{fontSize:11,fontWeight:700,color:W35,letterSpacing:"1px",textTransform:"uppercase",marginBottom:8,fontFamily:RF,display:"flex",alignItems:"center",gap:6}}>{cat.Icon?<cat.Icon size={13} color={W35} strokeWidth={1.5}/>:<span>{cat.icon}</span>} {lang==="he"?cat.he:cat.en}</div>
-              {catItems.map(item=>(
-                <div key={item.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:item.checked?"rgba(74,222,128,0.06)":W05,border:`0.5px solid ${item.checked?"rgba(74,222,128,0.2)":W12}`,borderRadius:10,marginBottom:6}}>
-                  <div onClick={()=>toggle(item.id)} style={{width:22,height:22,borderRadius:6,border:`2px solid ${item.checked?"#4ade80":W35}`,background:item.checked?"#4ade80":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
-                    {item.checked&&<Check size={11} color={DARK_BG} strokeWidth={3}/>}
-                  </div>
-                  <span style={{flex:1,fontSize:14,color:item.checked?W35:"#ffffff",fontFamily:RF,textDecoration:item.checked?"line-through":"none"}}>{item.text}</span>
-                  <button onClick={()=>del(item.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"2px 4px",flexShrink:0,display:"flex",alignItems:"center"}}><X size={13} color="rgba(255,107,107,0.4)"/></button>
+            <div key={cat.id} style={{borderRadius:16,overflow:"hidden",border:`0.5px solid ${isOpen?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.06)"}`,background:W05}}>
+              {/* Category header */}
+              <div onClick={()=>toggleCat(cat.id)}
+                style={{display:"flex",alignItems:"center",gap:10,padding:"14px 14px",cursor:"pointer",userSelect:"none"}}>
+                <ChevronRight size={16} color={W35} strokeWidth={2.5}
+                  style={{transform:isOpen?"rotate(90deg)":"rotate(0deg)",transition:"transform 0.2s",flexShrink:0}}/>
+                <div style={{fontSize:13,fontWeight:600,color:allDone?"#4ade80":W40,minWidth:32,flexShrink:0}}>
+                  {catDone}/{catItems.length}
                 </div>
-              ))}
+                <div style={{flex:1}}/>
+                <div style={{fontSize:15,fontWeight:700,color:"#ffffff"}}>{lang==="he"?cat.he:cat.en}</div>
+                <div style={{width:36,height:36,borderRadius:10,background:cat.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginRight:2}}>
+                  <cat.Icon size={18} color={cat.color} strokeWidth={1.5}/>
+                </div>
+              </div>
+
+              {/* Expanded content */}
+              {isOpen&&(
+                <div style={{borderTop:"0.5px solid rgba(255,255,255,0.06)"}}>
+                  {catItems.length===0&&(
+                    <div style={{padding:"12px 14px",fontSize:13,color:W25,textAlign:"center"}}>{lang==="he"?"אין פריטים עדיין":"No items yet"}</div>
+                  )}
+                  {catItems.map(item=>(
+                    <div key={item.id} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderBottom:"0.5px solid rgba(255,255,255,0.04)"}}>
+                      <div onClick={()=>toggle(item.id)}
+                        style={{width:22,height:22,borderRadius:7,border:`2px solid ${item.checked?"#4ade80":W25}`,
+                          background:item.checked?"#4ade80":"transparent",
+                          display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,transition:"all 0.15s"}}>
+                        {item.checked&&<Check size={11} color={DARK_BG} strokeWidth={3}/>}
+                      </div>
+                      <span style={{flex:1,fontSize:14,color:item.checked?W35:"#ffffff",fontFamily:RF,
+                        textDecoration:item.checked?"line-through":"none",transition:"all 0.15s"}}>{item.text}</span>
+                      <button onClick={()=>del(item.id)}
+                        style={{background:"none",border:"none",cursor:"pointer",padding:"3px 5px",opacity:0.35,display:"flex",alignItems:"center"}}>
+                        <X size={13} color="#ff6b6b"/>
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Add item row */}
+                  {addingTo===cat.id?(
+                    <div style={{display:"flex",gap:8,padding:"10px 14px",borderTop:"0.5px solid rgba(100,223,223,0.1)"}}>
+                      <input value={newText} onChange={e=>setNewText(e.target.value)}
+                        onKeyDown={e=>{if(e.key==="Enter")addItem(cat.id);if(e.key==="Escape"){setAddingTo(null);setNewText("");}}}
+                        autoFocus
+                        placeholder={lang==="he"?"שם הפריט...":"Item name..."}
+                        style={{flex:1,padding:"8px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:W07,color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none"}}/>
+                      <button onClick={()=>addItem(cat.id)}
+                        style={{padding:"8px 14px",borderRadius:10,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>
+                        {lang==="he"?"הוסף":"Add"}
+                      </button>
+                    </div>
+                  ):(
+                    <button onClick={()=>{setAddingTo(cat.id);setNewText("");}}
+                      style={{width:"100%",padding:"10px 14px",background:"none",border:"none",
+                        borderTop:"0.5px solid rgba(255,255,255,0.04)",color:W35,fontFamily:RF,
+                        fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6}}>
+                      <Plus size={13} color={W35} strokeWidth={2}/>
+                      {lang==="he"?"הוסף פריט":"Add item"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
-
-        {/* Add item */}
-        <div style={{background:W05,border:"0.5px dashed rgba(100,223,223,0.25)",borderRadius:14,padding:"14px"}}>
-          <div style={{fontSize:11,color:W35,fontWeight:600,marginBottom:10,fontFamily:RF}}>{lang==="he"?"+ הוסף פריט":"+ Add item"}</div>
-          <div style={{display:"flex",gap:8,marginBottom:8}}>
-            <select value={newCat} onChange={e=>setNewCat(e.target.value)}
-              style={{padding:"9px 6px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:W07,color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",flexShrink:0}}>
-              {PACK_CATS.map(c=><option key={c.id} value={c.id}>{lang==="he"?c.he:c.en}</option>)}
-            </select>
-            <input value={newText} onChange={e=>setNewText(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&addItem()}
-              placeholder={lang==="he"?"פריט חדש...":"New item..."}
-              style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:W07,color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none"}}/>
-          </div>
-          <button onClick={addItem} style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>
-            {lang==="he"?"הוסף":"Add"}
-          </button>
-        </div>
-
       </div>
     </div>
   );
@@ -2479,65 +2555,119 @@ function MapScreen({trip,expenses}){
     byDate[d].push(p);
   });
 
+  // Flat list of ALL placed expenses for the bottom sheet
+  const allPlaced=expenses.filter(e=>e.address);
+  const totalPlaced=allPlaced.reduce((s,e)=>s+e.amountILS,0);
+  const dc=trip.displayCurrency||"ILS";
+
+  // Pin accent colors per category
+  const PIN_COLORS={"flight":TEAL,"hotel":"#818cf8","attraction":"#f472b6","food":"#fbbf24","taxi":"#4ade80","other":"#94a3b8"};
+
   return(
-    <div>
-      <WaveHeader title={lang==="he"?"🗺️ מפה":"🗺️ Map"} subtitle={dest}/>
-      <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:12}}>
+    <div style={{minHeight:"100vh",background:DARK_BG,fontFamily:RF,display:"flex",flexDirection:"column"}}>
 
-        {/* Open destination in Google Maps */}
-        <button onClick={()=>window.open(`https://www.google.com/maps/search/${encDest}`,"_blank")}
-          style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:"linear-gradient(135deg,#4285F4,#34A853)",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-          🗺️ {lang==="he"?`פתח מפה של ${dest}`:`Open map of ${dest}`}
-        </button>
+      {/* ── Map visual area ─────────────────────────── */}
+      <div style={{flex:1,position:"relative",overflow:"hidden",background:"linear-gradient(160deg,#081520 0%,#0d2137 50%,#0a1e30 100%)"}}>
 
-        {/* Places with addresses */}
-        {places.length>0&&(
-          <div>
-            <div style={{fontSize:11,fontWeight:700,color:W35,letterSpacing:"0.5px",marginBottom:10,fontFamily:RF,textTransform:"uppercase"}}>
-              {lang==="he"?"📍 מקומות עם כתובת":"📍 Places with address"}
-            </div>
-            {Object.entries(byDate).sort().map(([date,ps])=>(
-              <div key={date} style={{marginBottom:12}}>
-                {date&&<div style={{fontSize:11,color:TEAL,fontWeight:600,marginBottom:6,fontFamily:RF}}>{fmtDate(date)}</div>}
-                {ps.map((p,i)=>(
-                  <div key={i} onClick={()=>window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address)}`,"_blank")}
-                    style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:W05,border:`0.5px solid ${W08}`,borderRadius:10,marginBottom:6,cursor:"pointer"}}>
-                    <span style={{fontSize:18,flexShrink:0}}>{p.icon}</span>
-                    <span style={{flex:1,fontSize:13,color:"#ffffff",fontFamily:RF}}>{p.label}</span>
-                    <span style={{fontSize:13,color:W35}}>🗺️</span>
-                  </div>
-                ))}
+        {/* Grid lines (street-like pattern) */}
+        <svg width="100%" height="100%" style={{position:"absolute",inset:0,opacity:0.12}} xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#64dfdf" strokeWidth="0.5"/>
+            </pattern>
+            <pattern id="road-h" width="180" height="180" patternUnits="userSpaceOnUse">
+              <rect y="80" width="180" height="4" fill="#1a3a54"/>
+              <rect x="80" width="4" height="180" fill="#1a3a54"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)"/>
+          <rect width="100%" height="100%" fill="url(#road-h)"/>
+        </svg>
+
+        {/* Park blob */}
+        <div style={{position:"absolute",bottom:"28%",left:"50%",transform:"translateX(-50%)",width:110,height:70,borderRadius:"50%",background:"rgba(34,197,94,0.08)",border:"0.5px solid rgba(34,197,94,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <span style={{fontSize:10,color:"rgba(34,197,94,0.4)",fontWeight:600,letterSpacing:"1px",textTransform:"uppercase"}}>PARK</span>
+        </div>
+
+        {/* Destination name + open button — centered */}
+        <div style={{position:"absolute",top:24,left:0,right:0,display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"0 20px"}}>
+          <div style={{background:"rgba(13,33,55,0.85)",backdropFilter:"blur(8px)",borderRadius:16,padding:"10px 18px",border:"0.5px solid rgba(100,223,223,0.2)",display:"flex",alignItems:"center",gap:8}}>
+            <MapPin size={14} color={TEAL} strokeWidth={1.5}/>
+            <span style={{fontSize:14,fontWeight:700,color:"#ffffff"}}>{dest||"מפה"}</span>
+          </div>
+          <button onClick={()=>window.open(`https://www.google.com/maps/search/${encDest}`,"_blank")}
+            style={{background:"linear-gradient(135deg,#4285F4,#34A853)",border:"none",borderRadius:12,padding:"8px 18px",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:7}}>
+            <Map size={14} strokeWidth={2}/> {lang==="he"?"פתח ב-Google Maps":"Open in Google Maps"}
+          </button>
+        </div>
+
+        {/* Decorative pins — scattered on "map" */}
+        {allPlaced.slice(0,8).map((exp,i)=>{
+          const cat=CATS.find(c=>c.id===exp.category);
+          const color=PIN_COLORS[exp.category]||"#94a3b8";
+          const positions=[
+            {top:"22%",left:"52%"},{top:"30%",left:"70%"},{top:"38%",left:"38%"},
+            {top:"48%",left:"62%"},{top:"55%",left:"30%"},{top:"60%",left:"72%"},
+            {top:"68%",left:"45%"},{top:"32%",left:"22%"},
+          ];
+          const pos=positions[i%positions.length];
+          return(
+            <div key={exp.id} style={{position:"absolute",...pos,transform:"translate(-50%,-100%)",display:"flex",flexDirection:"column",alignItems:"center",zIndex:10}}>
+              <div style={{width:36,height:36,borderRadius:10,background:`${color}22`,border:`1.5px solid ${color}99`,backdropFilter:"blur(4px)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 12px ${color}33`}}>
+                {cat?.Icon?<cat.Icon size={16} color={color} strokeWidth={1.5}/>:<MapPin size={16} color={color} strokeWidth={1.5}/>}
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Activities (no address) */}
-        {actPlaces.length>0&&(
-          <div>
-            <div style={{fontSize:11,fontWeight:700,color:W35,letterSpacing:"0.5px",marginBottom:10,fontFamily:RF,textTransform:"uppercase"}}>
-              {lang==="he"?"📋 פעילויות מתוכננות":"📋 Planned activities"}
+              <div style={{width:2,height:8,background:`${color}80`}}/>
+              <div style={{width:5,height:5,borderRadius:"50%",background:color,opacity:0.7}}/>
             </div>
-            {actPlaces.map((p,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:W05,border:`0.5px solid ${W08}`,borderRadius:10,marginBottom:6}}>
-                <span style={{fontSize:16,flexShrink:0}}>{p.icon}</span>
-                <span style={{flex:1,fontSize:13,color:"#ffffff",fontFamily:RF}}>{p.label}</span>
-                {p.date&&<span style={{fontSize:11,color:W35}}>{fmtDate(p.date)}</span>}
-              </div>
-            ))}
-          </div>
-        )}
+          );
+        })}
 
-        {places.length===0&&actPlaces.length===0&&(
-          <div style={{textAlign:"center",padding:"48px 0",color:W35}}>
-            <div style={{width:90,height:90,borderRadius:24,background:"rgba(100,223,223,0.07)",border:"0.5px solid rgba(100,223,223,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px"}}><Map size={40} color="rgba(100,223,223,0.4)" strokeWidth={1}/></div>
-            <div style={{fontSize:14,fontWeight:600,fontFamily:RF,color:W40}}>
-              {lang==="he"?"הוסף כתובות להוצאות כדי לראות מקומות במפה":"Add addresses to expenses to see places on the map"}
+        {/* Empty state overlay (no expenses with addresses) */}
+        {allPlaced.length===0&&(
+          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px"}}>
+            <div style={{background:"rgba(13,33,55,0.88)",backdropFilter:"blur(8px)",borderRadius:20,padding:"28px 24px",textAlign:"center",border:"0.5px solid rgba(100,223,223,0.15)"}}>
+              <Map size={36} color="rgba(100,223,223,0.4)" strokeWidth={1} style={{margin:"0 auto 12px",display:"block"}}/>
+              <div style={{fontSize:14,fontWeight:700,color:"#ffffff",marginBottom:6}}>{lang==="he"?"אין מקומות ממופים":"No mapped places"}</div>
+              <div style={{fontSize:12,color:W35,lineHeight:1.5}}>{lang==="he"?"הוסף כתובות להוצאות\nכדי לראות אותן כאן":"Add addresses to expenses\nto see them here"}</div>
             </div>
           </div>
         )}
-
       </div>
+
+      {/* ── Bottom sheet ───────────────────────────── */}
+      {allPlaced.length>0&&(
+        <div style={{background:"rgba(9,25,40,0.97)",borderTop:"0.5px solid rgba(100,223,223,0.12)",padding:"14px 18px 18px",flexShrink:0}}>
+          {/* Handle */}
+          <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
+            <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.15)"}}/>
+          </div>
+          {/* Header row */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:12}}>
+            <div style={{fontSize:20,fontWeight:800,color:"#ffffff",letterSpacing:"-0.5px"}}>{fmtAmt(totalPlaced,dc,{})}</div>
+            <div style={{fontSize:12,fontWeight:600,color:W40}}>{lang==="he"?"הוצאות ממופות":"Mapped expenses"}</div>
+          </div>
+          {/* Horizontal scroll cards */}
+          <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
+            {allPlaced.map(exp=>{
+              const cat=CATS.find(c=>c.id===exp.category);
+              const color=PIN_COLORS[exp.category]||"#94a3b8";
+              return(
+                <div key={exp.id}
+                  onClick={()=>window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(exp.address)}`,"_blank")}
+                  style={{flexShrink:0,background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(255,255,255,0.09)",borderRadius:14,padding:"12px 14px",minWidth:130,cursor:"pointer",display:"flex",flexDirection:"column",gap:6}}>
+                  <div style={{fontSize:12,fontWeight:600,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:120}}>{exp.description||catLabel(exp.category,lang)}</div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <div style={{fontSize:14,fontWeight:800,color:color}}>{fmtAmt(exp.amountILS,dc,{})}</div>
+                    <div style={{width:28,height:28,borderRadius:8,background:`${color}18`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      {cat?.Icon?<cat.Icon size={14} color={color} strokeWidth={1.5}/>:<MapPin size={14} color={color} strokeWidth={1.5}/>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2768,12 +2898,12 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   };
   const guideUrl=lang==="he"?"/guide-he.html":"/guide-en.html";
   const menuScreens=[
-    {icon:"📅",label:lang==="he"?"יומן":"Calendar",sec:"trip",scr:"calendar"},
-    {icon:"🔍",label:lang==="he"?"גלה":"Discover",sec:"trip",scr:"discover"},
-    {icon:"🗺️",label:lang==="he"?"מפה":"Map",sec:"trip",scr:"map"},
-    {icon:"🎒",label:lang==="he"?"אריזה":"Packing",sec:"trip",scr:"packing"},
-    {icon:"💰",label:lang==="he"?"הוצאות":"Expenses",sec:"budget",scr:"expenses"},
-    {icon:"📊",label:lang==="he"?"תקציב":"Budget",sec:"budget",scr:"budget"},
+    {Icon:Calendar,    label:lang==="he"?"יומן":"Calendar",    sec:"trip",   scr:"calendar"},
+    {Icon:Sparkles,    label:lang==="he"?"גלה":"Discover",     sec:"trip",   scr:"discover"},
+    {Icon:Map,         label:lang==="he"?"מפה":"Map",           sec:"trip",   scr:"map"},
+    {Icon:Backpack,    label:lang==="he"?"אריזה":"Packing",     sec:"trip",   scr:"packing"},
+    {Icon:Receipt,     label:lang==="he"?"הוצאות":"Expenses",   sec:"budget", scr:"expenses"},
+    {Icon:BarChart2,   label:lang==="he"?"תקציב":"Budget",      sec:"budget", scr:"budget"},
   ];
   const renderSideMenu=()=>(
     <>
@@ -2810,12 +2940,12 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               <div style={{padding:"4px 20px 8px",fontFamily:RF,fontSize:10,color:"rgba(100,223,223,0.4)",letterSpacing:"1px",textTransform:"uppercase"}}>
                 {lang==="he"?"מסכים":"Screens"}
               </div>
-              {menuScreens.map(({icon,label,sec,scr})=>{
+              {menuScreens.map(({Icon:MIcon,label,sec,scr})=>{
                 const isCur=section===sec&&screen===scr;
                 return(
                   <button key={scr} onClick={()=>navToScreen(sec,scr)}
                     style={{width:"100%",padding:"10px 20px",background:isCur?"rgba(100,223,223,0.08)":"none",border:"none",borderRight:isCur?`3px solid ${TEAL}`:"3px solid transparent",color:isCur?TEAL:"rgba(255,255,255,0.7)",fontFamily:RF,fontSize:14,fontWeight:isCur?700:400,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right",transition:"all 0.15s"}}>
-                    <span style={{fontSize:17}}>{icon}</span>{label}
+                    {MIcon&&<MIcon size={17} strokeWidth={1.5} color={isCur?TEAL:"rgba(255,255,255,0.7)"}/>}{label}
                   </button>
                 );
               })}
@@ -2922,8 +3052,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             <div style={{fontSize:12,color:shareMsg.startsWith("✅")?"#4ade80":"#ff6b6b",marginBottom:shareMsg.startsWith("✅")?10:0,fontFamily:RF,fontWeight:500}}>{shareMsg}</div>
             {shareMsg.startsWith("✅")&&(
               <div style={{display:"flex",gap:8,marginTop:8}}>
-                <button onClick={()=>{const url="https://tulon.co.il";const text=`הוזמנת לטיול "${trips.find(tr=>tr.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} :\n${url}`;window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");}} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>📲 שלח בוואטסאפ</button>
-                <button onClick={()=>{const url="https://tulon.co.il";const text=`הוזמנת לטיול "${trips.find(tr=>tr.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} : ${url}`;navigator.clipboard.writeText(text);setShareMsg("✅ הועתק ללוח!");}} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>📋 העתק לינק</button>
+                <button onClick={()=>{const url="https://tulon.co.il";const text=`הוזמנת לטיול "${trips.find(tr=>tr.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} :\n${url}`;window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");}} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><Share2 size={14} color="#ffffff" strokeWidth={2}/> {lang==="he"?"שלח בוואטסאפ":"Send WhatsApp"}</button>
+                <button onClick={()=>{const url="https://tulon.co.il";const text=`הוזמנת לטיול "${trips.find(tr=>tr.id===shareModal)?.destination||""}" בטיולון! היכנס עם האימייל ${shareEmail||""} : ${url}`;navigator.clipboard.writeText(text);setShareMsg(lang==="he"?"הועתק ללוח!":"Copied!");}} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><Copy size={14} color={TEAL} strokeWidth={2}/> {lang==="he"?"העתק לינק":"Copy link"}</button>
               </div>
             )}
           </div>
@@ -2981,11 +3111,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                     {inviteUrl}
                   </div>
                   {/* Copied confirmation */}
-                  {inviteCopied&&<div style={{fontSize:12,color:"#4ade80",fontFamily:RF,fontWeight:600,textAlign:"center",marginBottom:8}}>✓ {lang==="he"?"הועתק ללוח!":"Copied to clipboard!"}</div>}
+                  {inviteCopied&&<div style={{fontSize:12,color:"#4ade80",fontFamily:RF,fontWeight:600,textAlign:"center",marginBottom:8,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Check size={12} color="#4ade80" strokeWidth={2.5}/> {lang==="he"?"הועתק ללוח!":"Copied to clipboard!"}</div>}
                   <div style={{display:"flex",gap:8}}>
                     <button onClick={async()=>{try{await navigator.clipboard.writeText(inviteUrl);setInviteCopied(true);setTimeout(()=>setInviteCopied(false),2500);}catch(_){}}}
-                      style={{flex:1,padding:"9px",borderRadius:10,border:`0.5px solid ${inviteCopied?"rgba(74,222,128,0.5)":"rgba(100,223,223,0.3)"}`,background:inviteCopied?"rgba(74,222,128,0.1)":"rgba(100,223,223,0.08)",color:inviteCopied?"#4ade80":TEAL,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",transition:"all 0.2s"}}>
-                      {inviteCopied?(lang==="he"?"✓ הועתק":"✓ Copied"):`📋 ${lang==="he"?"העתק":"Copy"}`}
+                      style={{flex:1,padding:"9px",borderRadius:10,border:`0.5px solid ${inviteCopied?"rgba(74,222,128,0.5)":"rgba(100,223,223,0.3)"}`,background:inviteCopied?"rgba(74,222,128,0.1)":"rgba(100,223,223,0.08)",color:inviteCopied?"#4ade80":TEAL,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",transition:"all 0.2s",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+                      {inviteCopied?<><Check size={12} color="#4ade80" strokeWidth={2.5}/>{lang==="he"?"הועתק":"Copied"}</>:<><Copy size={12} color={TEAL} strokeWidth={2}/>{lang==="he"?"העתק":"Copy"}</>}
                     </button>
                     <button onClick={()=>{
                       const waText=lang==="he"
@@ -3025,9 +3155,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               <div key={e.id} onClick={()=>setInspireHidden(prev=>{const n=new Set(prev);n.has(e.id)?n.delete(e.id):n.add(e.id);return n;})}
                 style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:12,background:hidden?"rgba(255,255,255,0.03)":"rgba(100,223,223,0.07)",border:`0.5px solid ${hidden?"rgba(255,255,255,0.08)":"rgba(100,223,223,0.2)"}`,cursor:"pointer",opacity:hidden?0.45:1,transition:"all 0.15s"}}>
                 <div style={{width:20,height:20,borderRadius:5,border:`2px solid ${hidden?W25:TEAL}`,background:hidden?"transparent":TEAL,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  {!hidden&&<span style={{color:DARK_BG,fontSize:12,fontWeight:900}}>✓</span>}
+                  {!hidden&&<Check size={11} color={DARK_BG} strokeWidth={3}/>}
                 </div>
-                <span style={{fontSize:14}}>{cat?.icon||"📦"}</span>
+                <div style={{width:26,height:26,borderRadius:7,background:cat?.bg||W05,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  {cat?.Icon?<cat.Icon size={14} color={cat.color} strokeWidth={1.5}/>:<Package size={14} color={W35} strokeWidth={1.5}/>}
+                </div>
                 <span style={{fontFamily:RF,fontSize:13,color:"#ffffff",flex:1}}>{e.description||cat?.label||e.category}</span>
                 {e.date&&<span style={{fontSize:11,color:W35}}>{fmtDate(e.date)}</span>}
               </div>
@@ -3078,20 +3210,13 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       <>
         <style>{GS}</style>
         {joinBanner}
-        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
-          {/* Header */}
-          <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
-            <button onClick={handleBack} className="tap-btn" style={hBtn()}>← {t("app_name",lang)}</button>
-            <div style={{flex:1,textAlign:"center"}}>
-              <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
-            </div>
-            <div style={{display:"flex",gap:6}}>
-              {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} className="tap-btn" style={hBtn()}>👥</button>}
-              {isOwner&&<button onClick={()=>{setInspireModal(true);setInspireLink(null);setInspireHidden(new Set());}} className="tap-btn" style={hBtn({background:"rgba(251,191,36,0.1)",border:"0.5px solid rgba(251,191,36,0.3)",color:"#fbbf24"})}>✨</button>}
-              <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({fontSize:18,fontWeight:700,padding:"3px 10px"})}>☰</button>
-            </div>
+        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)",fontFamily:RF}}>
+          {/* Minimal top bar — back link only */}
+          <div style={{padding:"16px 20px 0",display:"flex",justifyContent:"flex-end"}}>
+            <button onClick={handleBack} style={{background:"none",border:"none",color:"rgba(100,223,223,0.7)",fontFamily:RF,fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+              {t("home_trips",lang)||"הטיולים שלי"} <ChevronRight size={14} color="rgba(100,223,223,0.7)" strokeWidth={2}/>
+            </button>
           </div>
-          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
           {sideMenu&&renderSideMenu()}
@@ -3112,14 +3237,14 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
-            <button onClick={handleHome} className="tap-btn" style={hBtn()}>🏠</button>
+            <button onClick={handleHome} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><MapPin size={16} strokeWidth={1.5}/></button>
             <div style={{flex:1,textAlign:"center"}}>
               <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
             </div>
             <div style={{display:"flex",gap:6}}>
-              <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn()}>💱</button>
-              <button onClick={()=>exportTripPDF(active,expenses,lang)} className="tap-btn" style={hBtn()}>📄</button>
-              <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({fontSize:18,fontWeight:700,padding:"3px 10px"})}>☰</button>
+              <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><ArrowLeftRight size={16} strokeWidth={1.5}/></button>
+              <button onClick={()=>exportTripPDF(active,expenses,lang)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><FileDown size={16} strokeWidth={1.5}/></button>
+              <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><Menu size={16} strokeWidth={1.5}/></button>
             </div>
           </div>
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
@@ -3156,13 +3281,13 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
-            <button onClick={handleHome} className="tap-btn" style={hBtn()}>🏠</button>
+            <button onClick={handleHome} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><MapPin size={16} strokeWidth={1.5}/></button>
             <div style={{flex:1,textAlign:"center"}}>
               <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
             </div>
             <div style={{display:"flex",gap:6}}>
-              <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn()}>💱</button>
-              <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({fontSize:18,fontWeight:700,padding:"3px 10px"})}>☰</button>
+              <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><ArrowLeftRight size={16} strokeWidth={1.5}/></button>
+              <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><Menu size={16} strokeWidth={1.5}/></button>
             </div>
           </div>
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
