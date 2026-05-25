@@ -43,6 +43,7 @@ import {
   AlertCircle, Loader, Link as LinkIcon, Ticket, Utensils, Car,
   Building2, Search, Clock, Menu, ArrowLeftRight, FileDown, BarChart2,
   Moon, Copy, Lock, Bug, Lightbulb, Bell, BellOff, Globe, Settings,
+  Mail, LogOut,
 } from "lucide-react";
 
 const catLabel=(id,lang)=>t(`cat_${id}`,lang)||id;
@@ -2903,7 +2904,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               </button>
               <button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");setSideMenu(false);}}
                 style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
-                <span style={{fontSize:18}}>🔗</span>{lang==="he"?"שתף טיול":"Share Trip"}
+                <Share2 size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"שתף טיול":"Share Trip"}
               </button>
               <div style={{margin:"10px 20px",height:"0.5px",background:"rgba(255,255,255,0.06)"}}/>
               <div style={{padding:"4px 20px 8px",fontFamily:RF,fontSize:10,color:"rgba(100,223,223,0.4)",letterSpacing:"1px",textTransform:"uppercase"}}>
@@ -2923,30 +2924,37 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           )}
           <button onClick={()=>{window.open(guideUrl,"_blank");setSideMenu(false);}}
             style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
-            <span style={{fontSize:18}}>📖</span>{lang==="he"?"חוברת הסבר":"User Guide"}
+            <BookOpen size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"חוברת הסבר":"User Guide"}
           </button>
-          <div style={{padding:"10px 20px",display:"flex",gap:8}}>
-            {["he","en"].map(l=>(
-              <button key={l} onClick={()=>{setLang(l);setSideMenu(false);}}
-                style={{flex:1,padding:"8px",borderRadius:10,border:`0.5px solid ${lang===l?"rgba(100,223,223,0.5)":"rgba(255,255,255,0.1)"}`,background:lang===l?"rgba(100,223,223,0.1)":"transparent",color:lang===l?TEAL:W40,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>
-                {l==="he"?"🇮🇱 עברית":"🇬🇧 English"}
-              </button>
-            ))}
+          <div style={{padding:"8px 20px 10px"}}>
+            <div style={{display:"flex",background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:24,padding:3}}>
+              {["en","he"].map(l=>(
+                <button key={l} onClick={()=>setLang(l)}
+                  style={{flex:1,padding:"7px 12px",borderRadius:20,border:"none",
+                    background:lang===l?"rgba(100,223,223,0.18)":"transparent",
+                    color:lang===l?TEAL:"rgba(255,255,255,0.4)",
+                    fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:RF,
+                    display:"flex",alignItems:"center",justifyContent:"center",gap:5,transition:"all 0.15s"}}>
+                  <Globe size={12} color={lang===l?TEAL:"rgba(255,255,255,0.4)"} strokeWidth={1.5}/>
+                  {l==="en"?"EN":"עב"}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         {/* Footer */}
         <div style={{padding:"12px 0",borderTop:"0.5px solid rgba(255,255,255,0.06)",flexShrink:0}}>
           <button onClick={()=>{window.open("/privacy","_blank");setSideMenu(false);}}
             style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
-            <span>🔒</span>{lang==="he"?"מדיניות פרטיות":"Privacy Policy"}
+            <Lock size={15} color={W35} strokeWidth={1.5}/>{lang==="he"?"מדיניות פרטיות":"Privacy Policy"}
           </button>
           <button onClick={()=>{window.open("/contact","_blank");setSideMenu(false);}}
             style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
-            <span>✉️</span>{lang==="he"?"צור קשר":"Contact"}
+            <Mail size={15} color={W35} strokeWidth={1.5}/>{lang==="he"?"צור קשר":"Contact"}
           </button>
           <button onClick={()=>{onLogout();setSideMenu(false);}}
             style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:"rgba(255,107,107,0.7)",fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
-            <span>🚪</span>{lang==="he"?"התנתקות":"Sign out"}
+            <LogOut size={15} color="rgba(255,107,107,0.7)" strokeWidth={1.5}/>{lang==="he"?"התנתקות":"Sign out"}
           </button>
         </div>
       </div>
