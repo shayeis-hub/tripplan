@@ -1259,24 +1259,20 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         </div>
 
             {show&&(
-              <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.65)",zIndex:1000,display:"flex",flexDirection:"column",justifyContent:"flex-end"}}
+              <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.72)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px"}}
                 onClick={e=>{if(e.target===e.currentTarget){setShow(false);setEditId(null);}}}>
-                <div style={{background:"#0d2137",borderRadius:"24px 24px 0 0",maxHeight:"92vh",overflowY:"auto",direction:"rtl",fontFamily:RF}}>
-                  {/* Handle */}
-                  <div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}>
-                    <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.18)"}}/>
-                  </div>
-                  {/* Sheet header */}
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 20px 16px"}}>
+                <div style={{background:"#0d2137",borderRadius:20,width:"100%",maxWidth:460,maxHeight:"88vh",overflowY:"auto",direction:"rtl",fontFamily:RF,border:"0.5px solid rgba(100,223,223,0.15)",boxShadow:"0 24px 64px rgba(0,0,0,0.6)"}}>
+                  {/* Modal header */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 20px 14px",borderBottom:"0.5px solid rgba(255,255,255,0.06)",position:"sticky",top:0,background:"#0d2137",zIndex:1,borderRadius:"20px 20px 0 0"}}>
                     <button onClick={()=>{setShow(false);setEditId(null);}}
                       style={{width:32,height:32,borderRadius:10,border:"none",background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                       <X size={17} color={W50} strokeWidth={2}/>
                     </button>
-                    <div style={{fontSize:17,fontWeight:700,color:"#ffffff"}}>{editId?t("exp_edit",lang):t("exp_new",lang)}</div>
+                    <div style={{fontSize:16,fontWeight:700,color:"#ffffff"}}>{editId?t("exp_edit",lang):t("exp_new",lang)}</div>
                     <div style={{width:32}}/>
                   </div>
 
-                  <div style={{padding:"0 20px 32px"}}>
+                  <div style={{padding:"16px 20px 28px"}}>
 
                 {/* category */}
                 <div style={{marginBottom:18}}>
