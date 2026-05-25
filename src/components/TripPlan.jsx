@@ -22,6 +22,16 @@ const DARK_BG = "#0d2137";
 
 import { useState, useEffect, useCallback, useMemo, useRef, useReducer } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const MapLeaflet = dynamic(() => import("./MapLeaflet"), {
+  ssr: false,
+  loading: () => (
+    <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",background:"#091928"}}>
+      <div style={{width:40,height:40,borderRadius:"50%",border:"3px solid rgba(100,223,223,0.15)",borderTopColor:"#64dfdf",animation:"spin 0.8s linear infinite"}}/>
+    </div>
+  ),
+});
 import { db } from "@/lib/firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { useLang } from "@/lib/LangContext";
@@ -2521,146 +2531,109 @@ function PackingListScreen({trip,onUpdate}){
 }
 
 // ── MAP SCREEN ────────────────────────────────────────────────────────────────
+const MAP_PIN_COLORS={"flight":TEAL,"hotel":"#818cf8","attraction":"#f472b6","food":"#fbbf24","taxi":"#4ade80","other":"#94a3b8"};
+
 function MapScreen({trip,expenses}){
   const{lang}=useLang();
   const dest=trip.destination||"";
-  const encDest=encodeURIComponent(dest);
-
-  // Collect all places with addresses
-  const places=[];
-  (expenses||[]).forEach(e=>{
-    if(e.address){
-      const cat=CATS.find(c=>c.id===e.category);
-      places.push({icon:cat?.icon||"📍",label:e.description||cat?.label||e.category,address:e.address,date:e.date||""});
-    }
-  });
-  // Activities (no address but show as list)
-  const actPlaces=[];
-  Object.entries(trip.activities||{}).forEach(([date,acts])=>{
-    (acts||[]).forEach(a=>{
-      const act=typeof a==="string"?{text:a}:a;
-      if(act.text) actPlaces.push({icon:actIcon(act.type),label:act.text,date});
-    });
-  });
-
-  // Group places by date
-  const byDate={};
-  places.forEach(p=>{
-    const d=p.date||"";
-    if(!byDate[d])byDate[d]=[];
-    byDate[d].push(p);
-  });
-
-  // Flat list of ALL placed expenses for the bottom sheet
-  const allPlaced=expenses.filter(e=>e.address);
-  const totalPlaced=allPlaced.reduce((s,e)=>s+e.amountILS,0);
   const dc=trip.displayCurrency||"ILS";
 
-  // Pin accent colors per category
-  const PIN_COLORS={"flight":TEAL,"hotel":"#818cf8","attraction":"#f472b6","food":"#fbbf24","taxi":"#4ade80","other":"#94a3b8"};
+  // Build places array from expenses that have an address
+  const places=useMemo(()=>(expenses||[])
+    .filter(e=>e.address)
+    .map(e=>{
+      const cat=CATS.find(c=>c.id===e.category);
+      return{
+        label:      e.description||catLabel(e.category,lang)||e.category,
+        address:    e.address,
+        category:   e.category,
+        amount:     e.amountILS?"₪"+Math.round(e.amountILS).toLocaleString():null,
+        amountFmt:  fmtAmt(e.amountILS,dc,{}),
+        date:       e.date||"",
+        id:         e.id,
+      };
+    }),[expenses,lang,dc]);
 
   return(
-    <div style={{minHeight:"100vh",background:DARK_BG,fontFamily:RF,display:"flex",flexDirection:"column"}}>
+    <div style={{height:"100vh",background:"#091928",display:"flex",flexDirection:"column",fontFamily:RF,position:"relative",overflow:"hidden"}}>
 
-      {/* ── Map visual area ─────────────────────────── */}
-      <div style={{flex:1,position:"relative",overflow:"hidden",background:"linear-gradient(160deg,#081520 0%,#0d2137 50%,#0a1e30 100%)"}}>
-
-        {/* Grid lines (street-like pattern) */}
-        <svg width="100%" height="100%" style={{position:"absolute",inset:0,opacity:0.12}} xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#64dfdf" strokeWidth="0.5"/>
-            </pattern>
-            <pattern id="road-h" width="180" height="180" patternUnits="userSpaceOnUse">
-              <rect y="80" width="180" height="4" fill="#1a3a54"/>
-              <rect x="80" width="4" height="180" fill="#1a3a54"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)"/>
-          <rect width="100%" height="100%" fill="url(#road-h)"/>
-        </svg>
-
-        {/* Park blob */}
-        <div style={{position:"absolute",bottom:"28%",left:"50%",transform:"translateX(-50%)",width:110,height:70,borderRadius:"50%",background:"rgba(34,197,94,0.08)",border:"0.5px solid rgba(34,197,94,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <span style={{fontSize:10,color:"rgba(34,197,94,0.4)",fontWeight:600,letterSpacing:"1px",textTransform:"uppercase"}}>PARK</span>
+      {/* ── Floating top bar ── */}
+      <div style={{position:"absolute",top:16,left:16,right:16,zIndex:1000,display:"flex",gap:10,alignItems:"stretch"}}>
+        {/* Destination chip */}
+        <div style={{flex:1,background:"rgba(9,25,40,0.88)",backdropFilter:"blur(14px)",borderRadius:14,padding:"10px 14px",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",gap:8,overflow:"hidden"}}>
+          <MapPin size={14} color={TEAL} strokeWidth={1.5} style={{flexShrink:0}}/>
+          <span style={{fontSize:14,fontWeight:700,color:"#ffffff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+            {dest||(lang==="he"?"מפה":"Map")}
+          </span>
         </div>
-
-        {/* Destination name + open button — centered */}
-        <div style={{position:"absolute",top:24,left:0,right:0,display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"0 20px"}}>
-          <div style={{background:"rgba(13,33,55,0.85)",backdropFilter:"blur(8px)",borderRadius:16,padding:"10px 18px",border:"0.5px solid rgba(100,223,223,0.2)",display:"flex",alignItems:"center",gap:8}}>
-            <MapPin size={14} color={TEAL} strokeWidth={1.5}/>
-            <span style={{fontSize:14,fontWeight:700,color:"#ffffff"}}>{dest||"מפה"}</span>
-          </div>
-          <button onClick={()=>window.open(`https://www.google.com/maps/search/${encDest}`,"_blank")}
-            style={{background:"linear-gradient(135deg,#4285F4,#34A853)",border:"none",borderRadius:12,padding:"8px 18px",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:7}}>
-            <Map size={14} strokeWidth={2}/> {lang==="he"?"פתח ב-Google Maps":"Open in Google Maps"}
+        {/* Google Maps button */}
+        {dest&&(
+          <button
+            onClick={()=>window.open(`https://www.google.com/maps/search/${encodeURIComponent(dest)}`,"_blank")}
+            style={{background:"rgba(66,133,244,0.88)",backdropFilter:"blur(14px)",border:"none",borderRadius:14,padding:"10px 16px",color:"#fff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:7,whiteSpace:"nowrap",flexShrink:0,boxShadow:"0 4px 16px rgba(66,133,244,0.35)"}}>
+            <Map size={14} strokeWidth={2}/>
+            {lang==="he"?"Google Maps":"Google Maps"}
           </button>
-        </div>
+        )}
+      </div>
 
-        {/* Decorative pins — scattered on "map" */}
-        {allPlaced.slice(0,8).map((exp,i)=>{
-          const cat=CATS.find(c=>c.id===exp.category);
-          const color=PIN_COLORS[exp.category]||"#94a3b8";
-          const positions=[
-            {top:"22%",left:"52%"},{top:"30%",left:"70%"},{top:"38%",left:"38%"},
-            {top:"48%",left:"62%"},{top:"55%",left:"30%"},{top:"60%",left:"72%"},
-            {top:"68%",left:"45%"},{top:"32%",left:"22%"},
-          ];
-          const pos=positions[i%positions.length];
-          return(
-            <div key={exp.id} style={{position:"absolute",...pos,transform:"translate(-50%,-100%)",display:"flex",flexDirection:"column",alignItems:"center",zIndex:10}}>
-              <div style={{width:36,height:36,borderRadius:10,background:`${color}22`,border:`1.5px solid ${color}99`,backdropFilter:"blur(4px)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 12px ${color}33`}}>
-                {cat?.Icon?<cat.Icon size={16} color={color} strokeWidth={1.5}/>:<MapPin size={16} color={color} strokeWidth={1.5}/>}
-              </div>
-              <div style={{width:2,height:8,background:`${color}80`}}/>
-              <div style={{width:5,height:5,borderRadius:"50%",background:color,opacity:0.7}}/>
-            </div>
-          );
-        })}
-
-        {/* Empty state overlay (no expenses with addresses) */}
-        {allPlaced.length===0&&(
-          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px"}}>
-            <div style={{background:"rgba(13,33,55,0.88)",backdropFilter:"blur(8px)",borderRadius:20,padding:"28px 24px",textAlign:"center",border:"0.5px solid rgba(100,223,223,0.15)"}}>
-              <Map size={36} color="rgba(100,223,223,0.4)" strokeWidth={1} style={{margin:"0 auto 12px",display:"block"}}/>
-              <div style={{fontSize:14,fontWeight:700,color:"#ffffff",marginBottom:6}}>{lang==="he"?"אין מקומות ממופים":"No mapped places"}</div>
-              <div style={{fontSize:12,color:W35,lineHeight:1.5}}>{lang==="he"?"הוסף כתובות להוצאות\nכדי לראות אותן כאן":"Add addresses to expenses\nto see them here"}</div>
+      {/* ── Real Leaflet map ── */}
+      <div style={{flex:1,position:"relative"}}>
+        {dest?(
+          <MapLeaflet destination={dest} places={places} lang={lang}/>
+        ):(
+          <div style={{flex:1,height:"100%",display:"flex",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center",background:"#091928"}}>
+            <div>
+              <Map size={52} color="rgba(100,223,223,0.35)" strokeWidth={1} style={{margin:"0 auto 14px",display:"block"}}/>
+              <div style={{color:"#ffffff",fontWeight:700,fontSize:15,marginBottom:6}}>{lang==="he"?"הגדר יעד תחילה":"Set a destination first"}</div>
+              <div style={{color:W40,fontSize:13}}>{lang==="he"?'עבור ללשונית "יעד" והגדר יעד':'Go to the "Destination" tab'}</div>
             </div>
           </div>
         )}
       </div>
 
-      {/* ── Bottom sheet ───────────────────────────── */}
-      {allPlaced.length>0&&(
-        <div style={{background:"rgba(9,25,40,0.97)",borderTop:"0.5px solid rgba(100,223,223,0.12)",padding:"14px 18px 18px",flexShrink:0}}>
-          {/* Handle */}
-          <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
-            <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.15)"}}/>
+      {/* ── Bottom list — places with addresses ── */}
+      {places.length>0&&(
+        <div style={{background:"rgba(7,20,34,0.97)",borderTop:"0.5px solid rgba(100,223,223,0.12)",padding:"14px 16px 20px",maxHeight:220,overflowY:"auto",flexShrink:0}}>
+          <div style={{fontSize:12,fontWeight:700,color:W40,marginBottom:10,display:"flex",alignItems:"center",gap:6,letterSpacing:"0.5px",textTransform:"uppercase"}}>
+            <MapPin size={12} color={TEAL} strokeWidth={2}/>
+            {lang==="he"?`${places.length} מקומות על המפה`:`${places.length} place${places.length!==1?"s":""} on map`}
           </div>
-          {/* Header row */}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:12}}>
-            <div style={{fontSize:20,fontWeight:800,color:"#ffffff",letterSpacing:"-0.5px"}}>{fmtAmt(totalPlaced,dc,{})}</div>
-            <div style={{fontSize:12,fontWeight:600,color:W40}}>{lang==="he"?"הוצאות ממופות":"Mapped expenses"}</div>
-          </div>
-          {/* Horizontal scroll cards */}
-          <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
-            {allPlaced.map(exp=>{
-              const cat=CATS.find(c=>c.id===exp.category);
-              const color=PIN_COLORS[exp.category]||"#94a3b8";
-              return(
-                <div key={exp.id}
-                  onClick={()=>window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(exp.address)}`,"_blank")}
-                  style={{flexShrink:0,background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(255,255,255,0.09)",borderRadius:14,padding:"12px 14px",minWidth:130,cursor:"pointer",display:"flex",flexDirection:"column",gap:6}}>
-                  <div style={{fontSize:12,fontWeight:600,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:120}}>{exp.description||catLabel(exp.category,lang)}</div>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                    <div style={{fontSize:14,fontWeight:800,color:color}}>{fmtAmt(exp.amountILS,dc,{})}</div>
-                    <div style={{width:28,height:28,borderRadius:8,background:`${color}18`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      {cat?.Icon?<cat.Icon size={14} color={color} strokeWidth={1.5}/>:<MapPin size={14} color={color} strokeWidth={1.5}/>}
-                    </div>
-                  </div>
+          {places.map((p,i)=>{
+            const cat=CATS.find(c=>c.id===p.category);
+            const color=MAP_PIN_COLORS[p.category]||"#94a3b8";
+            const gmLink=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address+", "+dest)}`;
+            return(
+              <div key={p.id||i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:i<places.length-1?"0.5px solid rgba(255,255,255,0.06)":"none"}}>
+                {/* Category icon */}
+                <div style={{width:36,height:36,borderRadius:10,background:`${color}22`,border:`1.5px solid ${color}44`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  {cat?.Icon?<cat.Icon size={16} color={color} strokeWidth={1.5}/>:<MapPin size={16} color={color} strokeWidth={1.5}/>}
                 </div>
-              );
-            })}
+                {/* Text */}
+                <div style={{flex:1,overflow:"hidden"}}>
+                  <div style={{fontSize:13,fontWeight:600,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.label}</div>
+                  <div style={{fontSize:11,color:W40,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:2}}>{p.address}</div>
+                </div>
+                {/* Amount */}
+                {p.amount&&<div style={{fontSize:13,fontWeight:700,color,flexShrink:0}}>{p.amountFmt}</div>}
+                {/* Navigate button */}
+                <button
+                  onClick={()=>window.open(gmLink,"_blank")}
+                  style={{background:"rgba(66,133,244,0.12)",border:"0.5px solid rgba(66,133,244,0.3)",borderRadius:8,padding:"6px 10px",color:"#4285F4",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:RF,flexShrink:0}}>
+                  {lang==="he"?"נווט":"Nav"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Empty state when no places (but destination exists) */}
+      {places.length===0&&dest&&(
+        <div style={{position:"absolute",bottom:30,left:0,right:0,display:"flex",justifyContent:"center",pointerEvents:"none",zIndex:800}}>
+          <div style={{background:"rgba(9,25,40,0.9)",backdropFilter:"blur(12px)",borderRadius:16,padding:"14px 20px",border:"0.5px solid rgba(100,223,223,0.15)",textAlign:"center",maxWidth:280}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#ffffff",marginBottom:4}}>{lang==="he"?"אין מקומות ממופים":"No mapped places"}</div>
+            <div style={{fontSize:11,color:W40,lineHeight:1.6}}>{lang==="he"?"הוסף כתובת להוצאה כדי שתופיע כאן":"Add an address to an expense to pin it here"}</div>
           </div>
         </div>
       )}
