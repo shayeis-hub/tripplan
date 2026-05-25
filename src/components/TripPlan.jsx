@@ -349,28 +349,37 @@ function PieChart({data}){
   if(!total)return null;
   let cum=-Math.PI/2;
   const slices=data.map(d=>{const a=(d.value/total)*2*Math.PI,s=cum;cum+=a;return{...d,s,e:cum};});
-  const R=80,cx=100,cy=100;
-  const arc=(s,e,r)=>{if(e-s>=2*Math.PI-0.001)e=s+2*Math.PI-0.001;const x1=cx+r*Math.cos(s),y1=cy+r*Math.sin(s),x2=cx+r*Math.cos(e),y2=cy+r*Math.sin(e),lg=e-s>Math.PI?1:0;return`M${cx} ${cy}L${x1} ${y1}A${r} ${r} 0 ${lg} 1 ${x2} ${y2}Z`;};
+  const R=80,r=48,cx=100,cy=100;
+  // donut arc: outer arc + inner arc
+  const arc=(s,e,outerR,innerR)=>{
+    if(e-s>=2*Math.PI-0.001)e=s+2*Math.PI-0.001;
+    const x1=cx+outerR*Math.cos(s),y1=cy+outerR*Math.sin(s);
+    const x2=cx+outerR*Math.cos(e),y2=cy+outerR*Math.sin(e);
+    const x3=cx+innerR*Math.cos(e),y3=cy+innerR*Math.sin(e);
+    const x4=cx+innerR*Math.cos(s),y4=cy+innerR*Math.sin(s);
+    const lg=e-s>Math.PI?1:0;
+    return`M${x1},${y1} A${outerR},${outerR} 0 ${lg} 1 ${x2},${y2} L${x3},${y3} A${innerR},${innerR} 0 ${lg} 0 ${x4},${y4} Z`;
+  };
   const[hov,setHov]=useState(null);
   return(
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
       <svg viewBox="0 0 200 200" style={{width:170,height:170}}>
         {slices.map((s,i)=>(
-          <path key={i} d={arc(s.s,s.e,hov===i?R+5:R)} fill={s.color} stroke={C.white} strokeWidth={2}
-            style={{cursor:"pointer",transition:"all 0.15s",filter:hov===i?"drop-shadow(0 4px 8px rgba(0,0,0,0.18))":"none"}}
+          <path key={i} d={arc(s.s,s.e,hov===i?R+5:R,r)} fill={s.color} stroke="#0d2137" strokeWidth={2}
+            style={{cursor:"pointer",transition:"all 0.15s",filter:hov===i?"drop-shadow(0 2px 6px rgba(0,0,0,0.25))":"none"}}
             onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(null)}
             onTouchStart={()=>setHov(i)} onTouchEnd={()=>setTimeout(()=>setHov(null),1200)}/>
         ))}
-        <text x={cx} y={cy-8} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={11} fill="#ffffff" fontWeight={700}>{hov!==null?slices[hov].label:'סה"כ'}</text>
-        <text x={cx} y={cy+10} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={13} fill={TEAL} fontWeight={900}>{hov!==null?`₪${slices[hov].value.toFixed(0)}`:`₪${total.toFixed(0)}`}</text>
-        {hov!==null&&<text x={cx} y={cy+26} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={9} fill={W40}>{((slices[hov].value/total)*100).toFixed(1)}%</text>}
+        <text x={cx} y={cy-8} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={11} fill={W40} fontWeight={600}>{hov!==null?slices[hov].label:'סה"כ'}</text>
+        <text x={cx} y={cy+10} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={14} fill={TEAL} fontWeight={900}>{hov!==null?`${slices[hov].value.toFixed(0)}`:`${total.toFixed(0)}`}</text>
+        {hov!==null&&<text x={cx} y={cy+26} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={9} fill={W35}>{((slices[hov].value/total)*100).toFixed(1)}%</text>}
       </svg>
       <div style={{display:"flex",flexWrap:"wrap",gap:"6px 12px",justifyContent:"center",maxWidth:260}}>
         {slices.map((s,i)=>(
           <div key={i} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",opacity:hov!==null&&hov!==i?0.4:1,transition:"opacity 0.15s"}}
             onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(null)}>
             <div style={{width:11,height:11,borderRadius:3,background:s.color,flexShrink:0}}/>
-            <span style={{fontSize:12,fontWeight:700}}>{s.icon} {s.label}</span>
+            <span style={{fontSize:12,fontWeight:700}}>{s.label}</span>
             <span style={{fontSize:11,color:W35}}>{((s.value/total)*100).toFixed(0)}%</span>
           </div>
         ))}
@@ -895,8 +904,8 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
           {valid&&(
             <div style={{padding:"12px 16px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:12,textAlign:"center"}}>
               <span style={{fontFamily:RF,fontSize:26,fontWeight:800,color:TEAL}}>{Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1}</span>
-              <span style={{fontSize:14,fontWeight:600,color:W70,marginRight:6}}>{t("days",lang)} 🎉</span>
-              <div style={{fontSize:12,color:W35,marginTop:2}}>{fmtDate(trip.startDate)} – {fmtDate(trip.endDate)}</div>
+              <span style={{fontSize:14,fontWeight:600,color:W70,marginRight:6}}>{t("days",lang)}</span>
+              <div style={{fontSize:12,color:W35,marginTop:2,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Calendar size={11} color={W35}/>{fmtDate(trip.startDate)} – {fmtDate(trip.endDate)}</div>
             </div>
           )}
         </Card>
@@ -911,17 +920,19 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
             <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder={t("dest_people_ph",lang)} onKeyDown={e=>e.key==="Enter"&&addPerson()}
               style={{flex:1,padding:"10px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,direction:"rtl",background:W07,color:"#ffffff",outline:"none"}}
               onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
-            <button onClick={addPerson} style={{padding:"10px 16px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>➕</button>
+            <button onClick={addPerson} style={{padding:"10px 16px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,cursor:"pointer",display:"flex",alignItems:"center"}}><Plus size={16} color={DARK_BG} strokeWidth={2.5}/></button>
           </div>
           {people.length===0?(
             <div style={{textAlign:"center",color:W35,padding:"12px 0",fontSize:13}}>{t("dest_solo",lang)}</div>
           ):(
             <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
               {people.map(p=>(
-                <div key={p.id} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:999,background:p.color+"15",border:`0.5px solid ${p.color}40`}}>
-                  <div style={{width:10,height:10,borderRadius:"50%",background:p.color,flexShrink:0}}/>
+                <div key={p.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:14,background:p.color+"15",border:`0.5px solid ${p.color}40`}}>
+                  <div style={{width:34,height:34,borderRadius:10,background:p.color+"22",border:`0.5px solid ${p.color}44`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <span style={{fontSize:14,fontWeight:800,color:p.color}}>{p.name[0]}</span>
+                  </div>
                   <span style={{fontSize:13,fontWeight:700,color:"#ffffff"}}>{p.name}</span>
-                  <button onClick={()=>removePerson(p.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,color:W35,padding:"0 0 0 2px",lineHeight:1}}>×</button>
+                  <button onClick={()=>removePerson(p.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"2px",display:"flex",alignItems:"center",marginRight:"auto"}}><X size={13} color={W35}/></button>
                 </div>
               ))}
             </div>
@@ -1545,7 +1556,7 @@ function BudgetScreen({trip,expenses,rates={}}){
               return(
                 <div key={cat.id} style={{marginBottom:16}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                    <div style={{fontWeight:700,fontSize:15,display:"flex",gap:6,alignItems:"center"}}><span>{cat.icon}</span><span>{catLabel(cat.id,lang)}</span><span style={{fontSize:11,color:W35}}>({cat.count})</span></div>
+                    <div style={{fontWeight:700,fontSize:15,display:"flex",gap:6,alignItems:"center"}}>{cat.Icon?<cat.Icon size={14} color={cat.color} strokeWidth={1.5}/>:<span>{cat.icon}</span>}<span>{catLabel(cat.id,lang)}</span><span style={{fontSize:11,color:W35}}>({cat.count})</span></div>
                     <div style={{fontFamily:RF,fontWeight:700,fontSize:15,color:TEAL}}>{fmt(cat.total)}</div>
                   </div>
                   <div style={{height:5,background:W08,borderRadius:999,overflow:"hidden"}}>
@@ -1609,10 +1620,10 @@ function BudgetScreen({trip,expenses,rates={}}){
 }
 
 const ACT_TYPES=[
-  {id:"general", icon:"📌", he:"כללי",    en:"General"},
-  {id:"tour",    icon:"🥾", he:"טיול",    en:"Tour"},
-  {id:"food",    icon:"🍽️", he:"מסעדה",  en:"Restaurant"},
-  {id:"drive",   icon:"🚗", he:"נסיעה",  en:"Transport"},
+  {id:"general", icon:"📌", Icon:MapPin,   he:"כללי",   en:"General"},
+  {id:"tour",    icon:"🥾", Icon:Backpack, he:"טיול",   en:"Tour"},
+  {id:"food",    icon:"🍽️",Icon:Utensils, he:"מסעדה",  en:"Restaurant"},
+  {id:"drive",   icon:"🚗", Icon:Car,      he:"נסיעה",  en:"Transport"},
 ];
 const actIcon=type=>ACT_TYPES.find(t=>t.id===type)?.icon||"📌";
 
@@ -2161,7 +2172,7 @@ function DiscoverScreen({trip}){
       <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:14}}>
         {!trip.destination?(
           <div style={{textAlign:"center",padding:"48px 0",color:W35}}>
-            <div style={{fontSize:44,marginBottom:12}}>🌍</div>
+            <div style={{width:90,height:90,borderRadius:24,background:"rgba(100,223,223,0.07)",border:"0.5px solid rgba(100,223,223,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px"}}><MapPin size={40} color="rgba(100,223,223,0.4)" strokeWidth={1}/></div>
             <div style={{fontSize:15,fontWeight:600}}>{t("disc_no_dest",lang)}</div>
           </div>
         ):(
@@ -2182,7 +2193,7 @@ function DiscoverScreen({trip}){
                 <div style={{fontFamily:RF,fontSize:16,fontWeight:800,color:"#ffffff"}}>{agodaTile.name}</div>
                 <div style={{fontSize:13,color:"#ffffff",fontWeight:600,marginTop:3,lineHeight:1.4,opacity:0.9}}>{agodaTile.label}</div>
               </div>
-              <div style={{fontSize:20,flexShrink:0}}>🏨</div>
+              <div style={{flexShrink:0,width:32,height:32,borderRadius:10,background:"rgba(224,69,90,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Building2 size={18} color="#e0455a" strokeWidth={1.5}/></div>
             </button>
 
             {/* ── Activities — Viator + GYG side by side ── */}
@@ -2235,7 +2246,7 @@ function DiscoverScreen({trip}){
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {(recs.attractions||[]).map((a,i)=>(
                       <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,background:W05}}>
-                        <div style={{fontSize:22,flexShrink:0}}>{a.emoji||"🏛️"}</div>
+                        <div style={{width:36,height:36,borderRadius:10,background:"rgba(244,114,182,0.13)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Ticket size={18} color="#f472b6" strokeWidth={1.5}/></div>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.name}</div>
                           <div style={{fontSize:11,color:W35,marginTop:2,lineHeight:1.4}}>{a.description}</div>
@@ -2255,7 +2266,7 @@ function DiscoverScreen({trip}){
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {(recs.restaurants||[]).map((r,i)=>(
                       <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,background:W05}}>
-                        <div style={{fontSize:22,flexShrink:0}}>{r.emoji||"🍽️"}</div>
+                        <div style={{width:36,height:36,borderRadius:10,background:"rgba(251,191,36,0.13)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Utensils size={18} color="#fbbf24" strokeWidth={1.5}/></div>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.name}</div>
                           <div style={{fontSize:11,color:W35,marginTop:2,lineHeight:1.4}}>{r.description}{r.cuisine?` · ${r.cuisine}`:""}</div>
@@ -2272,7 +2283,7 @@ function DiscoverScreen({trip}){
                 {/* Local tip */}
                 {recs.tip&&(
                   <div style={{background:"linear-gradient(135deg,rgba(246,173,85,0.12),rgba(237,137,54,0.08))",border:"0.5px solid rgba(246,173,85,0.3)",borderRadius:14,padding:"14px 16px",display:"flex",gap:12,alignItems:"flex-start"}}>
-                    <div style={{fontSize:22,flexShrink:0}}>💡</div>
+                    <div style={{width:36,height:36,borderRadius:10,background:"rgba(246,173,85,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Sparkles size={18} color="#f6ad55" strokeWidth={1.5}/></div>
                     <div>
                       <div style={{fontFamily:RF,fontSize:13,fontWeight:700,color:"#f6ad55",marginBottom:4}}>{t("disc_local_tip",lang)}</div>
                       <div style={{fontSize:13,color:W40,lineHeight:1.5}}>{recs.tip}</div>
@@ -2519,7 +2530,7 @@ function MapScreen({trip,expenses}){
 
         {places.length===0&&actPlaces.length===0&&(
           <div style={{textAlign:"center",padding:"48px 0",color:W35}}>
-            <div style={{fontSize:44,marginBottom:12}}>🗺️</div>
+            <div style={{width:90,height:90,borderRadius:24,background:"rgba(100,223,223,0.07)",border:"0.5px solid rgba(100,223,223,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px"}}><Map size={40} color="rgba(100,223,223,0.4)" strokeWidth={1}/></div>
             <div style={{fontSize:14,fontWeight:600,fontFamily:RF,color:W40}}>
               {lang==="he"?"הוסף כתובות להוצאות כדי לראות מקומות במפה":"Add addresses to expenses to see places on the map"}
             </div>
