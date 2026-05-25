@@ -33,14 +33,6 @@
     border-radius: 50%;
     background: radial-gradient(circle, rgba(100,223,223,0.08) 0%, transparent 70%);
   }
-  .cover::after {
-    content: '';
-    position: absolute;
-    bottom: -60px; right: -60px;
-    width: 250px; height: 250px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(100,223,223,0.06) 0%, transparent 70%);
-  }
   .cover-inner { position: relative; z-index: 1; }
   .cover h1 {
     font-size: 52px;
@@ -65,7 +57,6 @@
     font-weight: 700;
     padding: 8px 24px;
     border-radius: 999px;
-    letter-spacing: 0.5px;
   }
   .cover .version {
     display: inline-block;
@@ -75,240 +66,106 @@
     padding: 4px 12px;
     border-radius: 999px;
     margin-top: 14px;
-    margin-left: 8px;
   }
 
-  .content { max-width: 800px; margin: 0 auto; padding: 40px 32px; }
+  .content { max-width: 780px; margin: 0 auto; padding: 36px 28px; }
 
   .intro-box {
     background: #e8f4f8;
     border-left: 4px solid #64dfdf;
     border-radius: 12px;
-    padding: 18px 20px;
-    margin-bottom: 36px;
+    padding: 16px 20px;
+    margin-bottom: 32px;
     font-size: 14px;
     color: #2d4050;
     line-height: 1.7;
-  }
-
-  .whats-new {
-    background: linear-gradient(135deg, #fef9c3, #fef3c7);
-    border-left: 4px solid #fbbf24;
-    border-radius: 12px;
-    padding: 18px 22px;
-    margin-bottom: 36px;
-  }
-  .whats-new-title {
-    font-size: 15px;
-    font-weight: 800;
-    color: #92400e;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .whats-new ul { list-style: none; padding: 0; }
-  .whats-new li {
-    font-size: 13px;
-    color: #78350f;
-    padding: 4px 0;
-    padding-left: 22px;
-    position: relative;
-  }
-  .whats-new li::before {
-    content: '✨';
-    position: absolute;
-    left: 0;
-    top: 5px;
-    font-size: 11px;
   }
 
   .section-header {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin: 36px 0 16px;
+    margin: 32px 0 14px;
     padding-bottom: 10px;
     border-bottom: 2px solid #64dfdf;
   }
   .section-header h2 {
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 800;
     color: #0d2137;
-    letter-spacing: -0.3px;
   }
-  .section-number {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    background: #0d2137;
-    color: #64dfdf;
-    font-size: 14px;
-    font-weight: 800;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .app-structure {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-  .structure-box {
-    border-radius: 14px;
-    padding: 18px;
-    border: 2px solid;
-  }
-  .structure-box.budget { background: rgba(74,222,128,0.06); border-color: rgba(74,222,128,0.3); }
-  .structure-box.trip   { background: rgba(100,223,223,0.06); border-color: rgba(100,223,223,0.3); }
-  .structure-box-title  { font-size: 15px; font-weight: 800; color: #0d2137; margin-bottom: 10px; }
-  .structure-box ul     { list-style: none; padding: 0; }
-  .structure-box li     { font-size: 13px; color: #4a5568; padding: 3px 0; }
+  .section-icon { font-size: 22px; line-height: 1; }
 
   .screen-card {
     border-radius: 16px;
     overflow: hidden;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+    box-shadow: 0 3px 16px rgba(0,0,0,0.07);
   }
   .screen-card-header {
-    padding: 14px 20px;
+    padding: 13px 18px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
   }
-  .screen-card-emoji { font-size: 26px; line-height: 1; }
-  .screen-card-title {
-    font-size: 17px;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -0.2px;
-  }
-  .screen-card-desc {
-    font-size: 12px;
-    color: rgba(255,255,255,0.7);
-    margin-top: 3px;
-    font-weight: 400;
-  }
-  .screen-card-body { background: #ffffff; padding: 16px 20px; }
-  .feature-row {
+  .screen-card-emoji { font-size: 24px; line-height: 1; }
+  .screen-card-title { font-size: 16px; font-weight: 800; color: #ffffff; }
+  .screen-card-desc  { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .screen-card-body  { background: #ffffff; padding: 14px 18px; }
+
+  .row {
     display: flex;
     gap: 10px;
     padding: 8px 0;
     border-bottom: 1px solid #f0f4f8;
     align-items: flex-start;
   }
-  .feature-row:last-child { border-bottom: none; }
-  .feature-key {
+  .row:last-child { border-bottom: none; }
+  .row-key {
     font-weight: 700;
     font-size: 13px;
     color: #0d2137;
-    min-width: 160px;
+    min-width: 140px;
     flex-shrink: 0;
   }
-  .feature-val { font-size: 13px; color: #4a5568; line-height: 1.5; }
-  .feature-val .new-badge {
-    background: #fef3c7;
-    color: #92400e;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 1px 7px;
-    border-radius: 999px;
-    margin-right: 6px;
-  }
-  .sub-header {
-    padding: 8px 0 4px;
-    font-size: 12px;
-    color: #64dfdf;
-    font-weight: 700;
-  }
-  .tip-box {
+  .row-val { font-size: 13px; color: #4a5568; line-height: 1.5; }
+
+  .sub { padding: 8px 0 3px; font-size: 12px; color: #64dfdf; font-weight: 700; }
+
+  .tip {
     background: #f0fdf4;
     border-left: 3px solid #4ade80;
     border-radius: 8px;
     padding: 8px 14px;
-    margin-top: 12px;
+    margin-top: 10px;
     font-size: 12px;
     color: #166534;
-    font-style: italic;
   }
 
-  .steps-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; border-radius: 12px; overflow: hidden; }
-  .steps-table th {
-    background: #0d2137;
-    color: #64dfdf;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    text-align: left;
-  }
-  .steps-table td {
-    padding: 10px 14px;
-    font-size: 13px;
-    border-bottom: 1px solid #f0f4f8;
-    vertical-align: top;
-  }
-  .steps-table tr:nth-child(even) td { background: #f8fafc; }
-  .steps-table .step-num {
-    width: 36px;
-    font-weight: 800;
-    color: #64dfdf;
-    font-size: 15px;
-    text-align: center;
-  }
-
-  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; border-radius: 12px; overflow: hidden; }
-  .info-table th {
-    background: #0d2137;
-    color: white;
-    padding: 10px 14px;
-    font-size: 12px;
-    font-weight: 700;
-    text-align: left;
-  }
-  .info-table td {
-    padding: 9px 14px;
-    font-size: 13px;
-    border-bottom: 1px solid #f0f4f8;
-    vertical-align: top;
-  }
-  .info-table tr:nth-child(even) td { background: #f8fafc; }
-  .info-table .key-col { font-weight: 700; color: #2A7B8C; width: 35%; }
-
-  .tips-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-  .tip-card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 14px 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    border-top: 3px solid #64dfdf;
-  }
-  .tip-card .tip-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #0d2137;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .tip-card .tip-text { font-size: 12px; color: #4a5568; line-height: 1.5; }
-
-  .example-box {
+  .example {
     background: #f0f4ff;
     border-left: 3px solid #6366f1;
     border-radius: 8px;
     padding: 10px 14px;
     margin: 10px 0;
-    font-size: 12px;
+    font-size: 13px;
     color: #3730a3;
-    line-height: 1.6;
+    line-height: 1.7;
   }
+
+  .steps { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-radius: 12px; overflow: hidden; }
+  .steps th { background: #0d2137; color: #64dfdf; padding: 10px 14px; font-size: 13px; font-weight: 700; text-align: left; }
+  .steps td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #f0f4f8; vertical-align: top; }
+  .steps tr:nth-child(even) td { background: #f8fafc; }
+  .steps .n { width: 34px; font-weight: 800; color: #64dfdf; font-size: 15px; text-align: center; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .col-box { border-radius: 14px; padding: 16px; border: 2px solid; }
+  .col-box.green { background: rgba(74,222,128,0.06); border-color: rgba(74,222,128,0.3); }
+  .col-box.teal  { background: rgba(100,223,223,0.06); border-color: rgba(100,223,223,0.3); }
+  .col-box-title { font-size: 14px; font-weight: 800; color: #0d2137; margin-bottom: 8px; }
+  .col-box ul { list-style: none; padding: 0; }
+  .col-box li { font-size: 13px; color: #4a5568; padding: 2px 0; }
 
   .guide-footer {
     background: #0d2137;
@@ -319,90 +176,57 @@
     margin-top: 40px;
   }
   .guide-footer span { color: #64dfdf; }
-
-  @media print {
-    body { background: white; font-size: 12px; }
-    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .screen-card-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .steps-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .info-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .tip-card { break-inside: avoid; }
-    .screen-card { break-inside: avoid; }
-    .guide-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  }
 </style>
 </head>
 <body>
 
-<!-- COVER -->
 <div class="cover">
   <div class="cover-inner">
     <h1>Tulon</h1>
     <div class="subtitle">My Trip Planner</div>
     <div class="badge">User Guide</div>
-    <div>
-      <span class="version">Version 7.0</span>
-    </div>
+    <div><span class="version">Version 8.0</span></div>
   </div>
 </div>
 
 <div class="content">
 
-  <!-- INTRO -->
   <div class="intro-box">
     <strong>Welcome to Tulon!</strong> The app helps you plan trips, track expenses, manage your budget, and settle up with travel companions at the end.
-    This guide explains everything you need to know — in plain language.
   </div>
 
-  <!-- WHATS NEW -->
-  <div class="whats-new">
-    <div class="whats-new-title">🎉 What's New in Version 8.0</div>
-    <ul>
-      <li><strong>Google Sign-In 🔑</strong> – Sign in instantly with your Google account — one tap, no password needed</li>
-      <li><strong>Side navigation menu ☰</strong> – The three-line button in the header opens a slide-out menu for quick navigation between all trip screens, sharing settings, language switching and sign out</li>
-      <li><strong>Display Currency 💱</strong> – In Trip Settings: choose ₪ / $ / € — all totals, KPIs and the settlement are shown in your chosen currency at live rates</li>
-      <li><strong>Auto language detection 🌐</strong> – The app detects your device language and starts in Hebrew or English accordingly</li>
-      <li><strong>Flag button 🇮🇱/🇺🇸</strong> – Switch language in one tap on the flag — available on the home screen header and on the sign-in page</li>
-    </ul>
-  </div>
-
-  <!-- GETTING STARTED -->
+  <!-- Getting Started -->
   <div class="section-header">
-    <div class="section-number">→</div>
+    <div class="section-icon">🚀</div>
     <h2>Getting Started</h2>
   </div>
 
-  <table class="steps-table">
-    <tr><th class="step-num">#</th><th>Action</th></tr>
-    <tr><td class="step-num">1</td><td>Open <strong>www.tulon.co.il</strong> on your phone, computer, or download from Google Play</td></tr>
-    <tr><td class="step-num">2</td><td>Sign in with <strong>Google in one tap</strong> — or sign up with email and password</td></tr>
-    <tr><td class="step-num">3</td><td>Tap <strong>"+ New Trip"</strong> to create your first trip</td></tr>
-    <tr><td class="step-num">4</td><td>Tap the trip → choose <strong>Budget Management</strong> → tap <strong>⚙️ Trip Settings</strong> to add destination, dates, participants and display currency</td></tr>
-    <tr><td class="step-num">5</td><td>Start adding expenses, planning activities in the calendar, and preparing your packing list</td></tr>
-    <tr><td class="step-num">6</td><td>Share the trip via the <strong>👥</strong> button — with a specific email or an open link for the whole group</td></tr>
+  <table class="steps">
+    <tr><th class="n">#</th><th>Action</th></tr>
+    <tr><td class="n">1</td><td>Open <strong>www.tulon.co.il</strong> in your browser or download from Google Play</td></tr>
+    <tr><td class="n">2</td><td>Sign in with <strong>Google in one tap</strong> — or register with email and password</td></tr>
+    <tr><td class="n">3</td><td>Tap <strong>"+ New Trip"</strong> to create your first trip</td></tr>
+    <tr><td class="n">4</td><td>Tap the trip → <strong>Budget Management</strong> → <strong>⚙️ Trip Settings</strong> to add destination, dates and participants</td></tr>
+    <tr><td class="n">5</td><td>Add expenses, plan activities in the calendar, share with your group</td></tr>
   </table>
 
-  <!-- APP STRUCTURE -->
+  <!-- App Structure -->
   <div class="section-header">
-    <div class="section-number">🗂️</div>
+    <div class="section-icon">🗂️</div>
     <h2>App Structure</h2>
   </div>
 
-  <div class="intro-box">
-    When you open a trip you'll see a <strong>home screen</strong> with two large buttons. Tap what you need:
-  </div>
-
-  <div class="app-structure">
-    <div class="structure-box budget">
-      <div class="structure-box-title">💳 Budget Management</div>
+  <div class="two-col">
+    <div class="col-box green">
+      <div class="col-box-title">💳 Budget Management</div>
       <ul>
-        <li>⚙️ Trip Settings (destination, dates, people)</li>
+        <li>⚙️ Trip Settings</li>
         <li>💳 Expenses</li>
         <li>💰 Budget &amp; Settlement</li>
       </ul>
     </div>
-    <div class="structure-box trip">
-      <div class="structure-box-title">🌴 Trip Management</div>
+    <div class="col-box teal">
+      <div class="col-box-title">🌴 Trip Management</div>
       <ul>
         <li>📅 Calendar</li>
         <li>✨ Recommendations</li>
@@ -411,73 +235,77 @@
       </ul>
     </div>
   </div>
+  <div class="tip">💡 The ☰ button in the header opens a side menu for quick navigation between all screens, language switching, sharing and sign out</div>
 
-  <div class="tip-box" style="margin-bottom:24px;">💡 The 🏠 button in the header always returns to the trip home screen. The ← button goes back to the full trip list</div>
-
-  <!-- BUDGET SECTION -->
+  <!-- Trip Settings -->
   <div class="section-header">
-    <div class="section-number">💳</div>
-    <h2>Budget Section</h2>
+    <div class="section-icon">⚙️</div>
+    <h2>Trip Settings</h2>
   </div>
 
-  <!-- Settings -->
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #1A5C6B, #2A7B8C);">
       <div class="screen-card-emoji">⚙️</div>
       <div>
         <div class="screen-card-title">Trip Settings</div>
-        <div class="screen-card-desc">Trip details, participants and planned budget</div>
+        <div class="screen-card-desc">The foundation of your trip — fill in before you start</div>
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="feature-row"><div class="feature-key">🌍 Destination</div><div class="feature-val">The place you're traveling to — e.g. Thailand, Paris, New York</div></div>
-      <div class="feature-row"><div class="feature-key">📅 Dates</div><div class="feature-val">Departure and return dates — the app calculates the number of days automatically</div></div>
-      <div class="feature-row"><div class="feature-key">💱 Input Currency</div><div class="feature-val">Choose the default currency for expense forms. Add additional currencies — converted automatically at live rates</div></div>
-      <div class="feature-row"><div class="feature-key">💲 Display Currency <span class="new-badge">New</span></div><div class="feature-val">Choose <strong>₪ ILS / $ USD / € EUR</strong> — all totals, summaries and the settlement will be shown in this currency using live rates</div></div>
-      <div class="feature-row"><div class="feature-key">👥 Participants</div><div class="feature-val"><strong>Important!</strong> Add the names of all families or people traveling — this is the basis for expense splitting</div></div>
-      <div class="feature-row"><div class="feature-key">💰 Planned Budget</div><div class="feature-val">Enter a budget amount — you'll see a color-coded gauge in the Budget screen showing how much is left</div></div>
-      <div class="tip-box">💡 To access settings — tap <strong>⚙️ Trip Settings</strong> at the top of the Expenses screen</div>
+      <div class="row"><div class="row-key">🌍 Destination &amp; Dates</div><div class="row-val">The place you're going and your departure/return dates — the app calculates the number of days automatically</div></div>
+      <div class="row"><div class="row-key">👥 Participants</div><div class="row-val"><strong>Important!</strong> Add the names of all families or people traveling — this is the basis for splitting expenses</div></div>
+      <div class="row"><div class="row-key">💱 Input Currency</div><div class="row-val">The default currency shown in expense forms</div></div>
+      <div class="row"><div class="row-key">💲 Display Currency</div><div class="row-val">Choose <strong>₪ / $ / €</strong> — all totals and the settlement will be shown in this currency at live rates</div></div>
+      <div class="row"><div class="row-key">💰 Planned Budget</div><div class="row-val">Enter an amount — a color-coded gauge shows how much is left</div></div>
     </div>
   </div>
 
   <!-- Expenses -->
+  <div class="section-header">
+    <div class="section-icon">💳</div>
+    <h2>Expenses</h2>
+  </div>
+
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #c0552a, #E8704A);">
       <div class="screen-card-emoji">💳</div>
       <div>
-        <div class="screen-card-title">Expenses</div>
-        <div class="screen-card-desc">Log every expense during the trip</div>
+        <div class="screen-card-title">Logging Expenses</div>
+        <div class="screen-card-desc">Every expense during the trip</div>
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="feature-row"><div class="feature-key">📂 Categories</div><div class="feature-val">Flight ✈️, Hotel 🏨, Attractions 🎡, Food 🍜, Taxi 🚕, Other 📦</div></div>
-      <div class="feature-row"><div class="feature-key">💱 Multi-currency</div><div class="feature-val">Enter amounts in any currency — converted to your base currency at live rates</div></div>
-      <div class="feature-row"><div class="feature-key">📷 Receipt scanning</div><div class="feature-val">Tap the camera icon, photograph a receipt — AI fills in the amount, currency and description automatically</div></div>
+      <div class="row"><div class="row-key">📂 Categories</div><div class="row-val">Flight ✈️ · Hotel 🏨 · Attractions 🎡 · Food 🍜 · Taxi 🚕 · Other 📦</div></div>
+      <div class="row"><div class="row-key">💱 Multi-currency</div><div class="row-val">Enter any amount in any currency — converted to ILS automatically at live rates</div></div>
+      <div class="row"><div class="row-key">📷 Receipt scanning</div><div class="row-val">Tap the camera icon and photograph a receipt — AI fills in the amount, currency and description</div></div>
 
-      <div class="sub-header">✈️ Flight Expense</div>
-      <div class="feature-row"><div class="feature-key">✈️ Flight number</div><div class="feature-val">E.g. LY316 — displayed on the flight card and in the calendar</div></div>
-      <div class="feature-row"><div class="feature-key">🛫 Departure / Landing</div><div class="feature-val">Displayed on the flight card and used for reminders</div></div>
-      <div class="feature-row"><div class="feature-key">🔔 Reminder</div><div class="feature-val">Choose 2–8 hours before departure to get a reminder to head to the airport</div></div>
+      <div class="sub">✈️ Flight Expense</div>
+      <div class="row"><div class="row-key">Flight number &amp; times</div><div class="row-val">Displayed on the flight card and in the calendar — also used for departure reminders</div></div>
 
-      <div class="sub-header">🏨 Hotel Expense</div>
-      <div class="feature-row"><div class="feature-key">Check-in / Check-out</div><div class="feature-val">Enter dates — the hotel appears on every night of your stay in the calendar</div></div>
+      <div class="sub">🏨 Hotel Expense</div>
+      <div class="row"><div class="row-key">Check-in / Check-out</div><div class="row-val">The hotel appears on every night of your stay in the calendar</div></div>
 
-      <div class="sub-header">💸 Splitting Expenses</div>
-      <div class="feature-row"><div class="feature-key">👥 Shared / 👤 Personal</div><div class="feature-val"><strong>Shared</strong> = included in group settlement. <strong>Personal</strong> = yours only, not counted for others</div></div>
-      <div class="feature-row"><div class="feature-key">Who was there?</div><div class="feature-val">All participants are checked by default. Tap anyone who wasn't there to remove them from the split</div></div>
-      <div class="feature-row"><div class="feature-key">💳 Who paid?</div><div class="feature-val">Tap "+ Add payer", choose a person and enter how much they paid. Multiple payers per expense are supported</div></div>
+      <div class="sub">💸 Splitting Expenses</div>
+      <div class="row"><div class="row-key">👥 Shared / 👤 Personal</div><div class="row-val"><strong>Shared</strong> — included in the group settlement. <strong>Personal</strong> — not counted</div></div>
+      <div class="row"><div class="row-key">Who was there?</div><div class="row-val">Everyone is checked by default. Tap anyone who wasn't there to remove them from the split</div></div>
+      <div class="row"><div class="row-key">💳 Who paid?</div><div class="row-val">Tap "+ Add payer" → choose a person → enter the amount. Multiple payers per expense are supported</div></div>
 
-      <div class="example-box">
+      <div class="example">
         <strong>Example:</strong> 3 families went on a tour costing ₪300. Only Smith and Jones attended. Paid by: Smith ₪300<br>
         → At the end: Jones owes Smith ₪150
       </div>
 
-      <div class="feature-row"><div class="feature-key">✅ Mark as paid</div><div class="feature-val">Locks the exchange rate — the amount won't change if the rate shifts</div></div>
-      <div class="feature-row"><div class="feature-key">📍 Address</div><div class="feature-val">Add an address — tap to open Google Maps, and it will also appear on the Map screen</div></div>
+      <div class="row"><div class="row-key">📍 Address</div><div class="row-val">Add an address — tap to open Google Maps, and the place appears on the Map screen</div></div>
+      <div class="row"><div class="row-key">✅ Mark as paid</div><div class="row-val">Locks the exchange rate — the ILS amount won't change if the rate shifts</div></div>
     </div>
   </div>
 
-  <!-- Budget -->
+  <!-- Budget & Settlement -->
+  <div class="section-header">
+    <div class="section-icon">💰</div>
+    <h2>Budget &amp; Settlement</h2>
+  </div>
+
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #2d6b3e, #4A8C5C);">
       <div class="screen-card-emoji">💰</div>
@@ -487,21 +315,19 @@
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="feature-row"><div class="feature-key">📊 Budget gauge</div><div class="feature-val">How much of the budget has been spent: 🟢 up to 70%, 🟡 70–90%, 🔴 over 90%</div></div>
-      <div class="feature-row"><div class="feature-key">🥧 Category chart</div><div class="feature-val">Pie chart with breakdown — tap any slice for details</div></div>
-      <div class="feature-row"><div class="feature-key">💸 Who owes whom</div><div class="feature-val">Fully automatic calculation — see exactly who needs to pay whom and how much</div></div>
-      <div class="feature-row"><div class="feature-key">📤 Export report</div><div class="feature-val">Tap 📄 in the header for a formatted report with all expenses and the settlement</div></div>
-      <div class="tip-box">💡 Only "Shared" expenses are included in the settlement calculation. "Personal" expenses are excluded</div>
+      <div class="row"><div class="row-key">📊 Budget gauge</div><div class="row-val">🟢 up to 70% · 🟡 70–90% · 🔴 over 90%</div></div>
+      <div class="row"><div class="row-key">🥧 Category chart</div><div class="row-val">Pie chart with a breakdown of expenses by category</div></div>
+      <div class="row"><div class="row-key">💸 Who owes whom</div><div class="row-val">Fully automatic calculation — shows exactly who needs to pay whom and how much, in your chosen display currency</div></div>
+      <div class="row"><div class="row-key">📄 Export report</div><div class="row-val">Tap 📄 in the header for a formatted report with all expenses and the settlement</div></div>
     </div>
   </div>
 
-  <!-- TRIP SECTION -->
+  <!-- Calendar -->
   <div class="section-header">
-    <div class="section-number">🌴</div>
-    <h2>Trip Section</h2>
+    <div class="section-icon">📅</div>
+    <h2>Calendar</h2>
   </div>
 
-  <!-- Calendar -->
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #5B3E8C, #7B5EA7);">
       <div class="screen-card-emoji">📅</div>
@@ -511,25 +337,19 @@
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="sub-header">📅 Month View</div>
-      <div class="feature-row"><div class="feature-key">Monthly calendar</div><div class="feature-val">Color dots on each day: 🔵 flight, 🟢 hotel, 🟡 expenses, 🟣 activities</div></div>
-      <div class="feature-row"><div class="feature-key">Tap a day</div><div class="feature-val">Switches to the detailed day view with an hourly timeline</div></div>
-
-      <div class="sub-header">🕐 Day View</div>
-      <div class="feature-row"><div class="feature-key">Hourly timeline</div><div class="feature-val">Shows what's happening each hour — flights, check-ins and activities placed precisely on the timeline</div></div>
-      <div class="feature-row"><div class="feature-key">👆 Swipe between days</div><div class="feature-val">Swipe left/right to navigate — the ← → arrows in the header work too</div></div>
-      <div class="feature-row"><div class="feature-key">🌤️ Weather</div><div class="feature-val">Daily forecast: temperature and conditions (available up to 16 days ahead)</div></div>
-      <div class="feature-row"><div class="feature-key">👆 Tap an activity</div><div class="feature-val"><span class="new-badge">New</span>Tap any purple activity to see its full details — name, type, times — with an Edit button</div></div>
-
-      <div class="sub-header">✏️ Adding Daily Activities</div>
-      <div class="feature-row"><div class="feature-key">How to add</div><div class="feature-val">Tap "✏️ Activities" on any day — an entry panel opens</div></div>
-      <div class="feature-row"><div class="feature-key">Activity type</div><div class="feature-val">Choose: 🥾 Hike, 🍽️ Restaurant, 🚗 Drive, 📌 General — shown as an icon on the timeline</div></div>
-      <div class="feature-row"><div class="feature-key">Start &amp; end time</div><div class="feature-val">Enter from/to times — the activity occupies the correct slot on the timeline</div></div>
-      <div class="tip-box">💡 Activities are saved automatically to the cloud — they won't disappear</div>
+      <div class="row"><div class="row-key">Monthly calendar</div><div class="row-val">Color dots on each day: 🔵 flight · 🟢 hotel · 🟡 expenses · 🟣 activities. Tap a day to switch to the detailed daily view</div></div>
+      <div class="row"><div class="row-key">Hourly timeline</div><div class="row-val">Shows what's happening each hour — flights, check-ins and activities you added</div></div>
+      <div class="row"><div class="row-key">🌤️ Weather</div><div class="row-val">Daily forecast available up to 16 days ahead</div></div>
+      <div class="row"><div class="row-key">✏️ Adding activities</div><div class="row-val">Tap "✏️ Activities" on any day → enter a name, type and times. Tap an existing activity to edit it</div></div>
     </div>
   </div>
 
-  <!-- Discover -->
+  <!-- Recommendations -->
+  <div class="section-header">
+    <div class="section-icon">✨</div>
+    <h2>Recommendations</h2>
+  </div>
+
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #1a4a7a, #2563aa);">
       <div class="screen-card-emoji">✨</div>
@@ -539,254 +359,145 @@
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="feature-row"><div class="feature-key">🏨 Agoda</div><div class="feature-val">Full-width button at the top — tap to search hotels at your destination with trip dates pre-filled</div></div>
-      <div class="feature-row"><div class="feature-key">🎡 Viator / GetYourGuide</div><div class="feature-val">Two buttons side by side to search tours and activities at your destination</div></div>
-      <div class="feature-row"><div class="feature-key">🤖 AI Recommendations</div><div class="feature-val">Top attractions, restaurants and a local tip — tailored to your destination</div></div>
-      <div class="feature-row"><div class="feature-key">🗺️ Google Maps</div><div class="feature-val">"Open in Maps" button next to each recommendation — opens direct navigation</div></div>
-      <div class="tip-box">💡 Recommendations are provided in English for best quality</div>
+      <div class="row"><div class="row-key">🏨 Agoda</div><div class="row-val">Search hotels at your destination with trip dates pre-filled</div></div>
+      <div class="row"><div class="row-key">🎡 Viator / GetYourGuide</div><div class="row-val">Search tours and activities at your destination</div></div>
+      <div class="row"><div class="row-key">🤖 AI Recommendations</div><div class="row-val">Top attractions and restaurants with a local tip — tailored to your destination</div></div>
     </div>
   </div>
 
   <!-- Packing List -->
+  <div class="section-header">
+    <div class="section-icon">🎒</div>
+    <h2>Packing List</h2>
+  </div>
+
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #7c3aed, #9f5cff);">
       <div class="screen-card-emoji">🎒</div>
       <div>
-        <div class="screen-card-title">Packing List <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:999px;margin-left:6px;">New</span></div>
+        <div class="screen-card-title">Packing List</div>
         <div class="screen-card-desc">Manage your gear before and during the trip</div>
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="feature-row"><div class="feature-key">📋 Categories</div><div class="feature-val">Documents 📄, Clothes 👕, Tech 💻, Medical 💊, General 📦 — each item under the right category</div></div>
-      <div class="feature-row"><div class="feature-key">✅ Check off</div><div class="feature-val">Tap any item to mark it as packed — the progress bar at the top updates in real time</div></div>
-      <div class="feature-row"><div class="feature-key">➕ Add item</div><div class="feature-val">Type the item name, choose a category and tap Add</div></div>
-      <div class="feature-row"><div class="feature-key">🗑️ Delete</div><div class="feature-val">Tap ✕ next to any item to remove it</div></div>
-      <div class="feature-row"><div class="feature-key">☁️ Saved</div><div class="feature-val">The list is saved to the cloud — visible to all trip members</div></div>
-      <div class="tip-box">💡 Prepare your packing list before the trip — always accessible during packing too</div>
+      <div class="row"><div class="row-key">📋 Categories</div><div class="row-val">Documents · Clothes · Tech · Medical · General</div></div>
+      <div class="row"><div class="row-key">✅ Check off items</div><div class="row-val">Tap an item to mark it as packed — the progress bar at the top updates instantly</div></div>
+      <div class="row"><div class="row-key">➕ Add / 🗑️ Delete</div><div class="row-val">Type a name, choose a category and tap Add. Tap ✕ next to an item to remove it</div></div>
     </div>
   </div>
 
   <!-- Map -->
+  <div class="section-header">
+    <div class="section-icon">🗺️</div>
+    <h2>Map</h2>
+  </div>
+
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
       <div class="screen-card-emoji">🗺️</div>
       <div>
-        <div class="screen-card-title">Map <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:999px;margin-left:6px;">New</span></div>
+        <div class="screen-card-title">Map</div>
         <div class="screen-card-desc">All your trip places in one view</div>
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="feature-row"><div class="feature-key">🗺️ Open map</div><div class="feature-val">Tap to open Google Maps with all your trip locations grouped together</div></div>
-      <div class="feature-row"><div class="feature-key">📍 Places list</div><div class="feature-val">Every expense with an address appears here — restaurants, attractions, hotels</div></div>
-      <div class="feature-row"><div class="feature-key">Tap a place</div><div class="feature-val">Tap any place in the list to open direct navigation in Google Maps</div></div>
-      <div class="tip-box">💡 Add an address to every expense (restaurant, attraction) — it will appear automatically on the Map screen</div>
+      <div class="row"><div class="row-key">📍 Places</div><div class="row-val">Every expense with an address appears here automatically</div></div>
+      <div class="row"><div class="row-key">🗺️ Open map</div><div class="row-val">Tap any place to open direct navigation in Google Maps</div></div>
     </div>
   </div>
 
-  <!-- SIDE MENU -->
+  <!-- Sharing -->
   <div class="section-header">
-    <div class="section-number">☰</div>
-    <h2>Side Menu</h2>
-  </div>
-
-  <div class="intro-box">
-    The <strong>☰</strong> button in the trip header opens a slide-out menu for quick navigation to any screen, sharing management and language switching — without leaving the trip.
+    <div class="section-icon">👥</div>
+    <h2>Sharing a Trip</h2>
   </div>
 
   <div class="screen-card">
     <div class="screen-card-header" style="background: linear-gradient(135deg, #1a3a5c, #2d5c8a);">
-      <div class="screen-card-emoji">☰</div>
+      <div class="screen-card-emoji">🔗</div>
       <div>
-        <div class="screen-card-title">Quick Navigation Menu</div>
-        <div class="screen-card-desc">Accessible from any screen within a trip</div>
+        <div class="screen-card-title">Invite by Link</div>
+        <div class="screen-card-desc">The easiest way to share with your group</div>
       </div>
     </div>
     <div class="screen-card-body">
-      <div class="feature-row"><div class="feature-key">📅 Calendar</div><div class="feature-val">Jump directly to the trip calendar</div></div>
-      <div class="feature-row"><div class="feature-key">🔍 Discover</div><div class="feature-val">Jump directly to the Recommendations screen</div></div>
-      <div class="feature-row"><div class="feature-key">🗺️ Map</div><div class="feature-val">Jump directly to the places map</div></div>
-      <div class="feature-row"><div class="feature-key">🎒 Packing</div><div class="feature-val">Jump directly to the packing list</div></div>
-      <div class="feature-row"><div class="feature-key">💰 Expenses / Budget</div><div class="feature-val">Jump directly to the Budget section</div></div>
-      <div class="feature-row"><div class="feature-key">⚙️ Trip Settings</div><div class="feature-val">Open Trip Settings directly to edit destination, dates and participants</div></div>
-      <div class="feature-row"><div class="feature-key">👥 Share</div><div class="feature-val">Open the sharing panel to send an invite</div></div>
-      <div class="feature-row"><div class="feature-key">🌐 / 🇮🇱 Language</div><div class="feature-val">Switch between Hebrew and English — saved for all future sessions</div></div>
-      <div class="feature-row"><div class="feature-key">📖 Guide</div><div class="feature-val">Open this guide again at any time</div></div>
-      <div class="feature-row"><div class="feature-key">🚪 Sign out</div><div class="feature-val">Sign out securely from your account</div></div>
-      <div class="tip-box">💡 Close the menu by tapping anywhere on the main screen</div>
+      <div class="row"><div class="row-key">How to create</div><div class="row-val">Open trip → tap 👥 → scroll down → tap <strong>"🔗 Generate Invite Link"</strong></div></div>
+      <div class="row"><div class="row-key">Send</div><div class="row-val">📲 Send directly via WhatsApp, or 📋 copy the link</div></div>
+      <div class="row"><div class="row-key">What happens</div><div class="row-val">They tap the link → sign in or register → the trip appears in their account automatically</div></div>
+      <div class="row"><div class="row-key">Revoke link</div><div class="row-val">Tap 🗑️ — anyone already joined stays, but no new people can join</div></div>
     </div>
   </div>
 
-  <!-- SHARING -->
-  <div class="section-header">
-    <div class="section-number">👥</div>
-    <h2>Sharing a Trip</h2>
+  <div class="screen-card" style="margin-top:0;">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #374151, #4b5563);">
+      <div class="screen-card-emoji">📧</div>
+      <div>
+        <div class="screen-card-title">Share with a Specific Email</div>
+        <div class="screen-card-desc">For precise sharing with individual permissions</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">How to share</div><div class="row-val">Open trip → tap 👥 → enter email → tap Share</div></div>
+      <div class="row"><div class="row-key">Change permissions</div><div class="row-val">Tap the button next to their name to switch between <strong>Edit</strong> and <strong>View only</strong></div></div>
+      <div class="row"><div class="row-key">Remove</div><div class="row-val">Tap ✕ next to the person's name</div></div>
+    </div>
   </div>
 
-  <div style="font-size:13px;font-weight:700;color:#0d2137;margin-bottom:10px;">🔗 Invite by Link — The Easiest Way</div>
-  <div class="intro-box" style="background:#f0fdf4;border-color:#4ade80;margin-bottom:12px;">
-    <strong>New!</strong> Send an invite link to the whole group via WhatsApp — anyone with the link can join. No need to enter emails one by one.
-  </div>
-  <table class="info-table">
-    <tr><th class="key-col">Topic</th><th>Details</th></tr>
-    <tr><td class="key-col">How to create a link</td><td>Open trip → tap 👥 → scroll down → tap <strong>"🔗 Generate Invite Link"</strong></td></tr>
-    <tr><td class="key-col">Sending</td><td>Tap 📲 to send directly via WhatsApp, or 📋 to copy the link</td></tr>
-    <tr><td class="key-col">What happens to the invitee</td><td>They tap the link → sign in or register → the trip appears automatically in their account</td></tr>
-    <tr><td class="key-col">View only</td><td>You can set it so invitees only see the calendar and recommendations — not expenses or budget</td></tr>
-    <tr><td class="key-col">Revoke link</td><td>Tap 🗑️ to revoke — anyone already joined stays, but no new people can join</td></tr>
-  </table>
-
-  <div style="font-size:13px;font-weight:700;color:#0d2137;margin:18px 0 10px;">📧 Share with a Specific Email</div>
-  <table class="info-table">
-    <tr><th class="key-col">Topic</th><th>Details</th></tr>
-    <tr><td class="key-col">How to share</td><td>Open trip → tap 👥 → enter email → tap Share</td></tr>
-    <tr><td class="key-col">What they see</td><td>The entire trip — expenses, budget, calendar — and they can edit</td></tr>
-    <tr><td class="key-col">Real-time sync</td><td>Every change syncs instantly to all participants</td></tr>
-    <tr><td class="key-col">Change permissions</td><td>Tap the button next to their name to switch between Edit and View Only</td></tr>
-    <tr><td class="key-col">Remove participant</td><td>Tap ✕ next to their name to remove them from the trip</td></tr>
-  </table>
-
-  <div style="font-size:13px;font-weight:700;color:#0d2137;margin:18px 0 10px;">✨ Share as Inspiration</div>
-  <table class="info-table">
-    <tr><th class="key-col">Topic</th><th>Details</th></tr>
-    <tr><td class="key-col">What is it?</td><td>Send a read-only link — they see what you did and when, <strong>without prices</strong></td></tr>
-    <tr><td class="key-col">How to use</td><td>Open trip → tap <strong>✨</strong> → uncheck what to hide → tap "Create link"</td></tr>
-    <tr><td class="key-col">What they can do</td><td>View and import the trip to their own account — without any prices</td></tr>
-    <tr><td class="key-col">Account required?</td><td>To view — no. To import — yes</td></tr>
-  </table>
-
-  <!-- SETTLEMENT -->
+  <!-- Settlement -->
   <div class="section-header">
-    <div class="section-number">💸</div>
+    <div class="section-icon">💸</div>
     <h2>Settlement at the End of the Trip</h2>
   </div>
 
-  <div class="intro-box">
-    Tulon automatically calculates who owes money to whom — so after the trip everyone knows exactly what to pay.
-  </div>
-
-  <table class="steps-table">
-    <tr><th class="step-num">#</th><th>What to do</th></tr>
-    <tr><td class="step-num">1</td><td>In <strong>Trip Settings</strong> — add the names of all families / people traveling</td></tr>
-    <tr><td class="step-num">2</td><td>For each shared expense — mark <strong>who was there</strong> (tap anyone who wasn't to remove them)</td></tr>
-    <tr><td class="step-num">3</td><td>Tap <strong>"+ Add payer"</strong> and enter who paid and how much</td></tr>
-    <tr><td class="step-num">4</td><td>At the end of the trip — open <strong>Budget</strong> and scroll down to see who owes whom</td></tr>
+  <table class="steps">
+    <tr><th class="n">#</th><th>What to do</th></tr>
+    <tr><td class="n">1</td><td>In <strong>Trip Settings</strong> — add the names of all families / people traveling</td></tr>
+    <tr><td class="n">2</td><td>For each shared expense — mark <strong>who was there</strong></td></tr>
+    <tr><td class="n">3</td><td>Tap <strong>"+ Add payer"</strong> → enter who paid and how much</td></tr>
+    <tr><td class="n">4</td><td>At the end — open <strong>Budget</strong> and scroll down to see who owes whom</td></tr>
   </table>
 
-  <div class="example-box">
-    <strong>Full example — 3 families:</strong><br><br>
+  <div class="example">
+    <strong>Example — 3 families:</strong><br>
     🍽️ Restaurant ₪300 — only Smith &amp; Jones. Paid by: Smith ₪300<br>
     🚌 Tour ₪600 — all three. Paid by: Jones ₪400, Green ₪200<br>
     🏨 Hotel ₪900 — all three. Paid by: Smith ₪900<br><br>
-    <strong>Automatic calculation:</strong><br>
-    → Green owes Smith ₪100<br>
-    → Jones owes Smith ₪50
+    <strong>Result:</strong> Green owes Smith ₪100 · Jones owes Smith ₪50
   </div>
 
-  <!-- NOTIFICATIONS -->
+  <!-- Reminders -->
   <div class="section-header">
-    <div class="section-number">🔔</div>
+    <div class="section-icon">🔔</div>
     <h2>Automatic Reminders</h2>
   </div>
 
-  <table class="info-table">
-    <tr><th class="key-col">Reminder type</th><th>When it arrives</th></tr>
-    <tr><td class="key-col">✈️ Head to the airport</td><td>2 to 8 hours before departure — your choice when entering the flight</td></tr>
-    <tr><td class="key-col">🏨 Check-in day</td><td>On the morning of check-in (08:00)</td></tr>
-    <tr><td class="key-col">🏨 Check-out day</td><td>On the morning of check-out (08:00)</td></tr>
-    <tr><td class="key-col">💳 New expense added</td><td>When a travel companion adds an expense to your shared trip</td></tr>
-  </table>
-
-  <div class="tip-box" style="margin-bottom: 24px;">
-    💡 To enable reminders: tap the 🔕 icon on the home screen → approve the permission
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #92400e, #b45309);">
+      <div class="screen-card-emoji">🔔</div>
+      <div>
+        <div class="screen-card-title">Reminders</div>
+        <div class="screen-card-desc">Tap 🔕 on the home screen to enable</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">✈️ Head to the airport</div><div class="row-val">2–8 hours before departure — your choice when entering the flight</div></div>
+      <div class="row"><div class="row-key">🏨 Check-in / Check-out</div><div class="row-val">On the morning of arrival or departure day (08:00)</div></div>
+      <div class="row"><div class="row-key">💳 New expense added</div><div class="row-val">When a travel companion adds an expense to your shared trip</div></div>
+    </div>
   </div>
 
-  <!-- TIPS -->
+  <!-- Help -->
   <div class="section-header">
-    <div class="section-number">⚡</div>
-    <h2>Useful Tips</h2>
-  </div>
-
-  <div class="tips-grid">
-    <div class="tip-card">
-      <div class="tip-title">🔗 Easy invite</div>
-      <div class="tip-text">Generate an invite link and send it to the whole group on WhatsApp — everyone taps and joins</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">🎒 Packing list</div>
-      <div class="tip-text">Prepare the list before the trip — check off items as you pack each one</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">🗺️ Centralized map</div>
-      <div class="tip-text">Add an address to every expense — they all appear automatically on the Map screen</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">📅 Activity details</div>
-      <div class="tip-text">Tap any purple activity in the calendar to see full details and edit it on the spot</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">📱 Access from anywhere</div>
-      <div class="tip-text">Sign in with the same email from any phone or computer — everything syncs automatically</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">📷 Receipt scanning</div>
-      <div class="tip-text">Photograph a receipt — AI fills in the amount, currency and description automatically</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">💸 Partial split</div>
-      <div class="tip-text">Not everyone came? Tap whoever wasn't there to remove them from the split</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">💱 Quick currency conversion</div>
-      <div class="tip-text">Tap 💱 in the header to open the converter — handy when shopping at a market</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">🔒 Lock the exchange rate</div>
-      <div class="tip-text">Mark an expense as paid so the amount doesn't change if the rate shifts</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">👁️ Share without prices</div>
-      <div class="tip-text">Share the trip with friends who only see the itinerary — not what you spent</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">📤 Export report</div>
-      <div class="tip-text">Tap 📄 in Budget for a formatted report with all expenses and the settlement</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">🌍 Multiple trips</div>
-      <div class="tip-text">Manage several trips at once — switch between them from the home screen</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">💲 Display currency</div>
-      <div class="tip-text">In Trip Settings choose ₪/$/€ — all totals and settlement will show in your chosen currency automatically</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">🇺🇸 Language switch</div>
-      <div class="tip-text">Tap the flag on the home screen header — switches between Hebrew and English in one tap</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">🔑 Google Sign-In</div>
-      <div class="tip-text">Tap "Continue with Google" on the sign-in page — faster, no password to remember</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-title">☰ Quick navigation</div>
-      <div class="tip-text">Tap ☰ on any trip screen to jump directly to any part of the app — calendar, map, packing and more</div>
-    </div>
-  </div>
-
-  <!-- HELP -->
-  <div class="section-header">
-    <div class="section-number">⚖️</div>
+    <div class="section-icon">📞</div>
     <h2>Help &amp; Contact</h2>
   </div>
 
-  <table class="info-table">
-    <tr><th class="key-col">Topic</th><th>Where to find it</th></tr>
-    <tr><td class="key-col">📖 User guide</td><td>Tap the "📖 User Guide" button at the top of the home screen</td></tr>
-    <tr><td class="key-col">🔒 Privacy policy</td><td>www.tulon.co.il/privacy</td></tr>
-    <tr><td class="key-col">📋 Terms of use</td><td>www.tulon.co.il/terms</td></tr>
-    <tr><td class="key-col">📧 Contact us</td><td>contact@tulon.co.il</td></tr>
-    <tr><td class="key-col">📱 Android app</td><td>Search "Tulon" on Google Play</td></tr>
-  </table>
+  <div class="tip" style="margin-bottom:12px;">
+    📖 <strong>This guide</strong> is always available via the "📖 User Guide" button on the home screen, or through the side menu ☰
+  </div>
+  <div class="tip">
+    📧 <strong>Contact:</strong> contact@tulon.co.il &nbsp;|&nbsp; 🔒 <strong>Privacy:</strong> www.tulon.co.il/privacy
+  </div>
 
 </div>
 
