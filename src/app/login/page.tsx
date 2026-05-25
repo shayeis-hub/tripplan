@@ -5,6 +5,7 @@ import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
+import { AlertCircle, Loader } from "lucide-react";
 
 const ERROR_CODES: Record<string, "login_err_not_found" | "login_err_password" | "login_err_credential" | "login_err_in_use" | "login_err_weak" | "login_err_email"> = {
   "auth/user-not-found":       "login_err_not_found",
@@ -80,7 +81,8 @@ export default function LoginPage() {
         .btn-main{width:100%;padding:15px;border-radius:14px;border:none;background:#64dfdf;color:#0d2137;font-size:15px;font-weight:700;cursor:pointer;font-family:'Rubik',sans-serif;margin-bottom:10px;display:block;}
         .btn-main:disabled{opacity:0.5;cursor:default;}
         .btn-sec{width:100%;padding:13px;border-radius:14px;border:0.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer;font-family:'Rubik',sans-serif;display:block;}
-        .err{background:rgba(255,107,107,0.1);border:0.5px solid rgba(255,107,107,0.3);border-radius:12px;padding:10px 14px;margin-bottom:14px;color:#ff6b6b;font-size:13px;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .err{background:rgba(255,107,107,0.1);border:0.5px solid rgba(255,107,107,0.3);border-radius:12px;padding:10px 14px;margin-bottom:14px;color:#ff6b6b;font-size:13px;display:flex;align-items:center;gap:8px;}
         .div{height:0.5px;background:rgba(255,255,255,0.07);margin:18px 0;}
         .lang-toggle{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:0;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:24px;padding:3px;}
         .lang-btn{padding:5px 14px;border-radius:20px;border:none;background:transparent;color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer;font-family:'Rubik',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
@@ -122,10 +124,10 @@ export default function LoginPage() {
             onKeyDown={ev => { if (ev.key === "Enter") doSubmit(); }}
             autoComplete={isNew ? "new-password" : "current-password"}/>
 
-          {errMsg && <div className="err">⚠️ {errMsg}</div>}
+          {errMsg && <div className="err"><AlertCircle size={15} color="#ff6b6b" style={{flexShrink:0}}/> {errMsg}</div>}
 
           <button className="btn-main" onClick={doSubmit} disabled={busy}>
-            {busy ? "⏳" : isNew ? t("login_register_btn", lang) : t("login_btn", lang)}
+            {busy ? <Loader size={16} color="#0d2137" style={{animation:"spin 1s linear infinite"}}/> : isNew ? t("login_register_btn", lang) : t("login_btn", lang)}
           </button>
 
           <div className="or-divider"><span>{t("login_or", lang)}</span></div>
