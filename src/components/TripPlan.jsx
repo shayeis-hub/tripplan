@@ -32,7 +32,7 @@ import {
   Users, User, ChevronRight, Shirt, FileText, Zap, Heart, Package,
   AlertCircle, Loader, Link as LinkIcon, Ticket, Utensils, Car,
   Building2, Search, Clock, Menu, ArrowLeftRight, FileDown, BarChart2,
-  Moon, Copy, Lock, Bug, Lightbulb,
+  Moon, Copy, Lock, Bug, Lightbulb, Bell, BellOff, Globe,
 } from "lucide-react";
 
 const catLabel=(id,lang)=>t(`cat_${id}`,lang)||id;
@@ -980,7 +980,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
 
         {/* Display currency selector */}
         <Card>
-          <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:4,color:"rgba(255,255,255,0.85)"}}>💱 {lang==="he"?"מטבע תצוגה":"Display Currency"}</h2>
+          <h2 style={{fontFamily:RF,fontSize:18,fontWeight:700,marginBottom:4,color:"rgba(255,255,255,0.85)",display:"flex",alignItems:"center",gap:8}}><ArrowLeftRight size={17} color={TEAL} strokeWidth={1.5}/> {lang==="he"?"מטבע תצוגה":"Display Currency"}</h2>
           <p style={{fontSize:12,color:W35,marginBottom:12,fontFamily:RF}}>{lang==="he"?"סיכומים, סה\"כ והתחשבנות יוצגו במטבע זה":"Totals, summaries and settlement shown in this currency"}</p>
           <div style={{display:"flex",gap:8}}>
             {[{code:"ILS",label:"₪ שקל",labelEn:"₪ ILS"},{code:"USD",label:"$ דולר",labelEn:"$ USD"},{code:"EUR",label:"€ יורו",labelEn:"€ EUR"}].map(({code,label,labelEn})=>{
@@ -2990,19 +2990,42 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         <style>{GS}</style>
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",fontFamily:RF}}>
           {/* user bar */}
-          <div style={{background:"rgba(0,0,0,0.4)",padding:"10px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
-            <div style={{display:"flex",flexDirection:"column"}}>
+          <div style={{background:"rgba(0,0,0,0.4)",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
+            {/* App name */}
+            <div style={{display:"flex",flexDirection:"column",flexShrink:0}}>
               <span style={{fontFamily:RF,color:"#ffffff",fontSize:20,fontWeight:800,letterSpacing:"-0.5px",lineHeight:1}}>{t("app_name",lang)}</span>
               <span style={{fontFamily:RF,color:W35,fontSize:10,fontWeight:300,letterSpacing:"0.5px",marginTop:3}}>{t("app_subtitle",lang)}</span>
             </div>
-            <button onClick={()=>setLang(lang==="he"?"en":"he")} title={lang==="he"?"Switch to English":"עבור לעברית"}
-              style={{background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:20,padding:"4px 10px",cursor:"pointer",fontSize:18,lineHeight:1,display:"flex",alignItems:"center",gap:5}}>
-              <span>{lang==="he"?"🇮🇱":"🇺🇸"}</span>
-              <span style={{fontFamily:RF,fontSize:10,color:W35,fontWeight:500}}>{lang==="he"?"EN":"עב"}</span>
-            </button>
-            <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <button onClick={()=>setShowConverter(c=>!c)} style={{background:"rgba(100,223,223,0.1)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>💱</button>
-              <button onClick={subscribe} title={subscribed?t("notif_active",lang):t("notif_enable",lang)} style={{background:subscribed?"rgba(74,222,128,0.12)":"rgba(100,223,223,0.1)",border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(100,223,223,0.25)"}`,borderRadius:8,color:subscribed?"#4ade80":TEAL,fontFamily:RF,fontWeight:600,fontSize:11,padding:"5px 10px",cursor:"pointer"}}>{subscribed?"🔔":"🔕"}</button>
+
+            {/* Language pill — same style as login */}
+            <div style={{display:"flex",background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:24,padding:3,flexShrink:0}}>
+              {["en","he"].map(l=>(
+                <button key={l} onClick={()=>setLang(l)}
+                  style={{padding:"5px 12px",borderRadius:20,border:"none",
+                    background:lang===l?"rgba(100,223,223,0.18)":"transparent",
+                    color:lang===l?TEAL:"rgba(255,255,255,0.4)",
+                    fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:RF,
+                    display:"flex",alignItems:"center",gap:4,transition:"all 0.15s",whiteSpace:"nowrap"}}>
+                  <Globe size={11} color={lang===l?TEAL:"rgba(255,255,255,0.4)"} strokeWidth={1.5}/>
+                  {l==="en"?"EN":"עב"}
+                </button>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div style={{display:"flex",gap:7,alignItems:"center",flexShrink:0}}>
+              <button onClick={()=>setShowConverter(c=>!c)}
+                title={lang==="he"?"המרת מטבע":"Currency converter"}
+                style={{width:34,height:34,borderRadius:10,border:`0.5px solid ${showConverter?"rgba(100,223,223,0.4)":"rgba(100,223,223,0.2)"}`,background:showConverter?"rgba(100,223,223,0.15)":"rgba(100,223,223,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                <ArrowLeftRight size={15} color={TEAL} strokeWidth={1.5}/>
+              </button>
+              <button onClick={subscribe}
+                title={subscribed?t("notif_active",lang):t("notif_enable",lang)}
+                style={{width:34,height:34,borderRadius:10,border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(255,255,255,0.12)"}`,background:subscribed?"rgba(74,222,128,0.1)":"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                {subscribed
+                  ?<Bell size={15} color="#4ade80" strokeWidth={1.5}/>
+                  :<BellOff size={15} color={W35} strokeWidth={1.5}/>}
+              </button>
             </div>
           </div>
           {/* Currency Converter */}
