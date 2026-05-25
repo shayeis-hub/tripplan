@@ -2561,7 +2561,7 @@ function MapScreen({trip,expenses}){
     }),[expenses,lang,dc]);
 
   return(
-    <div style={{height:"100vh",background:"#091928",display:"flex",flexDirection:"column",fontFamily:RF,position:"relative",overflow:"hidden"}}>
+    <div style={{height:"100vh",background:"#0d2137",display:"flex",flexDirection:"column",fontFamily:RF,position:"relative",overflow:"hidden"}}>
 
       {/* ── Floating top bar ── */}
       <div style={{position:"absolute",top:16,left:16,right:16,zIndex:1000,display:"flex",gap:10,alignItems:"stretch"}}>
@@ -2600,11 +2600,17 @@ function MapScreen({trip,expenses}){
 
       {/* ── Bottom list — places with addresses ── */}
       {places.length>0&&(
-        <div style={{background:"rgba(7,20,34,0.97)",borderTop:"0.5px solid rgba(100,223,223,0.12)",padding:"14px 16px 20px",maxHeight:220,overflowY:"auto",flexShrink:0}}>
-          <div style={{fontSize:12,fontWeight:700,color:W40,marginBottom:10,display:"flex",alignItems:"center",gap:6,letterSpacing:"0.5px",textTransform:"uppercase"}}>
-            <MapPin size={12} color={TEAL} strokeWidth={2}/>
-            {lang==="he"?`${places.length} מקומות על המפה`:`${places.length} place${places.length!==1?"s":""} on map`}
+        <div style={{background:"#0d2137",borderTop:"0.5px solid rgba(100,223,223,0.15)",flexShrink:0,maxHeight:"45%",display:"flex",flexDirection:"column"}}>
+          {/* drag handle + header */}
+          <div style={{padding:"10px 16px 6px",flexShrink:0}}>
+            <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.15)",margin:"0 auto 10px"}}/>
+            <div style={{fontSize:11,fontWeight:700,color:W40,display:"flex",alignItems:"center",gap:6,letterSpacing:"0.8px",textTransform:"uppercase"}}>
+              <MapPin size={11} color={TEAL} strokeWidth={2}/>
+              {lang==="he"?`${places.length} מקומות`:`${places.length} place${places.length!==1?"s":""}`}
+            </div>
           </div>
+          <div style={{overflowY:"auto",padding:"0 16px 20px",flex:1}}>
+
           {places.map((p,i)=>{
             const cat=CATS.find(c=>c.id===p.category);
             const color=MAP_PIN_COLORS[p.category]||"#94a3b8";
@@ -2631,6 +2637,7 @@ function MapScreen({trip,expenses}){
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
@@ -2847,18 +2854,46 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     setInspireSaving(false);
   };
 
+  // ── History-aware navigation (Android/iOS back button support) ──
+  const pushNav=useCallback((type,id,sec,scr)=>{
+    try{ window.history.pushState({type,id,sec,scr},""); }catch{}
+  },[]);
+
+  useEffect(()=>{
+    // Set initial history entry so very first back press goes "home" not browser-back
+    try{ window.history.replaceState({type:"home"},""); }catch{}
+    const onPop=(e)=>{
+      const st=e.state;
+      if(!st||st.type==="home"){ setActiveId(null); setSection(null); }
+      else if(st.type==="splash"){ setActiveId(st.id); setSection(null); }
+      else if(st.type==="screen"){ setActiveId(st.id); setSection(st.sec); setScreen(st.scr); }
+    };
+    window.addEventListener("popstate",onPop);
+    return()=>window.removeEventListener("popstate",onPop);
+  },[]);
+
   const handleCreate=()=>{
     const t=newTrip(userId);
     setTrips((ts)=>[...ts,t]);
     onSaveTrip(t);
+    pushNav("screen",t.id,"budget","destination");
     setActiveId(t.id);
     setSection("budget");
     setScreen("destination");
   };
 
-  const handleSelect=id=>{setActiveId(id);setSection(null);setScreen("expenses");};
-  const handleBack=()=>{setActiveId(null);setSection(null);setScreen("expenses");};
-  const handleHome=()=>{setSection(null);};
+  const handleSelect=id=>{
+    pushNav("splash",id,null,null);
+    setActiveId(id);setSection(null);setScreen("expenses");
+  };
+  const handleBack=()=>{
+    pushNav("home",null,null,null);
+    setActiveId(null);setSection(null);setScreen("expenses");
+  };
+  const handleHome=()=>{
+    pushNav("splash",activeId,null,null);
+    setSection(null);
+  };
   const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
 
   const isOwner=active?.owner===userId||!active?.owner;
@@ -2868,7 +2903,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
 
   // ── Side menu (hamburger drawer) — defined before ALL early returns to avoid TDZ ──
   const navToScreen=(sec,scr)=>{
-    if(activeId){setSection(sec);setScreen(scr);}
+    if(activeId){ pushNav("screen",activeId,sec,scr); setSection(sec);setScreen(scr); }
     setSideMenu(false);
   };
   const guideUrl=lang==="he"?"/guide-he.html":"/guide-en.html";
@@ -3226,7 +3261,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {inspireModal&&renderInspireModal()}
           {sideMenu&&renderSideMenu()}
           <div style={{flex:1,overflowY:"auto"}}>
-            <TripSplashScreen trip={active} onBudget={()=>{setSection("budget");setScreen("expenses");}} onTrip={()=>{setSection("trip");setScreen("calendar");}} isViewOnly={isViewOnly} lang={lang}/>
+            <TripSplashScreen trip={active}
+              onBudget={()=>{pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}
+              onTrip={()=>{pushNav("screen",activeId,"trip","calendar");setSection("trip");setScreen("calendar");}}
+              isViewOnly={isViewOnly} lang={lang}/>
           </div>
         </div>
       </>
@@ -3260,7 +3298,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             {/* Trip settings button */}
             {screen!=="destination"&&(
               <div style={{padding:"12px 14px 0"}}>
-                <button onClick={()=>setScreen("destination")} style={{width:"100%",padding:"12px 16px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(100,223,223,0.06)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                <button onClick={()=>{pushNav("screen",activeId,"budget","destination");setScreen("destination");}} style={{width:"100%",padding:"12px 16px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(100,223,223,0.06)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
                   <Settings size={15} color={TEAL} strokeWidth={1.5}/> {lang==="he"?"הגדרות טיול":"Trip Settings"}
                 </button>
               </div>
@@ -3271,7 +3309,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates}/>}
             </div>
           </div>
-          {screen!=="destination"&&<NavBar screens={budgetScreens} current={screen} onNav={setScreen}/>}
+          {screen!=="destination"&&<NavBar screens={budgetScreens} current={screen} onNav={s=>{pushNav("screen",activeId,"budget",s);setScreen(s);}}/>}
         </div>
       </>
     );
@@ -3307,7 +3345,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               {screen==="map"&&<MapScreen trip={active} expenses={expenses}/>}
             </div>
           </div>
-          <NavBar screens={tripScreens} current={screen} onNav={setScreen}/>
+          <NavBar screens={tripScreens} current={screen} onNav={s=>{pushNav("screen",activeId,"trip",s);setScreen(s);}}/>
         </div>
       </>
     );

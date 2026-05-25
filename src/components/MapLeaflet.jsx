@@ -105,7 +105,7 @@ export default function MapLeaflet({ destination, places, lang }) {
       <div style={{
         flex: 1, display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
-        background: "#091928", gap: 12,
+        background: "#0d2137", gap: 12,
       }}>
         <div style={{
           width: 44, height: 44, borderRadius: "50%",
@@ -125,7 +125,7 @@ export default function MapLeaflet({ destination, places, lang }) {
     return (
       <div style={{
         flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-        background: "#091928", color: "rgba(255,255,255,0.4)", fontSize: 14, fontFamily: RF,
+        background: "#0d2137", color: "rgba(255,255,255,0.4)", fontSize: 14, fontFamily: RF,
       }}>
         {lang === "he" ? "לא נמצא יעד" : "Destination not found"}
       </div>
@@ -135,7 +135,7 @@ export default function MapLeaflet({ destination, places, lang }) {
   return (
     <>
       <style>{`
-        .leaflet-container { background: #091928; font-family: ${RF}; }
+        .leaflet-container { background: #0d2137; font-family: ${RF}; }
         .leaflet-popup-content-wrapper {
           background: #0d2137 !important;
           border: 0.5px solid rgba(100,223,223,0.2) !important;
