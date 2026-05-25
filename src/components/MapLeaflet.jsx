@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -52,6 +52,7 @@ function makeDestIcon() {
   });
 }
 
+// Returns { center, bbox } — bbox is [[s,w],[n,e]] for fitBounds, or null
 async function geocode(query) {
   try {
     const res = await fetch(
@@ -59,44 +60,60 @@ async function geocode(query) {
       { headers: { "Accept-Language": "en,he" } }
     );
     const json = await res.json();
-    if (json[0]) return [parseFloat(json[0].lat), parseFloat(json[0].lon)];
+    if (json[0]) {
+      const { lat, lon, boundingbox } = json[0];
+      const center = [parseFloat(lat), parseFloat(lon)];
+      const bbox = boundingbox
+        ? [[parseFloat(boundingbox[0]), parseFloat(boundingbox[2])],
+           [parseFloat(boundingbox[1]), parseFloat(boundingbox[3])]]
+        : null;
+      return { center, bbox };
+    }
   } catch {}
   return null;
 }
 
-export default function MapLeaflet({ destination, places, lang }) {
-  const [center, setCenter]       = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [markerMap, setMarkerMap] = useState({}); // address → [lat,lng]
+// Inner component — fits map to bbox once mounted
+function FitBounds({ bbox }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!bbox) return;
+    // maxZoom: country→5, region→8, city→12, neighbourhood→15
+    map.fitBounds(bbox, { padding: [24, 24], maxZoom: 14, animate: false });
+  }, [map, bbox]);
+  return null;
+}
 
-  // Geocode destination
+export default function MapLeaflet({ destination, places, lang }) {
+  const [geoResult, setGeoResult] = useState(null); // { center, bbox }
+  const [loading, setLoading]     = useState(true);
+  const [markerMap, setMarkerMap] = useState({});   // address → [lat,lng]
+
+  // Geocode destination — get center + bounding box
   useEffect(() => {
     if (!destination) { setLoading(false); return; }
     setLoading(true);
-    geocode(destination).then(c => {
-      setCenter(c || [31.7683, 35.2137]); // fallback: Jerusalem
+    geocode(destination).then(res => {
+      setGeoResult(res || { center: [31.7683, 35.2137], bbox: null });
       setLoading(false);
     });
   }, [destination]);
 
-  // Geocode expense addresses (rate-limited to respect Nominatim policy)
+  // Geocode expense addresses (rate-limited: Nominatim max 1 req/sec)
   useEffect(() => {
     if (!places || places.length === 0) return;
     let cancelled = false;
-
     (async () => {
       const coords = {};
       for (const p of places) {
         if (!p.address || coords[p.address]) continue;
-        const q = `${p.address}, ${destination}`;
-        const c = await geocode(q);
-        if (c) coords[p.address] = c;
-        await new Promise(r => setTimeout(r, 350)); // Nominatim: max 1 req/sec
+        const res = await geocode(`${p.address}, ${destination}`);
+        if (res) coords[p.address] = res.center;
+        await new Promise(r => setTimeout(r, 350));
         if (cancelled) return;
       }
       if (!cancelled) setMarkerMap(coords);
     })();
-
     return () => { cancelled = true; };
   }, [places, destination]);
 
@@ -121,7 +138,7 @@ export default function MapLeaflet({ destination, places, lang }) {
     );
   }
 
-  if (!center) {
+  if (!geoResult) {
     return (
       <div style={{
         flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
@@ -131,6 +148,8 @@ export default function MapLeaflet({ destination, places, lang }) {
       </div>
     );
   }
+
+  const { center, bbox } = geoResult;
 
   return (
     <>
@@ -151,17 +170,20 @@ export default function MapLeaflet({ destination, places, lang }) {
       `}</style>
       <MapContainer
         center={center}
-        zoom={13}
+        zoom={bbox ? 5 : 10}
         style={{ width: "100%", height: "100%" }}
         zoomControl={false}
       >
-        {/* CartoDB Voyager — clean colorful style, great contrast with dark UI chrome */}
+        {/* CartoDB Voyager — colorful/clean, great contrast with dark UI chrome */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           subdomains="abcd"
           maxZoom={20}
         />
+
+        {/* Fit to bounding box — handles country vs city zoom automatically */}
+        {bbox && <FitBounds bbox={bbox} />}
 
         {/* Destination center pin */}
         <Marker position={center} icon={makeDestIcon()}>
