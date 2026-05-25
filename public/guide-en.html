@@ -356,14 +356,13 @@
 
   <!-- WHATS NEW -->
   <div class="whats-new">
-    <div class="whats-new-title">🎉 What's New in Version 7.0</div>
+    <div class="whats-new-title">🎉 What's New in Version 8.0</div>
     <ul>
-      <li><strong>New structure – Budget & Trip separated 🗂️</strong> – When you open a trip you'll see two big buttons: "Budget Management" (expenses & budget) and "Trip Management" (calendar, recommendations & more). Much easier to navigate</li>
-      <li><strong>Packing List 🎒</strong> – A new screen to manage your packing checklist, with categories and a progress bar</li>
-      <li><strong>Map Screen 🗺️</strong> – See all the places from your expenses on a map in one tap</li>
-      <li><strong>Tap an activity in the calendar 📅</strong> – Tap any purple activity in day view to see full details and an edit button</li>
-      <li><strong>Redesigned Recommendations ✨</strong> – Agoda full-width at the top for hotels, Viator & GetYourGuide side by side for activities, AI recommendations below</li>
-      <li><strong>Invite by link 🔗</strong> – Send an invite link via WhatsApp — no need to enter anyone's email. Anyone with the link can join the trip</li>
+      <li><strong>Google Sign-In 🔑</strong> – Sign in instantly with your Google account — one tap, no password needed</li>
+      <li><strong>Side navigation menu ☰</strong> – The three-line button in the header opens a slide-out menu for quick navigation between all trip screens, sharing settings, language switching and sign out</li>
+      <li><strong>Display Currency 💱</strong> – In Trip Settings: choose ₪ / $ / € — all totals, KPIs and the settlement are shown in your chosen currency at live rates</li>
+      <li><strong>Auto language detection 🌐</strong> – The app detects your device language and starts in Hebrew or English accordingly</li>
+      <li><strong>Flag button 🇮🇱/🇺🇸</strong> – Switch language in one tap on the flag — available on the home screen header and on the sign-in page</li>
     </ul>
   </div>
 
@@ -376,9 +375,9 @@
   <table class="steps-table">
     <tr><th class="step-num">#</th><th>Action</th></tr>
     <tr><td class="step-num">1</td><td>Open <strong>www.tulon.co.il</strong> on your phone, computer, or download from Google Play</td></tr>
-    <tr><td class="step-num">2</td><td>Tap <strong>"New user? Sign up"</strong> and enter your email and password</td></tr>
+    <tr><td class="step-num">2</td><td>Sign in with <strong>Google in one tap</strong> — or sign up with email and password</td></tr>
     <tr><td class="step-num">3</td><td>Tap <strong>"+ New Trip"</strong> to create your first trip</td></tr>
-    <tr><td class="step-num">4</td><td>Tap the trip → choose <strong>Budget Management</strong> → tap <strong>⚙️ Trip Settings</strong> to add destination, dates and participants</td></tr>
+    <tr><td class="step-num">4</td><td>Tap the trip → choose <strong>Budget Management</strong> → tap <strong>⚙️ Trip Settings</strong> to add destination, dates, participants and display currency</td></tr>
     <tr><td class="step-num">5</td><td>Start adding expenses, planning activities in the calendar, and preparing your packing list</td></tr>
     <tr><td class="step-num">6</td><td>Share the trip via the <strong>👥</strong> button — with a specific email or an open link for the whole group</td></tr>
   </table>
@@ -433,7 +432,8 @@
     <div class="screen-card-body">
       <div class="feature-row"><div class="feature-key">🌍 Destination</div><div class="feature-val">The place you're traveling to — e.g. Thailand, Paris, New York</div></div>
       <div class="feature-row"><div class="feature-key">📅 Dates</div><div class="feature-val">Departure and return dates — the app calculates the number of days automatically</div></div>
-      <div class="feature-row"><div class="feature-key">💱 Currency</div><div class="feature-val">Choose the main currency. Add additional currencies — converted automatically at live rates</div></div>
+      <div class="feature-row"><div class="feature-key">💱 Input Currency</div><div class="feature-val">Choose the default currency for expense forms. Add additional currencies — converted automatically at live rates</div></div>
+      <div class="feature-row"><div class="feature-key">💲 Display Currency <span class="new-badge">New</span></div><div class="feature-val">Choose <strong>₪ ILS / $ USD / € EUR</strong> — all totals, summaries and the settlement will be shown in this currency using live rates</div></div>
       <div class="feature-row"><div class="feature-key">👥 Participants</div><div class="feature-val"><strong>Important!</strong> Add the names of all families or people traveling — this is the basis for expense splitting</div></div>
       <div class="feature-row"><div class="feature-key">💰 Planned Budget</div><div class="feature-val">Enter a budget amount — you'll see a color-coded gauge in the Budget screen showing how much is left</div></div>
       <div class="tip-box">💡 To access settings — tap <strong>⚙️ Trip Settings</strong> at the top of the Expenses screen</div>
@@ -583,6 +583,39 @@
     </div>
   </div>
 
+  <!-- SIDE MENU -->
+  <div class="section-header">
+    <div class="section-number">☰</div>
+    <h2>Side Menu</h2>
+  </div>
+
+  <div class="intro-box">
+    The <strong>☰</strong> button in the trip header opens a slide-out menu for quick navigation to any screen, sharing management and language switching — without leaving the trip.
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #1a3a5c, #2d5c8a);">
+      <div class="screen-card-emoji">☰</div>
+      <div>
+        <div class="screen-card-title">Quick Navigation Menu</div>
+        <div class="screen-card-desc">Accessible from any screen within a trip</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="feature-row"><div class="feature-key">📅 Calendar</div><div class="feature-val">Jump directly to the trip calendar</div></div>
+      <div class="feature-row"><div class="feature-key">🔍 Discover</div><div class="feature-val">Jump directly to the Recommendations screen</div></div>
+      <div class="feature-row"><div class="feature-key">🗺️ Map</div><div class="feature-val">Jump directly to the places map</div></div>
+      <div class="feature-row"><div class="feature-key">🎒 Packing</div><div class="feature-val">Jump directly to the packing list</div></div>
+      <div class="feature-row"><div class="feature-key">💰 Expenses / Budget</div><div class="feature-val">Jump directly to the Budget section</div></div>
+      <div class="feature-row"><div class="feature-key">⚙️ Trip Settings</div><div class="feature-val">Open Trip Settings directly to edit destination, dates and participants</div></div>
+      <div class="feature-row"><div class="feature-key">👥 Share</div><div class="feature-val">Open the sharing panel to send an invite</div></div>
+      <div class="feature-row"><div class="feature-key">🌐 / 🇮🇱 Language</div><div class="feature-val">Switch between Hebrew and English — saved for all future sessions</div></div>
+      <div class="feature-row"><div class="feature-key">📖 Guide</div><div class="feature-val">Open this guide again at any time</div></div>
+      <div class="feature-row"><div class="feature-key">🚪 Sign out</div><div class="feature-val">Sign out securely from your account</div></div>
+      <div class="tip-box">💡 Close the menu by tapping anywhere on the main screen</div>
+    </div>
+  </div>
+
   <!-- SHARING -->
   <div class="section-header">
     <div class="section-number">👥</div>
@@ -722,6 +755,22 @@
       <div class="tip-title">🌍 Multiple trips</div>
       <div class="tip-text">Manage several trips at once — switch between them from the home screen</div>
     </div>
+    <div class="tip-card">
+      <div class="tip-title">💲 Display currency</div>
+      <div class="tip-text">In Trip Settings choose ₪/$/€ — all totals and settlement will show in your chosen currency automatically</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🇺🇸 Language switch</div>
+      <div class="tip-text">Tap the flag on the home screen header — switches between Hebrew and English in one tap</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">🔑 Google Sign-In</div>
+      <div class="tip-text">Tap "Continue with Google" on the sign-in page — faster, no password to remember</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-title">☰ Quick navigation</div>
+      <div class="tip-text">Tap ☰ on any trip screen to jump directly to any part of the app — calendar, map, packing and more</div>
+    </div>
   </div>
 
   <!-- HELP -->
@@ -742,7 +791,7 @@
 </div>
 
 <div class="guide-footer">
-  <span>Tulon</span> – My Trip Planner &nbsp;|&nbsp; www.tulon.co.il &nbsp;|&nbsp; Version 7.0
+  <span>Tulon</span> – My Trip Planner &nbsp;|&nbsp; www.tulon.co.il &nbsp;|&nbsp; Version 8.0
 </div>
 
 </body>
