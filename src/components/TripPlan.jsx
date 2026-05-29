@@ -3319,7 +3319,6 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><ArrowLeftRight size={16} strokeWidth={1.5}/></button>
               <button onClick={()=>exportTripPDF(active,expenses,lang)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><FileDown size={16} strokeWidth={1.5}/></button>
-              <button onClick={()=>{setInspireModal(true);setInspireLink(null);setInspireHidden(new Set());}} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})} title={lang==="he"?"שתף השראה":"Share inspiration"}><Star size={16} strokeWidth={1.5}/></button>
               <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><Menu size={16} strokeWidth={1.5}/></button>
             </div>
           </div>
