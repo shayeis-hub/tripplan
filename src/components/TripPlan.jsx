@@ -411,7 +411,7 @@ function PieChart({data}){
         <text x={cx} y={cy+10} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={14} fill={TEAL} fontWeight={900}>{hov!==null?`${slices[hov].value.toFixed(0)}`:`${total.toFixed(0)}`}</text>
         {hov!==null&&<text x={cx} y={cy+26} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={9} fill={W35}>{((slices[hov].value/total)*100).toFixed(1)}%</text>}
       </svg>
-      <div style={{display:"flex",flexWrap:"wrap",gap:"6px 12px",justifyContent:"center",maxWidth:260}}>
+      <div style={{display:"flex",flexWrap:"wrap",gap:"6px 12px",justifyContent:"center",width:170,direction:"ltr"}}>
         {slices.map((s,i)=>(
           <div key={i} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",opacity:hov!==null&&hov!==i?0.4:1,transition:"opacity 0.15s"}}
             onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(null)}>
