@@ -370,6 +370,53 @@ function SS({label,value,onChange,children,style}){
   );
 }
 
+function TripDatePicker({dates,value,onChange,label,lang}){
+  const scrollRef=useRef(null);
+  useEffect(()=>{
+    if(!scrollRef.current||!value)return;
+    const idx=dates.indexOf(value);
+    if(idx<0)return;
+    const el=scrollRef.current.children[idx];
+    el?.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+  },[value]);
+  const DAY_HE=["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"];
+  const DAY_EN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const MON_HE=["ינו","פבר","מרץ","אפר","מאי","יונ","יול","אוג","ספט","אוק","נוב","דצמ"];
+  const MON_EN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return(
+    <div style={{marginBottom:14}}>
+      {label&&<FL>{label}</FL>}
+      <style>{`.tdp-scroll::-webkit-scrollbar{display:none}`}</style>
+      <div ref={scrollRef} className="tdp-scroll"
+        style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",paddingBottom:2}}>
+        {dates.map(d=>{
+          const dt=new Date(d+"T12:00:00");
+          const sel=d===value;
+          return(
+            <button key={d} onClick={()=>onChange(d)}
+              style={{display:"flex",flexDirection:"column",alignItems:"center",gap:1,
+                padding:"8px 10px",borderRadius:14,flexShrink:0,minWidth:48,
+                border:`1.5px solid ${sel?TEAL:"rgba(255,255,255,0.1)"}`,
+                background:sel?"rgba(100,223,223,0.13)":"rgba(255,255,255,0.04)",
+                cursor:"pointer",transition:"all 0.15s",
+                boxShadow:sel?`0 0 14px rgba(100,223,223,0.22)`:"none"}}>
+              <span style={{fontSize:9,fontWeight:700,fontFamily:RF,color:sel?TEAL:W35,letterSpacing:"0.3px"}}>
+                {lang==="he"?DAY_HE[dt.getDay()]:DAY_EN[dt.getDay()]}
+              </span>
+              <span style={{fontSize:20,fontWeight:900,fontFamily:RF,lineHeight:1.1,color:sel?"#ffffff":"rgba(255,255,255,0.75)"}}>
+                {dt.getDate()}
+              </span>
+              <span style={{fontSize:9,fontWeight:600,fontFamily:RF,color:sel?TEAL:W35}}>
+                {lang==="he"?MON_HE[dt.getMonth()]:MON_EN[dt.getMonth()]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Btn({children,onClick,color,outline,small,disabled,style}){
   const bg=outline?"transparent":color||C.ocean;
   const border=outline?`2px solid ${color||C.sandDark}`:"none";
@@ -1356,9 +1403,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                       <div style={{flex:1}}><SI label={t("flight_depart",lang)} value={form.departureTime} onChange={v=>set({departureTime:v})} type="time"/></div>
                       <div style={{flex:1}}><SI label={t("flight_landing",lang)} value={form.landingTime} onChange={v=>set({landingTime:v})} type="time"/></div>
                     </div>
-                    <SS label={t("flight_date",lang)} value={form.date} onChange={v=>set({date:v})}>
-                      {dates.map(d=><option key={d} value={d}>{fmtDate(d)}</option>)}
-                    </SS>
+                    <TripDatePicker dates={dates} value={form.date} onChange={v=>set({date:v})} label={t("flight_date",lang)} lang={lang}/>
                     {form.departureTime&&(
                       <div style={{marginBottom:14}}>
                         <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:8,color:W40,letterSpacing:"0.5px",textTransform:"uppercase"}}>{t("flight_reminder",lang)}</label>
@@ -1415,9 +1460,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                 )}
 
                 {form.category!=="hotel"&&form.category!=="flight"&&(
-                  <SS label={t("exp_date",lang)} value={form.date} onChange={v=>set({date:v})}>
-                    {dates.map(d=><option key={d} value={d}>{fmtDate(d)}</option>)}
-                  </SS>
+                  <TripDatePicker dates={dates} value={form.date} onChange={v=>set({date:v})} label={t("exp_date",lang)} lang={lang}/>
                 )}
 
                 {/* People split – only if people defined and isShared */}
