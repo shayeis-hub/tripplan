@@ -2,9 +2,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Mail, Clock, Copy, Check, Bug, Lightbulb, Lock, Users } from "lucide-react";
+import { useLang } from "@/lib/LangContext";
 
 export default function ContactPage() {
-  const [lang, setLang] = useState<"he" | "en">("he");
+  const { lang: appLang } = useLang();
+  const [lang, setLang] = useState<"he" | "en">(() => appLang as "he" | "en");
   const [copied, setCopied] = useState(false);
   const isHe = lang === "he";
   const dir = isHe ? "rtl" : "ltr";

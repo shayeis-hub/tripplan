@@ -2410,7 +2410,11 @@ function DiscoverScreen({trip}){
   );
 }
 
-const newTrip=(ownerId)=>({id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:"ILS",displayCurrency:"ILS",currencies:["ILS","USD","EUR"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]});
+const newTrip=(ownerId)=>{
+  const isHe=(typeof navigator!=="undefined"&&(navigator.language||"").toLowerCase().startsWith("he"));
+  const dc=isHe?"ILS":"USD";
+  return {id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:dc,displayCurrency:dc,currencies:isHe?["ILS","USD","EUR"]:["USD","EUR","GBP"],people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]};
+};
 
 // ── TRIP SPLASH SCREEN ────────────────────────────────────────────────────────
 function TripSplashScreen({trip,onBudget,onTrip,isViewOnly,lang}){
