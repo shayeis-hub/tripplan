@@ -37,6 +37,7 @@ import { db } from "@/lib/firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
+import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildBookingUrl } from "@/lib/affiliate";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
   Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send,
@@ -269,7 +270,7 @@ const NAV_CFG={
   expenses:   {Icon:Receipt,  he:"הוצאות", en:"Expenses",    es:"Gastos"},
   budget:     {Icon:Wallet,   he:"תקציב",  en:"Budget",      es:"Presupuesto"},
   calendar:   {Icon:Calendar, he:"יומן",   en:"Calendar",    es:"Calendario"},
-  discover:   {Icon:Sparkles, he:"המלצות", en:"Tips",        es:"Consejos"},
+  discover:   {Icon:Sparkles, he:"גלה",    en:"Discover",    es:"Descubre"},
   packing:    {Icon:Backpack, he:"אריזה",  en:"Packing",     es:"Equipaje"},
   map:        {Icon:Map,      he:"מפה",    en:"Map",         es:"Mapa"},
 };
@@ -2297,8 +2298,24 @@ function CalendarScreen({trip,expenses,onSaveActs}){
           </div>
         )}
         {timed.length===0&&untimed.length===0&&(
-          <div style={{textAlign:"center",color:"rgba(255,255,255,0.2)",padding:"32px 0",fontSize:13,fontFamily:RF}}>
-            {t("cal_no_events",lang)}
+          <div style={{padding:"24px 16px",fontFamily:RF}}>
+            <div style={{textAlign:"center",color:"rgba(255,255,255,0.25)",fontSize:13,marginBottom:14}}>
+              {t("cal_no_events",lang)}
+            </div>
+            {trip.destination&&(
+              <div style={{padding:"14px 16px",borderRadius:14,border:"0.5px solid rgba(167,139,250,0.3)",background:"linear-gradient(135deg,rgba(167,139,250,0.08),rgba(167,139,250,0.02))"}}>
+                <div style={{fontSize:12,color:"#c4b5fd",fontWeight:700,marginBottom:4}}>
+                  ✨ {lang==="he"?"יש זמן פנוי? מצא פעילות":lang==="es"?"¿Tienes tiempo libre? Encuentra una actividad":"Free time? Find an activity"}
+                </div>
+                <div style={{fontSize:11,color:W40,marginBottom:10,lineHeight:1.5}}>
+                  {lang==="he"?`סיורים, חוויות ואטרקציות ב${trip.destination}`:lang==="es"?`Tours, experiencias y atracciones en ${trip.destination}`:`Tours, experiences & attractions in ${trip.destination}`}
+                </div>
+                <button onClick={()=>window.open(buildViatorUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
+                  style={{width:"100%",padding:"10px",borderRadius:10,border:"0.5px solid rgba(167,139,250,0.45)",background:"rgba(167,139,250,0.15)",color:"#a78bfa",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                  🎡 {lang==="he"?"חפש פעילויות":lang==="es"?"Buscar actividades":"Find activities"} ↗
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -2432,16 +2449,9 @@ function CalendarScreen({trip,expenses,onSaveActs}){
 function DiscoverScreen({trip}){
   const{lang}=useLang();
   const dest=translateDest(trip.destination||"");
-  const encDest=encodeURIComponent(dest||trip.destination||"");
   const checkIn=trip.startDate||"";
   const checkOut=trip.endDate||"";
-  const AGODA_CID=process.env.NEXT_PUBLIC_AGODA_CID||"";
-  const BOOKING_AID=process.env.NEXT_PUBLIC_BOOKING_AID||"";
-  const VIATOR_PID=process.env.NEXT_PUBLIC_VIATOR_PID||"";
-  const GYG_ID=process.env.NEXT_PUBLIC_GYG_PARTNER_ID||"";
-
-  const agodaDates=checkIn&&checkOut?`&checkIn=${checkIn}&checkOut=${checkOut}`:"";
-  const bookingDates=checkIn&&checkOut?`&checkin=${checkIn}&checkout=${checkOut}`:"";
+  const affParams={destination:dest||trip.destination||"",checkIn,checkOut,source:"discover"};
 
   // AI recommendations state
   const[recs,setRecs]=useState(null);
@@ -2478,17 +2488,17 @@ function DiscoverScreen({trip}){
   const mapsUrl=name=>`https://www.google.com/maps/search/${encodeURIComponent(name+" "+(dest||trip.destination||""))}`;
 
   const agodaTile={name:"Agoda",domain:"agoda.com",color:"#e0455a",label:t("disc_book_hotels",lang),
-   url:`https://www.agoda.com/search?q=${encDest}${agodaDates}&adults=2&rooms=1${AGODA_CID?`&cid=${AGODA_CID}`:""}`};
+   url:buildAgodaUrl(affParams)};
   const actTiles=[
     {name:"Viator",domain:"viator.com",color:"#2d9cdb",label:t("disc_book_acts",lang),
-     url:`https://www.viator.com/search/${encDest}${VIATOR_PID?`?pid=${VIATOR_PID}&mcid=42383`:""}`},
+     url:buildViatorUrl(affParams)},
     {name:"GetYourGuide",domain:"getyourguide.com",color:"#ff6b35",label:t("disc_book_acts",lang),
-     url:`https://www.getyourguide.com/s/?q=${encDest}${GYG_ID?`&partner_id=${GYG_ID}&cmp=share_to_earn`:""}`},
+     url:buildGygUrl(affParams)},
   ];
 
   return(
     <div>
-      <WaveHeader title={t("disc_title",lang)} subtitle={trip.destination?(lang==="he"?`המלצות ל${trip.destination}`:lang==="es"?`Recomendaciones para ${trip.destination}`:`Recommendations for ${trip.destination}`):t("disc_subtitle",lang)}/>
+      <WaveHeader title={t("disc_title",lang)} subtitle={trip.destination?(lang==="he"?`מלון, פעילויות ועוד ל${trip.destination}`:lang==="es"?`Hoteles, actividades y más para ${trip.destination}`:`Hotels, activities & more for ${trip.destination}`):t("disc_subtitle",lang)}/>
       <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:14}}>
         {!trip.destination?(
           <div style={{textAlign:"center",padding:"48px 0",color:W35}}>
@@ -2646,7 +2656,24 @@ const newTrip=(ownerId)=>{
 };
 
 // ── TRIP SPLASH SCREEN ────────────────────────────────────────────────────────
-function TripSplashScreen({trip,onBudget,onTrip,isViewOnly,lang}){
+function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
+  // Dismissable per-trip — remembered in localStorage
+  const dismissKey=`tulon_disc_dismiss_${trip.id}`;
+  const[dismissed,setDismissed]=useState(()=>{
+    try{return localStorage.getItem(dismissKey)==="1";}catch{return false;}
+  });
+  const hasHotel=expenses.some(e=>e.category==="hotel");
+  const hasFlight=expenses.some(e=>e.category==="flight");
+  const missingAny=trip.destination&&!isViewOnly&&!dismissed&&(!hasHotel||!hasFlight);
+
+  const tr=(h,e,s)=>lang==="he"?h:lang==="es"?s:e;
+  const affParams={destination:trip.destination||"",checkIn:trip.startDate||"",checkOut:trip.endDate||"",source:"trip-cta"};
+
+  const dismiss=()=>{
+    setDismissed(true);
+    try{localStorage.setItem(dismissKey,"1");}catch{}
+  };
+
   return(
     <div style={{padding:"32px 20px",display:"flex",flexDirection:"column",gap:16,minHeight:"55vh",justifyContent:"center"}}>
       <div style={{textAlign:"center",marginBottom:8}}>
@@ -2661,6 +2688,32 @@ function TripSplashScreen({trip,onBudget,onTrip,isViewOnly,lang}){
           <div style={{fontSize:12,color:W35,marginTop:3,fontFamily:RF,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Users size={12} color={W35} strokeWidth={1.5}/> {(trip.people||[]).map(p=>p.name||p).join(" · ")}</div>
         )}
       </div>
+
+      {missingAny&&(
+        <div style={{position:"relative",padding:"16px 18px",borderRadius:18,border:"0.5px solid rgba(251,191,36,0.3)",background:"linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.03))"}}>
+          <button onClick={dismiss} style={{position:"absolute",top:8,left:lang==="he"?undefined:8,right:lang==="he"?8:undefined,background:"none",border:"none",color:"rgba(255,255,255,0.35)",cursor:"pointer",padding:4,fontSize:14,lineHeight:1}} aria-label="dismiss">✕</button>
+          <div style={{fontSize:13,fontWeight:700,color:"#fbbf24",marginBottom:4,paddingInlineEnd:20}}>
+            ✨ {tr("עוד לא הסתדרת?","Still need to book?","¿Aún por reservar?")}
+          </div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.55)",marginBottom:12,lineHeight:1.5,paddingInlineEnd:20}}>
+            {tr(`לטיול שלך ל${trip.destination} —`,`For your trip to ${trip.destination} —`,`Para tu viaje a ${trip.destination} —`)}
+          </div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {!hasHotel&&(
+              <button onClick={()=>window.open(buildAgodaUrl(affParams),"_blank")}
+                style={{flex:1,minWidth:140,padding:"10px 14px",borderRadius:12,border:"0.5px solid rgba(224,69,90,0.4)",background:"rgba(224,69,90,0.12)",color:"#ff8da0",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                🏨 {tr("מצא מלון","Find a hotel","Buscar hotel")} ↗
+              </button>
+            )}
+            {!hasFlight&&(
+              <button onClick={()=>window.open(`https://www.kiwi.com/deep?to=${encodeURIComponent(trip.destination||"")}${trip.startDate?`&depart_after=${trip.startDate}`:""}${trip.endDate?`&return_before=${trip.endDate}`:""}&utm_source=tulon&utm_medium=app&utm_campaign=trip-cta`,"_blank")}
+                style={{flex:1,minWidth:140,padding:"10px 14px",borderRadius:12,border:"0.5px solid rgba(45,156,219,0.4)",background:"rgba(45,156,219,0.12)",color:"#7ec4f0",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                ✈️ {tr("חפש טיסה","Find a flight","Buscar vuelo")} ↗
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {!isViewOnly&&(
         <button onClick={onBudget} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(74,222,128,0.35)",background:"linear-gradient(135deg,rgba(74,222,128,0.12),rgba(74,222,128,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"right"}}>
@@ -3208,7 +3261,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const guideUrl=lang==="he"?"/guide-he.html":lang==="es"?"/guide-es.html":"/guide-en.html";
   const menuScreens=[
     {Icon:Calendar,    label:lang==="he"?"יומן":lang==="es"?"Calendario":"Calendar",    sec:"trip",   scr:"calendar"},
-    {Icon:Sparkles,    label:lang==="he"?"גלה":lang==="es"?"Descubre":"Discover",     sec:"trip",   scr:"discover"},
+    {Icon:Sparkles,    label:lang==="he"?"גלה ↗":lang==="es"?"Descubre ↗":"Discover ↗",     sec:"trip",   scr:"discover"},
     {Icon:Map,         label:lang==="he"?"מפה":lang==="es"?"Mapa":"Map",           sec:"trip",   scr:"map"},
     {Icon:Backpack,    label:lang==="he"?"אריזה":lang==="es"?"Equipaje":"Packing",     sec:"trip",   scr:"packing"},
     {Icon:Receipt,     label:lang==="he"?"הוצאות":lang==="es"?"Gastos":"Expenses",   sec:"budget", scr:"expenses"},
@@ -3569,7 +3622,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {inspireModal&&renderInspireModal()}
           {sideMenu&&renderSideMenu()}
           <div style={{flex:1,overflowY:"auto"}}>
-            <TripSplashScreen trip={active}
+            <TripSplashScreen trip={active} expenses={active.expenses||[]}
               onBudget={()=>{pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}
               onTrip={()=>{pushNav("screen",activeId,"trip","calendar");setSection("trip");setScreen("calendar");}}
               isViewOnly={isViewOnly} lang={lang}/>

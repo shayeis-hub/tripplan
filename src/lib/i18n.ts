@@ -6,7 +6,7 @@ export const translations = {
   nav_expenses:    { he: "הוצאות",   en: "Expenses",    es: "Gastos" },
   nav_budget:      { he: "תקציב",    en: "Budget",      es: "Presupuesto" },
   nav_calendar:    { he: "לוח שנה",  en: "Calendar",    es: "Calendario" },
-  nav_discover:    { he: "המלצות",   en: "Tips",        es: "Consejos" },
+  nav_discover:    { he: "גלה ↗",    en: "Discover ↗",  es: "Descubre ↗" },
 
   // ── App general ───────────────────────────────────────
   app_name:        { he: "טיולון",               en: "TUlon",            es: "TUlon" },
@@ -178,8 +178,8 @@ export const translations = {
   cat_activities:   { he: "פעילויות",               en: "Activities",           es: "Actividades" },
 
   // ── Discover / Tips screen ────────────────────────────
-  disc_title:         { he: "✨ המלצות",              en: "✨ Tips",               es: "✨ Consejos" },
-  disc_subtitle:      { he: "המלצות על יעד הטיול",   en: "Recommendations for your trip", es: "Recomendaciones para tu viaje" },
+  disc_title:         { he: "✨ גלה ↗",               en: "✨ Discover ↗",         es: "✨ Descubre ↗" },
+  disc_subtitle:      { he: "מצא מלון, פעילויות ועוד ליעד שלך", en: "Find hotels, activities & more for your trip", es: "Encuentra hoteles, actividades y más para tu viaje" },
   disc_no_dest:       { he: 'הכנס יעד בלשונית "יעד" כדי לקבל המלצות', en: 'Enter a destination first to get recommendations', es: 'Introduce un destino en la pestaña "Destino" para recibir recomendaciones' },
   disc_hotels:        { he: "🏨 מלונות",               en: "🏨 Hotels",            es: "🏨 Hoteles" },
   disc_activities:    { he: "🎡 אטרקציות וחוויות",     en: "🎡 Attractions & Experiences", es: "🎡 Atracciones y experiencias" },
