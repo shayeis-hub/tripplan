@@ -14,12 +14,14 @@ export function LangProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("tulon_lang") as Lang | null;
-    if (saved === "he" || saved === "en") {
+    if (saved === "he" || saved === "en" || saved === "es") {
       setLangState(saved);
     } else {
-      // Auto-detect from device language — Hebrew stays Hebrew, everything else → English
+      // Auto-detect from device language — Hebrew → he, Spanish → es, everything else → en
       const device = (navigator.language || "").toLowerCase();
-      setLangState(device.startsWith("he") ? "he" : "en");
+      if (device.startsWith("he")) setLangState("he");
+      else if (device.startsWith("es")) setLangState("es");
+      else setLangState("en");
     }
   }, []);
 

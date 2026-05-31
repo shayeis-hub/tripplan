@@ -8,19 +8,23 @@ import {
   reauthenticateWithCredential,
 } from "firebase/auth";
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { useLang } from "@/lib/LangContext";
 
 type Step = "info" | "auth" | "confirm" | "done" | "error";
+type L = "he" | "en" | "es";
 
 export default function DeleteAccountPage() {
+  const { lang: appLang } = useLang();
   const [step, setStep]     = useState<Step>("info");
   const [email, setEmail]   = useState("");
   const [pass, setPass]     = useState("");
   const [busy, setBusy]     = useState(false);
   const [errMsg, setErrMsg] = useState("");
-  const [lang, setLang]     = useState<"he"|"en">("he");
+  const [lang, setLang]     = useState<L>(() => appLang as L);
 
   const isHe = lang === "he";
   const dir  = isHe ? "rtl" : "ltr";
+  const tr = (he: string, en: string, es: string) => lang === "he" ? he : lang === "es" ? es : en;
 
   const doDelete = async () => {
     if (!email || !pass) return;
@@ -45,11 +49,11 @@ export default function DeleteAccountPage() {
     } catch (e: any) {
       const code = e?.code || "";
       if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
-        setErrMsg(isHe ? "אימייל או סיסמה שגויים" : "Incorrect email or password");
+        setErrMsg(tr("אימייל או סיסמה שגויים", "Incorrect email or password", "Correo o contraseña incorrectos"));
       } else if (code === "auth/user-not-found") {
-        setErrMsg(isHe ? "משתמש לא נמצא" : "User not found");
+        setErrMsg(tr("משתמש לא נמצא", "User not found", "Usuario no encontrado"));
       } else {
-        setErrMsg(isHe ? `שגיאה: ${code}` : `Error: ${code}`);
+        setErrMsg(tr(`שגיאה: ${code}`, `Error: ${code}`, `Error: ${code}`));
       }
       setBusy(false);
     }
@@ -90,8 +94,11 @@ export default function DeleteAccountPage() {
         <div className="card">
           {/* Language toggle */}
           <div className="lang-toggle">
-            <button className={`lang-btn${lang==="he"?" active":""}`} onClick={()=>setLang("he")}>עב</button>
-            <button className={`lang-btn${lang==="en"?" active":""}`} onClick={()=>setLang("en")}>EN</button>
+            {(["he","en","es"] as L[]).map(L => (
+              <button key={L} className={`lang-btn${lang===L?" active":""}`} onClick={()=>setLang(L)}>
+                {L === "he" ? "עב" : L === "en" ? "EN" : "ES"}
+              </button>
+            ))}
           </div>
 
           <div className="logo">
@@ -101,26 +108,28 @@ export default function DeleteAccountPage() {
           {step === "info" && (
             <>
               <div className="title">
-                {isHe ? "🗑️ מחיקת חשבון" : "🗑️ Delete Account"}
+                {tr("🗑️ מחיקת חשבון", "🗑️ Delete Account", "🗑️ Eliminar cuenta")}
               </div>
               <div className="desc">
-                {isHe
-                  ? "מחיקת החשבון תסיר לצמיתות את כל הנתונים שלך מהמערכת. פעולה זו אינה הפיכה."
-                  : "Deleting your account will permanently remove all your data from our system. This action cannot be undone."}
+                {tr(
+                  "מחיקת החשבון תסיר לצמיתות את כל הנתונים שלך מהמערכת. פעולה זו אינה הפיכה.",
+                  "Deleting your account will permanently remove all your data from our system. This action cannot be undone.",
+                  "Eliminar tu cuenta borrará permanentemente todos tus datos del sistema. Esta acción no se puede deshacer."
+                )}
               </div>
               <div className="warn-box">
-                <strong>{isHe ? "מה יימחק:" : "What will be deleted:"}</strong>
+                <strong>{tr("מה יימחק:", "What will be deleted:", "Qué se eliminará:")}</strong>
                 <ul style={{paddingRight: isHe?"18px":undefined, paddingLeft: isHe?undefined:"18px", marginTop:6}}>
-                  <li>{isHe ? "כל הטיולים שלך" : "All your trips"}</li>
-                  <li>{isHe ? "כל ההוצאות והפעילויות" : "All expenses and activities"}</li>
-                  <li>{isHe ? "פרטי החשבון (אימייל וסיסמה)" : "Account credentials (email & password)"}</li>
+                  <li>{tr("כל הטיולים שלך", "All your trips", "Todos tus viajes")}</li>
+                  <li>{tr("כל ההוצאות והפעילויות", "All expenses and activities", "Todos los gastos y actividades")}</li>
+                  <li>{tr("פרטי החשבון (אימייל וסיסמה)", "Account credentials (email & password)", "Datos de la cuenta (correo y contraseña)")}</li>
                 </ul>
               </div>
               <button className="btn-del" onClick={()=>setStep("auth")}>
-                {isHe ? "המשך למחיקת חשבון" : "Continue to Delete Account"}
+                {tr("המשך למחיקת חשבון", "Continue to Delete Account", "Continuar con la eliminación")}
               </button>
               <a className="btn-sec" href="/">
-                {isHe ? "ביטול – חזור לאפליקציה" : "Cancel – Back to App"}
+                {tr("ביטול – חזור לאפליקציה", "Cancel – Back to App", "Cancelar – Volver a la app")}
               </a>
             </>
           )}
@@ -128,32 +137,34 @@ export default function DeleteAccountPage() {
           {step === "auth" && (
             <>
               <div className="title">
-                {isHe ? "אימות זהות" : "Verify Identity"}
+                {tr("אימות זהות", "Verify Identity", "Verificar identidad")}
               </div>
               <div className="desc">
-                {isHe
-                  ? "הכנס את פרטי הכניסה שלך כדי לאמת את זהותך לפני המחיקה."
-                  : "Enter your login credentials to verify your identity before deletion."}
+                {tr(
+                  "הכנס את פרטי הכניסה שלך כדי לאמת את זהותך לפני המחיקה.",
+                  "Enter your login credentials to verify your identity before deletion.",
+                  "Introduce tus credenciales de inicio de sesión para verificar tu identidad antes de eliminar la cuenta."
+                )}
               </div>
 
               {errMsg && <div className="err">⚠️ {errMsg}</div>}
 
               <input className="inp" type="email" dir="ltr"
-                placeholder={isHe ? "אימייל" : "Email"}
+                placeholder={tr("אימייל", "Email", "Correo electrónico")}
                 value={email} onChange={e=>setEmail(e.target.value)}
                 autoComplete="email"/>
               <input className="inp" type="password" dir="ltr"
-                placeholder={isHe ? "סיסמה" : "Password"}
+                placeholder={tr("סיסמה", "Password", "Contraseña")}
                 value={pass} onChange={e=>setPass(e.target.value)}
                 onKeyDown={e=>{ if(e.key==="Enter") setStep("confirm"); }}
                 autoComplete="current-password"/>
 
               <button className="btn-del" onClick={()=>{ if(email&&pass) setStep("confirm"); }} disabled={!email||!pass}>
-                {isHe ? "המשך" : "Continue"}
+                {tr("המשך", "Continue", "Continuar")}
               </button>
               <div className="divider"/>
               <button className="btn-sec" onClick={()=>setStep("info")}>
-                {isHe ? "חזור" : "Back"}
+                {tr("חזור", "Back", "Atrás")}
               </button>
             </>
           )}
@@ -161,22 +172,24 @@ export default function DeleteAccountPage() {
           {step === "confirm" && (
             <>
               <div className="title">
-                {isHe ? "⚠️ אישור סופי" : "⚠️ Final Confirmation"}
+                {tr("⚠️ אישור סופי", "⚠️ Final Confirmation", "⚠️ Confirmación final")}
               </div>
               <div className="desc">
-                {isHe
-                  ? `האם אתה בטוח שברצונך למחוק לצמיתות את החשבון של ${email}? לא ניתן לשחזר פעולה זו.`
-                  : `Are you sure you want to permanently delete the account for ${email}? This cannot be undone.`}
+                {tr(
+                  `האם אתה בטוח שברצונך למחוק לצמיתות את החשבון של ${email}? לא ניתן לשחזר פעולה זו.`,
+                  `Are you sure you want to permanently delete the account for ${email}? This cannot be undone.`,
+                  `¿Estás seguro de que deseas eliminar permanentemente la cuenta de ${email}? Esta acción no se puede deshacer.`
+                )}
               </div>
 
               {errMsg && <div className="err">⚠️ {errMsg}</div>}
 
               <button className="btn-del" onClick={doDelete} disabled={busy}>
-                {busy ? "⏳" : isHe ? "כן, מחק את החשבון שלי לצמיתות" : "Yes, permanently delete my account"}
+                {busy ? "⏳" : tr("כן, מחק את החשבון שלי לצמיתות", "Yes, permanently delete my account", "Sí, eliminar mi cuenta permanentemente")}
               </button>
               <div className="divider"/>
               <button className="btn-sec" onClick={()=>{ setStep("info"); setErrMsg(""); }}>
-                {isHe ? "ביטול" : "Cancel"}
+                {tr("ביטול", "Cancel", "Cancelar")}
               </button>
             </>
           )}
@@ -184,11 +197,13 @@ export default function DeleteAccountPage() {
           {step === "done" && (
             <div className="success">
               <div className="icon">✅</div>
-              <h2>{isHe ? "החשבון נמחק" : "Account Deleted"}</h2>
+              <h2>{tr("החשבון נמחק", "Account Deleted", "Cuenta eliminada")}</h2>
               <p>
-                {isHe
-                  ? "החשבון וכל הנתונים המשויכים אליו נמחקו לצמיתות. תודה שהשתמשת בטיולון."
-                  : "Your account and all associated data have been permanently deleted. Thank you for using TUlon."}
+                {tr(
+                  "החשבון וכל הנתונים המשויכים אליו נמחקו לצמיתות. תודה שהשתמשת בטיולון.",
+                  "Your account and all associated data have been permanently deleted. Thank you for using TUlon.",
+                  "Tu cuenta y todos los datos asociados se han eliminado permanentemente. Gracias por usar TUlon."
+                )}
               </p>
             </div>
           )}

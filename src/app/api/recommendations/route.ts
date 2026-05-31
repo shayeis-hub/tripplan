@@ -11,10 +11,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing destination" }, { status: 400 });
     }
 
-    const isHe = lang === "he";
-
-    const prompt = isHe
-      ? `אתה מומחה טיולים. עבור היעד: "${destination}", תן המלצות בעברית.
+    const prompt =
+      lang === "he"
+        ? `אתה מומחה טיולים. עבור היעד: "${destination}", תן המלצות בעברית.
 
 החזר JSON בדיוק בפורמט הזה (ללא הסבר, ללא markdown):
 {
@@ -34,7 +33,28 @@ export async function POST(req: NextRequest) {
   ],
   "tip": "טיפ מקומי שימושי אחד של עד 100 תווים"
 }`
-      : `You are a travel expert. For the destination: "${destination}", provide recommendations in English.
+        : lang === "es"
+        ? `Eres un experto en viajes. Para el destino: "${destination}", proporciona recomendaciones en español.
+
+Devuelve JSON exactamente en este formato (sin explicación, sin markdown):
+{
+  "attractions": [
+    {"name": "Nombre de la atracción", "description": "Descripción corta hasta 60 caracteres", "emoji": "🎭"},
+    {"name": "...", "description": "...", "emoji": "..."},
+    {"name": "...", "description": "...", "emoji": "..."},
+    {"name": "...", "description": "...", "emoji": "..."},
+    {"name": "...", "description": "...", "emoji": "..."}
+  ],
+  "restaurants": [
+    {"name": "Nombre del restaurante", "description": "Descripción corta hasta 60 caracteres", "cuisine": "Tipo de cocina", "emoji": "🍜"},
+    {"name": "...", "description": "...", "cuisine": "...", "emoji": "..."},
+    {"name": "...", "description": "...", "cuisine": "...", "emoji": "..."},
+    {"name": "...", "description": "...", "cuisine": "...", "emoji": "..."},
+    {"name": "...", "description": "...", "cuisine": "...", "emoji": "..."}
+  ],
+  "tip": "Un consejo local útil hasta 100 caracteres"
+}`
+        : `You are a travel expert. For the destination: "${destination}", provide recommendations in English.
 
 Return JSON in exactly this format (no explanation, no markdown):
 {

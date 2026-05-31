@@ -131,7 +131,7 @@ export default function MapLeaflet({ destination, places, lang }) {
           animation: "spin 0.8s linear infinite",
         }}/>
         <span style={{ color: "rgba(13,33,55,0.5)", fontSize: 13, fontFamily: RF }}>
-          {lang === "he" ? "טוען מפה…" : "Loading map…"}
+          {lang === "he" ? "טוען מפה…" : lang === "es" ? "Cargando mapa…" : "Loading map…"}
         </span>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
@@ -144,7 +144,7 @@ export default function MapLeaflet({ destination, places, lang }) {
         flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
         background: "#e8edf2", color: "rgba(13,33,55,0.4)", fontSize: 14, fontFamily: RF,
       }}>
-        {lang === "he" ? "לא נמצא יעד" : "Destination not found"}
+        {lang === "he" ? "לא נמצא יעד" : lang === "es" ? "Destino no encontrado" : "Destination not found"}
       </div>
     );
   }
@@ -221,7 +221,7 @@ export default function MapLeaflet({ destination, places, lang }) {
                     target="_blank" rel="noopener noreferrer"
                     style={{ background: "#4285F4", color: "#fff", padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: "none", display: "inline-block" }}
                   >
-                    {lang === "he" ? "ניווט ↗" : "Navigate ↗"}
+                    {lang === "he" ? "ניווט ↗" : lang === "es" ? "Ir ↗" : "Navigate ↗"}
                   </a>
                 </div>
               </Popup>

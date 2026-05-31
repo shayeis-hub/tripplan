@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TUlon – Guía del usuario</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Rubik', Arial, sans-serif;
+    background: #f8fafc;
+    color: #1a2b35;
+    direction: ltr;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .cover {
+    background: linear-gradient(160deg, #091928 0%, #0d2137 60%, #0a3050 100%);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: -80px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,223,223,0.08) 0%, transparent 70%);
+  }
+  .cover-inner { position: relative; z-index: 1; }
+  .cover h1 {
+    font-size: 52px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .cover .subtitle {
+    font-size: 16px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: #64dfdf;
+    color: #0d2137;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 24px;
+    border-radius: 999px;
+  }
+  .cover .version {
+    display: inline-block;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-top: 14px;
+  }
+
+  .content { max-width: 780px; margin: 0 auto; padding: 36px 28px; }
+
+  .intro-box {
+    background: #e8f4f8;
+    border-left: 4px solid #64dfdf;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    color: #2d4050;
+    line-height: 1.7;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 32px 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #64dfdf;
+  }
+  .section-header h2 {
+    font-size: 19px;
+    font-weight: 800;
+    color: #0d2137;
+  }
+  .section-icon { font-size: 22px; line-height: 1; }
+
+  .screen-card {
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 16px rgba(0,0,0,0.07);
+  }
+  .screen-card-header {
+    padding: 13px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .screen-card-emoji { font-size: 24px; line-height: 1; }
+  .screen-card-title { font-size: 16px; font-weight: 800; color: #ffffff; }
+  .screen-card-desc  { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .screen-card-body  { background: #ffffff; padding: 14px 18px; }
+
+  .row {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f4f8;
+    align-items: flex-start;
+  }
+  .row:last-child { border-bottom: none; }
+  .row-key {
+    font-weight: 700;
+    font-size: 13px;
+    color: #0d2137;
+    min-width: 140px;
+    flex-shrink: 0;
+  }
+  .row-val { font-size: 13px; color: #4a5568; line-height: 1.5; }
+
+  .sub { padding: 8px 0 3px; font-size: 12px; color: #64dfdf; font-weight: 700; }
+
+  .tip {
+    background: #f0fdf4;
+    border-left: 3px solid #4ade80;
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #166534;
+  }
+
+  .example {
+    background: #f0f4ff;
+    border-left: 3px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: #3730a3;
+    line-height: 1.7;
+  }
+
+  .steps { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-radius: 12px; overflow: hidden; }
+  .steps th { background: #0d2137; color: #64dfdf; padding: 10px 14px; font-size: 13px; font-weight: 700; text-align: left; }
+  .steps td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #f0f4f8; vertical-align: top; }
+  .steps tr:nth-child(even) td { background: #f8fafc; }
+  .steps .n { width: 34px; font-weight: 800; color: #64dfdf; font-size: 15px; text-align: center; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .col-box { border-radius: 14px; padding: 16px; border: 2px solid; }
+  .col-box.green { background: rgba(74,222,128,0.06); border-color: rgba(74,222,128,0.3); }
+  .col-box.teal  { background: rgba(100,223,223,0.06); border-color: rgba(100,223,223,0.3); }
+  .col-box-title { font-size: 14px; font-weight: 800; color: #0d2137; margin-bottom: 8px; }
+  .col-box ul { list-style: none; padding: 0; }
+  .col-box li { font-size: 13px; color: #4a5568; padding: 2px 0; }
+
+  .guide-footer {
+    background: #0d2137;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    margin-top: 40px;
+  }
+  .guide-footer span { color: #64dfdf; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-inner">
+    <h1>TUlon</h1>
+    <div class="subtitle">Mi planificador de viajes</div>
+    <div class="badge">Guía del usuario</div>
+    <div><span class="version">Versión 9.0</span></div>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="intro-box">
+    <strong>¡Bienvenido a TUlon!</strong> La app te ayuda a planificar viajes, registrar gastos, gestionar tu presupuesto y ajustar cuentas con tus compañeros de viaje al final.
+  </div>
+
+  <!-- Cómo empezar -->
+  <div class="section-header">
+    <div class="section-icon">🚀</div>
+    <h2>Cómo empezar</h2>
+  </div>
+
+  <table class="steps">
+    <tr><th class="n">#</th><th>Acción</th></tr>
+    <tr><td class="n">1</td><td>Abre <strong>www.tulon.app</strong> en tu navegador o descarga desde Google Play</td></tr>
+    <tr><td class="n">2</td><td>Inicia sesión con <strong>Google con un toque</strong> — o regístrate con correo y contraseña</td></tr>
+    <tr><td class="n">3</td><td>Toca <strong>"+ Nuevo viaje"</strong> para crear tu primer viaje</td></tr>
+    <tr><td class="n">4</td><td>Toca el viaje → <strong>Gestión del presupuesto</strong> → <strong>⚙️ Ajustes del viaje</strong> para añadir destino, fechas y participantes</td></tr>
+    <tr><td class="n">5</td><td>Añade gastos, planifica actividades en el calendario, comparte con tu grupo</td></tr>
+  </table>
+
+  <!-- Estructura de la app -->
+  <div class="section-header">
+    <div class="section-icon">🗂️</div>
+    <h2>Estructura de la app</h2>
+  </div>
+
+  <div class="two-col">
+    <div class="col-box green">
+      <div class="col-box-title">💳 Gestión del presupuesto</div>
+      <ul>
+        <li>⚙️ Ajustes del viaje</li>
+        <li>💳 Gastos</li>
+        <li>💰 Presupuesto y liquidación</li>
+      </ul>
+    </div>
+    <div class="col-box teal">
+      <div class="col-box-title">🌴 Gestión del viaje</div>
+      <ul>
+        <li>📅 Calendario</li>
+        <li>✨ Recomendaciones</li>
+        <li>🎒 Lista de equipaje</li>
+        <li>🗺️ Mapa</li>
+      </ul>
+    </div>
+  </div>
+  <div class="tip">💡 El botón ☰ en la cabecera abre un menú lateral para navegar rápido entre todas las pantallas, cambiar idioma, compartir y cerrar sesión</div>
+
+  <!-- Ajustes del viaje -->
+  <div class="section-header">
+    <div class="section-icon">⚙️</div>
+    <h2>Ajustes del viaje</h2>
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #1A5C6B, #2A7B8C);">
+      <div class="screen-card-emoji">⚙️</div>
+      <div>
+        <div class="screen-card-title">Ajustes del viaje</div>
+        <div class="screen-card-desc">La base de tu viaje — complétalo antes de empezar</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">🌍 Destino y fechas</div><div class="row-val">El lugar al que vas y tus fechas de salida/regreso — la app calcula automáticamente el número de días</div></div>
+      <div class="row"><div class="row-key">👥 Participantes</div><div class="row-val"><strong>¡Importante!</strong> Añade los nombres de todas las familias o personas que viajan — esta es la base para dividir los gastos</div></div>
+      <div class="row"><div class="row-key">💱 Moneda de entrada</div><div class="row-val">La moneda predeterminada que se muestra en los formularios de gastos</div></div>
+      <div class="row"><div class="row-key">💲 Moneda de visualización</div><div class="row-val">Elige <strong>$ / € / £</strong> — todos los totales y la liquidación se mostrarán en esta moneda al tipo de cambio actual</div></div>
+      <div class="row"><div class="row-key">💰 Presupuesto previsto</div><div class="row-val">Introduce un importe — un indicador de colores muestra cuánto queda</div></div>
+    </div>
+  </div>
+
+  <!-- Gastos -->
+  <div class="section-header">
+    <div class="section-icon">💳</div>
+    <h2>Gastos</h2>
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #c0552a, #E8704A);">
+      <div class="screen-card-emoji">💳</div>
+      <div>
+        <div class="screen-card-title">Registrar gastos</div>
+        <div class="screen-card-desc">Cada gasto durante el viaje</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">📂 Categorías</div><div class="row-val">Vuelo ✈️ · Hotel 🏨 · Atracciones 🎡 · Comida 🍜 · Taxi 🚕 · Otro 📦</div></div>
+      <div class="row"><div class="row-key">💱 Multidivisa</div><div class="row-val">Introduce cualquier importe en cualquier moneda — convertido automáticamente al tipo de cambio actual</div></div>
+      <div class="row"><div class="row-key">📷 Escanear recibo</div><div class="row-val">Toca el icono de cámara y fotografía un recibo — la IA rellena el importe, la moneda y la descripción</div></div>
+
+      <div class="sub">✈️ Gasto de vuelo</div>
+      <div class="row"><div class="row-key">Número y horarios</div><div class="row-val">Se muestran en la tarjeta del vuelo y en el calendario — también se usan para los recordatorios de salida</div></div>
+
+      <div class="sub">🏨 Gasto de hotel</div>
+      <div class="row"><div class="row-key">Check-in / Check-out</div><div class="row-val">El hotel aparece en cada noche de tu estancia en el calendario</div></div>
+
+      <div class="sub">💸 Dividir gastos</div>
+      <div class="row"><div class="row-key">👥 Compartido / 👤 Personal</div><div class="row-val"><strong>Compartido</strong> — se incluye en la liquidación del grupo. <strong>Personal</strong> — no se cuenta</div></div>
+      <div class="row"><div class="row-key">¿Quién estaba?</div><div class="row-val">Todos están marcados por defecto. Toca a alguien que no estaba para quitarlo de la división</div></div>
+      <div class="row"><div class="row-key">💳 ¿Quién pagó?</div><div class="row-val">Toca "+ Añadir pagador" → elige una persona → introduce el importe. Se admiten varios pagadores por gasto</div></div>
+
+      <div class="example">
+        <strong>Ejemplo:</strong> 3 familias hicieron una excursión que costó 300 €. Solo asistieron Smith y Jones. Pagado por: Smith 300 €<br>
+        → Al final: Jones debe a Smith 150 €
+      </div>
+
+      <div class="row"><div class="row-key">📍 Dirección</div><div class="row-val">Añade una dirección — toca para abrir Google Maps, y el lugar aparece en la pantalla Mapa</div></div>
+      <div class="row"><div class="row-key">✅ Marcar como pagado</div><div class="row-val">Fija el tipo de cambio — el importe convertido no cambiará si el tipo se modifica</div></div>
+    </div>
+  </div>
+
+  <!-- Presupuesto y liquidación -->
+  <div class="section-header">
+    <div class="section-icon">💰</div>
+    <h2>Presupuesto y liquidación</h2>
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #2d6b3e, #4A8C5C);">
+      <div class="screen-card-emoji">💰</div>
+      <div>
+        <div class="screen-card-title">Presupuesto y liquidación</div>
+        <div class="screen-card-desc">Resumen de gastos y quién debe a quién</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">📊 Indicador de presupuesto</div><div class="row-val">🟢 hasta 70% · 🟡 70–90% · 🔴 más de 90%</div></div>
+      <div class="row"><div class="row-key">🥧 Gráfico de categorías</div><div class="row-val">Gráfico circular con el desglose de gastos por categoría</div></div>
+      <div class="row"><div class="row-key">💸 Quién debe a quién</div><div class="row-val">Cálculo totalmente automático — muestra exactamente quién debe pagar a quién y cuánto, en la moneda de visualización elegida</div></div>
+      <div class="row"><div class="row-key">📄 Exportar informe</div><div class="row-val">Toca 📄 en la cabecera para obtener un informe formateado con todos los gastos y la liquidación</div></div>
+    </div>
+  </div>
+
+  <!-- Calendario -->
+  <div class="section-header">
+    <div class="section-icon">📅</div>
+    <h2>Calendario</h2>
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #5B3E8C, #7B5EA7);">
+      <div class="screen-card-emoji">📅</div>
+      <div>
+        <div class="screen-card-title">Calendario</div>
+        <div class="screen-card-desc">Vista mensual y diaria con cronología por horas</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">Calendario mensual</div><div class="row-val">Puntos de color en cada día: 🔵 vuelo · 🟢 hotel · 🟡 gastos · 🟣 actividades. Toca un día para cambiar a la vista diaria detallada</div></div>
+      <div class="row"><div class="row-key">Cronología por horas</div><div class="row-val">Muestra lo que pasa en cada hora — vuelos, check-ins y actividades que añadiste</div></div>
+      <div class="row"><div class="row-key">🌤️ Tiempo</div><div class="row-val">Pronóstico diario disponible hasta 16 días</div></div>
+      <div class="row"><div class="row-key">✏️ Añadir actividades</div><div class="row-val">Toca "✏️ Actividades" en cualquier día → introduce nombre, tipo y horas. Toca una actividad existente para editarla</div></div>
+    </div>
+  </div>
+
+  <!-- Recomendaciones -->
+  <div class="section-header">
+    <div class="section-icon">✨</div>
+    <h2>Recomendaciones</h2>
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #1a4a7a, #2563aa);">
+      <div class="screen-card-emoji">✨</div>
+      <div>
+        <div class="screen-card-title">Recomendaciones</div>
+        <div class="screen-card-desc">Reserva hoteles, actividades y obtén consejos de IA</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">🏨 Agoda</div><div class="row-val">Busca hoteles en tu destino con las fechas del viaje precargadas</div></div>
+      <div class="row"><div class="row-key">🎡 Viator / GetYourGuide</div><div class="row-val">Busca tours y actividades en tu destino</div></div>
+      <div class="row"><div class="row-key">🤖 Recomendaciones de IA</div><div class="row-val">Mejores atracciones y restaurantes con un consejo local — adaptados a tu destino</div></div>
+    </div>
+  </div>
+
+  <!-- Lista de equipaje -->
+  <div class="section-header">
+    <div class="section-icon">🎒</div>
+    <h2>Lista de equipaje</h2>
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #7c3aed, #9f5cff);">
+      <div class="screen-card-emoji">🎒</div>
+      <div>
+        <div class="screen-card-title">Lista de equipaje</div>
+        <div class="screen-card-desc">Gestiona tu equipo antes y durante el viaje</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">📋 Categorías</div><div class="row-val">Documentos · Ropa · Electrónica · Salud · Otros</div></div>
+      <div class="row"><div class="row-key">✅ Marcar artículos</div><div class="row-val">Toca un artículo para marcarlo como empacado — la barra de progreso superior se actualiza al instante</div></div>
+      <div class="row"><div class="row-key">➕ Añadir / 🗑️ Eliminar</div><div class="row-val">Escribe un nombre, elige una categoría y toca Añadir. Toca ✕ junto a un artículo para eliminarlo</div></div>
+    </div>
+  </div>
+
+  <!-- Mapa -->
+  <div class="section-header">
+    <div class="section-icon">🗺️</div>
+    <h2>Mapa</h2>
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+      <div class="screen-card-emoji">🗺️</div>
+      <div>
+        <div class="screen-card-title">Mapa</div>
+        <div class="screen-card-desc">Todos los lugares de tu viaje en una sola vista</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">📍 Lugares</div><div class="row-val">Cada gasto con dirección aparece aquí automáticamente</div></div>
+      <div class="row"><div class="row-key">🗺️ Abrir mapa</div><div class="row-val">Toca cualquier lugar para abrir la navegación directa en Google Maps</div></div>
+    </div>
+  </div>
+
+  <!-- Compartir -->
+  <div class="section-header">
+    <div class="section-icon">👥</div>
+    <h2>Compartir un viaje</h2>
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #1a3a5c, #2d5c8a);">
+      <div class="screen-card-emoji">🔗</div>
+      <div>
+        <div class="screen-card-title">Invitar por enlace</div>
+        <div class="screen-card-desc">La forma más fácil de compartir con tu grupo</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">Cómo crearlo</div><div class="row-val">Abre el viaje → toca 👥 → desplázate hacia abajo → toca <strong>"🔗 Crear enlace de invitación"</strong></div></div>
+      <div class="row"><div class="row-key">Enviar</div><div class="row-val">📲 Envía directamente por WhatsApp, o 📋 copia el enlace</div></div>
+      <div class="row"><div class="row-key">Qué pasa</div><div class="row-val">Tocan el enlace → inician sesión o se registran → el viaje aparece en su cuenta automáticamente</div></div>
+      <div class="row"><div class="row-key">Revocar enlace</div><div class="row-val">Toca 🗑️ — los que ya se unieron permanecen, pero no podrán unirse nuevas personas</div></div>
+    </div>
+  </div>
+
+  <div class="screen-card" style="margin-top:0;">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #374151, #4b5563);">
+      <div class="screen-card-emoji">📧</div>
+      <div>
+        <div class="screen-card-title">Compartir con un correo específico</div>
+        <div class="screen-card-desc">Para compartir con precisión con permisos individuales</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">Cómo compartir</div><div class="row-val">Abre el viaje → toca 👥 → introduce el correo → toca Compartir</div></div>
+      <div class="row"><div class="row-key">Cambiar permisos</div><div class="row-val">Toca el botón junto al nombre para alternar entre <strong>Editar</strong> y <strong>Solo lectura</strong></div></div>
+      <div class="row"><div class="row-key">Eliminar</div><div class="row-val">Toca ✕ junto al nombre de la persona</div></div>
+    </div>
+  </div>
+
+  <!-- Liquidación -->
+  <div class="section-header">
+    <div class="section-icon">💸</div>
+    <h2>Liquidación al final del viaje</h2>
+  </div>
+
+  <table class="steps">
+    <tr><th class="n">#</th><th>Qué hacer</th></tr>
+    <tr><td class="n">1</td><td>En <strong>Ajustes del viaje</strong> — añade los nombres de todas las familias / personas que viajan</td></tr>
+    <tr><td class="n">2</td><td>Para cada gasto compartido — marca <strong>quién estaba</strong></td></tr>
+    <tr><td class="n">3</td><td>Toca <strong>"+ Añadir pagador"</strong> → introduce quién pagó y cuánto</td></tr>
+    <tr><td class="n">4</td><td>Al final — abre <strong>Presupuesto</strong> y desplázate hacia abajo para ver quién debe a quién</td></tr>
+  </table>
+
+  <div class="example">
+    <strong>Ejemplo — 3 familias:</strong><br>
+    🍽️ Restaurante 300 € — solo Smith y Jones. Pagado por: Smith 300 €<br>
+    🚌 Excursión 600 € — los tres. Pagado por: Jones 400 €, Green 200 €<br>
+    🏨 Hotel 900 € — los tres. Pagado por: Smith 900 €<br><br>
+    <strong>Resultado:</strong> Green debe a Smith 100 € · Jones debe a Smith 50 €
+  </div>
+
+  <!-- Recordatorios -->
+  <div class="section-header">
+    <div class="section-icon">🔔</div>
+    <h2>Recordatorios automáticos</h2>
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-card-header" style="background: linear-gradient(135deg, #92400e, #b45309);">
+      <div class="screen-card-emoji">🔔</div>
+      <div>
+        <div class="screen-card-title">Recordatorios</div>
+        <div class="screen-card-desc">Toca 🔕 en la pantalla principal para activarlos</div>
+      </div>
+    </div>
+    <div class="screen-card-body">
+      <div class="row"><div class="row-key">✈️ Salir al aeropuerto</div><div class="row-val">De 2 a 8 horas antes de la salida — eliges al introducir el vuelo</div></div>
+      <div class="row"><div class="row-key">🏨 Check-in / Check-out</div><div class="row-val">La mañana del día de llegada o salida (08:00)</div></div>
+      <div class="row"><div class="row-key">💳 Nuevo gasto añadido</div><div class="row-val">Cuando un compañero de viaje añade un gasto a tu viaje compartido</div></div>
+    </div>
+  </div>
+
+  <!-- Ayuda -->
+  <div class="section-header">
+    <div class="section-icon">📞</div>
+    <h2>Ayuda y contacto</h2>
+  </div>
+
+  <div class="tip" style="margin-bottom:12px;">
+    📖 <strong>Esta guía</strong> siempre está disponible desde el botón "📖 Guía de usuario" en la pantalla principal, o desde el menú lateral ☰
+  </div>
+  <div class="tip">
+    📧 <strong>Contacto:</strong> contact@tulon.app &nbsp;|&nbsp; 🔒 <strong>Privacidad:</strong> www.tulon.app/privacy
+  </div>
+
+</div>
+
+<div class="guide-footer">
+  <span>TUlon</span> – Mi planificador de viajes &nbsp;|&nbsp; www.tulon.app &nbsp;|&nbsp; Versión 9.0
+</div>
+
+</body>
+</html>

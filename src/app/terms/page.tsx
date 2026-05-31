@@ -1,39 +1,46 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useLang } from "@/lib/LangContext";
+
+type L = "he" | "en" | "es";
 
 export default function TermsPage() {
-  const [lang, setLang] = useState<"he" | "en">("he");
-  const isHe = lang === "he";
-  const dir = isHe ? "rtl" : "ltr";
+  const { lang: appLang } = useLang();
+  const [lang, setLang] = useState<L>(() => appLang as L);
+  const dir = lang === "he" ? "rtl" : "ltr";
+  const tr = (he: string, en: string, es: string) => lang === "he" ? he : lang === "es" ? es : en;
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a1628", color: "#ffffff", fontFamily: "'Rubik',sans-serif", direction: dir }}>
       {/* Header */}
       <div style={{ background: "rgba(0,0,0,0.3)", borderBottom: "0.5px solid rgba(100,223,223,0.15)", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Link href="/" style={{ color: "#64dfdf", textDecoration: "none", fontWeight: 700, fontSize: 18 }}>
-          {isHe ? "← טיולון" : "← TUlon"}
+          {tr("← טיולון", "← TUlon", "← TUlon")}
         </Link>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => setLang("he")} style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: lang === "he" ? "#64dfdf" : "rgba(255,255,255,0.08)", color: lang === "he" ? "#0a1628" : "#ffffff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>עב</button>
-          <button onClick={() => setLang("en")} style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: lang === "en" ? "#64dfdf" : "rgba(255,255,255,0.08)", color: lang === "en" ? "#0a1628" : "#ffffff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>EN</button>
+          {(["he","en","es"] as L[]).map(L => (
+            <button key={L} onClick={() => setLang(L)} style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: lang === L ? "#64dfdf" : "rgba(255,255,255,0.08)", color: lang === L ? "#0a1628" : "#ffffff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+              {L === "he" ? "עב" : L === "en" ? "EN" : "ES"}
+            </button>
+          ))}
         </div>
       </div>
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 80px" }}>
         <h1 style={{ fontSize: 32, fontWeight: 900, color: "#64dfdf", marginBottom: 8 }}>
-          {isHe ? "תנאי שימוש" : "Terms of Service"}
+          {tr("תנאי שימוש", "Terms of Service", "Términos de servicio")}
         </h1>
         <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, marginBottom: 40 }}>
-          {isHe ? "עודכן לאחרונה: מאי 2025" : "Last updated: May 2025"}
+          {tr("עודכן לאחרונה: מאי 2025", "Last updated: May 2025", "Última actualización: mayo de 2025")}
         </p>
 
-        {isHe ? <HeContent /> : <EnContent />}
+        {lang === "he" ? <HeContent /> : lang === "es" ? <EsContent /> : <EnContent />}
 
         <div style={{ marginTop: 48, paddingTop: 24, borderTop: "0.5px solid rgba(255,255,255,0.1)", display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <Link href="/privacy" style={{ color: "#64dfdf", fontSize: 13 }}>{isHe ? "מדיניות פרטיות" : "Privacy Policy"}</Link>
-          <Link href="/contact" style={{ color: "#64dfdf", fontSize: 13 }}>{isHe ? "צור קשר" : "Contact"}</Link>
-          <Link href="/" style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{isHe ? "חזרה לאפליקציה" : "Back to App"}</Link>
+          <Link href="/privacy" style={{ color: "#64dfdf", fontSize: 13 }}>{tr("מדיניות פרטיות", "Privacy Policy", "Política de privacidad")}</Link>
+          <Link href="/contact" style={{ color: "#64dfdf", fontSize: 13 }}>{tr("צור קשר", "Contact", "Contacto")}</Link>
+          <Link href="/" style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{tr("חזרה לאפליקציה", "Back to App", "Volver a la app")}</Link>
         </div>
       </div>
     </div>
@@ -180,6 +187,74 @@ function EnContent() {
 
       <Section title="10. Contact">
         <p>Questions about these terms: <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a></p>
+      </Section>
+    </>
+  );
+}
+
+function EsContent() {
+  return (
+    <>
+      <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.8, marginBottom: 32 }}>
+        Bienvenido a TUlon. El uso de la app implica la aceptación de los siguientes términos. Si no estás de acuerdo, por favor deja de usar el servicio.
+      </p>
+
+      <Section title="1. El Servicio">
+        <p>TUlon es una aplicación de gestión de viajes que permite planificar destinos, registrar gastos, gestionar el calendario, recibir recomendaciones y compartir con compañeros de viaje. El servicio se proporciona &quot;tal cual&quot; (As-Is).</p>
+      </Section>
+
+      <Section title="2. Cuenta de usuario">
+        <ul style={{ paddingLeft: 20, margin: 0 }}>
+          <li>Debes tener al menos 13 años para usar el servicio</li>
+          <li>Eres responsable de mantener tu contraseña en secreto</li>
+          <li>Una cuenta por persona — no se permite compartir el acceso</li>
+          <li>Nos reservamos el derecho de suspender cuentas que infrinjan estos términos</li>
+        </ul>
+      </Section>
+
+      <Section title="3. Uso permitido">
+        <p>Puedes usar el servicio para fines personales y no comerciales. No está permitido:</p>
+        <ul style={{ paddingLeft: 20, margin: "8px 0 0" }}>
+          <li>Usar el servicio para actividades ilegales</li>
+          <li>Intentar hackear, escanear o interrumpir el servicio</li>
+          <li>Subir contenido dañino, fraudulento o que infrinja derechos de autor</li>
+          <li>Revender el acceso al servicio</li>
+        </ul>
+      </Section>
+
+      <Section title="4. Propiedad intelectual">
+        <p>Todo el código, diseño y contenido de la aplicación pertenece a TUlon. Los datos que introduces (destinos, gastos, etc.) son tuyos.</p>
+      </Section>
+
+      <Section title="5. Pago y suscripción">
+        <p>El servicio se ofrece actualmente sin coste. Si en el futuro se introducen planes de pago, se avisará con antelación y tendrás la opción de elegir.</p>
+      </Section>
+
+      <Section title="6. Cancelación y terminación">
+        <p>Puedes dejar de usar el servicio en cualquier momento. Para solicitar la eliminación de tu cuenta, contáctanos en <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a>. Eliminaremos tus datos en un plazo de 30 días.</p>
+        <p style={{ marginTop: 8 }}>Nos reservamos el derecho de cerrar cuentas que infrinjan estos términos, previo aviso cuando sea posible.</p>
+      </Section>
+
+      <Section title="7. Limitación de responsabilidad">
+        <p>TUlon no se hace responsable de daños directos o indirectos derivados del uso de la app, incluyendo:</p>
+        <ul style={{ paddingLeft: 20, margin: "8px 0 0" }}>
+          <li>Pérdida de datos por fallos técnicos</li>
+          <li>Imprecisiones en tipos de cambio, datos meteorológicos o recomendaciones de IA</li>
+          <li>Enlaces externos (Booking.com, Agoda, etc.)</li>
+        </ul>
+        <p style={{ marginTop: 8 }}>Las recomendaciones mostradas (restaurantes, atracciones) se generan con IA y no constituyen asesoramiento profesional.</p>
+      </Section>
+
+      <Section title="8. Cambios en el servicio">
+        <p>Podemos modificar, suspender o discontinuar partes del servicio en cualquier momento. Avisaremos con antelación de los cambios importantes cuando sea posible.</p>
+      </Section>
+
+      <Section title="9. Ley aplicable">
+        <p>Estos términos se rigen por las leyes del Estado de Israel. Cualquier disputa será resuelta por los tribunales competentes de Israel.</p>
+      </Section>
+
+      <Section title="10. Contacto">
+        <p>Consultas sobre estos términos: <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a></p>
       </Section>
     </>
   );

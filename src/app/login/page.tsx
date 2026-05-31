@@ -39,7 +39,7 @@ export default function LoginPage() {
       window.location.href = "/";
     } catch (firebaseErr: any) {
       if (firebaseErr.code !== "auth/popup-closed-by-user") {
-        setErrMsg(lang === "he" ? `שגיאה: ${firebaseErr.code}` : `Error: ${firebaseErr.code}`);
+        setErrMsg(lang === "he" ? `שגיאה: ${firebaseErr.code}` : lang === "es" ? `Error: ${firebaseErr.code}` : `Error: ${firebaseErr.code}`);
       }
       setBusy(false);
     }
@@ -59,6 +59,7 @@ export default function LoginPage() {
     } catch (firebaseErr: any) {
       const key = ERROR_CODES[firebaseErr.code];
       setErrMsg(key ? t(key, lang) : (lang === "he" ? `שגיאה: ${firebaseErr.code}` : `Error: ${firebaseErr.code}`));
+      // Spanish uses same "Error" prefix as English
       setBusy(false);
     }
   };
@@ -103,6 +104,7 @@ export default function LoginPage() {
         <div className="lang-toggle">
           <button className={`lang-btn${lang === "en" ? " active" : ""}`} onClick={() => setLang("en")}><Globe size={13}/> <span>EN</span></button>
           <button className={`lang-btn${lang === "he" ? " active" : ""}`} onClick={() => setLang("he")}><Globe size={13}/> <span>עב</span></button>
+          <button className={`lang-btn${lang === "es" ? " active" : ""}`} onClick={() => setLang("es")}><Globe size={13}/> <span>ES</span></button>
         </div>
 
         <div className="card">
@@ -150,11 +152,11 @@ export default function LoginPage() {
 
           {/* Legal footer – inside card so it's always below */}
           <div className="legal">
-            <a href="/privacy">{lang === "he" ? "מדיניות פרטיות" : "Privacy Policy"}</a>
+            <a href="/privacy">{lang === "he" ? "מדיניות פרטיות" : lang === "es" ? "Política de privacidad" : "Privacy Policy"}</a>
             <span>·</span>
-            <a href="/terms">{lang === "he" ? "תנאי שימוש" : "Terms of Service"}</a>
+            <a href="/terms">{lang === "he" ? "תנאי שימוש" : lang === "es" ? "Términos de servicio" : "Terms of Service"}</a>
             <span>·</span>
-            <a href="/contact">{lang === "he" ? "צור קשר" : "Contact"}</a>
+            <a href="/contact">{lang === "he" ? "צור קשר" : lang === "es" ? "Contacto" : "Contact"}</a>
           </div>
         </div>
       </div>

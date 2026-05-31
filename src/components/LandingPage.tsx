@@ -1,9 +1,92 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { Wallet, Users, Calendar, Building2, Backpack, Share2 } from "lucide-react";
+import { useLang } from "@/lib/LangContext";
+
+const T = {
+  tag: { he: "מתכנן הטיולים שלי", en: "My Trip Planner", es: "Mi planificador de viajes" },
+  desc: {
+    he: "תכנן טיולים, עקוב אחרי הוצאות, ונהל התחשבנות עם חברי הטיול — הכל במקום אחד",
+    en: "Plan trips, track expenses, and settle up with your travel buddies — all in one place",
+    es: "Planifica viajes, registra gastos y ajusta cuentas con tus compañeros de viaje — todo en un solo lugar",
+  },
+  ctaStart: { he: "התחל בחינם", en: "Start free", es: "Empezar gratis" },
+  ctaLogin: { he: "כניסה למשתמשים קיימים", en: "Existing user? Sign in", es: "¿Ya tienes cuenta? Inicia sesión" },
+  featTitle: {
+    he: "כל מה שצריך לטיול מושלם",
+    en: "Everything you need for the perfect trip",
+    es: "Todo lo que necesitas para un viaje perfecto",
+  },
+  featSub: {
+    he: "מניהול תקציב ועד יומן פעילויות — הכל במקום אחד",
+    en: "From budget management to activity calendar — all in one place",
+    es: "Desde la gestión del presupuesto hasta el calendario de actividades — todo en un solo lugar",
+  },
+  feat1Title: { he: "ניהול הוצאות", en: "Expense tracking", es: "Gestión de gastos" },
+  feat1Desc: {
+    he: "רשום כל הוצאה בכל מטבע — האפליקציה ממירה לשקלים אוטומטית לפי שער חי",
+    en: "Log expenses in any currency — automatic conversion at live exchange rates",
+    es: "Registra cualquier gasto en cualquier moneda — conversión automática al tipo de cambio en vivo",
+  },
+  feat2Title: { he: "התחשבנות קבוצתית", en: "Group settlement", es: "Ajuste de cuentas grupal" },
+  feat2Desc: {
+    he: "בסוף הטיול — מי חייב כמה למי, חישוב אוטומטי מלא",
+    en: "At the end of the trip — who owes whom, fully automatic calculation",
+    es: "Al final del viaje — quién debe a quién, cálculo totalmente automático",
+  },
+  feat3Title: { he: "יומן ומסלול", en: "Calendar & itinerary", es: "Calendario e itinerario" },
+  feat3Desc: {
+    he: "תכנן פעילויות לכל יום, ראה מה קורה בכל שעה עם תחזית מזג אוויר",
+    en: "Plan activities for each day, see what's happening hour by hour with weather forecasts",
+    es: "Planifica actividades para cada día y consulta hora a hora con el pronóstico del tiempo",
+  },
+  feat4Title: { he: "המלצות מלונות ופעילויות", en: "Hotel & activity recommendations", es: "Recomendaciones de hoteles y actividades" },
+  feat4Desc: {
+    he: "חיפוש מלונות ב-Agoda ופעילויות ב-Viator — ישירות מתוך האפליקציה",
+    en: "Search hotels on Agoda and activities on Viator — right from the app",
+    es: "Busca hoteles en Agoda y actividades en Viator — directamente desde la app",
+  },
+  feat5Title: { he: "שיתוף קבוצתי", en: "Group sharing", es: "Compartir en grupo" },
+  feat5Desc: {
+    he: "שלח קישור הזמנה לוואטסאפ — כל חברי הטיול מצטרפים בלחיצה אחת",
+    en: "Send an invite link via WhatsApp — everyone joins with one tap",
+    es: "Envía un enlace de invitación por WhatsApp — todos se unen con un toque",
+  },
+  feat6Title: { he: "רשימת אריזה ומפה", en: "Packing list & map", es: "Lista de equipaje y mapa" },
+  feat6Desc: {
+    he: "ניהול ציוד לפני הטיול, וכל מקומות הטיול על מפה אחת",
+    en: "Manage your gear before the trip, and view all places on one map",
+    es: "Gestiona tu equipo antes del viaje y todos los lugares en un solo mapa",
+  },
+  band1: {
+    he: "מתאים לטיולים משפחתיים, קבוצות חברים ונסיעות עסקיות —",
+    en: "Great for family trips, groups of friends, and business travel —",
+    es: "Ideal para viajes en familia, grupos de amigos y viajes de negocios —",
+  },
+  band2: { he: "חינמי לחלוטין, ללא הגבלה", en: "Completely free, no limits", es: "Totalmente gratis, sin límites" },
+  howTitle: { he: "איך מתחילים?", en: "How does it work?", es: "¿Cómo empezar?" },
+  howSub: { he: "שלושה צעדים פשוטים", en: "Three simple steps", es: "Tres pasos sencillos" },
+  step1Title: { he: "נרשמים בחינם", en: "Sign up free", es: "Regístrate gratis" },
+  step1Desc: { he: "עם Google בלחיצה אחת, או עם אימייל וסיסמה", en: "One-tap Google sign-in, or email & password", es: "Inicio con Google en un toque, o con correo y contraseña" },
+  step2Title: { he: "יוצרים טיול ומוסיפים חברים", en: "Create a trip & add friends", es: "Crea un viaje y añade amigos" },
+  step2Desc: { he: "שולחים קישור לכל הקבוצה — כולם רואים ומעדכנים בזמן אמת", en: "Share a link with the group — everyone sees and updates in real time", es: "Comparte un enlace con el grupo — todos ven y actualizan en tiempo real" },
+  step3Title: { he: "נהנים מהטיול", en: "Enjoy the trip", es: "Disfruta del viaje" },
+  step3Desc: { he: "מוסיפים הוצאות, מתכננים פעילויות — ובסוף מתחשבנים בלחיצה אחת", en: "Log expenses, plan activities — then settle up with one tap", es: "Registra gastos, planifica actividades — y al final ajusta cuentas con un toque" },
+  ctaReadyTitle: { he: "מוכן לתכנן את הטיול הבא?", en: "Ready to plan your next trip?", es: "¿Listo para planificar tu próximo viaje?" },
+  ctaReadySub: { he: "ללא עלות, ללא כרטיס אשראי", en: "No cost, no credit card", es: "Sin costo, sin tarjeta de crédito" },
+  ctaReadyBtn: { he: "התחל עכשיו — בחינם", en: "Get started — free", es: "Empezar ahora — gratis" },
+  footPrivacy: { he: "מדיניות פרטיות", en: "Privacy Policy", es: "Política de privacidad" },
+  footTerms: { he: "תנאי שימוש", en: "Terms", es: "Términos" },
+  footContact: { he: "צור קשר", en: "Contact", es: "Contacto" },
+  footGuide: { he: "מדריך למשתמש", en: "User Guide", es: "Guía de usuario" },
+} as const;
 
 export default function LandingPage() {
   const router = useRouter();
+  const { lang, setLang } = useLang();
+  const isHe = lang === "he";
+  const dir = isHe ? "rtl" : "ltr";
+  const guideHref = lang === "he" ? "/guide-he.html" : lang === "es" ? "/guide-es.html" : "/guide-en.html";
 
   return (
     <>
@@ -11,7 +94,12 @@ export default function LandingPage() {
         @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Rubik', sans-serif; background: #0d2137; }
-        .lp { font-family: 'Rubik', sans-serif; background: #0d2137; color: #fff; min-height: 100vh; direction: rtl; }
+        .lp { font-family: 'Rubik', sans-serif; background: #0d2137; color: #fff; min-height: 100vh; }
+
+        /* Language switcher */
+        .lang-switch { position: absolute; top: 16px; ${isHe ? "left" : "right"}: 16px; display: flex; gap: 6px; z-index: 10; }
+        .lang-btn { padding: 5px 10px; border-radius: 8px; border: 0.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.55); font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .lang-btn.active { background: rgba(100,223,223,0.15); border-color: rgba(100,223,223,0.4); color: #64dfdf; }
 
         /* Hero */
         .hero {
@@ -24,7 +112,7 @@ export default function LandingPage() {
         .hero::before {
           content: '';
           position: absolute;
-          top: -100px; right: -100px;
+          top: -100px; ${isHe ? "right" : "left"}: -100px;
           width: 400px; height: 400px;
           border-radius: 50%;
           background: radial-gradient(circle, rgba(100,223,223,0.07) 0%, transparent 70%);
@@ -62,7 +150,7 @@ export default function LandingPage() {
           border-radius: 999px;
           border: 0.5px solid rgba(255,255,255,0.15);
           cursor: pointer;
-          margin-right: 12px;
+          margin-${isHe ? "right" : "left"}: 12px;
           transition: all 0.2s;
         }
         .btn-login:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.3); }
@@ -128,57 +216,62 @@ export default function LandingPage() {
         .lp-footer .brand { color: #64dfdf; font-weight: 700; }
       `}</style>
 
-      <div className="lp">
+      <div className="lp" style={{ direction: dir }}>
+
+        {/* Language switcher */}
+        <div className="lang-switch">
+          <button className={`lang-btn ${lang === "he" ? "active" : ""}`} onClick={() => setLang("he")}>עב</button>
+          <button className={`lang-btn ${lang === "en" ? "active" : ""}`} onClick={() => setLang("en")}>EN</button>
+          <button className={`lang-btn ${lang === "es" ? "active" : ""}`} onClick={() => setLang("es")}>ES</button>
+        </div>
 
         {/* Hero */}
         <div className="hero">
           <div className="hero-inner">
             <div className="hero-logo">TU<span>lon</span></div>
-            <div className="hero-tag">מתכנן הטיולים שלי</div>
-            <div className="hero-desc">
-              תכנן טיולים, עקוב אחרי הוצאות, ונהל התחשבנות עם חברי הטיול — הכל במקום אחד
-            </div>
+            <div className="hero-tag">{T.tag[lang]}</div>
+            <div className="hero-desc">{T.desc[lang]}</div>
             <div className="hero-btns">
-              <button className="btn-cta" onClick={() => router.push("/login")}>התחל בחינם</button>
-              <button className="btn-login" onClick={() => router.push("/login")}>כניסה למשתמשים קיימים</button>
+              <button className="btn-cta" onClick={() => router.push("/login")}>{T.ctaStart[lang]}</button>
+              <button className="btn-login" onClick={() => router.push("/login")}>{T.ctaLogin[lang]}</button>
             </div>
           </div>
         </div>
 
         {/* Features */}
         <div className="section">
-          <div className="section-title">כל מה שצריך לטיול מושלם</div>
-          <div className="section-sub">מניהול תקציב ועד יומן פעילויות — הכל במקום אחד</div>
+          <div className="section-title">{T.featTitle[lang]}</div>
+          <div className="section-sub">{T.featSub[lang]}</div>
           <div className="features">
             <div className="feat">
               <div className="feat-icon" style={{background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.25)"}}><Wallet size={22} color="#64dfdf" strokeWidth={1.5}/></div>
-              <div className="feat-title">ניהול הוצאות</div>
-              <div className="feat-desc">רשום כל הוצאה בכל מטבע — האפליקציה ממירה לשקלים אוטומטית לפי שער חי</div>
+              <div className="feat-title">{T.feat1Title[lang]}</div>
+              <div className="feat-desc">{T.feat1Desc[lang]}</div>
             </div>
             <div className="feat">
               <div className="feat-icon" style={{background:"rgba(129,140,248,0.12)",border:"0.5px solid rgba(129,140,248,0.25)"}}><Share2 size={22} color="#818cf8" strokeWidth={1.5}/></div>
-              <div className="feat-title">התחשבנות קבוצתית</div>
-              <div className="feat-desc">בסוף הטיול — מי חייב כמה למי, חישוב אוטומטי מלא</div>
+              <div className="feat-title">{T.feat2Title[lang]}</div>
+              <div className="feat-desc">{T.feat2Desc[lang]}</div>
             </div>
             <div className="feat">
               <div className="feat-icon" style={{background:"rgba(244,114,182,0.12)",border:"0.5px solid rgba(244,114,182,0.25)"}}><Calendar size={22} color="#f472b6" strokeWidth={1.5}/></div>
-              <div className="feat-title">יומן ומסלול</div>
-              <div className="feat-desc">תכנן פעילויות לכל יום, ראה מה קורה בכל שעה עם תחזית מזג אוויר</div>
+              <div className="feat-title">{T.feat3Title[lang]}</div>
+              <div className="feat-desc">{T.feat3Desc[lang]}</div>
             </div>
             <div className="feat">
               <div className="feat-icon" style={{background:"rgba(251,191,36,0.12)",border:"0.5px solid rgba(251,191,36,0.25)"}}><Building2 size={22} color="#fbbf24" strokeWidth={1.5}/></div>
-              <div className="feat-title">המלצות מלונות ופעילויות</div>
-              <div className="feat-desc">חיפוש מלונות ב-Agoda ופעילויות ב-Viator — ישירות מתוך האפליקציה</div>
+              <div className="feat-title">{T.feat4Title[lang]}</div>
+              <div className="feat-desc">{T.feat4Desc[lang]}</div>
             </div>
             <div className="feat">
               <div className="feat-icon" style={{background:"rgba(74,222,128,0.12)",border:"0.5px solid rgba(74,222,128,0.25)"}}><Users size={22} color="#4ade80" strokeWidth={1.5}/></div>
-              <div className="feat-title">שיתוף קבוצתי</div>
-              <div className="feat-desc">שלח קישור הזמנה לוואטסאפ — כל חברי הטיול מצטרפים בלחיצה אחת</div>
+              <div className="feat-title">{T.feat5Title[lang]}</div>
+              <div className="feat-desc">{T.feat5Desc[lang]}</div>
             </div>
             <div className="feat">
               <div className="feat-icon" style={{background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.25)"}}><Backpack size={22} color="#64dfdf" strokeWidth={1.5}/></div>
-              <div className="feat-title">רשימת אריזה ומפה</div>
-              <div className="feat-desc">ניהול ציוד לפני הטיול, וכל מקומות הטיול על מפה אחת</div>
+              <div className="feat-title">{T.feat6Title[lang]}</div>
+              <div className="feat-desc">{T.feat6Desc[lang]}</div>
             </div>
           </div>
         </div>
@@ -186,35 +279,35 @@ export default function LandingPage() {
         {/* Band */}
         <div className="band">
           <div className="band-text">
-            מתאים לטיולים משפחתיים, קבוצות חברים ונסיעות עסקיות —<br/>
-            <span>חינמי לחלוטין, ללא הגבלה</span>
+            {T.band1[lang]}<br/>
+            <span>{T.band2[lang]}</span>
           </div>
         </div>
 
         {/* How it works */}
         <div className="section">
-          <div className="section-title">איך מתחילים?</div>
-          <div className="section-sub">שלושה צעדים פשוטים</div>
+          <div className="section-title">{T.howTitle[lang]}</div>
+          <div className="section-sub">{T.howSub[lang]}</div>
           <div className="steps">
             <div className="step">
               <div className="step-num">1</div>
               <div className="step-text">
-                <div className="step-title">נרשמים בחינם</div>
-                <div className="step-desc">עם Google בלחיצה אחת, או עם אימייל וסיסמה</div>
+                <div className="step-title">{T.step1Title[lang]}</div>
+                <div className="step-desc">{T.step1Desc[lang]}</div>
               </div>
             </div>
             <div className="step">
               <div className="step-num">2</div>
               <div className="step-text">
-                <div className="step-title">יוצרים טיול ומוסיפים חברים</div>
-                <div className="step-desc">שולחים קישור לכל הקבוצה — כולם רואים ומעדכנים בזמן אמת</div>
+                <div className="step-title">{T.step2Title[lang]}</div>
+                <div className="step-desc">{T.step2Desc[lang]}</div>
               </div>
             </div>
             <div className="step">
               <div className="step-num">3</div>
               <div className="step-text">
-                <div className="step-title">נהנים מהטיול</div>
-                <div className="step-desc">מוסיפים הוצאות, מתכננים פעילויות — ובסוף מתחשבנים בלחיצה אחת</div>
+                <div className="step-title">{T.step3Title[lang]}</div>
+                <div className="step-desc">{T.step3Desc[lang]}</div>
               </div>
             </div>
           </div>
@@ -224,20 +317,20 @@ export default function LandingPage() {
 
         {/* CTA bottom */}
         <div className="section" style={{textAlign:"center", paddingTop:40, paddingBottom:56}}>
-          <div style={{fontSize:22, fontWeight:800, color:"#fff", marginBottom:10}}>מוכן לתכנן את הטיול הבא?</div>
-          <div style={{fontSize:14, color:"rgba(255,255,255,0.35)", marginBottom:28}}>ללא עלות, ללא כרטיס אשראי</div>
-          <button className="btn-cta" onClick={() => router.push("/login")}>התחל עכשיו — בחינם</button>
+          <div style={{fontSize:22, fontWeight:800, color:"#fff", marginBottom:10}}>{T.ctaReadyTitle[lang]}</div>
+          <div style={{fontSize:14, color:"rgba(255,255,255,0.35)", marginBottom:28}}>{T.ctaReadySub[lang]}</div>
+          <button className="btn-cta" onClick={() => router.push("/login")}>{T.ctaReadyBtn[lang]}</button>
         </div>
 
         {/* Footer */}
         <div className="lp-footer">
           <div style={{marginBottom:10}}>
-            <a href="/privacy">מדיניות פרטיות</a>
-            <a href="/terms">תנאי שימוש</a>
-            <a href="/contact">צור קשר</a>
-            <a href="/guide-he.html">מדריך למשתמש</a>
+            <a href="/privacy">{T.footPrivacy[lang]}</a>
+            <a href="/terms">{T.footTerms[lang]}</a>
+            <a href="/contact">{T.footContact[lang]}</a>
+            <a href={guideHref}>{T.footGuide[lang]}</a>
           </div>
-          <div><span className="brand">TUlon</span> – מתכנן הטיולים שלי &nbsp;·&nbsp; www.tulon.app</div>
+          <div><span className="brand">TUlon</span> – {T.tag[lang]} &nbsp;·&nbsp; www.tulon.app</div>
         </div>
 
       </div>
