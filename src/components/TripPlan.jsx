@@ -3054,15 +3054,15 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           </button>
           <div style={{padding:"8px 20px 10px"}}>
             <div style={{display:"flex",background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:24,padding:3}}>
-              {["en","he"].map(l=>(
+              {["en","he","es"].map(l=>(
                 <button key={l} onClick={()=>setLang(l)}
-                  style={{flex:1,padding:"7px 12px",borderRadius:20,border:"none",
+                  style={{flex:1,padding:"7px 10px",borderRadius:20,border:"none",
                     background:lang===l?"rgba(100,223,223,0.18)":"transparent",
                     color:lang===l?TEAL:"rgba(255,255,255,0.4)",
                     fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:RF,
-                    display:"flex",alignItems:"center",justifyContent:"center",gap:5,transition:"all 0.15s"}}>
+                    display:"flex",alignItems:"center",justifyContent:"center",gap:4,transition:"all 0.15s"}}>
                   <Globe size={12} color={lang===l?TEAL:"rgba(255,255,255,0.4)"} strokeWidth={1.5}/>
-                  {l==="en"?"EN":"עב"}
+                  {l==="en"?"EN":l==="he"?"עב":"ES"}
                 </button>
               ))}
             </div>
@@ -3102,15 +3102,15 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
 
             {/* Language pill — same style as login */}
             <div style={{display:"flex",background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:24,padding:3,flexShrink:0}}>
-              {["en","he"].map(l=>(
+              {["en","he","es"].map(l=>(
                 <button key={l} onClick={()=>setLang(l)}
-                  style={{padding:"5px 12px",borderRadius:20,border:"none",
+                  style={{padding:"5px 10px",borderRadius:20,border:"none",
                     background:lang===l?"rgba(100,223,223,0.18)":"transparent",
                     color:lang===l?TEAL:"rgba(255,255,255,0.4)",
                     fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:RF,
-                    display:"flex",alignItems:"center",gap:4,transition:"all 0.15s",whiteSpace:"nowrap"}}>
+                    display:"flex",alignItems:"center",gap:3,transition:"all 0.15s",whiteSpace:"nowrap"}}>
                   <Globe size={11} color={lang===l?TEAL:"rgba(255,255,255,0.4)"} strokeWidth={1.5}/>
-                  {l==="en"?"EN":"עב"}
+                  {l==="en"?"EN":l==="he"?"עב":"ES"}
                 </button>
               ))}
             </div>
