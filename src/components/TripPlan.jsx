@@ -772,6 +772,195 @@ function exportTripPDF(trip,expenses,lang="he"){
   setTimeout(()=>w.print(),800);
 }
 
+// ── ITINERARY EXPORT ────────────────────────────────────────────────────────
+// Printable day-by-day, hour-by-hour schedule:
+//   • Flights (with departure/landing times)
+//   • Hotel check-ins / check-outs / nights
+//   • Manually-entered calendar activities
+//   • Other timed expenses (attractions, food, taxi…) with `time` field
+function exportItineraryPDF(trip,expenses,lang="he"){
+  if(!trip||!trip.startDate||!trip.endDate)return;
+
+  // ── Localized labels ─────────────────────────────────────────────────────
+  const L={
+    he:{title:"לוח זמנים",subtitle:"לו\"ז הטיול",day:"יום",noEvents:"אין פעילויות מתוכננות ליום זה",
+        flightDep:"✈️ המראה",flightLand:"🛬 נחיתה",hotelIn:"🏨 צ׳ק אין",hotelOut:"🏨 צ׳ק אאוט",hotelNight:"🏨 לינה",
+        time:"שעה",event:"אירוע",details:"פרטים",noTime:"ללא שעה",
+        createdBy:"נוצר על ידי",appName:"טיולון",appSub:"מתכנן הטיולים שלי",fallbackDest:"טיול"},
+    en:{title:"Itinerary",subtitle:"Trip Schedule",day:"Day",noEvents:"No activities scheduled for this day",
+        flightDep:"✈️ Takeoff",flightLand:"🛬 Landing",hotelIn:"🏨 Check-in",hotelOut:"🏨 Check-out",hotelNight:"🏨 Stay",
+        time:"Time",event:"Event",details:"Details",noTime:"No time",
+        createdBy:"Created by",appName:"TUlon",appSub:"My Trip Planner",fallbackDest:"Trip"},
+    es:{title:"Itinerario",subtitle:"Programa del viaje",day:"Día",noEvents:"No hay actividades programadas para este día",
+        flightDep:"✈️ Despegue",flightLand:"🛬 Aterrizaje",hotelIn:"🏨 Check-in",hotelOut:"🏨 Check-out",hotelNight:"🏨 Estancia",
+        time:"Hora",event:"Evento",details:"Detalles",noTime:"Sin hora",
+        createdBy:"Creado con",appName:"TUlon",appSub:"Mi planificador de viajes",fallbackDest:"Viaje"},
+  }[lang]||L?.en;
+
+  const dir=lang==="he"?"rtl":"ltr";
+  const dates=getRange(trip.startDate,trip.endDate);
+  const locale=lang==="he"?"he-IL":lang==="es"?"es-ES":"en-US";
+  const actLbl=type=>{const a=ACT_TYPES.find(x=>x.id===type);return a?(a[lang]||a.en):"";};
+
+  // ── Build items for each day ─────────────────────────────────────────────
+  // Item shape: { time, label, type, color, details }
+  const itemsForDay=(d)=>{
+    const items=[];
+
+    // Flights starting today
+    expenses.filter(e=>e.category==="flight"&&e.date===d).forEach(e=>{
+      if(e.departureTime){
+        items.push({time:e.departureTime,label:`${L.flightDep}${e.description?` — ${e.description}`:""}`,color:"#3b82f6",
+                    details:e.flightNumber?`✈ ${e.flightNumber}`:""});
+      }
+      if(e.landingTime){
+        items.push({time:e.landingTime,label:`${L.flightLand}${e.description?` — ${e.description}`:""}`,color:"#3b82f6",
+                    details:""});
+      }
+    });
+
+    // Hotel check-in / out / mid-stay
+    expenses.filter(e=>e.category==="hotel").forEach(e=>{
+      if(e.checkIn===d){
+        items.push({time:"14:00",label:`${L.hotelIn}${e.description?` — ${e.description}`:""}`,color:"#10b981",
+                    details:e.address||""});
+      }else if(e.checkOut===d){
+        items.push({time:"11:00",label:`${L.hotelOut}${e.description?` — ${e.description}`:""}`,color:"#10b981",
+                    details:e.address||""});
+      }else if(e.checkIn<d&&e.checkOut>d){
+        items.push({time:"",label:`${L.hotelNight}${e.description?` — ${e.description}`:""}`,color:"#10b981",
+                    details:e.address||""});
+      }
+    });
+
+    // Other timed expenses
+    expenses.filter(e=>!["flight","hotel"].includes(e.category)&&e.date===d&&e.time).forEach(e=>{
+      const cat=CATS.find(c=>c.id===e.category);
+      items.push({time:e.time,
+        label:`${cat?.icon||""} ${e.description||t(`cat_${e.category}`,lang)}`,
+        color:cat?.color||"#64dfdf",
+        details:[e.timeEnd?`→ ${e.timeEnd}`:"",e.address?`📍 ${e.address}`:""].filter(Boolean).join(" · ")});
+    });
+
+    // Manual activities
+    const acts=(trip.activities||{})[d]||[];
+    acts.forEach(a=>{
+      const text=typeof a==="string"?a:(a.text||"");
+      if(!text)return;
+      const time=typeof a==="object"?(a.time||""):"";
+      const timeEnd=typeof a==="object"?(a.timeEnd||""):"";
+      const type=typeof a==="object"?(a.type||"general"):"general";
+      const icon=ACT_TYPES.find(x=>x.id===type)?.icon||"📌";
+      items.push({time,label:`${icon} ${text}`,color:"#a78bfa",
+                  details:[timeEnd?`→ ${timeEnd}`:"",actLbl(type)].filter(Boolean).join(" · ")});
+    });
+
+    // Sort by time — items without time go to the end
+    return items.sort((a,b)=>{
+      if(!a.time&&!b.time)return 0;
+      if(!a.time)return 1;
+      if(!b.time)return -1;
+      return a.time.localeCompare(b.time);
+    });
+  };
+
+  // ── Build HTML ───────────────────────────────────────────────────────────
+  const dayBlocks=dates.map((d,i)=>{
+    const items=itemsForDay(d);
+    const dateObj=new Date(d+"T12:00:00");
+    const wday=dateObj.toLocaleDateString(locale,{weekday:"long"});
+    const dateStr=dateObj.toLocaleDateString(locale,{day:"numeric",month:"long",year:"numeric"});
+    return `
+    <div class="day-block">
+      <div class="day-header">
+        <div class="day-num">${L.day} ${i+1}</div>
+        <div class="day-meta">
+          <div class="day-wday">${wday}</div>
+          <div class="day-date">${dateStr}</div>
+        </div>
+      </div>
+      ${items.length===0
+        ? `<div class="empty">${L.noEvents}</div>`
+        : `<table class="schedule">
+            <thead><tr><th class="t-time">${L.time}</th><th class="t-event">${L.event}</th><th class="t-det">${L.details}</th></tr></thead>
+            <tbody>
+              ${items.map(it=>`<tr>
+                <td class="cell-time" style="border-${dir==="rtl"?"right":"left"}:3px solid ${it.color}">${it.time||`<span class="no-time">${L.noTime}</span>`}</td>
+                <td class="cell-event">${it.label}</td>
+                <td class="cell-det">${it.details||""}</td>
+              </tr>`).join("")}
+            </tbody>
+          </table>`}
+    </div>`;
+  }).join("");
+
+  const html=`<!DOCTYPE html>
+<html dir="${dir}" lang="${lang}">
+<head>
+<meta charset="UTF-8">
+<title>${L.appName} – ${trip.destination||L.fallbackDest} – ${L.title}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Rubik',Arial,sans-serif;background:#f8fafc;color:#1a2b35;direction:${dir};font-size:14px;line-height:1.5;}
+  .cover{background:linear-gradient(160deg,#091928,#0d2137,#0a3050);padding:36px 28px;color:white;}
+  .logo{font-size:38px;font-weight:900;letter-spacing:-1.5px;}
+  .logo-sub{font-size:11px;font-weight:300;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-top:3px;}
+  .dest{font-size:22px;font-weight:700;margin-top:18px;}
+  .dates{font-size:12px;color:rgba(255,255,255,0.4);margin-top:5px;}
+  .badge{display:inline-block;background:#64dfdf;color:#0d2137;font-size:11px;font-weight:700;padding:5px 16px;border-radius:999px;margin-top:12px;}
+  .content{padding:24px 20px;max-width:820px;margin:0 auto;}
+
+  .day-block{margin-bottom:22px;page-break-inside:avoid;background:white;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+  .day-header{background:linear-gradient(135deg,#0d2137,#1a3a5c);color:white;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;}
+  .day-num{font-size:18px;font-weight:800;color:#64dfdf;letter-spacing:-0.3px;}
+  .day-meta{text-align:${dir==="rtl"?"left":"right"};}
+  .day-wday{font-size:13px;font-weight:600;text-transform:capitalize;}
+  .day-date{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;}
+
+  .empty{padding:20px 24px;color:#94a3b8;font-size:12px;text-align:center;font-style:italic;}
+
+  table.schedule{width:100%;border-collapse:collapse;font-size:12px;}
+  table.schedule th{background:#f1f5f9;color:#475569;padding:8px 14px;text-align:${dir==="rtl"?"right":"left"};font-weight:700;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;}
+  table.schedule td{padding:10px 14px;border-bottom:1px solid #f1f5f9;vertical-align:top;}
+  table.schedule tr:last-child td{border-bottom:none;}
+  .t-time{width:90px;}
+  .t-det{width:30%;}
+  .cell-time{font-weight:700;color:#0d2137;direction:ltr;text-align:${dir==="rtl"?"right":"left"};font-size:13px;padding-${dir==="rtl"?"right":"left"}:12px;}
+  .cell-event{font-weight:500;color:#0d2137;font-size:13px;}
+  .cell-det{color:#7a9baa;font-size:11px;}
+  .no-time{color:#cbd5e1;font-weight:400;font-style:italic;font-size:11px;}
+
+  .footer{background:#0d2137;color:rgba(255,255,255,0.35);text-align:center;padding:14px;font-size:10px;margin-top:28px;}
+  .footer span{color:#64dfdf;}
+
+  @media print{
+    body{background:white;}
+    .cover,.day-header{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .day-block{box-shadow:none;border:1px solid #e2e8f0;}
+  }
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="logo">${L.appName}</div>
+  <div class="logo-sub">${L.appSub}</div>
+  <div class="dest">🌍 ${trip.destination||L.fallbackDest}</div>
+  <div class="dates">${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}</div>
+  <div class="badge">📅 ${L.title}</div>
+</div>
+<div class="content">${dayBlocks}</div>
+<div class="footer">${L.createdBy} <span>${L.appName}</span> – ${L.appSub} &nbsp;|&nbsp; ${new Date().toLocaleDateString(locale)}</div>
+</body></html>`;
+
+  const w=window.open("","_blank");
+  if(!w)return;
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(),800);
+}
+
 function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
   const{lang}=useLang();
   const[showJoin,setShowJoin]=useState(false);
@@ -2195,7 +2384,17 @@ function CalendarScreen({trip,expenses,onSaveActs}){
             <h1 style={{fontFamily:RF,color:"#ffffff",fontSize:22,fontWeight:800,letterSpacing:"-0.3px",lineHeight:1}}>{t("cal_title",lang)}</h1>
             <p style={{color:W35,marginTop:4,fontSize:11,fontWeight:400}}>{trip.destination?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}</p>
           </div>
-          {trip.destination&&<div style={{fontSize:11,color:"rgba(255,255,255,0.3)",fontFamily:RF}}>{wLoad?t("wx_loading",lang):wx?`🌍 ${wx.name}`:wErr?"☁️":""}</div>}
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            {trip.destination&&<div style={{fontSize:11,color:"rgba(255,255,255,0.3)",fontFamily:RF}}>{wLoad?t("wx_loading",lang):wx?`🌍 ${wx.name}`:wErr?"☁️":""}</div>}
+            {trip.startDate&&trip.endDate&&(
+              <button onClick={()=>exportItineraryPDF(trip,expenses,lang)}
+                title={lang==="he"?"הדפס לו\"ז":lang==="es"?"Imprimir itinerario":"Print itinerary"}
+                style={{padding:"6px 10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap"}}>
+                <FileDown size={13} strokeWidth={1.8}/>
+                {lang==="he"?"לו\"ז":lang==="es"?"Itinerario":"Itinerary"}
+              </button>
+            )}
+          </div>
         </div>
         {/* View toggle */}
         <div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.06)",borderRadius:10,padding:3}}>
