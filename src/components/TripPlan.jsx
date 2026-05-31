@@ -1754,6 +1754,28 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                 </div>)
               :allFiltered.map(exp=><ExpenseRow key={exp.id} exp={exp}/>)
             }
+
+            {/* Hotel booking nudge — shown at bottom when no hotel expense exists */}
+            {!expenses.some(e=>e.category==="hotel")&&trip.destination&&(
+              <div style={{marginTop:8,padding:"14px 16px",borderRadius:14,border:"0.5px solid rgba(129,140,248,0.3)",background:"linear-gradient(135deg,rgba(129,140,248,0.08),rgba(129,140,248,0.02))"}}>
+                <div style={{fontFamily:RF,fontSize:12,fontWeight:700,color:"#a5b4fc",marginBottom:6}}>
+                  🏨 {lang==="he"?"עדיין לא הזמנתם מלון?":lang==="es"?"¿Aún sin hotel reservado?":"Haven't booked your hotel yet?"}
+                </div>
+                <div style={{fontSize:11,color:W40,marginBottom:10,lineHeight:1.5}}>
+                  {lang==="he"?`השווה מחירים ומצא מלון ל${trip.destination}`:lang==="es"?`Compara precios para ${trip.destination}`:`Compare prices and find a hotel in ${trip.destination}`}
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>window.open(buildAgodaUrl({destination:trip.destination,checkIn:trip.startDate,checkOut:trip.endDate,source:"trip-cta"}),"_blank")}
+                    style={{flex:1,padding:"9px",borderRadius:10,border:"0.5px solid rgba(224,69,90,0.4)",background:"rgba(224,69,90,0.12)",color:"#ff8da0",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+                    🏨 Agoda ↗
+                  </button>
+                  <button onClick={()=>window.open(buildBookingUrl({destination:trip.destination,checkIn:trip.startDate,checkOut:trip.endDate,source:"trip-cta"}),"_blank")}
+                    style={{flex:1,padding:"9px",borderRadius:10,border:"0.5px solid rgba(23,100,210,0.4)",background:"rgba(23,100,210,0.12)",color:"#93c5fd",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+                    🔵 Booking ↗
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
     </div>
   );
@@ -1947,6 +1969,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
   const[selDate,setSelDate]=useState(dates[0]||"");
   const[editActs,setEditActs]=useState([]); // [{text,time}] being edited
   const[actPopup,setActPopup]=useState(null); // activity detail popup {act, date}
+  const[hotelNudgeDismissed,setHotelNudgeDismissed]=useState(()=>{try{return localStorage.getItem(`tulon_hotel_nudge_${trip.id}`)==="1";}catch{return false;}});
   const{wx,loading:wLoad,error:wErr}=useWeather(trip.destination,trip.startDate,trip.endDate);
 
   const wxMap={};
@@ -2219,6 +2242,30 @@ function CalendarScreen({trip,expenses,onSaveActs}){
           </div>
         ))}
 
+        {/* Hotel booking nudge — shown once per trip when no hotel booked */}
+        {!expenses.some(e=>e.category==="hotel")&&trip.destination&&!hotelNudgeDismissed&&(
+          <div style={{marginBottom:12,padding:"10px 14px",background:"rgba(129,140,248,0.08)",border:"0.5px solid rgba(129,140,248,0.28)",borderRadius:12,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:18,flexShrink:0}}>🏨</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:RF,fontSize:12,fontWeight:700,color:"#a5b4fc",marginBottom:3}}>
+                {lang==="he"?"עדיין לא הזמנתם מלון?":lang==="es"?"¿Aún sin hotel?":"Haven't booked a hotel yet?"}
+              </div>
+              <div style={{display:"flex",gap:6}}>
+                <button onClick={()=>window.open(buildAgodaUrl({destination:trip.destination,checkIn:trip.startDate,checkOut:trip.endDate,source:"calendar-empty"}),"_blank")}
+                  style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(224,69,90,0.4)",background:"rgba(224,69,90,0.12)",color:"#ff8da0",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>
+                  Agoda ↗
+                </button>
+                <button onClick={()=>window.open(buildBookingUrl({destination:trip.destination,checkIn:trip.startDate,checkOut:trip.endDate,source:"calendar-empty"}),"_blank")}
+                  style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(23,100,210,0.4)",background:"rgba(23,100,210,0.12)",color:"#93c5fd",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>
+                  Booking ↗
+                </button>
+              </div>
+            </div>
+            <button onClick={()=>{setHotelNudgeDismissed(true);try{localStorage.setItem(`tulon_hotel_nudge_${trip.id}`,"1");}catch{}}}
+              style={{background:"none",border:"none",color:W25,cursor:"pointer",padding:4,fontSize:14,lineHeight:1,flexShrink:0}}>✕</button>
+          </div>
+        )}
+
         {/* Timeline */}
         <div style={{position:"relative",display:"flex",gap:0}}>
           {/* Hour labels */}
@@ -2310,12 +2357,36 @@ function CalendarScreen({trip,expenses,onSaveActs}){
                 <div style={{fontSize:11,color:W40,marginBottom:10,lineHeight:1.5}}>
                   {lang==="he"?`סיורים, חוויות ואטרקציות ב${trip.destination}`:lang==="es"?`Tours, experiencias y atracciones en ${trip.destination}`:`Tours, experiences & attractions in ${trip.destination}`}
                 </div>
-                <button onClick={()=>window.open(buildViatorUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
-                  style={{width:"100%",padding:"10px",borderRadius:10,border:"0.5px solid rgba(167,139,250,0.45)",background:"rgba(167,139,250,0.15)",color:"#a78bfa",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-                  🎡 {lang==="he"?"חפש פעילויות":lang==="es"?"Buscar actividades":"Find activities"} ↗
-                </button>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>window.open(buildViatorUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
+                    style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(167,139,250,0.45)",background:"rgba(167,139,250,0.15)",color:"#a78bfa",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+                    🎡 Viator ↗
+                  </button>
+                  <button onClick={()=>window.open(buildGygUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
+                    style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(255,107,53,0.4)",background:"rgba(255,107,53,0.1)",color:"#ff9a6c",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+                    🎫 GetYourGuide ↗
+                  </button>
+                </div>
               </div>
             )}
+          </div>
+        )}
+        {/* Activities chip — always shown at bottom even on days with events */}
+        {(timed.length>0||untimed.length>0)&&trip.destination&&(
+          <div style={{marginTop:16,padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(167,139,250,0.2)",background:"rgba(167,139,250,0.05)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+            <div style={{fontFamily:RF,fontSize:12,color:"rgba(167,139,250,0.8)",fontWeight:600}}>
+              🎡 {lang==="he"?"מחפשים מה לעשות?":lang==="es"?"¿Buscar actividades?":"Things to do?"}
+            </div>
+            <div style={{display:"flex",gap:6,flexShrink:0}}>
+              <button onClick={()=>window.open(buildViatorUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
+                style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(167,139,250,0.38)",background:"rgba(167,139,250,0.12)",color:"#c4b5fd",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>
+                Viator ↗
+              </button>
+              <button onClick={()=>window.open(buildGygUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
+                style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(255,107,53,0.33)",background:"rgba(255,107,53,0.08)",color:"#ff9a6c",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>
+                GYG ↗
+              </button>
+            </div>
           </div>
         )}
       </div>
