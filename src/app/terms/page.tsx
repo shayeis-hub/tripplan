@@ -88,7 +88,7 @@ function HeContent() {
       </Section>
 
       <Section title="6. ביטול וסיום">
-        <p>תוכל להפסיק את השימוש בכל עת. לבקשת מחיקת חשבון פנה אלינו ב-<a href="mailto:contact@tulon.co.il" style={{ color: "#64dfdf" }}>contact@tulon.co.il</a>. נמחק את הנתונים שלך תוך 30 יום.</p>
+        <p>תוכל להפסיק את השימוש בכל עת. לבקשת מחיקת חשבון פנה אלינו ב-<a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a>. נמחק את הנתונים שלך תוך 30 יום.</p>
         <p style={{ marginTop: 8 }}>אנו שומרים לעצמנו הזכות לסגור חשבונות שמפרים את התנאים, לאחר התראה.</p>
       </Section>
 
@@ -111,7 +111,7 @@ function HeContent() {
       </Section>
 
       <Section title="10. יצירת קשר">
-        <p>שאלות בנוגע לתנאים: <a href="mailto:contact@tulon.co.il" style={{ color: "#64dfdf" }}>contact@tulon.co.il</a></p>
+        <p>שאלות בנוגע לתנאים: <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a></p>
       </Section>
     </>
   );
@@ -156,7 +156,7 @@ function EnContent() {
       </Section>
 
       <Section title="6. Cancellation & Termination">
-        <p>You may stop using the service at any time. To request account deletion, contact us at <a href="mailto:contact@tulon.co.il" style={{ color: "#64dfdf" }}>contact@tulon.co.il</a>. We will delete your data within 30 days.</p>
+        <p>You may stop using the service at any time. To request account deletion, contact us at <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a>. We will delete your data within 30 days.</p>
         <p style={{ marginTop: 8 }}>We reserve the right to close accounts that violate these terms, following notice where possible.</p>
       </Section>
 
@@ -179,7 +179,7 @@ function EnContent() {
       </Section>
 
       <Section title="10. Contact">
-        <p>Questions about these terms: <a href="mailto:contact@tulon.co.il" style={{ color: "#64dfdf" }}>contact@tulon.co.il</a></p>
+        <p>Questions about these terms: <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a></p>
       </Section>
     </>
   );

@@ -10,7 +10,7 @@ async function loginAndShoot(browser, width, height, prefix) {
   await page.setViewport({ width, height, deviceScaleFactor: 2 });
 
   // Login
-  await page.goto('https://www.tulon.co.il/login', { waitUntil: 'networkidle0', timeout: 30000 });
+  await page.goto('https://www.tulon.app/login', { waitUntil: 'networkidle0', timeout: 30000 });
   await new Promise(r => setTimeout(r, 2000));
 
   await page.$eval('input[type="email"]', el => { el.value = ''; });

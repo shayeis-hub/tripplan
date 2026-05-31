@@ -53,7 +53,7 @@ function HeContent() {
   return (
     <>
       <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.8, marginBottom: 32 }}>
-        טיולון (&quot;השירות&quot;, &quot;האפליקציה&quot;) מפעיל אתר האינטרנט tulon.co.il ואפליקציית מתכנן הטיולים. דף זה מסביר כיצד אנו אוספים, משתמשים ומגנים על המידע שלך.
+        טיולון (&quot;השירות&quot;, &quot;האפליקציה&quot;) מפעיל אתר האינטרנט tulon.app ואפליקציית מתכנן הטיולים. דף זה מסביר כיצד אנו אוספים, משתמשים ומגנים על המידע שלך.
       </p>
 
       <Section title="1. מידע שאנו אוספים">
@@ -111,7 +111,7 @@ function HeContent() {
       </Section>
 
       <Section title="9. יצירת קשר">
-        <p>לכל שאלה בנוגע לפרטיות: <a href="mailto:contact@tulon.co.il" style={{ color: "#64dfdf" }}>contact@tulon.co.il</a></p>
+        <p>לכל שאלה בנוגע לפרטיות: <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a></p>
       </Section>
     </>
   );
@@ -121,7 +121,7 @@ function EnContent() {
   return (
     <>
       <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.8, marginBottom: 32 }}>
-        TUlon (&quot;the Service&quot;, &quot;the App&quot;) operates tulon.co.il and the TUlon trip planner application. This page explains how we collect, use, and protect your information.
+        TUlon (&quot;the Service&quot;, &quot;the App&quot;) operates tulon.app and the TUlon trip planner application. This page explains how we collect, use, and protect your information.
       </p>
 
       <Section title="1. Information We Collect">
@@ -179,7 +179,7 @@ function EnContent() {
       </Section>
 
       <Section title="9. Contact">
-        <p>For any privacy questions: <a href="mailto:contact@tulon.co.il" style={{ color: "#64dfdf" }}>contact@tulon.co.il</a></p>
+        <p>For any privacy questions: <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a></p>
       </Section>
     </>
   );

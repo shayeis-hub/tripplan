@@ -12,7 +12,7 @@ export default function ContactPage() {
   const dir = isHe ? "rtl" : "ltr";
 
   const copy = () => {
-    navigator.clipboard.writeText("contact@tulon.co.il");
+    navigator.clipboard.writeText("contact@tulon.app");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -51,8 +51,8 @@ export default function ContactPage() {
             {isHe ? "אימייל" : "Email"}
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <a href="mailto:contact@tulon.co.il" style={{ color: "#ffffff", fontSize: 18, fontWeight: 700, textDecoration: "none", letterSpacing: "-0.3px" }}>
-              contact@tulon.co.il
+            <a href="mailto:contact@tulon.app" style={{ color: "#ffffff", fontSize: 18, fontWeight: 700, textDecoration: "none", letterSpacing: "-0.3px" }}>
+              contact@tulon.app
             </a>
             <button onClick={copy} style={{ padding: "7px 14px", borderRadius: 8, border: "0.5px solid rgba(100,223,223,0.3)", background: copied ? "rgba(100,223,223,0.2)" : "rgba(100,223,223,0.08)", color: "#64dfdf", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Rubik',sans-serif", transition: "all 0.2s", whiteSpace: "nowrap" }}>
               {copied ? <><Check size={13} strokeWidth={2.5}/> {isHe ? "הועתק" : "Copied"}</> : <><Copy size={13} strokeWidth={1.5}/> {isHe ? "העתק" : "Copy"}</>}
@@ -84,7 +84,7 @@ export default function ContactPage() {
             { Icon: Lock,        color: "#818cf8", bg: "rgba(129,140,248,0.12)", title: "Privacy & account deletion", desc: "Request to delete your data" },
             { Icon: Users,       color: "#4ade80", bg: "rgba(74,222,128,0.12)",  title: "Partnership",             desc: "Business, marketing, or other" },
           ]).map(item => (
-            <a key={item.title} href={`mailto:contact@tulon.co.il?subject=${encodeURIComponent(item.title)}`}
+            <a key={item.title} href={`mailto:contact@tulon.app?subject=${encodeURIComponent(item.title)}`}
               style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "0.5px solid rgba(255,255,255,0.08)", textDecoration: "none", cursor: "pointer", transition: "all 0.2s" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(100,223,223,0.3)"; (e.currentTarget as HTMLElement).style.background = "rgba(100,223,223,0.05)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}>

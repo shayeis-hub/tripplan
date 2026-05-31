@@ -237,7 +237,7 @@ export default function LandingPage() {
             <a href="/contact">צור קשר</a>
             <a href="/guide-he.html">מדריך למשתמש</a>
           </div>
-          <div><span className="brand">TUlon</span> – מתכנן הטיולים שלי &nbsp;·&nbsp; www.tulon.co.il</div>
+          <div><span className="brand">TUlon</span> – מתכנן הטיולים שלי &nbsp;·&nbsp; www.tulon.app</div>
         </div>
 
       </div>
