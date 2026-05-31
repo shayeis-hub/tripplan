@@ -2948,7 +2948,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         destination:active.destination,startDate:active.startDate,endDate:active.endDate,
         expenses:sanitized,createdAt:Date.now(),
       });
-      setInspireLink(`${window.location.origin}/trip/${shareId}`);
+      setInspireLink(`https://tulon.app/trip/${shareId}`);
     }catch(e){console.error(e);}
     setInspireSaving(false);
   };
