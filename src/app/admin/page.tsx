@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 
 const ADMIN_EMAIL = "shayeis@gmail.com";
 const RF = "'Rubik',sans-serif";
@@ -42,6 +42,15 @@ export default function AdminPage() {
     } catch { setErr("סיסמה שגויה"); }
   };
 
+  const resetPass = async () => {
+    try {
+      await sendPasswordResetEmail(auth, ADMIN_EMAIL);
+      setErr(`📧 נשלח מייל איפוס ל-${ADMIN_EMAIL}`);
+    } catch (e: any) {
+      setErr(`שגיאה: ${e?.code || "unknown"}`);
+    }
+  };
+
   const fetchStats = async (token: string) => {
     setLoading(true);
     try {
@@ -76,6 +85,9 @@ export default function AdminPage() {
         {err && <div style={{ color: "#ff6b6b", fontSize: 13, marginBottom: 10 }}>{err}</div>}
         <button onClick={login} style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", background: TEAL, color: BG, fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: RF }}>
           כניסה
+        </button>
+        <button onClick={resetPass} style={{ width: "100%", padding: 10, marginTop: 10, borderRadius: 12, border: "0.5px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.4)", fontWeight: 500, fontSize: 12, cursor: "pointer", fontFamily: RF }}>
+          🔑 שכחתי סיסמה — שלח מייל איפוס
         </button>
       </div>
     </div>
