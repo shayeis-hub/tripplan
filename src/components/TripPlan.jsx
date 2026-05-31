@@ -1226,14 +1226,14 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   // all expenses for selected day (for display in list)
   const dayExp=expenses.filter(e=>e.category==="hotel"?e.checkIn<=sel&&e.checkOut>=sel:e.date===sel);
 
-  // filtered for search view
+  // filtered for search view — chronologically sorted
   const allFiltered=useMemo(()=>{
     return expenses.filter(e=>{
       const matchSearch=!search||(e.description||"").includes(search)||(CATS.find(c=>c.id===e.category)?.label||"").includes(search);
       const matchCat=filterCat==="all"||e.category===filterCat;
       const matchPaid=filterPaid==="all"||(filterPaid==="paid"&&e.paid)||(filterPaid==="unpaid"&&!e.paid);
       return matchSearch&&matchCat&&matchPaid;
-    });
+    }).sort(sortByDateTime);
   },[expenses,search,filterCat,filterPaid]);
 
   const isFiltering=search||filterCat!=="all"||filterPaid!=="all";
@@ -2424,6 +2424,20 @@ function DiscoverScreen({trip}){
   );
 }
 
+// Sort expenses chronologically by date, then by time.
+// Hotels use checkIn; flights use departureTime; others use time. Missing → end.
+const sortByDateTime=(a,b)=>{
+  const da=a.category==="hotel"?a.checkIn:a.date;
+  const db=b.category==="hotel"?b.checkIn:b.date;
+  if(!da&&!db)return 0;
+  if(!da)return 1;
+  if(!db)return -1;
+  if(da!==db)return da.localeCompare(db);
+  const ta=a.time||a.departureTime||"00:00";
+  const tb=b.time||b.departureTime||"00:00";
+  return ta.localeCompare(tb);
+};
+
 const newTrip=(ownerId)=>{
   const loc=(typeof navigator!=="undefined"?(navigator.language||""):"").toLowerCase();
   let dc="USD", currencies=["USD","EUR","GBP"];
@@ -3283,7 +3297,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>{t("inspire_sub",lang)}</p>
         <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
           {expenses.length===0&&<div style={{color:W35,fontSize:13,textAlign:"center",padding:"12px 0"}}>{t("inspire_no_exp",lang)}</div>}
-          {expenses.map(e=>{
+          {[...expenses].sort(sortByDateTime).map(e=>{
             const cat=CATS.find(c=>c.id===e.category);
             const hidden=inspireHidden.has(e.id);
             return(
