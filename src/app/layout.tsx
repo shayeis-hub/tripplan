@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     title: "טיולון",
   },
   icons: {
-    icon: "/icon.svg",
+    icon: "/icon-192.png",
     apple: "/icon-192.png",
   },
 };
