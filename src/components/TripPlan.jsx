@@ -37,7 +37,7 @@ import { db } from "@/lib/firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
-import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildBookingUrl } from "@/lib/affiliate";
+import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildBookingUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
   Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send,
@@ -234,8 +234,13 @@ function useWeather(destination,startDate,endDate){
         const maxDate=localDateStr(new Date(today.getTime()+16*86400000));
         const end2=endDate>maxDate?maxDate:endDate;
         const start2=startDate<localDateStr(today)?localDateStr(today):startDate;
-        return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&start_date=${start2}&end_date=${end2}&timezone=auto`)
-          .then(r=>r.json()).then(fc=>({name,country,daily:fc.daily}));
+        return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&start_date=${start2}&end_date=${end2}&timezone=auto`)
+          .then(r=>r.json()).then(fc=>{
+            // Normalise field name: API uses weather_code, fallback to legacy weathercode
+            const daily=fc.daily;
+            if(daily&&daily.weather_code&&!daily.weathercode) daily.weathercode=daily.weather_code;
+            return {name,country,daily};
+          });
       }).then(d=>{setWx(d);setLoading(false);}).catch(e=>{setWxError(e.message||"שגיאה");setLoading(false);});
   },[destination,startDate,endDate]);
   return{wx,loading,error:wxError};
@@ -576,15 +581,19 @@ function CurrencyConverter({rates,onClose,tripCurrencies}){
         <input value={amount} onChange={e=>setAmount(e.target.value)} type="number" placeholder={t("conv_ph",lang)} min="0"
           style={{width:"100%",padding:"11px 14px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:16,color:"#ffffff",background:W07,outline:"none",direction:"ltr",marginBottom:10}}
           onFocus={e=>(e.target.style.borderColor=TEAL)} onBlur={e=>(e.target.style.borderColor=TBB)}/>
-        {/* From / swap / To */}
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+        {/* From / swap / To — vertical stack so flags+names don't overflow */}
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
           <select value={from} onChange={e=>setFrom(e.target.value)}
-            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            style={{width:"100%",padding:"10px 10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
             {allCodes.map(c=><option key={c} value={c}>{currLabel(c,lang)}</option>)}
           </select>
-          <button onClick={swap} style={{padding:"8px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.08)",color:TEAL,fontSize:16,cursor:"pointer",flexShrink:0}}>⇄</button>
+          <div style={{display:"flex",justifyContent:"center"}}>
+            <button onClick={swap} style={{padding:"6px 20px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.08)",color:TEAL,fontSize:15,cursor:"pointer",fontFamily:RF,fontWeight:700,letterSpacing:1}}>
+              ⇅ {lang==="he"?"החלף":lang==="es"?"Cambiar":"Swap"}
+            </button>
+          </div>
           <select value={to} onChange={e=>setTo(e.target.value)}
-            style={{flex:1,padding:"10px 8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
+            style={{width:"100%",padding:"10px 10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:"#0d2f4a",outline:"none"}}>
             {allCodes.map(c=><option key={c} value={c}>{currLabel(c,lang)}</option>)}
           </select>
         </div>
@@ -1066,6 +1075,33 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
             </button>
           </div>
         )}
+
+        {/* Quick affiliate chips */}
+        <div style={{marginTop:8}}>
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.18)",textAlign:"center",marginBottom:8,fontFamily:RF,letterSpacing:"0.8px",textTransform:"uppercase"}}>
+            {lang==="he"?"חיפוש מהיר":lang==="es"?"Búsqueda rápida":"Quick search"}
+          </div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+            <a href="https://www.kiwi.com" target="_blank" rel="noopener noreferrer"
+              style={{display:"flex",alignItems:"center",gap:6,padding:"9px 16px",borderRadius:999,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.06)",textDecoration:"none",cursor:"pointer",transition:"all 0.15s"}}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(100,223,223,0.12)";e.currentTarget.style.borderColor="rgba(100,223,223,0.35)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(100,223,223,0.06)";e.currentTarget.style.borderColor="rgba(100,223,223,0.2)";}}>
+              <span style={{fontSize:15}}>✈️</span>
+              <span style={{fontFamily:RF,fontSize:12,fontWeight:700,color:TEAL}}>
+                {lang==="he"?"חפש טיסה":lang==="es"?"Buscar vuelo":"Find a flight"}
+              </span>
+            </a>
+            <a href={buildAiraloUrl({source:"splash"})} target="_blank" rel="noopener noreferrer"
+              style={{display:"flex",alignItems:"center",gap:6,padding:"9px 16px",borderRadius:999,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.06)",textDecoration:"none",cursor:"pointer",transition:"all 0.15s"}}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(100,223,223,0.12)";e.currentTarget.style.borderColor="rgba(100,223,223,0.35)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(100,223,223,0.06)";e.currentTarget.style.borderColor="rgba(100,223,223,0.2)";}}>
+              <span style={{fontSize:15}}>📶</span>
+              <span style={{fontFamily:RF,fontSize:12,fontWeight:700,color:TEAL}}>
+                {lang==="he"?"eSIM לנסיעה":lang==="es"?"eSIM de viaje":"Travel eSIM"}
+              </span>
+            </a>
+          </div>
+        </div>
 
         {/* Legal footer */}
         <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",paddingTop:8,paddingBottom:4,marginTop:4}}>
@@ -2223,7 +2259,26 @@ function CalendarScreen({trip,expenses,onSaveActs}){
             </div>
             <div>
               <div style={{color:"#ffffff",fontWeight:700,fontSize:16,fontFamily:RF}}>{wday}</div>
-              {wxd&&<div style={{fontSize:12,color:TEAL,marginTop:2}}>{WMO[wxd.code]?.split(" ")[0]} {wxd.max?.toFixed(0)}°C</div>}
+              {wxd?(
+                <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4,flexWrap:"wrap"}}>
+                  <span style={{fontSize:18,lineHeight:1}}>{WMO[wxd.code]?.split(" ")[0]||"🌡️"}</span>
+                  <div style={{display:"flex",flexDirection:"column",gap:0}}>
+                    <span style={{fontSize:12,fontWeight:700,color:TEAL,lineHeight:1.2}}>
+                      {wxd.max!=null?`${wxd.max.toFixed(0)}°`:"–"}
+                      {wxd.min!=null?<span style={{fontWeight:400,color:W40}}> / {wxd.min.toFixed(0)}°</span>:null}
+                    </span>
+                    {wxd.rain!=null&&wxd.rain>0&&(
+                      <span style={{fontSize:10,color:"#93c5fd",lineHeight:1.2}}>💧 {wxd.rain}%</span>
+                    )}
+                  </div>
+                </div>
+              ):(wErr||!wx)&&!wLoad&&trip.destination&&(
+                <div style={{fontSize:10,color:W25,marginTop:3}}>
+                  {wErr&&wErr.includes("16")?
+                    (lang==="he"?"תחזית זמינה 16 יום מראש":lang==="es"?"Pronóstico disponible 16 días antes":"Forecast available 16 days ahead")
+                    :"–"}
+                </div>
+              )}
             </div>
             {/* Next day arrow */}
             <button onClick={()=>{const i=dates.indexOf(selDate);if(i<dates.length-1)setSelDate(dates[i+1]);}} disabled={dates.indexOf(selDate)===dates.length-1}
@@ -2232,6 +2287,18 @@ function CalendarScreen({trip,expenses,onSaveActs}){
           </div>
           <button onClick={()=>openEdit(selDate)} style={{padding:"7px 12px",borderRadius:9,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,cursor:"pointer"}}>{t("cal_activities",lang)}</button>
         </div>
+
+        {/* Airport transfer banner – shown on any day that has a flight */}
+        {expenses.some(e=>e.category==="flight"&&e.date===selDate)&&(
+          <div onClick={()=>window.open(buildGetTransferUrl({source:"calendar-flight"}),"_blank")}
+            style={{marginBottom:10,padding:"10px 14px",background:"rgba(251,191,36,0.08)",border:"0.5px solid rgba(251,191,36,0.28)",borderRadius:12,display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
+            <span style={{fontSize:18,flexShrink:0}}>🚖</span>
+            <span style={{flex:1,fontFamily:RF,fontSize:13,fontWeight:700,color:"#fbbf24"}}>{t("flight_transfer_banner",lang)}</span>
+            <span style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(251,191,36,0.4)",background:"rgba(251,191,36,0.12)",color:"#fde68a",fontFamily:RF,fontWeight:700,fontSize:11,flexShrink:0}}>
+              {t("flight_transfer_cta",lang)} ↗
+            </span>
+          </div>
+        )}
 
         {/* Hotel stay banner – top of day */}
         {stayHotels.map(h=>(
@@ -2473,7 +2540,9 @@ function CalendarScreen({trip,expenses,onSaveActs}){
             <p style={{color:W35,marginTop:4,fontSize:11,fontWeight:400}}>{trip.destination?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}</p>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
-            {trip.destination&&<div style={{fontSize:11,color:"rgba(255,255,255,0.3)",fontFamily:RF}}>{wLoad?t("wx_loading",lang):wx?`🌍 ${wx.name}`:wErr?"☁️":""}</div>}
+            {trip.destination&&<div style={{fontSize:11,color:"rgba(255,255,255,0.3)",fontFamily:RF}}>
+              {wLoad?t("wx_loading",lang):wx?`🌍 ${wx.name}`:wErr&&wErr.includes("16")?(lang==="he"?"☁️ תחזית זמינה 16 יום מראש":lang==="es"?"☁️ Pronóstico disponible 16 días antes":"☁️ Forecast available 16 days ahead"):""}
+            </div>}
             {trip.startDate&&trip.endDate&&(
               <button onClick={()=>exportItineraryPDF(trip,expenses,lang)}
                 title={lang==="he"?"הדפס לו\"ז":lang==="es"?"Imprimir itinerario":"Print itinerary"}
@@ -2566,6 +2635,7 @@ function DiscoverScreen({trip}){
     {name:"GetYourGuide",domain:"getyourguide.com",color:"#ff6b35",label:t("disc_book_acts",lang),
      url:buildGygUrl(affParams)},
   ];
+  const airaloUrl=buildAiraloUrl({source:"discover"});
 
   return(
     <div>
@@ -2610,6 +2680,19 @@ function DiscoverScreen({trip}){
                 </button>
               ))}
             </div>
+
+            {/* ── Airalo eSIM ── */}
+            <button onClick={()=>open(airaloUrl)}
+              style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"18px 20px",borderRadius:18,border:"0.5px solid rgba(100,223,223,0.35)",background:"linear-gradient(135deg,rgba(100,223,223,0.12),rgba(100,223,223,0.05))",cursor:"pointer"}}>
+              <div style={{width:48,height:48,borderRadius:12,background:"rgba(100,223,223,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:26}}>📶</div>
+              <div style={{textAlign:"right",flex:1}}>
+                <div style={{fontFamily:RF,fontSize:16,fontWeight:800,color:"#ffffff"}}>Airalo eSIM</div>
+                <div style={{fontSize:13,color:"#ffffff",fontWeight:600,marginTop:3,lineHeight:1.4,opacity:0.85}}>
+                  {lang==="he"?"גלישה בחו\"ל בלי להחליף כרטיס":lang==="es"?"Internet en el extranjero sin cambiar SIM":"Browse abroad without swapping your SIM"}
+                </div>
+              </div>
+              <div style={{flexShrink:0,width:32,height:32,borderRadius:10,background:"rgba(100,223,223,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><Globe size={18} color={TEAL} strokeWidth={1.5}/></div>
+            </button>
 
             {/* ── AI Recommendations ── */}
             {recsLoading&&(
@@ -2782,6 +2865,10 @@ function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
                 ✈️ {tr("חפש טיסה","Find a flight","Buscar vuelo")} ↗
               </button>
             )}
+            <button onClick={()=>window.open(buildAiraloUrl({source:"trip-cta"}),"_blank")}
+              style={{flex:1,minWidth:140,padding:"10px 14px",borderRadius:12,border:`0.5px solid rgba(100,223,223,0.35)`,background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+              📶 {tr("eSIM לנסיעה","Travel eSIM","eSIM de viaje")} ↗
+            </button>
           </div>
         </div>
       )}
@@ -2826,6 +2913,7 @@ const DEFAULT_PACK=(lang)=>[
   {id:"t1",text:lang==="he"?"מטען":lang==="es"?"Cargador":"Charger",             category:"tech",    checked:false},
   {id:"t2",text:lang==="he"?"אוזניות":lang==="es"?"Auriculares":"Headphones",       category:"tech",    checked:false},
   {id:"t3",text:lang==="he"?"מצלמה":lang==="es"?"Cámara":"Camera",             category:"tech",    checked:false},
+  {id:"t4",text:lang==="he"?"📶 eSIM לנסיעה (Airalo)":lang==="es"?"📶 eSIM de viaje (Airalo)":"📶 Travel eSIM (Airalo)", category:"tech",    checked:false},
   {id:"m1",text:lang==="he"?"תרופות שגרתיות":lang==="es"?"Medicación habitual":"Regular medication",category:"medical",checked:false},
   {id:"m2",text:lang==="he"?"קרם הגנה":lang==="es"?"Protector solar":"Sunscreen",       category:"medical", checked:false},
   {id:"m3",text:lang==="he"?"משחת שיניים":lang==="es"?"Pasta de dientes":"Toothpaste",   category:"medical", checked:false},

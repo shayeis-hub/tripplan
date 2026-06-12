@@ -131,6 +131,8 @@ export const translations = {
   flight_reminder:  { he: "🔔 תזכורת לפני הטיסה",   en: "🔔 Reminder before flight", es: "🔔 Recordatorio antes del vuelo" },
   flight_hours:     { he: "שעות",                   en: "hours",                es: "horas" },
   flight_reminder_at: { he: "🔔 תזכורת ב-",         en: "🔔 Reminder at",       es: "🔔 Recordatorio a las" },
+  flight_transfer_banner: { he: "כבר הזמנת העברות להיום?", en: "Did you book your transfers for today?", es: "¿Ya reservaste tus traslados de hoy?" },
+  flight_transfer_cta:    { he: "הזמן העברה",              en: "Book a transfer",                        es: "Reservar traslado" },
 
   // ── Hotel specific ────────────────────────────────────
   hotel_dates:      { he: "🏨 תאריכי שהייה",         en: "🏨 Stay Dates",        es: "🏨 Fechas de estancia" },

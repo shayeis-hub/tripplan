@@ -14,6 +14,7 @@ export type AffSource =
   | "discover"       // The "Discover" / "גלה" screen — primary recommendations page
   | "trip-cta"       // CTA banner shown on the trip splash screen when a booking is missing
   | "calendar-empty" // Suggestion on an empty calendar day
+  | "calendar-flight"// Transfer banner on a calendar day that has a flight
   | "splash";        // Landing / pre-login surfaces
 
 interface BuildParams {
@@ -133,20 +134,19 @@ export function buildGygUrl({ destination, source }: BuildParams): string {
   return `https://www.getyourguide.com/s/?q=${q}${partner}&${utm(source)}`;
 }
 
-// Airalo eSIM — landing on a country-specific page when we recognize the destination,
-// otherwise on the local-eSIMs list with the search ready.
-// When AIRALO_PID is set, route through Impact.com so commission is tracked.
-export function buildAiraloUrl({ destination, source }: BuildParams): string {
-  const slug = AIRALO_COUNTRY_SLUG[destination] || "";
-  const targetPath = slug ? `${slug}-esim` : "local-esims";
-  const targetUrl  = `https://www.airalo.com/${targetPath}`;
+// Airalo eSIM — TravelPayouts SmartLink (all tracking built-in).
+// The SmartLink handles affiliate attribution; we add subid1 for source tracking.
+const AIRALO_TP_URL = "https://airalo.tpk.ro/A5T0EOcn";
 
-  if (AIRALO_PID) {
-    // Impact.com format — wraps the destination URL with the partner ID for tracking
-    const u = encodeURIComponent(`${targetUrl}?${utm(source)}`);
-    return `https://airalo.pxf.io/c/${AIRALO_PID}/?u=${u}&subId1=${source}`;
-  }
-  return `${targetUrl}?${utm(source)}`;
+export function buildAiraloUrl({ source }: Pick<BuildParams, "source">): string {
+  return `${AIRALO_TP_URL}?subid1=tulon&subid2=${source}`;
+}
+
+// GetTransfer airport transfers — TravelPayouts SmartLink (all tracking built-in).
+const GETTRANSFER_TP_URL = "https://gettransfer.tpk.ro/Ge13JWCO";
+
+export function buildGetTransferUrl({ source }: Pick<BuildParams, "source">): string {
+  return `${GETTRANSFER_TP_URL}?subid1=tulon&subid2=${source}`;
 }
 
 // One-stop helper if you want all five URLs at once for a given trip context.

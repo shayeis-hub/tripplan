@@ -2,6 +2,8 @@
 import { useRouter } from "next/navigation";
 import { Wallet, Users, Calendar, Building2, Backpack, Share2 } from "lucide-react";
 import { useLang } from "@/lib/LangContext";
+import SiteNav from "@/components/SiteNav";
+import SiteFooter from "@/components/SiteFooter";
 
 const T = {
   tag: { he: "מתכנן הטיולים שלי", en: "My Trip Planner", es: "Mi planificador de viajes" },
@@ -24,9 +26,9 @@ const T = {
   },
   feat1Title: { he: "ניהול הוצאות", en: "Expense tracking", es: "Gestión de gastos" },
   feat1Desc: {
-    he: "רשום כל הוצאה בכל מטבע — האפליקציה ממירה לשקלים אוטומטית לפי שער חי",
-    en: "Log expenses in any currency — automatic conversion at live exchange rates",
-    es: "Registra cualquier gasto en cualquier moneda — conversión automática al tipo de cambio en vivo",
+    he: "רשום כל הוצאה בכל מטבע — האפליקציה ממירה למטבע ברירת המחדל שלך אוטומטית לפי שער חי",
+    en: "Log expenses in any currency — automatic conversion to your default currency at live exchange rates",
+    es: "Registra cualquier gasto en cualquier moneda — conversión automática a tu moneda predeterminada al tipo de cambio en vivo",
   },
   feat2Title: { he: "התחשבנות קבוצתית", en: "Group settlement", es: "Ajuste de cuentas grupal" },
   feat2Desc: {
@@ -79,6 +81,47 @@ const T = {
   footTerms: { he: "תנאי שימוש", en: "Terms", es: "Términos" },
   footContact: { he: "צור קשר", en: "Contact", es: "Contacto" },
   footGuide: { he: "מדריך למשתמש", en: "User Guide", es: "Guía de usuario" },
+
+  // Plan teaser
+  planTitle: {
+    he: "כל מה שצריך לתכנן טיול מושלם",
+    en: "Everything You Need to Plan the Perfect Trip",
+    es: "Todo lo que Necesitas para el Viaje Perfecto",
+  },
+  planSub: {
+    he: "טיסות, מלונות, אטרקציות ו-eSIM — כל הקישורים הכי טובים במקום אחד",
+    en: "Flights, hotels, activities & eSIM — all the best links in one place",
+    es: "Vuelos, hoteles, actividades y eSIM — todos los mejores enlaces en un solo lugar",
+  },
+  planBtn: {
+    he: "למדריך התכנון המלא",
+    en: "Open the Trip Planning Hub",
+    es: "Abrir el Centro de Planificación",
+  },
+
+  // Blog teaser
+  blogTitle: { he: "📖 מהבלוג שלנו", en: "📖 From Our Blog", es: "📖 De Nuestro Blog" },
+  blogSub: {
+    he: "טיפים, מסלולים ומדריכים לטיולים מושלמים",
+    en: "Tips, itineraries and guides for the perfect trip",
+    es: "Consejos, itinerarios y guías para el viaje perfecto",
+  },
+  blogBtn: { he: "לכל המאמרים", en: "All Articles", es: "Todos los Artículos" },
+  blogPost1Title: {
+    he: "5 טיפים לתכנון טיול קבוצתי ללא כאבי ראש",
+    en: "5 Tips for Stress-Free Group Travel Planning",
+    es: "5 Consejos para Planificar un Viaje en Grupo sin Estrés",
+  },
+  blogPost2Title: {
+    he: "איך לנהל תקציב טיול בלי לוותר על הכיף",
+    en: "How to Manage Your Travel Budget Without Sacrificing Fun",
+    es: "Cómo Gestionar tu Presupuesto de Viaje Sin Sacrificar la Diversión",
+  },
+  blogPost3Title: {
+    he: "6 יעדים מומלצים לחורף 2026 — בכל תקציב",
+    en: "6 Recommended Winter 2026 Destinations — For Every Budget",
+    es: "6 Destinos Recomendados para el Invierno 2026 — Para Cada Presupuesto",
+  },
 } as const;
 
 export default function LandingPage() {
@@ -95,11 +138,6 @@ export default function LandingPage() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Rubik', sans-serif; background: #0d2137; }
         .lp { font-family: 'Rubik', sans-serif; background: #0d2137; color: #fff; min-height: 100vh; }
-
-        /* Language switcher */
-        .lang-switch { position: absolute; top: 16px; ${isHe ? "left" : "right"}: 16px; display: flex; gap: 6px; z-index: 10; }
-        .lang-btn { padding: 5px 10px; border-radius: 8px; border: 0.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.55); font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s; }
-        .lang-btn.active { background: rgba(100,223,223,0.15); border-color: rgba(100,223,223,0.4); color: #64dfdf; }
 
         /* Hero */
         .hero {
@@ -202,28 +240,23 @@ export default function LandingPage() {
         .band-text { font-size: 20px; font-weight: 700; color: #fff; max-width: 500px; margin: 0 auto; line-height: 1.6; }
         .band-text span { color: #64dfdf; }
 
-        /* Footer */
-        .lp-footer {
-          background: rgba(0,0,0,0.3);
-          padding: 24px;
-          text-align: center;
-          font-size: 12px;
-          color: rgba(255,255,255,0.2);
-          border-top: 0.5px solid rgba(255,255,255,0.06);
+        /* Plan & Blog teasers */
+        .teaser-card {
+          background: rgba(255,255,255,0.03);
+          border: 0.5px solid rgba(255,255,255,0.08);
+          border-radius: 14px; padding: 14px 16px;
+          text-decoration: none; color: inherit;
+          display: block; transition: all 0.15s;
         }
-        .lp-footer a { color: rgba(255,255,255,0.25); text-decoration: none; margin: 0 10px; }
-        .lp-footer a:hover { color: rgba(100,223,223,0.6); }
-        .lp-footer .brand { color: #64dfdf; font-weight: 700; }
+        .teaser-card:hover {
+          background: rgba(100,223,223,0.05);
+          border-color: rgba(100,223,223,0.18);
+        }
       `}</style>
 
       <div className="lp" style={{ direction: dir }}>
 
-        {/* Language switcher */}
-        <div className="lang-switch">
-          <button className={`lang-btn ${lang === "he" ? "active" : ""}`} onClick={() => setLang("he")}>עב</button>
-          <button className={`lang-btn ${lang === "en" ? "active" : ""}`} onClick={() => setLang("en")}>EN</button>
-          <button className={`lang-btn ${lang === "es" ? "active" : ""}`} onClick={() => setLang("es")}>ES</button>
-        </div>
+        <SiteNav />
 
         {/* Hero */}
         <div className="hero">
@@ -322,16 +355,87 @@ export default function LandingPage() {
           <button className="btn-cta" onClick={() => router.push("/login")}>{T.ctaReadyBtn[lang]}</button>
         </div>
 
-        {/* Footer */}
-        <div className="lp-footer">
-          <div style={{marginBottom:10}}>
-            <a href="/privacy">{T.footPrivacy[lang]}</a>
-            <a href="/terms">{T.footTerms[lang]}</a>
-            <a href="/contact">{T.footContact[lang]}</a>
-            <a href={guideHref}>{T.footGuide[lang]}</a>
+        {/* Plan teaser — full-width band */}
+        <div style={{
+          background:"linear-gradient(135deg,#0a2a44 0%,#0d3358 50%,#0a2a44 100%)",
+          borderTop:"0.5px solid rgba(100,223,223,0.18)",
+          borderBottom:"0.5px solid rgba(100,223,223,0.18)",
+          padding:"44px 24px",
+          textAlign:"center",
+        }}>
+          <div style={{maxWidth:600,margin:"0 auto"}}>
+            {/* Icon row */}
+            <div style={{display:"flex",justifyContent:"center",gap:10,marginBottom:20,flexWrap:"wrap"}}>
+              {["✈️","🏨","🎡","📶"].map(e=>(
+                <div key={e} style={{
+                  width:44,height:44,borderRadius:12,
+                  background:"rgba(100,223,223,0.1)",
+                  border:"0.5px solid rgba(100,223,223,0.25)",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:22,
+                }}>
+                  {e}
+                </div>
+              ))}
+            </div>
+            <div style={{fontSize:24,fontWeight:900,color:"#fff",lineHeight:1.3,marginBottom:12,letterSpacing:-0.5}}>
+              {T.planTitle[lang]}
+            </div>
+            <div style={{fontSize:15,color:"rgba(255,255,255,0.5)",lineHeight:1.7,marginBottom:28,maxWidth:460,margin:"0 auto 28px"}}>
+              {T.planSub[lang]}
+            </div>
+            <a href="/plan" style={{
+              display:"inline-block",
+              background:"#64dfdf",
+              color:"#0d2137",
+              fontFamily:"'Rubik',sans-serif",
+              fontSize:17,fontWeight:900,
+              padding:"16px 44px",borderRadius:999,
+              textDecoration:"none",
+              boxShadow:"0 8px 32px rgba(100,223,223,0.3)",
+              letterSpacing:-0.3,
+            }}>
+              {T.planBtn[lang]} →
+            </a>
           </div>
-          <div><span className="brand">TUlon</span> – {T.tag[lang]} &nbsp;·&nbsp; www.tulon.app</div>
         </div>
+
+        {/* Blog teaser */}
+        <div className="divider"/>
+        <div className="section" style={{paddingTop:40,paddingBottom:52}}>
+          <div className="section-title">{T.blogTitle[lang]}</div>
+          <div className="section-sub" style={{marginBottom:22}}>{T.blogSub[lang]}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:22}}>
+            {[
+              {slug:"group-travel-tips",  emoji:"👥", title:T.blogPost1Title[lang]},
+              {slug:"budget-travel",      emoji:"💰", title:T.blogPost2Title[lang]},
+              {slug:"winter-destinations-2026", emoji:"❄️", title:T.blogPost3Title[lang]},
+            ].map(p=>(
+              <a key={p.slug} className="teaser-card" href={`/blog/${p.slug}`}>
+                <span style={{fontSize:15}}>{p.emoji}</span>
+                {" "}
+                <span style={{fontSize:14,fontWeight:600,color:"rgba(255,255,255,0.7)"}}>{p.title}</span>
+                <span style={{float:isHe?"left":"right",fontSize:12,color:"rgba(100,223,223,0.55)",fontWeight:600}}>↗</span>
+              </a>
+            ))}
+          </div>
+          <div style={{textAlign:"center"}}>
+            <a href="/blog" style={{
+              display:"inline-block",
+              background:"transparent",
+              border:"0.5px solid rgba(100,223,223,0.25)",
+              color:"rgba(100,223,223,0.7)",
+              fontFamily:"'Rubik',sans-serif",
+              fontSize:13,fontWeight:700,
+              padding:"9px 22px",borderRadius:999,
+              textDecoration:"none",
+            }}>
+              {T.blogBtn[lang]} →
+            </a>
+          </div>
+        </div>
+
+        <SiteFooter />
 
       </div>
     </>
