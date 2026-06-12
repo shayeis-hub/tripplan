@@ -2210,11 +2210,11 @@ function CalendarScreen({trip,expenses,onSaveActs}){
     const timed=timedEvents.filter(e=>e.hour!==null).sort((a,b)=>a.hour-b.hour);
     const untimed=timedEvents.filter(e=>e.hour===null);
 
-    // Hour range: 6am to midnight
-    const hours=Array.from({length:19},(_,i)=>i+5); // 5..23
+    // Full 24-hour range: midnight to midnight
+    const hours=Array.from({length:25},(_,i)=>i); // 0..24
 
-    const hourToY=h=>(h-5)*56; // 56px per hour
-    const totalH=19*56;
+    const hourToY=h=>h*56; // 56px per hour
+    const totalH=24*56;
 
     const eventColor={
       flight:TEAL,reminder:"#ff6b6b",
@@ -2292,7 +2292,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
         {expenses.some(e=>e.category==="flight"&&e.date===selDate)&&(
           <div onClick={()=>window.open(buildGetTransferUrl({source:"calendar-flight"}),"_blank")}
             style={{marginBottom:10,padding:"10px 14px",background:"rgba(251,191,36,0.08)",border:"0.5px solid rgba(251,191,36,0.28)",borderRadius:12,display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
-            <span style={{fontSize:18,flexShrink:0}}>🚖</span>
+            <Car size={18} color="#fbbf24" strokeWidth={1.7} style={{flexShrink:0}}/>
             <span style={{flex:1,fontFamily:RF,fontSize:13,fontWeight:700,color:"#fbbf24"}}>{t("flight_transfer_banner",lang)}</span>
             <span style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(251,191,36,0.4)",background:"rgba(251,191,36,0.12)",color:"#fde68a",fontFamily:RF,fontWeight:700,fontSize:11,flexShrink:0}}>
               {t("flight_transfer_cta",lang)} ↗
@@ -2379,7 +2379,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
             {selDate===new Date().toISOString().slice(0,10)&&(()=>{
               const now=new Date();
               const h=now.getHours()+now.getMinutes()/60;
-              if(h>=5&&h<=23) return(
+              if(h>=0&&h<=24) return(
                 <div style={{position:"absolute",top:hourToY(h),left:0,right:0,height:2,background:"#ff6b6b",zIndex:10,borderRadius:999}}>
                   <div style={{position:"absolute",right:-4,top:-3,width:8,height:8,borderRadius:"50%",background:"#ff6b6b"}}/>
                 </div>
