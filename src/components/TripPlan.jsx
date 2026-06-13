@@ -1676,7 +1676,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                   <SI label={t("exp_address",lang)} value={form.address||""} onChange={v=>set({address:v})} placeholder="e.g. 123 Sukhumvit Rd, Bangkok"/>
                 )}
 
-                {form.category!=="hotel"&&form.category!=="flight"&&(
+                {form.category!=="hotel"&&form.category!=="flight"&&form.category!=="shopping"&&(
                   <div style={{marginBottom:14}}>
                     <div style={{display:"flex",gap:10}}>
                       <div style={{flex:1}}>
