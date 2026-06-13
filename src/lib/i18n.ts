@@ -60,6 +60,7 @@ export const translations = {
   cat_attraction:  { he: "אטרקציות",  en: "Attractions",  es: "Atracciones" },
   cat_food:        { he: "אוכל",       en: "Food",         es: "Comida" },
   cat_taxi:        { he: "מונית",      en: "Taxi",         es: "Taxi" },
+  cat_shopping:    { he: "שופינג",     en: "Shopping",     es: "Compras" },
   cat_other:       { he: "אחר",        en: "Other",        es: "Otro" },
   cat_all:         { he: "הכל",        en: "All",          es: "Todo" },
 

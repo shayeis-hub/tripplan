@@ -45,7 +45,7 @@ import {
   AlertCircle, Loader, Link as LinkIcon, Ticket, Utensils, Car,
   Building2, Search, Clock, Menu, ArrowLeftRight, FileDown, BarChart2,
   Moon, Copy, Lock, Bug, Lightbulb, Bell, BellOff, Globe, Settings,
-  Mail, LogOut, Star,
+  Mail, LogOut, Star, ShoppingCart,
 } from "lucide-react";
 
 const catLabel=(id,lang)=>t(`cat_${id}`,lang)||id;
@@ -79,8 +79,9 @@ const CATS=[
   {id:"hotel",     label:"מלון",     icon:"🏨", Icon:Building2, color:"#818cf8", bg:"rgba(129,140,248,0.13)"},
   {id:"attraction",label:"אטרקציות",icon:"🎡", Icon:Ticket,    color:"#f472b6", bg:"rgba(244,114,182,0.13)"},
   {id:"food",      label:"אוכל",     icon:"🍜", Icon:Utensils,  color:"#fbbf24", bg:"rgba(251,191,36,0.13)"},
-  {id:"taxi",      label:"מונית",    icon:"🚕", Icon:Car,       color:"#4ade80", bg:"rgba(74,222,128,0.13)"},
-  {id:"other",     label:"אחר",      icon:"📦", Icon:Package,   color:"#94a3b8", bg:"rgba(148,163,184,0.13)"},
+  {id:"taxi",      label:"מונית",    icon:"🚕", Icon:Car,         color:"#4ade80", bg:"rgba(74,222,128,0.13)"},
+  {id:"shopping",  label:"שופינג",   icon:"🛍️", Icon:ShoppingCart,color:"#ec4899", bg:"rgba(236,72,153,0.13)"},
+  {id:"other",     label:"אחר",      icon:"📦", Icon:Package,     color:"#94a3b8", bg:"rgba(148,163,184,0.13)"},
 ];
 // ברירת מחדל – תמיד זמינים
 const DEFAULT_CURRENCIES=[
@@ -1699,7 +1700,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                   </div>
                 )}
 
-                {form.category!=="hotel"&&form.category!=="flight"&&(
+                {form.category!=="hotel"&&form.category!=="flight"&&form.category!=="shopping"&&(
                   <TripDatePicker dates={dates} value={form.date} onChange={v=>set({date:v})} label={t("exp_date",lang)} lang={lang}/>
                 )}
 
@@ -2022,7 +2023,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
     const seen=new Set();
     return all.filter(e=>{const key=`${e.checkIn}_${e.checkOut}_${e.description||""}`;if(seen.has(key))return false;seen.add(key);return true;});
   };
-  const otherOn=d=>expenses.filter(e=>!["flight","hotel"].includes(e.category)&&e.date===d&&e.isShared!==false);
+  const otherOn=d=>expenses.filter(e=>!["flight","hotel","shopping"].includes(e.category)&&e.date===d&&e.isShared!==false);
   const hasEvents=d=>{
     const a=acts[d]||[];
     return a.length>0||flightsOn(d).length>0||hotelsOn(d).length>0||otherOn(d).length>0;
