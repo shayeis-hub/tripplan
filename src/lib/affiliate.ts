@@ -99,8 +99,31 @@ const AIRALO_COUNTRY_SLUG: Record<string, string> = {
   "Tanzania":"tanzania","Zanzibar":"tanzania",
 };
 
-const utm = (source: AffSource) =>
-  `utm_source=tulon&utm_medium=app&utm_campaign=${source}`;
+// Partner / influencer referral code captured by <RefCapture/>.
+// Returns "" on SSR or when no valid code is stored / expired.
+const REF_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+export function getPartnerRef(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    const raw = window.localStorage.getItem("tulon_ref");
+    if (!raw) return "";
+    const { code, ts } = JSON.parse(raw);
+    if (!code || typeof code !== "string") return "";
+    if (Date.now() - ts > REF_TTL_MS) return "";
+    return code;
+  } catch { return ""; }
+}
+
+const utm = (source: AffSource) => {
+  const ref = getPartnerRef();
+  const refPart = ref ? `&utm_content=${encodeURIComponent(ref)}&aff_sub=${encodeURIComponent(ref)}` : "";
+  return `utm_source=tulon&utm_medium=app&utm_campaign=${source}${refPart}`;
+};
+
+const tpRef = () => {
+  const ref = getPartnerRef();
+  return ref ? `&subid3=${encodeURIComponent(ref)}` : "";
+};
 
 const dates = (checkIn?: string, checkOut?: string, agoda = false) => {
   if (!checkIn || !checkOut) return "";
@@ -139,14 +162,14 @@ export function buildGygUrl({ destination, source }: BuildParams): string {
 const AIRALO_TP_URL = "https://airalo.tpk.ro/A5T0EOcn";
 
 export function buildAiraloUrl({ source }: Pick<BuildParams, "source">): string {
-  return `${AIRALO_TP_URL}?subid1=tulon&subid2=${source}`;
+  return `${AIRALO_TP_URL}?subid1=tulon&subid2=${source}${tpRef()}`;
 }
 
 // GetTransfer airport transfers — TravelPayouts SmartLink (all tracking built-in).
 const GETTRANSFER_TP_URL = "https://gettransfer.tpk.ro/Ge13JWCO";
 
 export function buildGetTransferUrl({ source }: Pick<BuildParams, "source">): string {
-  return `${GETTRANSFER_TP_URL}?subid1=tulon&subid2=${source}`;
+  return `${GETTRANSFER_TP_URL}?subid1=tulon&subid2=${source}${tpRef()}`;
 }
 
 // One-stop helper if you want all five URLs at once for a given trip context.
