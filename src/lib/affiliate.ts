@@ -15,7 +15,8 @@ export type AffSource =
   | "trip-cta"       // CTA banner shown on the trip splash screen when a booking is missing
   | "calendar-empty" // Suggestion on an empty calendar day
   | "calendar-flight"// Transfer banner on a calendar day that has a flight
-  | "splash";        // Landing / pre-login surfaces
+  | "splash"         // Landing / pre-login surfaces
+  | "plan-page";     // /plan marketing page (LinkCards)
 
 interface BuildParams {
   destination: string;       // raw destination name (will be URL-encoded)

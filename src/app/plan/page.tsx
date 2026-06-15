@@ -2,24 +2,28 @@
 import { useLang } from "@/lib/LangContext";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
-
-const AGODA_CID  = process.env.NEXT_PUBLIC_AGODA_CID  || "";
-const BOOKING_AID = process.env.NEXT_PUBLIC_BOOKING_AID || "";
-const VIATOR_PID  = process.env.NEXT_PUBLIC_VIATOR_PID  || "";
-const GYG_ID      = process.env.NEXT_PUBLIC_GYG_PARTNER_ID || "";
+import { buildAgodaUrl, buildBookingUrl, buildViatorUrl, buildGygUrl, buildAiraloUrl, getPartnerRef } from "@/lib/affiliate";
 
 const UTM = "utm_source=tulon&utm_medium=web&utm_campaign=plan-page";
 
-const links = {
-  agoda:    `https://www.agoda.com/?cid=${AGODA_CID}&tag=tulon&${UTM}`,
-  booking:  `https://www.booking.com/?aid=${BOOKING_AID}&${UTM}`,
-  viator:   `https://www.viator.com?pid=${VIATOR_PID}&mcid=42383&${UTM}`,
-  gyg:      `https://www.getyourguide.com/?partner_id=${GYG_ID}&${UTM}`,
-  airalo:   `https://airalo.tpk.ro/A5T0EOcn?subid1=tulon&subid2=plan-page`,
-  kiwi:     `https://www.kiwi.com/?${UTM}`,
-  skyscanner:`https://www.skyscanner.net/?${UTM}`,
-  gflights: `https://flights.google.com/?${UTM}`,
-  maps:     `https://maps.google.com/?${UTM}`,
+// Generic plain destinations get a ref attached at click time so partner attribution
+// works even from the marketing page (no need to wait for a render after RefCapture).
+function withRef(base: string): string {
+  const ref = getPartnerRef();
+  const sep = base.includes("?") ? "&" : "?";
+  return ref ? `${base}${sep}utm_content=${encodeURIComponent(ref)}&aff_sub=${encodeURIComponent(ref)}` : base;
+}
+
+const linkBuilders = {
+  agoda:      () => buildAgodaUrl({source:"plan-page", destination:""}),
+  booking:    () => buildBookingUrl({source:"plan-page", destination:""}),
+  viator:     () => buildViatorUrl({source:"plan-page", destination:""}),
+  gyg:        () => buildGygUrl({source:"plan-page", destination:""}),
+  airalo:     () => buildAiraloUrl({source:"plan-page"}),
+  kiwi:       () => withRef(`https://www.kiwi.com/?${UTM}`),
+  skyscanner: () => withRef(`https://www.skyscanner.net/?${UTM}`),
+  gflights:   () => withRef(`https://flights.google.com/?${UTM}`),
+  maps:       () => withRef(`https://maps.google.com/?${UTM}`),
 };
 
 const T = {
@@ -117,13 +121,17 @@ const T = {
 } as const;
 
 function LinkCard({
-  logo, title, desc, href, lang,
+  logo, title, desc, builder, lang,
 }: {
-  logo: string; title: string; desc: string; href: string; lang: "he"|"en"|"es";
+  logo: string; title: string; desc: string; builder: () => string; lang: "he"|"en"|"es";
 }) {
   const visitText = T.visit[lang];
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    window.open(builder(), "_blank", "noopener,noreferrer");
+  };
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" style={{
+    <a href={builder()} onClick={handleClick} target="_blank" rel="noopener noreferrer" style={{
       display: "block", textDecoration: "none",
       background: "rgba(255,255,255,0.04)",
       border: "0.5px solid rgba(255,255,255,0.09)",
@@ -188,9 +196,9 @@ export default function PlanPage() {
             <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.flightsTitle[lang]}</div>
             <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:18}}>{T.flightsSub[lang]}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              <LinkCard logo="🟢" title="Google Flights"   desc={T.gflightsDesc[lang]} href={links.gflights} lang={lang}/>
-              <LinkCard logo="🟠" title="Kiwi.com"         desc={T.kiwiDesc[lang]}     href={links.kiwi}     lang={lang}/>
-              <LinkCard logo="🔵" title="Skyscanner"       desc={T.skyscannerDesc[lang]} href={links.skyscanner} lang={lang}/>
+              <LinkCard logo="🟢" title="Google Flights"   desc={T.gflightsDesc[lang]} builder={linkBuilders.gflights} lang={lang}/>
+              <LinkCard logo="🟠" title="Kiwi.com"         desc={T.kiwiDesc[lang]}     builder={linkBuilders.kiwi}     lang={lang}/>
+              <LinkCard logo="🔵" title="Skyscanner"       desc={T.skyscannerDesc[lang]} builder={linkBuilders.skyscanner} lang={lang}/>
             </div>
           </div>
 
@@ -199,8 +207,8 @@ export default function PlanPage() {
             <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.hotelsTitle[lang]}</div>
             <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:18}}>{T.hotelsSub[lang]}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              <LinkCard logo="🟡" title="Agoda"       desc={T.agodaDesc[lang]}   href={links.agoda}   lang={lang}/>
-              <LinkCard logo="🔵" title="Booking.com" desc={T.bookingDesc[lang]} href={links.booking} lang={lang}/>
+              <LinkCard logo="🟡" title="Agoda"       desc={T.agodaDesc[lang]}   builder={linkBuilders.agoda}   lang={lang}/>
+              <LinkCard logo="🔵" title="Booking.com" desc={T.bookingDesc[lang]} builder={linkBuilders.booking} lang={lang}/>
             </div>
           </div>
 
@@ -209,8 +217,8 @@ export default function PlanPage() {
             <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.activitiesTitle[lang]}</div>
             <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:18}}>{T.activitiesSub[lang]}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              <LinkCard logo="🟣" title="Viator"          desc={T.viatorDesc[lang]} href={links.viator} lang={lang}/>
-              <LinkCard logo="🟠" title="GetYourGuide"    desc={T.gygDesc[lang]}    href={links.gyg}    lang={lang}/>
+              <LinkCard logo="🟣" title="Viator"          desc={T.viatorDesc[lang]} builder={linkBuilders.viator} lang={lang}/>
+              <LinkCard logo="🟠" title="GetYourGuide"    desc={T.gygDesc[lang]}    builder={linkBuilders.gyg}    lang={lang}/>
             </div>
           </div>
 
@@ -219,7 +227,7 @@ export default function PlanPage() {
             <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.esimTitle[lang]}</div>
             <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:18}}>{T.esimSub[lang]}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              <LinkCard logo="📶" title="Airalo" desc={T.airaloDesc[lang]} href={links.airalo} lang={lang}/>
+              <LinkCard logo="📶" title="Airalo" desc={T.airaloDesc[lang]} builder={linkBuilders.airalo} lang={lang}/>
             </div>
           </div>
 
