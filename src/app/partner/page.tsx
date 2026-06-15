@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { useLang } from "@/lib/LangContext";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
@@ -36,7 +37,7 @@ const T = {
   benefit1: { he: "אחוז מכל הזמנה ששותפים בה", en: "A cut of every qualifying booking", es: "Un porcentaje de cada reserva calificada" },
   benefit2: { he: "האפליקציה נשארת חינמית למשתמש שלכם", en: "The app stays free for your users", es: "La app sigue siendo gratuita para tu audiencia" },
   benefit3: { he: "דשבורד דרך Travelpayouts לראות סטטיסטיקות", en: "A Travelpayouts dashboard to track stats", es: "Panel de Travelpayouts para ver estadísticas" },
-  benefit4: { he: "תשלום ישיר ל-PayPal / העברה בנקאית / קריפטו", en: "Direct payout via PayPal / wire / crypto", es: "Pago directo por PayPal / transferencia / cripto" },
+  benefit4: { he: "תשלום ישיר ל-PayPal או העברה בנקאית", en: "Direct payout via PayPal or wire transfer", es: "Pago directo por PayPal o transferencia bancaria" },
 
   whoTitle: { he: "מי מתאים?", en: "Who Is This For", es: "Para Quién" },
   who1: { he: "משפיענים בתחום הטיולים", en: "Travel influencers", es: "Influencers de viajes" },
@@ -46,22 +47,61 @@ const T = {
 
   ctaTitle: { he: "מעוניינים להצטרף?", en: "Want to Join?", es: "¿Quieres Unirte?" },
   ctaBody: {
-    he: "שלחו לנו מייל קצר עם פרטים — מי אתם, איפה אתם מפרסמים, וכמה עוקבים יש לכם. נחזור אליכם תוך כמה ימים עם קוד אישי.",
-    en: "Send us a short email — who you are, where you publish, and how big your audience is. We'll get back to you within a few days with a personal code.",
-    es: "Envíanos un correo breve — quién eres, dónde publicas y cuán grande es tu audiencia. Te responderemos en pocos días con un código personal.",
+    he: "מלאו את הטופס וניצור איתכם קשר תוך כמה ימים עם קוד אישי.",
+    en: "Fill out the form and we'll get back to you within a few days with a personal code.",
+    es: "Completa el formulario y te responderemos en pocos días con un código personal.",
   },
-  ctaBtn: { he: "כתבו לנו", en: "Email Us", es: "Escríbenos" },
-} as const;
 
-const MAILTO = "mailto:shayeis@gmail.com?subject=Tulon%20Partner%20Program";
+  fName:    { he: "שם",                  en: "Name",                  es: "Nombre" },
+  fEmail:   { he: "אימייל",               en: "Email",                 es: "Correo" },
+  fAud:     { he: "איפה אתם מפרסמים? (אופציונלי)", en: "Where do you publish? (optional)", es: "¿Dónde publicas? (opcional)" },
+  fAudPh:   { he: "אינסטגרם, יוטיוב, בלוג, קהילה...", en: "Instagram, YouTube, blog, community...", es: "Instagram, YouTube, blog, comunidad..." },
+  fMsg:     { he: "ספרו לנו עליכם", en: "Tell us about yourself", es: "Cuéntanos sobre ti" },
+  fMsgPh:   { he: "כמה עוקבים, סוג התוכן, למה כדאי שנעבוד יחד...", en: "Audience size, content type, why we should work together...", es: "Tamaño de audiencia, tipo de contenido, por qué deberíamos trabajar juntos..." },
+  send:     { he: "שלח", en: "Send", es: "Enviar" },
+  sending:  { he: "שולח...", en: "Sending...", es: "Enviando..." },
+  ok:       { he: "תודה! נחזור אליכם בקרוב.", en: "Thanks! We'll be in touch soon.", es: "¡Gracias! Te contactaremos pronto." },
+  err:      { he: "אופס, משהו השתבש. נסו שוב או שלחו מייל ל-contact@tulon.app", en: "Oops, something went wrong. Try again or email contact@tulon.app", es: "Ups, algo salió mal. Inténtalo de nuevo o escribe a contact@tulon.app" },
+} as const;
 
 export default function PartnerPage() {
   const { lang } = useLang();
   const isHe = lang === "he";
 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [audience, setAudience] = useState("");
+  const [message, setMessage] = useState("");
+  const [state, setState] = useState<"idle"|"sending"|"ok"|"err">("idle");
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || !message.trim()) return;
+    setState("sending");
+    try {
+      const res = await fetch("/api/partner-apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, audience, message }),
+      });
+      setState(res.ok ? "ok" : "err");
+    } catch { setState("err"); }
+  }
+
   const steps = [T.step1[lang], T.step2[lang], T.step3[lang]];
   const benefits = [T.benefit1[lang], T.benefit2[lang], T.benefit3[lang], T.benefit4[lang]];
   const who = [T.who1[lang], T.who2[lang], T.who3[lang], T.who4[lang]];
+
+  const inputStyle: React.CSSProperties = {
+    width:"100%",padding:"12px 14px",borderRadius:12,
+    border:"0.5px solid rgba(255,255,255,0.12)",
+    background:"rgba(255,255,255,0.04)",color:"#fff",
+    fontFamily:"'Rubik',sans-serif",fontSize:14,outline:"none",
+  };
+  const labelStyle: React.CSSProperties = {
+    display:"block",fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.55)",
+    letterSpacing:"0.6px",textTransform:"uppercase",marginBottom:7,
+  };
 
   return (
     <>
@@ -69,6 +109,7 @@ export default function PartnerPage() {
         @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Rubik', sans-serif; background: #0d2137; }
+        .partner-input:focus { border-color: #64dfdf !important; background: rgba(100,223,223,0.06) !important; }
       `}</style>
       <div style={{fontFamily:"'Rubik',sans-serif",background:"#0d2137",color:"#fff",minHeight:"100vh"}} dir={isHe?"rtl":"ltr"}>
         <SiteNav />
@@ -159,21 +200,61 @@ export default function PartnerPage() {
             </div>
           </Section>
 
-          {/* CTA */}
+          {/* CTA — form */}
           <Section title={T.ctaTitle[lang]}>
             <p style={{fontSize:15,color:"rgba(255,255,255,0.55)",lineHeight:1.7,marginBottom:22}}>
               {T.ctaBody[lang]}
             </p>
-            <a href={MAILTO} style={{
-              display:"inline-block",
-              background:"#64dfdf",color:"#0d2137",
-              fontFamily:"'Rubik',sans-serif",
-              fontSize:15,fontWeight:800,
-              padding:"13px 32px",borderRadius:999,
-              textDecoration:"none",
-            }}>
-              {T.ctaBtn[lang]} →
-            </a>
+
+            {state==="ok"?(
+              <div style={{
+                padding:"22px 24px",borderRadius:14,
+                background:"rgba(74,222,128,0.08)",
+                border:"0.5px solid rgba(74,222,128,0.35)",
+                color:"#bbf7d0",fontSize:15,fontWeight:700,textAlign:"center",
+              }}>
+                ✓ {T.ok[lang]}
+              </div>
+            ):(
+              <form onSubmit={submit} style={{display:"flex",flexDirection:"column",gap:14}}>
+                <div>
+                  <label style={labelStyle}>{T.fName[lang]}</label>
+                  <input className="partner-input" required value={name} onChange={e=>setName(e.target.value)} style={inputStyle}/>
+                </div>
+                <div>
+                  <label style={labelStyle}>{T.fEmail[lang]}</label>
+                  <input className="partner-input" type="email" required value={email} onChange={e=>setEmail(e.target.value)} style={inputStyle}/>
+                </div>
+                <div>
+                  <label style={labelStyle}>{T.fAud[lang]}</label>
+                  <input className="partner-input" value={audience} onChange={e=>setAudience(e.target.value)} placeholder={T.fAudPh[lang]} style={inputStyle}/>
+                </div>
+                <div>
+                  <label style={labelStyle}>{T.fMsg[lang]}</label>
+                  <textarea className="partner-input" required value={message} onChange={e=>setMessage(e.target.value)} placeholder={T.fMsgPh[lang]}
+                    rows={4} style={{...inputStyle,resize:"vertical",minHeight:100}}/>
+                </div>
+
+                {state==="err"&&(
+                  <div style={{
+                    padding:"10px 14px",borderRadius:10,
+                    background:"rgba(255,107,107,0.08)",
+                    border:"0.5px solid rgba(255,107,107,0.3)",
+                    color:"#fca5a5",fontSize:13,
+                  }}>{T.err[lang]}</div>
+                )}
+
+                <button type="submit" disabled={state==="sending"} style={{
+                  marginTop:6,padding:"13px 32px",borderRadius:999,border:"none",
+                  background:state==="sending"?"rgba(100,223,223,0.4)":"#64dfdf",
+                  color:"#0d2137",fontFamily:"'Rubik',sans-serif",
+                  fontSize:15,fontWeight:800,cursor:state==="sending"?"default":"pointer",
+                  alignSelf:"flex-start",
+                }}>
+                  {state==="sending"?T.sending[lang]:T.send[lang]}
+                </button>
+              </form>
+            )}
           </Section>
 
         </div>
