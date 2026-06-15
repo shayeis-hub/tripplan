@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 const KEY = "tulon_ref";
 const TTL_DAYS = 90;
+const TRACK_KEY = "tulon_ref_tracked";
 
 export default function RefCapture() {
   useEffect(() => {
@@ -11,6 +12,15 @@ export default function RefCapture() {
       const ref = params.get("ref");
       if (ref && /^[A-Za-z0-9_-]{2,32}$/.test(ref)) {
         localStorage.setItem(KEY, JSON.stringify({ code: ref, ts: Date.now() }));
+        const trackedKey = `${TRACK_KEY}_${ref}`;
+        if (!sessionStorage.getItem(trackedKey)) {
+          sessionStorage.setItem(trackedKey, "1");
+          fetch("/api/track-ref", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: ref, landingPath: window.location.pathname }),
+          }).catch(() => {});
+        }
         return;
       }
       const raw = localStorage.getItem(KEY);

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 
@@ -11,6 +11,29 @@ const BG = "#0d2137";
 interface Stats {
   users: { total: number; today: number; week: number; month: number; recent: { email: string; created: string; lastSignIn: string }[] };
   trips: { total: number; expenses: number; totalILS: number };
+}
+
+interface Partner {
+  code: string;
+  name: string;
+  contact: string;
+  platform: string;
+  commission: number | null;
+  notes: string;
+  active: boolean;
+  createdAt: number;
+  clicks: number;
+  lastClick: number;
+}
+
+function Input({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <div>
+      <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 5 }}>{label}</label>
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "0.5px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 13, fontFamily: RF, outline: "none", boxSizing: "border-box" }}/>
+    </div>
+  );
 }
 
 function KPI({ label, value, sub, color = TEAL }: { label: string; value: string | number; sub?: string; color?: string }) {
@@ -30,6 +53,16 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr]         = useState("");
   const [idToken, setIdToken] = useState("");
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [showAddPartner, setShowAddPartner] = useState(false);
+  const [pName, setPName]         = useState("");
+  const [pCode, setPCode]         = useState("");
+  const [pContact, setPContact]   = useState("");
+  const [pPlatform, setPPlatform] = useState("");
+  const [pCommission, setPCommission] = useState("");
+  const [pNotes, setPNotes]       = useState("");
+  const [pSaving, setPSaving]     = useState(false);
+  const [pErr, setPErr]           = useState("");
 
   const login = async () => {
     try {
@@ -63,15 +96,74 @@ export default function AdminPage() {
     } finally { setLoading(false); }
   };
 
+  const fetchPartners = useCallback(async (token: string) => {
+    try {
+      const res = await fetch("/api/admin/partners", { headers: { authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setPartners(data.partners || []);
+    } catch (e: any) { setErr(e.message); }
+  }, []);
+
   const refresh = async () => {
     if (!auth.currentUser) return;
     const token = await auth.currentUser.getIdToken(true);
     fetchStats(token);
+    fetchPartners(token);
+  };
+
+  const addPartner = async () => {
+    if (!pName.trim() || !auth.currentUser) return;
+    setPSaving(true); setPErr("");
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch("/api/admin/partners", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: pName, code: pCode || undefined, contact: pContact,
+          platform: pPlatform, notes: pNotes,
+          commission: pCommission ? Number(pCommission) : null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error");
+      setPName(""); setPCode(""); setPContact(""); setPPlatform(""); setPCommission(""); setPNotes("");
+      setShowAddPartner(false);
+      await fetchPartners(token);
+    } catch (e: any) { setPErr(e.message); }
+    finally { setPSaving(false); }
+  };
+
+  const togglePartner = async (code: string, active: boolean) => {
+    if (!auth.currentUser) return;
+    const token = await auth.currentUser.getIdToken();
+    await fetch(`/api/admin/partners/${code}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", authorization: `Bearer ${token}` },
+      body: JSON.stringify({ active }),
+    });
+    fetchPartners(token);
+  };
+
+  const deletePartner = async (code: string) => {
+    if (!auth.currentUser) return;
+    if (!confirm(`למחוק את הקוד ${code}? (לא ימחק את הקליקים ההיסטוריים)`)) return;
+    const token = await auth.currentUser.getIdToken();
+    await fetch(`/api/admin/partners/${code}`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${token}` },
+    });
+    fetchPartners(token);
+  };
+
+  const copyLink = (code: string) => {
+    navigator.clipboard.writeText(`https://tulon.app/?ref=${code}`);
   };
 
   useEffect(() => {
-    if (authed && idToken) fetchStats(idToken);
-  }, [authed, idToken]);
+    if (authed && idToken) { fetchStats(idToken); fetchPartners(idToken); }
+  }, [authed, idToken, fetchPartners]);
 
   if (!authed) return (
     <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: RF }}>
@@ -145,6 +237,72 @@ export default function AdminPage() {
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
                     התחבר לאחרונה: {u.lastSignIn ? new Date(u.lastSignIn).toLocaleDateString("he-IL") : "—"}
                   </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Partners */}
+            <div style={{ marginTop: 32, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, textTransform: "uppercase", letterSpacing: 1 }}>🤝 שותפים</div>
+              <button onClick={() => setShowAddPartner(s => !s)}
+                style={{ padding: "8px 16px", borderRadius: 10, border: `0.5px solid ${TEAL}40`, background: "rgba(100,223,223,0.08)", color: TEAL, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: RF }}>
+                {showAddPartner ? "× סגור" : "+ הוסף שותף"}
+              </button>
+            </div>
+
+            {showAddPartner && (
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(100,223,223,0.2)", borderRadius: 16, padding: "18px 20px", marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                  <Input label="שם השותף *" value={pName} onChange={setPName}/>
+                  <Input label="קוד (אם ריק יווצר אוטומטית)" value={pCode} onChange={setPCode} placeholder="dana23"/>
+                  <Input label="פלטפורמה" value={pPlatform} onChange={setPPlatform} placeholder="Instagram"/>
+                  <Input label="פרטי קשר" value={pContact} onChange={setPContact} placeholder="email / phone"/>
+                  <Input label="אחוז עמלה" value={pCommission} onChange={setPCommission} placeholder="30"/>
+                  <Input label="הערות" value={pNotes} onChange={setPNotes}/>
+                </div>
+                {pErr && <div style={{ color: "#ff6b6b", fontSize: 12, marginBottom: 10 }}>{pErr}</div>}
+                <button onClick={addPartner} disabled={pSaving || !pName.trim()}
+                  style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: pSaving ? "rgba(100,223,223,0.4)" : TEAL, color: BG, fontWeight: 800, fontSize: 13, cursor: pSaving ? "default" : "pointer", fontFamily: RF }}>
+                  {pSaving ? "שומר..." : "צור שותף"}
+                </button>
+              </div>
+            )}
+
+            <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden", marginBottom: 28 }}>
+              {partners.length === 0 ? (
+                <div style={{ padding: "32px 20px", textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 13 }}>
+                  אין שותפים עדיין. לחץ "הוסף שותף" כדי להתחיל.
+                </div>
+              ) : partners.map((p, i) => (
+                <div key={p.code} style={{ padding: "14px 20px", borderBottom: i < partners.length - 1 ? "0.5px solid rgba(255,255,255,0.06)" : "none", display: "grid", gridTemplateColumns: "auto 1fr auto auto auto auto", gap: 12, alignItems: "center" }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: p.active ? "#4ade80" : "rgba(255,255,255,0.2)" }}/>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <code style={{ fontSize: 13, fontWeight: 800, color: TEAL, fontFamily: "monospace" }}>{p.code}</code>
+                      <span style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>{p.name}</span>
+                      {p.commission != null && <span style={{ fontSize: 11, color: "#fbbf24", fontWeight: 700 }}>{p.commission}%</span>}
+                    </div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                      {p.platform || "—"}{p.contact ? ` · ${p.contact}` : ""}
+                      {p.lastClick > 0 && ` · קליק אחרון: ${new Date(p.lastClick).toLocaleDateString("he-IL")}`}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: p.clicks > 0 ? TEAL : "rgba(255,255,255,0.3)" }}>{p.clicks}</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>קליקים</div>
+                  </div>
+                  <button onClick={() => copyLink(p.code)} title="העתק קישור"
+                    style={{ padding: "6px 10px", borderRadius: 8, border: "0.5px solid rgba(100,223,223,0.25)", background: "rgba(100,223,223,0.06)", color: TEAL, fontSize: 11, cursor: "pointer", fontFamily: RF }}>
+                    📋 העתק
+                  </button>
+                  <button onClick={() => togglePartner(p.code, !p.active)} title={p.active ? "השבת" : "הפעל"}
+                    style={{ padding: "6px 10px", borderRadius: 8, border: `0.5px solid ${p.active ? "rgba(255,255,255,0.15)" : "rgba(74,222,128,0.3)"}`, background: "rgba(255,255,255,0.03)", color: p.active ? "rgba(255,255,255,0.55)" : "#4ade80", fontSize: 11, cursor: "pointer", fontFamily: RF }}>
+                    {p.active ? "השבת" : "הפעל"}
+                  </button>
+                  <button onClick={() => deletePartner(p.code)} title="מחק"
+                    style={{ padding: "6px 9px", borderRadius: 8, border: "0.5px solid rgba(255,107,107,0.25)", background: "rgba(255,107,107,0.05)", color: "#ff6b6b", fontSize: 11, cursor: "pointer", fontFamily: RF }}>
+                    🗑️
+                  </button>
                 </div>
               ))}
             </div>
