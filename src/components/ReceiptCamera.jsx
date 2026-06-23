@@ -92,8 +92,11 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "#0d2137", display: "flex", flexDirection: "column", padding: "14px 16px 18px", gap: 14 }} dir={lang === "he" ? "rtl" : "ltr"}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 12 }} dir={lang === "he" ? "rtl" : "ltr"}>
       <style>{`@keyframes camfade{from{opacity:0}to{opacity:1}}`}</style>
+
+      {/* Phone-sized dialog: fills small screens, capped on large ones */}
+      <div style={{ width: "100%", maxWidth: 420, height: "100%", maxHeight: 680, background: "#0d2137", borderRadius: 20, overflow: "hidden", display: "flex", flexDirection: "column", padding: "14px 16px 18px", gap: 14 }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
@@ -168,6 +171,7 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
             </>
           )}
         </div>
+      </div>
 
       {/* Native camera fallback (used when getUserMedia is blocked) */}
       <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }}
