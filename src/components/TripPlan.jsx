@@ -183,6 +183,8 @@ const PERSON_COLORS=[C.ocean,C.coral,C.palm,C.sunset,C.purple,C.oceanLight,"#C03
 const fmtDate=(d)=>d?new Date(d).toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
 const localDateStr=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const getRange=(s,e)=>{const a=[];if(!s||!e)return a;const c=new Date(s),l=new Date(e);while(c<=l){a.push(localDateStr(c));c.setDate(c.getDate()+1);}return a;};
+// Default to today if the trip is already underway, otherwise the first day.
+const defaultTripDate=(dates)=>{const t=localDateStr(new Date());return dates.includes(t)?t:(dates[0]||"");};
 const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
 const remTime=(t,hrs=5)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-(hrs*60);if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
 
@@ -1338,7 +1340,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
   );
 }
 
-const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:dates[0]||"",checkIn:dates[0]||"",checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",isShared:true,participants:people.map(p=>p.id),payers:[]});
+const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:defaultTripDate(dates),checkIn:defaultTripDate(dates),checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",isShared:true,participants:people.map(p=>p.id),payers:[]});
 
 function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo}){
   const{lang}=useLang();
@@ -1524,7 +1526,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:scanning?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:scanning?"default":"pointer",opacity:scanning?0.5:1}}>
               {scanning?<Loader size={16} color={W40} strokeWidth={1.5} style={{animation:"spin 1s linear infinite"}}/>:<Search size={16} color={W40} strokeWidth={1.5}/>}
             </button>
-            <button onClick={()=>{setForm(f=>({...mkForm(dates,trip.defaultCurrency,people),date:dates[0]||"",checkIn:dates[0]||""}));setShow(true);setEditId(null);}}
+            <button onClick={()=>{setForm(f=>({...mkForm(dates,trip.defaultCurrency,people),date:defaultTripDate(dates),checkIn:defaultTripDate(dates)}));setShow(true);setEditId(null);}}
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.12)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
               <Plus size={18} color={TEAL} strokeWidth={2.5}/>
             </button>
@@ -2003,7 +2005,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
   const[acts,setActs]=useState(trip.activities||{});       // {date: [{text, time}]}
   const[editD,setEditD]=useState(null);
   const[view,setView]=useState("month");  // "month" | "day"
-  const[selDate,setSelDate]=useState(dates[0]||"");
+  const[selDate,setSelDate]=useState(defaultTripDate(dates));
   const[editActs,setEditActs]=useState([]); // [{text,time}] being edited
   const[actPopup,setActPopup]=useState(null); // activity detail popup {act, date}
   const[hotelNudgeDismissed,setHotelNudgeDismissed]=useState(()=>{try{return localStorage.getItem(`tulon_hotel_nudge_${trip.id}`)==="1";}catch{return false;}});
@@ -2557,7 +2559,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
         {/* View toggle */}
         <div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.06)",borderRadius:10,padding:3}}>
           <button onClick={()=>setView("month")} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="month"?"rgba(100,223,223,0.18)":"transparent",color:view==="month"?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>{t("cal_month",lang)}</button>
-          <button onClick={()=>{setView("day");if(!selDate&&dates[0])setSelDate(dates[0]);}} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="day"?"rgba(100,223,223,0.18)":"transparent",color:view==="day"?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>{t("cal_day",lang)}</button>
+          <button onClick={()=>{setView("day");if(!selDate)setSelDate(defaultTripDate(dates));}} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="day"?"rgba(100,223,223,0.18)":"transparent",color:view==="day"?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>{t("cal_day",lang)}</button>
         </div>
         {/* Day nav (only in day view) */}
         {view==="day"&&dates.length>0&&(
