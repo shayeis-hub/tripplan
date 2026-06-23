@@ -92,85 +92,81 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 12 }} dir={lang === "he" ? "rtl" : "ltr"}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 3000, height: "100dvh", background: "#000", overflow: "hidden" }} dir={lang === "he" ? "rtl" : "ltr"}>
       <style>{`@keyframes camfade{from{opacity:0}to{opacity:1}}`}</style>
 
-      {/* Phone-sized dialog: fills small screens, capped on large ones */}
-      <div style={{ width: "100%", maxWidth: 420, height: "100%", maxHeight: 680, background: "#0d2137", borderRadius: 20, overflow: "hidden", display: "flex", flexDirection: "column", padding: "14px 16px 18px", gap: 14 }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-        <button onClick={() => { stopStream(); onClose(); }}
-          style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-          <X size={18} color="#fff" />
-        </button>
-        <div style={{ color: "#fff", fontFamily: RF, fontWeight: 800, fontSize: 17 }}>{t("cam_title", lang)}</div>
-        <div style={{ width: 36 }} />
-      </div>
-
-      {!shot && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 7, flexShrink: 0 }}>
-          {[t("cam_tip1", lang), t("cam_tip2", lang), t("cam_tip3", lang)].map((tip, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, background: "rgba(100,223,223,0.2)", border: `1px solid ${TEAL}`, color: TEAL, fontFamily: RF, fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
-              <span style={{ color: "#fff", fontFamily: RF, fontSize: 14, fontWeight: 500, lineHeight: 1.25 }}>{tip}</span>
-            </div>
-          ))}
-        </div>
+      {/* Full-screen video / captured preview */}
+      {shot ? (
+        <img src={shot} alt="receipt" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+      ) : (
+        <video ref={videoRef} playsInline muted style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       )}
 
-      {/* Camera viewport — grows to fill all remaining height (no gaps) */}
-      <div style={{
-        position: "relative", flex: 1, minHeight: 0, width: "100%",
-        borderRadius: 16, overflow: "hidden", background: "#000",
-        border: `2.5px ${shot ? "solid" : "dashed"} ${TEAL}`,
-      }}>
-        {shot ? (
-          <img src={shot} alt="receipt" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
-        ) : (
-          <video ref={videoRef} playsInline muted style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+      {/* Receipt frame hint — large, floating over the live video (no dimming = no "gap" look) */}
+      {!shot && ready && (
+        <div style={{ position: "absolute", top: 132, bottom: 124, left: "6%", right: "6%", border: `2.5px dashed ${TEAL}`, borderRadius: 16, pointerEvents: "none", animation: "camfade 0.3s" }} />
+      )}
+
+      {/* Top overlay: close + title + tips */}
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "12px 16px 20px", background: "linear-gradient(180deg,rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.5) 60%,transparent 100%)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button onClick={() => { stopStream(); onClose(); }}
+            style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <X size={18} color="#fff" />
+          </button>
+          <div style={{ color: "#fff", fontFamily: RF, fontWeight: 800, fontSize: 17 }}>{t("cam_title", lang)}</div>
+          <div style={{ width: 36 }} />
+        </div>
+        {!shot && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+            {[t("cam_tip1", lang), t("cam_tip2", lang), t("cam_tip3", lang)].map((tip, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, background: "rgba(100,223,223,0.22)", border: `1px solid ${TEAL}`, color: TEAL, fontFamily: RF, fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
+                <span style={{ color: "#fff", fontFamily: RF, fontSize: 14, fontWeight: 500, lineHeight: 1.2, textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}>{tip}</span>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Controls */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 36, width: "100%", flexShrink: 0 }}>
-          {shot ? (
-            <>
-              <button onClick={retake}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: "#fff", fontFamily: RF, fontSize: 12 }}>
-                <div style={{ width: 54, height: 54, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}>
-                  <RotateCcw size={22} color="#fff" />
-                </div>
-                {t("cam_retake", lang)}
-              </button>
-              <button onClick={useShot}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: TEAL, fontFamily: RF, fontSize: 12, fontWeight: 700 }}>
-                <div style={{ width: 66, height: 66, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Check size={28} color="#0d2137" strokeWidth={2.5} />
-                </div>
-                {t("cam_use", lang)}
-              </button>
-            </>
-          ) : (
-            <>
-              {/* spacer to keep the shutter centered */}
-              <div style={{ width: 54, flexShrink: 0 }} />
-              <button onClick={capture} disabled={!ready}
-                style={{ border: "none", background: "transparent", cursor: ready ? "pointer" : "default", opacity: ready ? 1 : 0.4 }}>
-                <div style={{ width: 76, height: 76, borderRadius: "50%", background: "#fff", border: "4px solid rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Camera size={32} color="#0d2137" />
-                </div>
-              </button>
-              <button onClick={() => galleryRef.current?.click()}
-                style={{ width: 54, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, border: "none", background: "transparent", cursor: "pointer", color: "#fff", fontFamily: RF, fontSize: 10 }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}>
-                  <ImageIcon size={20} color="#fff" />
-                </div>
-                {t("cam_gallery", lang)}
-              </button>
-            </>
-          )}
-        </div>
+      {/* Bottom overlay: controls */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "28px 24px 22px", background: "linear-gradient(0deg,rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.5) 60%,transparent 100%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 36 }}>
+        {shot ? (
+          <>
+            <button onClick={retake}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: "#fff", fontFamily: RF, fontSize: 12 }}>
+              <div style={{ width: 54, height: 54, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}>
+                <RotateCcw size={22} color="#fff" />
+              </div>
+              {t("cam_retake", lang)}
+            </button>
+            <button onClick={useShot}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: TEAL, fontFamily: RF, fontSize: 12, fontWeight: 700 }}>
+              <div style={{ width: 66, height: 66, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Check size={28} color="#0d2137" strokeWidth={2.5} />
+              </div>
+              {t("cam_use", lang)}
+            </button>
+          </>
+        ) : (
+          <>
+            {/* spacer to keep the shutter centered */}
+            <div style={{ width: 54, flexShrink: 0 }} />
+            <button onClick={capture} disabled={!ready}
+              style={{ border: "none", background: "transparent", cursor: ready ? "pointer" : "default", opacity: ready ? 1 : 0.4 }}>
+              <div style={{ width: 76, height: 76, borderRadius: "50%", background: "#fff", border: "4px solid rgba(255,255,255,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Camera size={32} color="#0d2137" />
+              </div>
+            </button>
+            <button onClick={() => galleryRef.current?.click()}
+              style={{ width: 54, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, border: "none", background: "transparent", cursor: "pointer", color: "#fff", fontFamily: RF, fontSize: 10 }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)" }}>
+                <ImageIcon size={20} color="#fff" />
+              </div>
+              {t("cam_gallery", lang)}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Native camera fallback (used when getUserMedia is blocked) */}
