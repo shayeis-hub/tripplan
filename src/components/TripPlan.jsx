@@ -38,6 +38,7 @@ import { setDoc, doc } from "firebase/firestore";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildBookingUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
+import ReceiptCamera from "@/components/ReceiptCamera";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
   Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send,
@@ -1357,6 +1358,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const[showFilters,setShowFilters]=useState(false);
   const[scanning,setScanning]=useState(false);
   const[scanMsg,setScanMsg]=useState(null); // {type:"ok"|"err", text}
+  const[showCamera,setShowCamera]=useState(false);
 
   const set=p=>setForm(f=>({...f,...p}));
 
@@ -1522,7 +1524,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         subtitle={trip.destination?`${trip.destination}${nights>0?` · ${nights} ${t("days",lang)}`:""}`:""}
         action={
           <div style={{display:"flex",gap:8}}>
-            <button onClick={()=>document.getElementById("receipt-input").click()} disabled={scanning}
+            <button onClick={()=>setShowCamera(true)} disabled={scanning}
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:scanning?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:scanning?"default":"pointer",opacity:scanning?0.5:1}}>
               {scanning?<Loader size={16} color={W40} strokeWidth={1.5} style={{animation:"spin 1s linear infinite"}}/>:<Camera size={17} color={W40} strokeWidth={1.5}/>}
             </button>
@@ -1534,7 +1536,14 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         }
       />
 
-      {/* hidden file input for camera */}
+      {/* In-app receipt camera with framing guide + capture tips */}
+      {showCamera&&(
+        <ReceiptCamera lang={lang}
+          onClose={()=>setShowCamera(false)}
+          onCapture={f=>{setShowCamera(false);handleScan(f);}}/>
+      )}
+
+      {/* hidden file input — legacy fallback (kept for safety) */}
       <input id="receipt-input" type="file" accept="image/*" capture="environment"
         style={{display:"none"}}
         onChange={e=>{const f=e.target.files?.[0];e.target.value="";if(f)handleScan(f);}}/>

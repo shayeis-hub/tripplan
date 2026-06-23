@@ -228,6 +228,16 @@ export const translations = {
   scan_loading:     { he: "⏳ מזהה קבלה...",           en: "⏳ Reading receipt...", es: "⏳ Leyendo recibo..." },
   scan_error:       { he: "לא הצלחתי לקרוא את הקבלה. נסה שוב.", en: "Could not read the receipt. Please try again.", es: "No se pudo leer el recibo. Inténtalo de nuevo." },
   scan_success:     { he: "✓ הנתונים זוהו – בדוק ותקן לפי הצורך", en: "✓ Data detected – review and adjust as needed", es: "✓ Datos detectados — revisa y ajusta si es necesario" },
+  cam_title:        { he: "צילום קבלה",                en: "Capture receipt",      es: "Capturar recibo" },
+  cam_tip1:         { he: "מקם את הקבלה בתוך המסגרת",  en: "Place the receipt inside the frame", es: "Coloca el recibo dentro del marco" },
+  cam_tip2:         { he: "ודא תאורה טובה ושהקבלה שטוחה", en: "Good lighting, keep it flat", es: "Buena luz, mantenlo plano" },
+  cam_tip3:         { he: "שורת הסכום הסופי חייבת להיכלל", en: "Include the final total line", es: "Incluye la línea del total final" },
+  cam_capture:      { he: "צלם",                       en: "Capture",              es: "Capturar" },
+  cam_retake:       { he: "צלם שוב",                   en: "Retake",               es: "Repetir" },
+  cam_use:          { he: "השתמש בתמונה",              en: "Use photo",            es: "Usar foto" },
+  cam_gallery:      { he: "בחר מהגלריה",               en: "Choose from gallery",  es: "Elegir de galería" },
+  cam_cancel:       { he: "ביטול",                     en: "Cancel",               es: "Cancelar" },
+  cam_denied:       { he: "אין גישה למצלמה — פותח מצלמת המכשיר", en: "No camera access — opening device camera", es: "Sin acceso a cámara — abriendo cámara del dispositivo" },
 
   // ── Converter ─────────────────────────────────────────
   conv_title:       { he: "💱 מחשבון המרת מטבע",     en: "💱 Currency Converter", es: "💱 Conversor de monedas" },
