@@ -1543,6 +1543,18 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           onCapture={f=>{setShowCamera(false);handleScan(f);}}/>
       )}
 
+      {/* Processing overlay — shown while the receipt is being read */}
+      {scanning&&(
+        <div style={{position:"fixed",inset:0,zIndex:3100,background:"rgba(13,33,55,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:18,padding:24}}>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          <Loader size={44} color={TEAL} strokeWidth={1.8} style={{animation:"spin 1s linear infinite"}}/>
+          <div style={{color:"#fff",fontFamily:RF,fontWeight:700,fontSize:17,textAlign:"center"}}>{t("scan_loading",lang)}</div>
+          <div style={{color:W40,fontFamily:RF,fontSize:13,textAlign:"center",maxWidth:260,lineHeight:1.5}}>
+            {lang==="he"?"מזהה סכום, מטבע ותאריך — כמה שניות":lang==="es"?"Detectando importe, moneda y fecha — unos segundos":"Detecting amount, currency and date — a few seconds"}
+          </div>
+        </div>
+      )}
+
       {/* hidden file input — legacy fallback (kept for safety) */}
       <input id="receipt-input" type="file" accept="image/*" capture="environment"
         style={{display:"none"}}
