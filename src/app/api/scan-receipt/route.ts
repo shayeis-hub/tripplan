@@ -12,35 +12,44 @@ export async function POST(req: NextRequest) {
     }
 
     const currencyHint = currencies?.length
-      ? `The trip uses these currencies: ${currencies.join(", ")}. Prefer one of them if it matches the receipt.`
+      ? `\nThe trip uses these currencies: ${currencies.join(", ")}. If the receipt's currency is ambiguous (e.g. a bare "$" that could be USD/AUD/CAD/SGD), prefer whichever of these the receipt's country/language best matches.`
       : "";
 
-    const prompt = `You are a receipt scanning assistant. Analyze this receipt image and extract the key information.
+    const prompt = `You are an expert receipt-scanning assistant. Carefully read this receipt image — it may be a faded thermal print, photographed at an angle, or in a foreign language. Extract the key information.
 
-Return ONLY a valid JSON object with these fields (no explanation, no markdown):
+First think briefly, then return a single JSON object as the LAST thing in your reply (no markdown fences):
 {
-  "amount": <total amount as a number, null if not readable>,
-  "currency": "<ISO 4217 code: ILS for ₪, USD for $, EUR for €, GBP for £, THB for ฿, JPY for ¥, AUD for A$, CAD for C$, CHF, SGD, NOK, SEK, DKK, HUF, CZK, PLN, TRY, MXN, INR, CNY, HKD, KRW, NZD — detect from symbol/text on receipt>",
-  "description": "<merchant name or brief description, max 40 chars>",
-  "category": "<one of: flight | hotel | attraction | food | taxi | other>",
-  "date": "<YYYY-MM-DD if clearly visible on the receipt, otherwise null>"
+  "amount": <final total as a number, null if not readable>,
+  "currency": "<ISO 4217 code: ILS for ₪, USD for $, EUR for €, GBP for £, THB for ฿, JPY for ¥, AUD for A$, CAD for C$, CHF, SGD, NOK, SEK, DKK, HUF, CZK, PLN, TRY, MXN, INR, CNY, HKD, KRW, NZD — detect from symbol/text/country>",
+  "description": "<merchant name, max 40 chars>",
+  "category": "<one of: flight | hotel | attraction | food | taxi | shopping | other>",
+  "date": "<YYYY-MM-DD if clearly visible, otherwise null>"
 }
+
+Amount rules:
+- Use the FINAL grand total actually paid (after tax, tip, service charge and discounts) — usually the largest, bottom-most "Total"/"סה״כ"/"Total a pagar" line. Do NOT use a subtotal, an item price, "amount due before tip", or a change-given figure.
+- Read digits carefully: respect the local decimal separator (e.g. "1.234,56" in Europe = 1234.56; "1,234.56" = 1234.56). Never include the currency symbol in the number.
+
+Currency rules:
+- Detect from the symbol AND surrounding text/language/country, not the symbol alone.${currencyHint}
 
 Category rules:
 - food: restaurants, cafes, bars, supermarkets, food delivery
 - hotel: hotels, hostels, Airbnb, accommodation
 - flight: airlines, airports
-- taxi: taxis, Uber, Lyft, ride-share, car rental
+- taxi: taxis, Uber, Lyft, ride-share, car rental, fuel
 - attraction: museums, tours, activities, theme parks, tickets
-- other: anything else
+- shopping: clothing, electronics, souvenirs, retail stores, duty-free
+- other: anything that fits none of the above
 
-${currencyHint}
+Date rules:
+- Convert to YYYY-MM-DD. Watch DD/MM vs MM/DD: a European/Israeli receipt is almost always DD/MM/YYYY; a US receipt is MM/DD/YYYY. If a part is >12 it disambiguates the order.
 
-Important: amount should be the FINAL TOTAL on the receipt (after tax, tips, discounts). Return null for any field you cannot determine with reasonable confidence.`;
+Return null for any field you cannot read with reasonable confidence — a wrong guess is worse than null.`;
 
     const response = await client.messages.create({
-      model: "claude-haiku-4-5",
-      max_tokens: 256,
+      model: "claude-sonnet-4-6",
+      max_tokens: 512,
       messages: [
         {
           role: "user",
@@ -59,21 +68,23 @@ Important: amount should be the FINAL TOTAL on the receipt (after tax, tips, dis
       ],
     });
 
-    const raw = (response.content[0] as { type: string; text: string }).text.trim();
+    const textPart = response.content.find(c => c.type === "text") as { type: string; text: string } | undefined;
+    const raw = (textPart?.text || "").trim();
 
-    // Extract JSON even if Claude wraps it in markdown
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
+    // Grab the LAST {...} block, since the model may reason before emitting JSON.
+    const lastOpen = raw.lastIndexOf("{");
+    const lastClose = raw.lastIndexOf("}");
+    if (lastOpen === -1 || lastClose <= lastOpen) {
       return NextResponse.json({ error: "Could not parse receipt" }, { status: 422 });
     }
 
-    const data = JSON.parse(jsonMatch[0]);
+    const data = JSON.parse(raw.slice(lastOpen, lastClose + 1));
 
     return NextResponse.json({
       amount: typeof data.amount === "number" ? data.amount : null,
       currency: typeof data.currency === "string" ? data.currency.toUpperCase() : null,
       description: typeof data.description === "string" ? data.description : null,
-      category: ["flight","hotel","attraction","food","taxi","other"].includes(data.category)
+      category: ["flight","hotel","attraction","food","taxi","shopping","other"].includes(data.category)
         ? data.category : "other",
       date: typeof data.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data.date)
         ? data.date : null,
