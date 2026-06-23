@@ -117,8 +117,8 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
         )}
       </div>
 
-      {/* Live / preview area */}
-      <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {/* Live / preview area — capped height so the shutter sits right under the frame */}
+      <div style={{ flex: "0 0 auto", height: "44vh", position: "relative", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
         {shot ? (
           <img src={shot} alt="receipt" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
         ) : (
@@ -128,7 +128,7 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
             {ready && (
               <div style={{ position: "absolute", inset: 0, pointerEvents: "none", animation: "camfade 0.3s" }}>
                 <div style={{
-                  position: "absolute", top: "6%", height: "42%", left: "10%", right: "10%",
+                  position: "absolute", top: "7%", bottom: "7%", left: "8%", right: "8%",
                   border: `2.5px dashed ${TEAL}`, borderRadius: 14,
                   boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)",
                 }} />
