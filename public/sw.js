@@ -1,5 +1,10 @@
 // ── טיולון Service Worker ─────────────────────────────────────────
-const CACHE = "tulon-v2";
+const CACHE = "tulon-v3";
+
+// Allow the page to tell a waiting worker to activate immediately.
+self.addEventListener("message", (e) => {
+  if (e.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
 
 // נכסים שנרצה לשמור ב-cache מיד בהתקנה
 const PRECACHE = [
