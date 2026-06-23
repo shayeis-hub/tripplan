@@ -128,7 +128,7 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
             {ready && (
               <div style={{ position: "absolute", inset: 0, pointerEvents: "none", animation: "camfade 0.3s" }}>
                 <div style={{
-                  position: "absolute", top: "8%", bottom: "8%", left: "18%", right: "18%",
+                  position: "absolute", top: "6%", height: "42%", left: "10%", right: "10%",
                   border: `2.5px dashed ${TEAL}`, borderRadius: 14,
                   boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)",
                 }} />
