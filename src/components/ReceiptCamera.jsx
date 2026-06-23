@@ -92,48 +92,45 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.92)", overflow: "auto", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} dir={lang === "he" ? "rtl" : "ltr"}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "#0d2137", display: "flex", flexDirection: "column", padding: "14px 16px 18px", gap: 14 }} dir={lang === "he" ? "rtl" : "ltr"}>
       <style>{`@keyframes camfade{from{opacity:0}to{opacity:1}}`}</style>
 
-      {/* Compact card: tips → camera viewport → controls */}
-      <div style={{ width: "100%", maxWidth: 380, display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <button onClick={() => { stopStream(); onClose(); }}
+          style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+          <X size={18} color="#fff" />
+        </button>
+        <div style={{ color: "#fff", fontFamily: RF, fontWeight: 800, fontSize: 17 }}>{t("cam_title", lang)}</div>
+        <div style={{ width: 36 }} />
+      </div>
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={() => { stopStream(); onClose(); }}
-            style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-            <X size={18} color="#fff" />
-          </button>
-          <div style={{ color: "#fff", fontFamily: RF, fontWeight: 800, fontSize: 17 }}>{t("cam_title", lang)}</div>
-          <div style={{ width: 36 }} />
+      {!shot && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 7, flexShrink: 0 }}>
+          {[t("cam_tip1", lang), t("cam_tip2", lang), t("cam_tip3", lang)].map((tip, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, background: "rgba(100,223,223,0.2)", border: `1px solid ${TEAL}`, color: TEAL, fontFamily: RF, fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
+              <span style={{ color: "#fff", fontFamily: RF, fontSize: 14, fontWeight: 500, lineHeight: 1.25 }}>{tip}</span>
+            </div>
+          ))}
         </div>
+      )}
 
-        {!shot && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            {[t("cam_tip1", lang), t("cam_tip2", lang), t("cam_tip3", lang)].map((tip, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, background: "rgba(100,223,223,0.2)", border: `1px solid ${TEAL}`, color: TEAL, fontFamily: RF, fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
-                <span style={{ color: "#fff", fontFamily: RF, fontSize: 14, fontWeight: 500, lineHeight: 1.25 }}>{tip}</span>
-              </div>
-            ))}
-          </div>
+      {/* Camera viewport — grows to fill all remaining height (no gaps) */}
+      <div style={{
+        position: "relative", flex: 1, minHeight: 0, width: "100%",
+        borderRadius: 16, overflow: "hidden", background: "#000",
+        border: `2.5px ${shot ? "solid" : "dashed"} ${TEAL}`,
+      }}>
+        {shot ? (
+          <img src={shot} alt="receipt" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+        ) : (
+          <video ref={videoRef} playsInline muted style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
         )}
+      </div>
 
-        {/* Camera viewport — the video itself, receipt-shaped */}
-        <div style={{
-          position: "relative", width: "100%", height: "min(52vh, 440px)",
-          borderRadius: 16, overflow: "hidden", background: "#000",
-          border: `2.5px ${shot ? "solid" : "dashed"} ${TEAL}`, flexShrink: 0,
-        }}>
-          {shot ? (
-            <img src={shot} alt="receipt" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
-          ) : (
-            <video ref={videoRef} playsInline muted style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          )}
-        </div>
-
-        {/* Controls */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 36, width: "100%" }}>
+      {/* Controls */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 36, width: "100%", flexShrink: 0 }}>
           {shot ? (
             <>
               <button onClick={retake}
@@ -171,7 +168,6 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
             </>
           )}
         </div>
-      </div>
 
       {/* Native camera fallback (used when getUserMedia is blocked) */}
       <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }}
