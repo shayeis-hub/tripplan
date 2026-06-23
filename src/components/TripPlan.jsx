@@ -1545,7 +1545,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
       {/* Processing overlay — shown while the receipt is being read */}
       {scanning&&(
-        <div style={{position:"fixed",inset:0,zIndex:3100,background:"rgba(13,33,55,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:18,padding:24}}>
+        <div style={{position:"fixed",inset:0,zIndex:3100,background:"rgba(13,33,55,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",gap:16,padding:"90px 24px 24px"}}>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <Loader size={44} color={TEAL} strokeWidth={1.8} style={{animation:"spin 1s linear infinite"}}/>
           <div style={{color:"#fff",fontFamily:RF,fontWeight:700,fontSize:17,textAlign:"center"}}>{t("scan_loading",lang)}</div>
