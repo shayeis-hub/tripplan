@@ -117,8 +117,8 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
         )}
       </div>
 
-      {/* Live / preview area — capped height so the shutter sits right under the frame */}
-      <div style={{ flex: "0 0 auto", height: "44vh", position: "relative", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {/* Live / preview area — fills to the bottom; frame nearly fills it */}
+      <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
         {shot ? (
           <img src={shot} alt="receipt" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
         ) : (
@@ -128,7 +128,7 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
             {ready && (
               <div style={{ position: "absolute", inset: 0, pointerEvents: "none", animation: "camfade 0.3s" }}>
                 <div style={{
-                  position: "absolute", top: "7%", bottom: "7%", left: "8%", right: "8%",
+                  position: "absolute", top: "5%", bottom: "5%", left: "11%", right: "11%",
                   border: `2.5px dashed ${TEAL}`, borderRadius: 14,
                   boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)",
                 }} />
@@ -139,18 +139,18 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
       </div>
 
       {/* Controls */}
-      <div style={{ padding: "12px 24px 18px", background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center", gap: 28 }}>
+      <div style={{ padding: "12px 24px 18px", background: "rgba(0,0,0,0.72)", display: "grid", gridTemplateColumns: shot ? "1fr 1fr" : "1fr auto 1fr", alignItems: "center" }}>
         {shot ? (
           <>
             <button onClick={retake}
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: "#fff", fontFamily: RF, fontSize: 12 }}>
+              style={{ justifySelf: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: "#fff", fontFamily: RF, fontSize: 12 }}>
               <div style={{ width: 52, height: 52, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.08)" }}>
                 <RotateCcw size={22} color="#fff" />
               </div>
               {t("cam_retake", lang)}
             </button>
             <button onClick={useShot}
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: TEAL, fontFamily: RF, fontSize: 12, fontWeight: 700 }}>
+              style={{ justifySelf: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: TEAL, fontFamily: RF, fontSize: 12, fontWeight: 700 }}>
               <div style={{ width: 64, height: 64, borderRadius: "50%", background: TEAL, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Check size={28} color="#0d2137" strokeWidth={2.5} />
               </div>
@@ -159,20 +159,22 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
           </>
         ) : (
           <>
-            <button onClick={() => galleryRef.current?.click()}
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: "#fff", fontFamily: RF, fontSize: 11 }}>
-              <div style={{ width: 48, height: 48, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.08)" }}>
-                <ImageIcon size={20} color="#fff" />
-              </div>
-              {t("cam_gallery", lang)}
-            </button>
+            <div style={{ justifySelf: "center" }}>
+              <button onClick={() => galleryRef.current?.click()}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, border: "none", background: "transparent", cursor: "pointer", color: "#fff", fontFamily: RF, fontSize: 11 }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.08)" }}>
+                  <ImageIcon size={20} color="#fff" />
+                </div>
+                {t("cam_gallery", lang)}
+              </button>
+            </div>
             <button onClick={capture} disabled={!ready}
-              style={{ border: "none", background: "transparent", cursor: ready ? "pointer" : "default", opacity: ready ? 1 : 0.4 }}>
+              style={{ justifySelf: "center", border: "none", background: "transparent", cursor: ready ? "pointer" : "default", opacity: ready ? 1 : 0.4 }}>
               <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#fff", border: "4px solid rgba(255,255,255,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Camera size={30} color="#0d2137" />
               </div>
             </button>
-            <div style={{ width: 48 }} />
+            <div />
           </>
         )}
       </div>
