@@ -111,8 +111,8 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
         <X size={19} color="#fff" />
       </button>
 
-      {/* Centered group: tips → frame → controls, all tight together */}
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, padding: "70px 20px 28px" }}>
+      {/* Group: tips → frame → controls, tight together, anchored near the top */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 16, padding: "62px 20px 24px" }}>
 
         {!shot && (
           <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", maxWidth: 360 }}>
