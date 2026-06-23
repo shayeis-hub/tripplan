@@ -45,7 +45,7 @@ import {
   AlertCircle, Loader, Link as LinkIcon, Ticket, Utensils, Car,
   Building2, Search, Clock, Menu, ArrowLeftRight, FileDown, BarChart2,
   Moon, Copy, Lock, Bug, Lightbulb, Bell, BellOff, Globe, Settings,
-  Mail, LogOut, Star, ShoppingCart,
+  Mail, LogOut, Star, ShoppingCart, Camera,
 } from "lucide-react";
 
 const catLabel=(id,lang)=>t(`cat_${id}`,lang)||id;
@@ -1524,7 +1524,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           <div style={{display:"flex",gap:8}}>
             <button onClick={()=>document.getElementById("receipt-input").click()} disabled={scanning}
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:scanning?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:scanning?"default":"pointer",opacity:scanning?0.5:1}}>
-              {scanning?<Loader size={16} color={W40} strokeWidth={1.5} style={{animation:"spin 1s linear infinite"}}/>:<Search size={16} color={W40} strokeWidth={1.5}/>}
+              {scanning?<Loader size={16} color={W40} strokeWidth={1.5} style={{animation:"spin 1s linear infinite"}}/>:<Camera size={17} color={W40} strokeWidth={1.5}/>}
             </button>
             <button onClick={()=>{setForm(f=>({...mkForm(dates,trip.defaultCurrency,people),date:defaultTripDate(dates),checkIn:defaultTripDate(dates)}));setShow(true);setEditId(null);}}
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.12)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
