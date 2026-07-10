@@ -984,10 +984,16 @@ function exportItineraryPDF(trip,expenses,lang="he"){
   setTimeout(()=>w.print(),800);
 }
 
-function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
+function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,rates={}}){
   const{lang}=useLang();
   const[showJoin,setShowJoin]=useState(false);
   const[joinLink,setJoinLink]=useState("");
+  const[showArchived,setShowArchived]=useState(false);
+
+  const todayStr=localDateStr(new Date());
+  const activeTrips=trips.filter(t=>!t.archived);
+  const archivedTrips=trips.filter(t=>t.archived);
+  const tripEnded=t=>!!t.endDate&&t.endDate<todayStr;
 
   const handleJoin=()=>{
     if(!joinLink.trim())return;
@@ -1007,7 +1013,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
       </div>
 
       <div style={{padding:"0 18px 20px",display:"flex",flexDirection:"column",gap:10}}>
-        {trips.length===0&&(
+        {activeTrips.length===0&&archivedTrips.length===0&&(
           <div style={{textAlign:"center",padding:"40px 0 32px",color:W35}}>
             <div style={{width:100,height:100,borderRadius:26,background:"rgba(100,223,223,0.07)",border:"0.5px solid rgba(100,223,223,0.18)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
               <Send size={44} color="rgba(100,223,223,0.5)" strokeWidth={1}/>
@@ -1017,7 +1023,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
           </div>
         )}
 
-        {trips.map((trip,idx)=>{
+        {activeTrips.map((trip,idx)=>{
           const ACCENTS=["#64dfdf","#818cf8","#f472b6","#fbbf24","#4ade80"];
           const accent=ACCENTS[idx%ACCENTS.length];
           const nights=trip.startDate&&trip.endDate?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
@@ -1047,6 +1053,13 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
                   <div style={{width:44,height:44,borderRadius:14,background:`${accent}18`,border:`0.5px solid ${accent}38`,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <MapPin size={20} color={accent} strokeWidth={1.5}/>
                   </div>
+                  {tripEnded(trip)&&(
+                    <button title={lang==="he"?"העבר לארכיון":lang==="es"?"Archivar":"Archive"}
+                      onClick={ev=>{ev.stopPropagation();onArchive(trip.id,true);}}
+                      style={{padding:"7px 8px",borderRadius:8,border:"none",background:"rgba(251,191,36,0.12)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <Package size={13} color="#fbbf24"/>
+                    </button>
+                  )}
                   <button onClick={ev=>{ev.stopPropagation();if(window.confirm(t("confirm_delete",lang)))onDelete(trip.id);}} style={{padding:"7px 8px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.12)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <Trash2 size={13} color="#ff6b6b"/>
                   </button>
@@ -1086,6 +1099,49 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,userId,rates={}}){
               style={{width:"100%",padding:"12px",borderRadius:12,border:"none",background:joinLink.trim()?TEAL:"rgba(255,255,255,0.1)",color:joinLink.trim()?DARK_BG:W25,fontFamily:RF,fontWeight:700,fontSize:14,cursor:joinLink.trim()?"pointer":"default"}}>
               {lang==="he"?"הצטרף":lang==="es"?"Unirse":"Join"}
             </button>
+          </div>
+        )}
+
+        {/* Archived trips */}
+        {archivedTrips.length>0&&(
+          <div style={{marginTop:6}}>
+            <button onClick={()=>setShowArchived(v=>!v)}
+              style={{width:"100%",padding:"12px 14px",borderRadius:14,border:"0.5px solid rgba(255,255,255,0.09)",background:"rgba(255,255,255,0.03)",color:W40,fontSize:13,fontWeight:600,fontFamily:RF,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <span style={{display:"flex",alignItems:"center",gap:8}}>
+                <Package size={15} color="rgba(255,255,255,0.35)"/>
+                {lang==="he"?"טיולים שהסתיימו":lang==="es"?"Viajes finalizados":"Past trips"} ({archivedTrips.length})
+              </span>
+              <span style={{fontSize:11,color:W25}}>{showArchived?"▲":"▼"}</span>
+            </button>
+            {showArchived&&(
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:8}}>
+                {archivedTrips.map(trip=>{
+                  const nights=trip.startDate&&trip.endDate?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
+                  const total=trip.expenses?.reduce((s,e)=>s+e.amountILS,0)||0;
+                  return(
+                    <div key={trip.id} onClick={()=>onSelect(trip.id)}
+                      style={{borderRadius:14,border:"0.5px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.025)",padding:"11px 14px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",opacity:0.75}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontFamily:RF,fontSize:14,fontWeight:600,color:"rgba(255,255,255,0.75)"}}>{trip.destination||"—"}</span>
+                          <span style={{fontSize:9,background:"rgba(251,191,36,0.1)",color:"rgba(251,191,36,0.7)",border:"0.5px solid rgba(251,191,36,0.25)",borderRadius:999,padding:"2px 7px",fontWeight:600}}>
+                            {lang==="he"?"צפייה בלבד":lang==="es"?"Solo lectura":"View only"}
+                          </span>
+                        </div>
+                        <div style={{fontSize:11,color:W25,marginTop:2}}>
+                          {trip.startDate?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}{nights>0&&` · ${nights} ${t("days",lang)}`}{total>0&&` · ${fmtAmt(total,trip.displayCurrency||"ILS",rates)}`}
+                        </div>
+                      </div>
+                      <button title={lang==="he"?"שחזר מהארכיון":lang==="es"?"Restaurar":"Restore"}
+                        onClick={ev=>{ev.stopPropagation();onArchive(trip.id,false);}}
+                        style={{padding:"7px 10px",borderRadius:8,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(100,223,223,0.07)",cursor:"pointer",fontFamily:RF,fontSize:11,fontWeight:600,color:TEAL,flexShrink:0}}>
+                        {lang==="he"?"שחזר":lang==="es"?"Restaurar":"Restore"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -2872,6 +2928,14 @@ function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
 
   return(
     <div style={{padding:"32px 20px",display:"flex",flexDirection:"column",gap:16,minHeight:"55vh",justifyContent:"center"}}>
+      {trip.archived&&(
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"9px 14px",borderRadius:12,background:"rgba(251,191,36,0.08)",border:"0.5px solid rgba(251,191,36,0.3)"}}>
+          <Package size={14} color="#fbbf24"/>
+          <span style={{fontFamily:RF,fontSize:12,fontWeight:600,color:"#fde68a"}}>
+            {tr("טיול בארכיון — צפייה בלבד","Archived trip — view only","Viaje archivado — solo lectura")}
+          </span>
+        </div>
+      )}
       <div style={{textAlign:"center",marginBottom:8}}>
         <div style={{width:64,height:64,borderRadius:20,background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px"}}>
           <MapPin size={30} color="#64dfdf" strokeWidth={1.5}/>
@@ -3310,6 +3374,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const expenses=active?.expenses||[];
 
   const updTrip=useCallback((patch)=>{
+    const current=trips.find(t=>t.id===activeId);
+    if(current?.archived&&!("archived" in patch))return; // archived trips are read-only
     setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,...patch}:t));
     const updated=trips.find(t=>t.id===activeId);
     if(updated) onSaveTrip({...updated,...patch});
@@ -3317,6 +3383,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
 
   const addExp=useCallback((e)=>{
     setTrips((ts)=>{
+      if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
       const next=ts.map(t=>{
         if(t.id!==activeId)return t;
         return{...t,expenses:[...t.expenses,e]};
@@ -3347,7 +3414,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
 
   const togglePay=useCallback((id)=>{
     setTrips((ts)=>ts.map(t=>{
-      if(t.id!==activeId)return t;
+      if(t.id!==activeId||t.archived)return t;
       const updated={...t,expenses:t.expenses.map(e=>e.id===id?{...e,paid:!e.paid}:e)};
       onSaveTrip(updated);
       return updated;
@@ -3356,6 +3423,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
 
   const delExp=useCallback((id)=>{
     setTrips((ts)=>{
+      if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
       const next=ts.map(t=>{
         if(t.id!==activeId)return t;
         return{...t,expenses:t.expenses.filter(e=>e.id!==id)};
@@ -3368,6 +3436,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
 
   const editExp=useCallback((id,patch)=>{
     setTrips((ts)=>{
+      if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
       const next=ts.map(t=>{
         if(t.id!==activeId)return t;
         return{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)};
@@ -3447,10 +3516,18 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     setSection(null);
   };
   const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
+  const handleArchive=(id,archived)=>{
+    setTrips((ts)=>{
+      const next=ts.map(t=>t.id===id?{...t,archived}:t);
+      const updated=next.find(t=>t.id===id);
+      if(updated) setTimeout(()=>onSaveTrip(updated),0);
+      return next;
+    });
+  };
 
   const isOwner=active?.owner===userId||!active?.owner;
   const normalizedUserEmail=(userEmail||"").toLowerCase().trim();
-  const isViewOnly=!isOwner&&!!(active?.viewOnlyUsers||[]).some(e=>e.toLowerCase().trim()===normalizedUserEmail);
+  const isViewOnly=!!active?.archived||(!isOwner&&!!(active?.viewOnlyUsers||[]).some(e=>e.toLowerCase().trim()===normalizedUserEmail));
   const budgetScreens=["expenses","budget"];
   const tripScreens=["calendar","discover","packing","map"];
 
@@ -3600,7 +3677,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           </div>
           {/* Currency Converter */}
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]}/>}
-          <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} userId={userId} rates={rates}/>
+          <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates}/>
         </div>
       </>
     );
