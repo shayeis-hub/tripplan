@@ -185,7 +185,16 @@ const fmtDate=(d)=>d?new Date(d).toLocaleDateString("he-IL",{day:"2-digit",month
 const localDateStr=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const getRange=(s,e)=>{const a=[];if(!s||!e)return a;const c=new Date(s),l=new Date(e);while(c<=l){a.push(localDateStr(c));c.setDate(c.getDate()+1);}return a;};
 // Default to today if the trip is already underway, otherwise the first day.
-const defaultTripDate=(dates)=>{const t=localDateStr(new Date());return dates.includes(t)?t:(dates[0]||"");};
+// Default to today if the trip is underway; otherwise the nearest trip day
+// (first day if the trip hasn't started, last day if it's already over).
+const defaultTripDate=(dates)=>{
+  if(!dates.length) return "";
+  const t=localDateStr(new Date());
+  if(dates.includes(t)) return t;
+  if(t<dates[0]) return dates[0];
+  if(t>dates[dates.length-1]) return dates[dates.length-1];
+  return dates[0];
+};
 const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
 const remTime=(t,hrs=5)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-(hrs*60);if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
 
@@ -2070,7 +2079,16 @@ function CalendarScreen({trip,expenses,onSaveActs}){
 
   // ── MONTH VIEW ──────────────────────────────────────────────────────────────
   const[curMonth,setCurMonth]=useState(()=>{
-    if(!trip.startDate) return {y:new Date().getFullYear(),m:new Date().getMonth()};
+    const now=new Date();
+    const nowYM={y:now.getFullYear(),m:now.getMonth()};
+    if(!trip.startDate) return nowYM;
+    // If today falls within the trip's month span, open on the current month.
+    if(trip.endDate){
+      const s=new Date(trip.startDate),e=new Date(trip.endDate);
+      const afterStart=nowYM.y>s.getFullYear()||(nowYM.y===s.getFullYear()&&nowYM.m>=s.getMonth());
+      const beforeEnd =nowYM.y<e.getFullYear()||(nowYM.y===e.getFullYear()&&nowYM.m<=e.getMonth());
+      if(afterStart&&beforeEnd) return nowYM;
+    }
     const d=new Date(trip.startDate);
     return {y:d.getFullYear(),m:d.getMonth()};
   });
