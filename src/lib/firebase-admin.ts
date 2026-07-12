@@ -15,5 +15,6 @@ function getAdminApp(): admin.app.App {
   });
 }
 
-export function getAdminAuth() { return admin.auth(getAdminApp()); }
-export function getAdminDb()   { return admin.firestore(getAdminApp()); }
+export function getAdminAuth()      { return admin.auth(getAdminApp()); }
+export function getAdminDb()        { return admin.firestore(getAdminApp()); }
+export function getAdminMessaging() { return admin.messaging(getAdminApp()); }

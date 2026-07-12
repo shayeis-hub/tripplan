@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { getAdminMessaging } from "@/lib/firebase-admin";
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -21,13 +22,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No subscription" }, { status: 404 });
     }
 
-    const { subscription } = subDoc.data();
-    await webpush.sendNotification(
-      subscription,
-      JSON.stringify({ title, body, url: url || "/" })
-    );
+    const { subscription, fcmToken } = subDoc.data();
+    const results: Record<string, string> = {};
 
-    return NextResponse.json({ success: true });
+    // Native app (FCM) — preferred channel when present
+    if (fcmToken) {
+      try {
+        await getAdminMessaging().send({
+          token: fcmToken,
+          notification: { title, body: body || "" },
+          data: { url: url || "/" },
+          android: {
+            notification: { icon: "ic_launcher", color: "#0d2137" },
+            priority: "high",
+          },
+        });
+        results.fcm = "sent";
+      } catch (e) {
+        results.fcm = "failed";
+      }
+    }
+
+    // Browser (web-push)
+    if (subscription) {
+      try {
+        await webpush.sendNotification(
+          subscription,
+          JSON.stringify({ title, body, url: url || "/" })
+        );
+        results.webpush = "sent";
+      } catch (e) {
+        results.webpush = "failed";
+      }
+    }
+
+    if (!Object.values(results).includes("sent")) {
+      return NextResponse.json({ error: "All channels failed", results }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, results });
   } catch (err) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

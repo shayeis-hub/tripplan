@@ -506,13 +506,39 @@ function PieChart({data}){
 }
 
 // ─── PUSH NOTIFICATIONS ──────────────────────────────────────────────────────
+// Web: service-worker + VAPID web-push. Native app (Capacitor): FCM token via
+// the PushNotifications plugin — both stored through /api/push-subscribe.
+const isCapacitorNative=()=>typeof window!=="undefined"&&window.Capacitor?.isNativePlatform?.();
+
 function usePushNotifications(userId){
   const[permission,setPermission]=useState(typeof Notification!=="undefined"?Notification.permission:"default");
   const[subscribed,setSubscribed]=useState(false);
 
+  const saveFcmToken=async(token,uid)=>{
+    await fetch("/api/push-subscribe",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({fcmToken:token,userId:uid}),
+    });
+  };
+
+  const subscribeNative=async()=>{
+    const{PushNotifications}=window.Capacitor.Plugins;
+    const perm=await PushNotifications.requestPermissions();
+    if(perm.receive!=="granted"){setPermission("denied");return;}
+    setPermission("granted");
+    await PushNotifications.addListener("registration",async(token)=>{
+      await saveFcmToken(token.value,userId);
+      setSubscribed(true);
+    });
+    await PushNotifications.register();
+  };
+
   const subscribe=async()=>{
-    if(!userId||typeof Notification==="undefined") return;
+    if(!userId) return;
     try{
+      if(isCapacitorNative()){await subscribeNative();return;}
+      if(typeof Notification==="undefined") return;
       const perm=await Notification.requestPermission();
       setPermission(perm);
       if(perm!=="granted") return;
@@ -539,7 +565,22 @@ function usePushNotifications(userId){
   };
 
   useEffect(()=>{
-    if(!userId||typeof navigator==="undefined"||!navigator.serviceWorker) return;
+    if(!userId||typeof navigator==="undefined") return;
+    if(isCapacitorNative()){
+      // Re-register silently if permission was already granted
+      const{PushNotifications}=window.Capacitor.Plugins;
+      PushNotifications.checkPermissions().then(p=>{
+        if(p.receive==="granted"){
+          PushNotifications.addListener("registration",async(token)=>{
+            await saveFcmToken(token.value,userId);
+            setSubscribed(true);
+          });
+          PushNotifications.register();
+        }
+      }).catch(()=>{});
+      return;
+    }
+    if(!navigator.serviceWorker) return;
     navigator.serviceWorker.register("/sw.js").catch(()=>{});
     navigator.serviceWorker.ready.then(reg=>{
       reg.pushManager.getSubscription().then(sub=>{
@@ -1427,6 +1468,27 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
   const set=p=>setForm(f=>({...f,...p}));
 
+  // Inside the native app (Capacitor) the real system camera gives a far better
+  // capture experience than getUserMedia — use it when available.
+  const isNativeApp=typeof window!=="undefined"&&window.Capacitor?.isNativePlatform?.();
+  const nativeScan=async()=>{
+    try{
+      const{Camera}=window.Capacitor.Plugins;
+      const photo=await Camera.getPhoto({
+        quality:90,resultType:"base64",source:"PROMPT",saveToGallery:false,
+        promptLabelHeader:lang==="he"?"צילום קבלה":lang==="es"?"Capturar recibo":"Capture receipt",
+        promptLabelPhoto:lang==="he"?"בחר מהגלריה":lang==="es"?"Elegir de galería":"Choose from gallery",
+        promptLabelPicture:lang==="he"?"צלם עכשיו":lang==="es"?"Tomar foto":"Take photo",
+      });
+      if(!photo?.base64String)return;
+      const bin=atob(photo.base64String);
+      const u8=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+      const file=new File([u8],`receipt-${Date.now()}.jpg`,{type:`image/${photo.format||"jpeg"}`});
+      handleScan(file);
+    }catch{/* user cancelled the camera — nothing to do */}
+  };
+
   const handleScan=async(file)=>{
     if(!file)return;
     setScanning(true);setScanMsg(null);
@@ -1589,7 +1651,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         subtitle={trip.destination?`${trip.destination}${nights>0?` · ${nights} ${t("days",lang)}`:""}`:""}
         action={
           <div style={{display:"flex",gap:8}}>
-            <button onClick={()=>setShowCamera(true)} disabled={scanning}
+            <button onClick={()=>isNativeApp?nativeScan():setShowCamera(true)} disabled={scanning}
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:scanning?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:scanning?"default":"pointer",opacity:scanning?0.5:1}}>
               {scanning?<Loader size={16} color={W40} strokeWidth={1.5} style={{animation:"spin 1s linear infinite"}}/>:<Camera size={17} color={W40} strokeWidth={1.5}/>}
             </button>
