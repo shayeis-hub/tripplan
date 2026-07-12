@@ -5,6 +5,7 @@ import { LangProvider } from "@/lib/LangContext";
 import RegisterSW from "@/components/RegisterSW";
 import RefCapture from "@/components/RefCapture";
 import DirSetter from "@/components/DirSetter";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "טיולון – מתכנן הטיולים שלי",
@@ -51,7 +52,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
-      <body><LangProvider><DirSetter /><AuthProvider><RegisterSW /><RefCapture />{children}</AuthProvider></LangProvider></body>
+      <body><LangProvider><DirSetter /><AuthProvider><RegisterSW /><RefCapture />{children}<Analytics /></AuthProvider></LangProvider></body>
     </html>
   );
 }
