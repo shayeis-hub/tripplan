@@ -27,22 +27,29 @@ export const blogPosts: BlogPost[] = [
       es: "Primera vez en Tailandia, todo organizado por cuenta propia, presupuesto definido de antemano — y exactamente el 90% utilizado. Una historia real con hoteles, tours y consejos de oro.",
     },
     body: {
-      he: `אחרי כמעט שלושה שבועות בתאילנד וכל המידע שקיבלנו מהקהילה לפני הנסיעה — הגיע הזמן להחזיר. אנחנו זוג דתי, קצת מעל גיל 50, בפעם הראשונה בתאילנד, וחגגנו שם 30 שנות נישואין. ארגנתי הכל לבד, מהטיסות ועד הסיור האחרון.
+      he: `אחרי כמעט שלושה שבועות בתאילנד וכל המידע שקיבלנו מהקהילה לפני הנסיעה — הגיע הזמן להחזיר. אנחנו זוג דתי, קצת מעל גיל 50, בפעם הראשונה בתאילנד, וחגגנו שם 30 שנות נישואין. ארגנתי הכל לבד, מהטיסות ועד הסיור האחרון — וכמעט הכל עבר דרך מקום אחד: אפליקציית טיולון.
 
 **התקציב — הוגדר מראש, נוצל ב-90%**
-לפני הטיול הגדרתי תקציב כולל, ולאורך כל הדרך ניהלתי אותו באפליקציית טיולון — כל הוצאה נרשמה במקום, כולל סריקת קבלות ותיוק אוטומטי לקטגוריות. בסוף הטיול ידעתי בדיוק כמה יצא על מה, וסיימנו על 90% מהתקציב בלי לחסוך יותר מדי. גם יומן הטיול המלא — טיסות, מלונות וסיורים יום-אחרי-יום — ישב שם, אז בכל בוקר ידענו בדיוק מה מחכה לנו.
+לפני הטיול הגדרתי בטיולון תקציב כולל, ומאותו רגע כל הוצאה נרשמה במקום — ברוב המקרים בכלל לא הקלדתי כלום: מצלמים את הקבלה, האפליקציה מזהה סכום, מטבע ותאריך ומתייקת לקטגוריה הנכונה לבד. בסוף הטיול ידעתי בדיוק כמה יצא על מה, וסיימנו על 90% מהתקציב בלי לחסוך יותר מדי. גם יומן הטיול המלא — טיסות, מלונות וסיורים יום-אחרי-יום — ישב שם, אז בכל בוקר ידענו בדיוק מה מחכה לנו.
 
 **טיסות**
 אל על ישיר, מחלקת פרימיום — היו הרבה נקודות נוסע מתמיד, ובגילנו זו הדרך היחידה לשרוד 11 שעות טיסה. זו הייתה ההוצאה הגדולה בטיול. טיסות פנים עם תאי איירווייז ובנגקוק איירווייז — מדויקות, תהליכים מהירים, מטוסים סבירים.
 
+**ההסעות משדה התעופה — בזכות תזכורת**
+ביום הטיסה קפצה לי בטיולון תזכורת שכדאי לסדר הסעה מהשדה — ובאמת שכחתי. לחצתי על הקישור, הזמנתי דרך GetTransfer, ונהג עם שלט חיכה לנו בנחיתה. בגיל שלנו, אחרי 11 שעות טיסה, זה שווה זהב.
+
+**סים לטלפון — ברגע האחרון**
+יום לפני הטיסה נזכרתי שאין לנו אינטרנט לתאילנד. פתחתי את טיולון, לחצתי על ה-eSIM של Airalo, ותוך חמש דקות היה לנו סים דיגיטלי מותקן — בלי לחפש דוכנים בשדה ובלי להחליף כרטיסים.
+
 **מלונות — עם דגש על שבת וכשרות**
+את כל המלונות סגרתי דרך אגודה — ישירות מתוך מסך התכנון של טיולון, ככה שההזמנות והתאריכים נכנסו ליומן הטיול בלי הקלדה כפולה:
 - **בנגקוק — Chilax Resort:** מלון חמוד וקרוב לבית חב"ד, חשוב לנו בגלל הארוחות.
 - **צ'אנג מאי — The Empress Premier:** מפנק מאוד, וצוות שמכיר את נושא השבת ברמה שפנו אלינו מיוזמתם והסבירו שבשבת הם דואגים למעלית ולפתיחת הדלת.
 - **קוסמוי — Synergy Resort:** על קו החוף, שתי בריכות, דקה מבית חב"ד ומוקף מסעדות כשרות. שידרגו לנו וילה בהגעה — אפס תלונות.
 - **בנגקוק לסיום:** המלון הצמוד ל-MBK (את השם, כנראה, לא אזכור לעולם).
 
 **סיורים**
-את הסיורים הגדולים סגרתי מהארץ דרך סיאם טורס: דוי אינתנון, צ'אנג ראי, 42 האיים בסירה איטית, חוות הצלה לפילים וסדנת בישול כשרה. סיורים מקומיים ספונטניים — דרך GetYourGuide, מהיום למחר, עם הדרכה באנגלית: ארמון המלך וכמה מקדשים. אפשר להסתובב לבד, אבל הידע שמקבלים מהמדריך שווה כל בהאט (וזה ממש זול).
+את הסיורים הגדולים סגרתי מהארץ דרך סיאם טורס: דוי אינתנון, צ'אנג ראי, 42 האיים בסירה איטית, חוות הצלה לפילים וסדנת בישול כשרה. את הסיורים המקומיים הספונטניים סגרתי דרך GetYourGuide מתוך מסך "גלה" של טיולון — מהיום למחר, עם הדרכה באנגלית: ארמון המלך וכמה מקדשים. אפשר להסתובב לבד, אבל הידע שמקבלים מהמדריך שווה כל בהאט (וזה ממש זול).
 
 **טיפ חשוב על 42 האיים:** כדי לחוות הכל באמת — תגיעו בכושר. טיפוס רציני של 500 מטר לנקודת תצפית מטורפת, חתירה בקייאק, ועוד טיפוס ללגונה הירוקה. הנופים שווים כל טיפת זיעה.
 
@@ -53,23 +60,32 @@ export const blogPosts: BlogPost[] = [
 בעיקר Bolt, מדי פעם טוק-טוק (בעיקר בצ'אנג מאי), וכשאפשר — ברגל.
 
 **ולסיום**
-קוסמוי הרגישה לפעמים כמו אילת: עברית ברחוב, מסעדות כשרות בכל פינה, ואפילו רכב עם רמקול שמזמין למסיבות בשירים בעברית. אומרים שתאילנד התייקרה — אין לי השוואה לעבר, אבל ליהנות שם אפשר גם בתקציב שפוי. ולאכול כשר כל יום? במקומות אחרים בעולם זה תיק כלכלי כבד. לא כאן.`,
-      en: `After almost three weeks in Thailand — and all the advice we received from the community before the trip — it's time to give back. We're a religious couple, just over 50, first time in Thailand, celebrating our 30th wedding anniversary. I organized everything myself, from flights to the very last tour.
+קוסמוי הרגישה לפעמים כמו אילת: עברית ברחוב, מסעדות כשרות בכל פינה, ואפילו רכב עם רמקול שמזמין למסיבות בשירים בעברית. אומרים שתאילנד התייקרה — אין לי השוואה לעבר, אבל ליהנות שם אפשר גם בתקציב שפוי. ולאכול כשר כל יום? במקומות אחרים בעולם זה תיק כלכלי כבד. לא כאן.
+
+ואם לסכם במשפט אחד: היומן, ההזמנות, ההוצאות והקבלות — הכל היה במקום אחד. ככה נראה טיול רגוע.`,
+      en: `After almost three weeks in Thailand — and all the advice we received from the community before the trip — it's time to give back. We're a religious couple, just over 50, first time in Thailand, celebrating our 30th wedding anniversary. I organized everything myself, from flights to the very last tour — and almost all of it ran through one place: the Tulon app.
 
 **The budget — set in advance, 90% used**
-Before the trip I defined a total budget, and managed it throughout with the Tulon app — every expense logged on the spot, including receipt scanning with automatic categorization. By the end I knew exactly what went where, and we finished at 90% of budget without over-scrimping. The full trip itinerary — flights, hotels and tours day by day — lived there too, so every morning we knew exactly what was ahead.
+Before the trip I set a total budget in Tulon, and from that moment every expense was logged on the spot — most of the time I didn't even type anything: snap the receipt, and the app reads the amount, currency and date and files it in the right category by itself. By the end I knew exactly what went where, and we finished at 90% of budget without over-scrimping. The full trip itinerary — flights, hotels and tours day by day — lived there too, so every morning we knew exactly what was ahead.
 
 **Flights**
 Direct El Al, premium class — we had plenty of frequent-flyer points, and at our age that's the only way to survive an 11-hour flight. It was the biggest expense of the trip. Domestic flights with Thai Airways and Bangkok Airways — punctual, fast processes, decent planes.
 
+**Airport transfers — thanks to a reminder**
+On flight day, Tulon popped a reminder to arrange a transfer from the airport — and I had genuinely forgotten. One tap, booked through GetTransfer, and a driver with a name sign was waiting when we landed. At our age, after an 11-hour flight, that's worth gold.
+
+**A SIM for the phone — at the last minute**
+The day before the flight I realized we had no data plan for Thailand. Opened Tulon, tapped the Airalo eSIM, and within five minutes we had a digital SIM installed — no hunting for kiosks at the airport, no swapping cards.
+
 **Hotels — with Shabbat and kosher in mind**
+I booked all the hotels through Agoda — straight from Tulon's planning screen, so the bookings and dates flowed into the trip calendar without double entry:
 - **Bangkok — Chilax Resort:** charming and close to the Chabad House, which mattered for meals.
 - **Chiang Mai — The Empress Premier:** very pampering, with staff who understand Shabbat so well they approached us proactively to explain they'd handle the elevator and door for us.
 - **Koh Samui — Synergy Resort:** beachfront, two pools, a minute from Chabad and surrounded by kosher restaurants. They upgraded our villa on arrival — zero complaints.
 - **Bangkok to finish:** the hotel attached to MBK (whose name I will apparently never remember).
 
 **Tours**
-The big tours I booked from home through a local agency: Doi Inthanon, Chiang Rai, the 42 islands by slow boat, an elephant rescue farm and a kosher cooking workshop. Spontaneous local tours — via GetYourGuide, booked a day ahead with English guides: the Grand Palace and several temples. You can wander alone, but the knowledge a guide adds is worth every baht (and it's genuinely cheap).
+The big tours I booked from home through a local agency: Doi Inthanon, Chiang Rai, the 42 islands by slow boat, an elephant rescue farm and a kosher cooking workshop. The spontaneous local tours I booked through GetYourGuide right from Tulon's Discover screen — a day ahead, with English-speaking guides: the Grand Palace and several temples. You can wander alone, but the knowledge a guide adds is worth every baht (and it's genuinely cheap).
 
 **Important tip about the 42 islands:** to experience it fully — arrive fit. A serious 500-meter climb to an insane viewpoint, kayaking, then another climb to the green lagoon. The views are worth every drop of sweat.
 
@@ -80,23 +96,32 @@ For our 30th anniversary we hired a couples photographer in Koh Samui and got an
 Mostly Bolt, occasionally tuk-tuks (mainly in Chiang Mai), and on foot whenever possible.
 
 **In closing**
-Koh Samui sometimes felt like a resort town back home: Hebrew in the streets, kosher restaurants on every corner. They say Thailand got expensive — I can't compare to the past, but you can absolutely enjoy it on a sane budget. And eating kosher every day? Elsewhere in the world that's a serious financial burden. Not here.`,
-      es: `Después de casi tres semanas en Tailandia — y todos los consejos que recibimos de la comunidad antes del viaje — es hora de devolver el favor. Somos una pareja religiosa, poco más de 50 años, primera vez en Tailandia, celebrando nuestro 30º aniversario de boda. Lo organicé todo yo mismo, desde los vuelos hasta el último tour.
+Koh Samui sometimes felt like a resort town back home: Hebrew in the streets, kosher restaurants on every corner. They say Thailand got expensive — I can't compare to the past, but you can absolutely enjoy it on a sane budget. And eating kosher every day? Elsewhere in the world that's a serious financial burden. Not here.
+
+If I had to sum it up in one sentence: the itinerary, the bookings, the expenses and the receipts — all in one place. That's what a calm trip looks like.`,
+      es: `Después de casi tres semanas en Tailandia — y todos los consejos que recibimos de la comunidad antes del viaje — es hora de devolver el favor. Somos una pareja religiosa, poco más de 50 años, primera vez en Tailandia, celebrando nuestro 30º aniversario de boda. Lo organicé todo yo mismo, desde los vuelos hasta el último tour — y casi todo pasó por un solo lugar: la app Tulon.
 
 **El presupuesto — definido de antemano, 90% utilizado**
-Antes del viaje definí un presupuesto total y lo gestioné todo el tiempo con la app Tulon — cada gasto registrado al momento, incluido el escaneo de recibos con categorización automática. Al final sabía exactamente en qué se fue cada parte, y terminamos en el 90% del presupuesto sin privarnos demasiado. El itinerario completo — vuelos, hoteles y tours día a día — también vivía allí, así que cada mañana sabíamos exactamente qué nos esperaba.
+Antes del viaje definí un presupuesto total en Tulon, y desde ese momento cada gasto quedó registrado al instante — la mayoría de las veces ni siquiera escribí nada: fotografías el recibo y la app detecta el importe, la moneda y la fecha, y lo archiva sola en la categoría correcta. Al final sabía exactamente en qué se fue cada parte, y terminamos en el 90% del presupuesto sin privarnos demasiado. El itinerario completo — vuelos, hoteles y tours día a día — también vivía allí, así que cada mañana sabíamos exactamente qué nos esperaba.
 
 **Vuelos**
 El Al directo, clase premium — teníamos muchos puntos de viajero frecuente, y a nuestra edad es la única forma de sobrevivir 11 horas de vuelo. Fue el mayor gasto del viaje. Vuelos internos con Thai Airways y Bangkok Airways — puntuales, procesos rápidos, aviones decentes.
 
+**Traslados del aeropuerto — gracias a un recordatorio**
+El día del vuelo, Tulon me mostró un recordatorio para organizar el traslado desde el aeropuerto — y realmente lo había olvidado. Un toque, reservado por GetTransfer, y un conductor con cartel nos esperaba al aterrizar. A nuestra edad, después de 11 horas de vuelo, eso vale oro.
+
+**SIM para el teléfono — a último momento**
+El día antes del vuelo me di cuenta de que no teníamos datos para Tailandia. Abrí Tulon, toqué el eSIM de Airalo, y en cinco minutos teníamos una SIM digital instalada — sin buscar quioscos en el aeropuerto ni cambiar tarjetas.
+
 **Hoteles — pensando en Shabat y comida kosher**
+Reservé todos los hoteles por Agoda — directamente desde la pantalla de planificación de Tulon, así que las reservas y fechas entraron al calendario del viaje sin doble registro:
 - **Bangkok — Chilax Resort:** encantador y cerca de la Casa Jabad, importante para las comidas.
 - **Chiang Mai — The Empress Premier:** muy acogedor, con personal que entiende tan bien el Shabat que se acercaron proactivamente para explicarnos cómo nos ayudarían con el ascensor y la puerta.
 - **Koh Samui — Synergy Resort:** frente a la playa, dos piscinas, a un minuto de Jabad y rodeado de restaurantes kosher. Nos mejoraron la villa al llegar — cero quejas.
 - **Bangkok para terminar:** el hotel pegado al MBK (cuyo nombre aparentemente nunca recordaré).
 
 **Tours**
-Los grandes los reservé desde casa con una agencia: Doi Inthanon, Chiang Rai, las 42 islas en barco lento, una granja de rescate de elefantes y un taller de cocina kosher. Tours locales espontáneos — vía GetYourGuide, de un día para otro con guías en inglés: el Gran Palacio y varios templos. Se puede pasear solo, pero el conocimiento del guía vale cada baht (y es realmente barato).
+Los grandes los reservé desde casa con una agencia: Doi Inthanon, Chiang Rai, las 42 islas en barco lento, una granja de rescate de elefantes y un taller de cocina kosher. Los tours locales espontáneos los reservé por GetYourGuide directamente desde la pantalla Descubre de Tulon — de un día para otro, con guías en inglés: el Gran Palacio y varios templos. Se puede pasear solo, pero el conocimiento del guía vale cada baht (y es realmente barato).
 
 **Consejo importante sobre las 42 islas:** para vivirlo todo — llega en forma. Una subida seria de 500 metros a un mirador increíble, kayak, y otra subida a la laguna verde. Las vistas valen cada gota de sudor.
 
@@ -107,7 +132,9 @@ Por nuestro 30º aniversario contratamos una fotógrafa de parejas en Koh Samui 
 Principalmente Bolt, de vez en cuando tuk-tuks (sobre todo en Chiang Mai), y a pie siempre que fuera posible.
 
 **Para terminar**
-Koh Samui a veces se sentía como una ciudad turística de casa: hebreo en las calles, restaurantes kosher en cada esquina. Dicen que Tailandia se encareció — no puedo comparar con el pasado, pero se puede disfrutar con un presupuesto sensato. ¿Y comer kosher todos los días? En otras partes del mundo es una carga económica seria. Aquí no.`,
+Koh Samui a veces se sentía como una ciudad turística de casa: hebreo en las calles, restaurantes kosher en cada esquina. Dicen que Tailandia se encareció — no puedo comparar con el pasado, pero se puede disfrutar con un presupuesto sensato. ¿Y comer kosher todos los días? En otras partes del mundo es una carga económica seria. Aquí no.
+
+Si tuviera que resumirlo en una frase: el itinerario, las reservas, los gastos y los recibos — todo en un solo lugar. Así se ve un viaje tranquilo.`,
     },
   },
   {
