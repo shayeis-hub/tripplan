@@ -108,9 +108,9 @@ const T = {
   },
   blogBtn: { he: "לכל המאמרים", en: "All Articles", es: "Todos los Artículos" },
   blogPost1Title: {
-    he: "5 טיפים לתכנון טיול קבוצתי ללא כאבי ראש",
-    en: "5 Tips for Stress-Free Group Travel Planning",
-    es: "5 Consejos para Planificar un Viaje en Grupo sin Estrés",
+    he: "שלושה שבועות בתאילנד: זוג 50+, כשרות ושבת — סיפור אמיתי",
+    en: "Three Weeks in Thailand: A 50+ Couple, Kosher & Shabbat — A True Story",
+    es: "Tres Semanas en Tailandia: Pareja 50+, Kosher y Shabat — Historia Real",
   },
   blogPost2Title: {
     he: "איך לנהל תקציב טיול בלי לוותר על הכיף",
@@ -407,7 +407,7 @@ export default function LandingPage() {
           <div className="section-sub" style={{marginBottom:22}}>{T.blogSub[lang]}</div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:22}}>
             {[
-              {slug:"group-travel-tips",  emoji:"👥", title:T.blogPost1Title[lang]},
+              {slug:"thailand-kosher-anniversary-trip", emoji:"💑", title:T.blogPost1Title[lang]},
               {slug:"budget-travel",      emoji:"💰", title:T.blogPost2Title[lang]},
               {slug:"winter-destinations-2026", emoji:"❄️", title:T.blogPost3Title[lang]},
             ].map(p=>(

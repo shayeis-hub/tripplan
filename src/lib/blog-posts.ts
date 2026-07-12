@@ -11,6 +11,106 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "thailand-kosher-anniversary-trip",
+    emoji: "💑",
+    category: { he: "סיפורי מטיילים", en: "Traveler Stories", es: "Historias de Viajeros" },
+    date: "2026-07-12",
+    readMin: 6,
+    title: {
+      he: "שלושה שבועות בתאילנד: זוג 50+, כשרות, שבת — וחגיגת 30 שנות נישואין",
+      en: "Three Weeks in Thailand: A 50+ Couple, Kosher Food, Shabbat — and a 30th Anniversary",
+      es: "Tres Semanas en Tailandia: Pareja 50+, Comida Kosher, Shabat — y un 30º Aniversario",
+    },
+    excerpt: {
+      he: "פעם ראשונה בתאילנד, הכל מאורגן לבד, תקציב מוגדר מראש — וניצול של 90% ממנו בדיוק. סיפור אמיתי של מטיילים, כולל המלונות, הסיורים והטיפים ששווים זהב.",
+      en: "First time in Thailand, everything self-organized, a budget set in advance — and exactly 90% of it used. A real traveler story with the hotels, tours and tips worth gold.",
+      es: "Primera vez en Tailandia, todo organizado por cuenta propia, presupuesto definido de antemano — y exactamente el 90% utilizado. Una historia real con hoteles, tours y consejos de oro.",
+    },
+    body: {
+      he: `אחרי כמעט שלושה שבועות בתאילנד וכל המידע שקיבלנו מהקהילה לפני הנסיעה — הגיע הזמן להחזיר. אנחנו זוג דתי, קצת מעל גיל 50, בפעם הראשונה בתאילנד, וחגגנו שם 30 שנות נישואין. ארגנתי הכל לבד, מהטיסות ועד הסיור האחרון.
+
+**התקציב — הוגדר מראש, נוצל ב-90%**
+לפני הטיול הגדרתי תקציב כולל, ולאורך כל הדרך ניהלתי אותו באפליקציית טיולון — כל הוצאה נרשמה במקום, כולל סריקת קבלות ותיוק אוטומטי לקטגוריות. בסוף הטיול ידעתי בדיוק כמה יצא על מה, וסיימנו על 90% מהתקציב בלי לחסוך יותר מדי. גם יומן הטיול המלא — טיסות, מלונות וסיורים יום-אחרי-יום — ישב שם, אז בכל בוקר ידענו בדיוק מה מחכה לנו.
+
+**טיסות**
+אל על ישיר, מחלקת פרימיום — היו הרבה נקודות נוסע מתמיד, ובגילנו זו הדרך היחידה לשרוד 11 שעות טיסה. זו הייתה ההוצאה הגדולה בטיול. טיסות פנים עם תאי איירווייז ובנגקוק איירווייז — מדויקות, תהליכים מהירים, מטוסים סבירים.
+
+**מלונות — עם דגש על שבת וכשרות**
+- **בנגקוק — Chilax Resort:** מלון חמוד וקרוב לבית חב"ד, חשוב לנו בגלל הארוחות.
+- **צ'אנג מאי — The Empress Premier:** מפנק מאוד, וצוות שמכיר את נושא השבת ברמה שפנו אלינו מיוזמתם והסבירו שבשבת הם דואגים למעלית ולפתיחת הדלת.
+- **קוסמוי — Synergy Resort:** על קו החוף, שתי בריכות, דקה מבית חב"ד ומוקף מסעדות כשרות. שידרגו לנו וילה בהגעה — אפס תלונות.
+- **בנגקוק לסיום:** המלון הצמוד ל-MBK (את השם, כנראה, לא אזכור לעולם).
+
+**סיורים**
+את הסיורים הגדולים סגרתי מהארץ דרך סיאם טורס: דוי אינתנון, צ'אנג ראי, 42 האיים בסירה איטית, חוות הצלה לפילים וסדנת בישול כשרה. סיורים מקומיים ספונטניים — דרך GetYourGuide, מהיום למחר, עם הדרכה באנגלית: ארמון המלך וכמה מקדשים. אפשר להסתובב לבד, אבל הידע שמקבלים מהמדריך שווה כל בהאט (וזה ממש זול).
+
+**טיפ חשוב על 42 האיים:** כדי לחוות הכל באמת — תגיעו בכושר. טיפוס רציני של 500 מטר לנקודת תצפית מטורפת, חתירה בקייאק, ועוד טיפוס ללגונה הירוקה. הנופים שווים כל טיפת זיעה.
+
+**הרגע המיוחד**
+לכבוד 30 שנות הנישואין לקחנו בקוסמוי צלמת זוגיות — רעות הלר, מקסימה — וקיבלנו מזכרת מדהימה מהטיול.
+
+**התניידות**
+בעיקר Bolt, מדי פעם טוק-טוק (בעיקר בצ'אנג מאי), וכשאפשר — ברגל.
+
+**ולסיום**
+קוסמוי הרגישה לפעמים כמו אילת: עברית ברחוב, מסעדות כשרות בכל פינה, ואפילו רכב עם רמקול שמזמין למסיבות בשירים בעברית. אומרים שתאילנד התייקרה — אין לי השוואה לעבר, אבל ליהנות שם אפשר גם בתקציב שפוי. ולאכול כשר כל יום? במקומות אחרים בעולם זה תיק כלכלי כבד. לא כאן.`,
+      en: `After almost three weeks in Thailand — and all the advice we received from the community before the trip — it's time to give back. We're a religious couple, just over 50, first time in Thailand, celebrating our 30th wedding anniversary. I organized everything myself, from flights to the very last tour.
+
+**The budget — set in advance, 90% used**
+Before the trip I defined a total budget, and managed it throughout with the Tulon app — every expense logged on the spot, including receipt scanning with automatic categorization. By the end I knew exactly what went where, and we finished at 90% of budget without over-scrimping. The full trip itinerary — flights, hotels and tours day by day — lived there too, so every morning we knew exactly what was ahead.
+
+**Flights**
+Direct El Al, premium class — we had plenty of frequent-flyer points, and at our age that's the only way to survive an 11-hour flight. It was the biggest expense of the trip. Domestic flights with Thai Airways and Bangkok Airways — punctual, fast processes, decent planes.
+
+**Hotels — with Shabbat and kosher in mind**
+- **Bangkok — Chilax Resort:** charming and close to the Chabad House, which mattered for meals.
+- **Chiang Mai — The Empress Premier:** very pampering, with staff who understand Shabbat so well they approached us proactively to explain they'd handle the elevator and door for us.
+- **Koh Samui — Synergy Resort:** beachfront, two pools, a minute from Chabad and surrounded by kosher restaurants. They upgraded our villa on arrival — zero complaints.
+- **Bangkok to finish:** the hotel attached to MBK (whose name I will apparently never remember).
+
+**Tours**
+The big tours I booked from home through a local agency: Doi Inthanon, Chiang Rai, the 42 islands by slow boat, an elephant rescue farm and a kosher cooking workshop. Spontaneous local tours — via GetYourGuide, booked a day ahead with English guides: the Grand Palace and several temples. You can wander alone, but the knowledge a guide adds is worth every baht (and it's genuinely cheap).
+
+**Important tip about the 42 islands:** to experience it fully — arrive fit. A serious 500-meter climb to an insane viewpoint, kayaking, then another climb to the green lagoon. The views are worth every drop of sweat.
+
+**The special moment**
+For our 30th anniversary we hired a couples photographer in Koh Samui and got an amazing keepsake from the trip.
+
+**Getting around**
+Mostly Bolt, occasionally tuk-tuks (mainly in Chiang Mai), and on foot whenever possible.
+
+**In closing**
+Koh Samui sometimes felt like a resort town back home: Hebrew in the streets, kosher restaurants on every corner. They say Thailand got expensive — I can't compare to the past, but you can absolutely enjoy it on a sane budget. And eating kosher every day? Elsewhere in the world that's a serious financial burden. Not here.`,
+      es: `Después de casi tres semanas en Tailandia — y todos los consejos que recibimos de la comunidad antes del viaje — es hora de devolver el favor. Somos una pareja religiosa, poco más de 50 años, primera vez en Tailandia, celebrando nuestro 30º aniversario de boda. Lo organicé todo yo mismo, desde los vuelos hasta el último tour.
+
+**El presupuesto — definido de antemano, 90% utilizado**
+Antes del viaje definí un presupuesto total y lo gestioné todo el tiempo con la app Tulon — cada gasto registrado al momento, incluido el escaneo de recibos con categorización automática. Al final sabía exactamente en qué se fue cada parte, y terminamos en el 90% del presupuesto sin privarnos demasiado. El itinerario completo — vuelos, hoteles y tours día a día — también vivía allí, así que cada mañana sabíamos exactamente qué nos esperaba.
+
+**Vuelos**
+El Al directo, clase premium — teníamos muchos puntos de viajero frecuente, y a nuestra edad es la única forma de sobrevivir 11 horas de vuelo. Fue el mayor gasto del viaje. Vuelos internos con Thai Airways y Bangkok Airways — puntuales, procesos rápidos, aviones decentes.
+
+**Hoteles — pensando en Shabat y comida kosher**
+- **Bangkok — Chilax Resort:** encantador y cerca de la Casa Jabad, importante para las comidas.
+- **Chiang Mai — The Empress Premier:** muy acogedor, con personal que entiende tan bien el Shabat que se acercaron proactivamente para explicarnos cómo nos ayudarían con el ascensor y la puerta.
+- **Koh Samui — Synergy Resort:** frente a la playa, dos piscinas, a un minuto de Jabad y rodeado de restaurantes kosher. Nos mejoraron la villa al llegar — cero quejas.
+- **Bangkok para terminar:** el hotel pegado al MBK (cuyo nombre aparentemente nunca recordaré).
+
+**Tours**
+Los grandes los reservé desde casa con una agencia: Doi Inthanon, Chiang Rai, las 42 islas en barco lento, una granja de rescate de elefantes y un taller de cocina kosher. Tours locales espontáneos — vía GetYourGuide, de un día para otro con guías en inglés: el Gran Palacio y varios templos. Se puede pasear solo, pero el conocimiento del guía vale cada baht (y es realmente barato).
+
+**Consejo importante sobre las 42 islas:** para vivirlo todo — llega en forma. Una subida seria de 500 metros a un mirador increíble, kayak, y otra subida a la laguna verde. Las vistas valen cada gota de sudor.
+
+**El momento especial**
+Por nuestro 30º aniversario contratamos una fotógrafa de parejas en Koh Samui y nos llevamos un recuerdo increíble del viaje.
+
+**Cómo moverse**
+Principalmente Bolt, de vez en cuando tuk-tuks (sobre todo en Chiang Mai), y a pie siempre que fuera posible.
+
+**Para terminar**
+Koh Samui a veces se sentía como una ciudad turística de casa: hebreo en las calles, restaurantes kosher en cada esquina. Dicen que Tailandia se encareció — no puedo comparar con el pasado, pero se puede disfrutar con un presupuesto sensato. ¿Y comer kosher todos los días? En otras partes del mundo es una carga económica seria. Aquí no.`,
+    },
+  },
+  {
     slug: "group-travel-tips",
     emoji: "👥",
     category: { he: "טיולים קבוצתיים", en: "Group Travel", es: "Viaje en Grupo" },
