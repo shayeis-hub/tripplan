@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.2",
+    "@googlemaps/markerclusterer": "^2.6.2",
     "@sentry/nextjs": "^10.53.1",
     "@vercel/analytics": "^2.0.1",
     "docx": "^9.7.1",

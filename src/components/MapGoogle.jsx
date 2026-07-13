@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
 
 const RF = "'Rubik',sans-serif";
 const KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "";
@@ -14,7 +15,26 @@ const PIN_COLORS = {
   other:      "#64748b",
 };
 
-// Load the Google Maps JS API once, shared across mounts.
+// Dark map theme to match the app chrome (works because we don't use a cloud mapId).
+const DARK_STYLE = [
+  { elementType: "geometry", stylers: [{ color: "#0f2438" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0f2438" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#8ca3b8" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#2a4058" }] },
+  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#9fb4c9" }] },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#cddbe9" }] },
+  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#7f97ac" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#12362e" }] },
+  { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#4a9c7d" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1e3750" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#16293c" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8ca3b8" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2b4a68" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#223a52" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1b2b" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d5975" }] },
+];
+
 let mapsPromise = null;
 function loadMaps() {
   if (typeof window === "undefined") return Promise.reject(new Error("ssr"));
@@ -27,7 +47,6 @@ function loadMaps() {
     s.async = true;
     s.onload = async () => {
       try {
-        // With loading=async the classes are lazy — import them before use.
         await window.google.maps.importLibrary("maps");
         await window.google.maps.importLibrary("geocoding");
         resolve(window.google.maps);
@@ -39,7 +58,6 @@ function loadMaps() {
   return mapsPromise;
 }
 
-// Geocode with a localStorage cache so each address is billed at most once per device.
 function cachedGeocode(geocoder, query) {
   const cacheKey = `gmc_${query}`;
   try {
@@ -70,17 +88,34 @@ function pinIcon(maps, color) {
   };
 }
 
+// Cluster bubble styled to match the app
+function clusterRenderer(maps) {
+  return {
+    render({ count, position }) {
+      const size = count < 10 ? 40 : count < 50 ? 48 : 56;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+        <circle cx="${size/2}" cy="${size/2}" r="${size/2-2}" fill="#64dfdf" opacity="0.92"/>
+        <circle cx="${size/2}" cy="${size/2}" r="${size/2-2}" fill="none" stroke="#0d2137" stroke-width="1.5"/>
+      </svg>`;
+      return new maps.Marker({
+        position,
+        icon: { url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg), scaledSize: new maps.Size(size, size), anchor: new maps.Point(size/2, size/2) },
+        label: { text: String(count), color: "#0d2137", fontSize: "13px", fontWeight: "800", fontFamily: RF },
+        zIndex: 1000 + count,
+      });
+    },
+  };
+}
+
 export default function MapGoogle({ destination, places, lang }) {
   const mapEl = useRef(null);
-  const mapRef = useRef(null);
-  const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [status, setStatus] = useState("loading");
   const [errCode, setErrCode] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     if (!destination) { setStatus("error"); setErrCode("no-destination"); return; }
     if (!KEY) { setStatus("error"); setErrCode("no-key"); return; }
-    // Google calls this global on auth/referer/billing failures
     window.gm_authFailure = () => { if (!cancelled) { setStatus("error"); setErrCode("auth-failure (key/referrer/billing)"); } };
 
     loadMaps().then(async (maps) => {
@@ -94,37 +129,65 @@ export default function MapGoogle({ destination, places, lang }) {
       const map = new maps.Map(mapEl.current, {
         center,
         zoom: dest ? 11 : 6,
+        styles: DARK_STYLE,
         mapTypeControl: true,
         streetViewControl: true,
         fullscreenControl: false,
         zoomControl: true,
-        mapTypeControlOptions: { position: maps.ControlPosition.TOP_LEFT },
+        mapTypeControlOptions: { position: maps.ControlPosition.TOP_LEFT, style: maps.MapTypeControlStyle.DROPDOWN_MENU },
         gestureHandling: "greedy",
       });
-      mapRef.current = map;
       setStatus("ready");
 
       const bounds = new maps.LatLngBounds();
       if (dest) bounds.extend(center);
-
       const info = new maps.InfoWindow();
 
       // Destination marker
       if (dest) {
-        new maps.Marker({
-          position: center, map, title: destination,
-          icon: pinIcon(maps, "#64dfdf"),
-        });
+        new maps.Marker({ position: center, map, title: destination, icon: pinIcon(maps, "#64dfdf"), zIndex: 999 });
       }
 
-      // Place markers (geocoded, cached)
+      // "Where am I" custom control
+      const locBtn = document.createElement("button");
+      locBtn.type = "button";
+      locBtn.title = lang === "he" ? "המיקום שלי" : lang === "es" ? "Mi ubicación" : "My location";
+      locBtn.innerHTML = "◎";
+      Object.assign(locBtn.style, {
+        margin: "10px", width: "40px", height: "40px", borderRadius: "10px", border: "none",
+        background: "#0d2137", color: "#64dfdf", fontSize: "20px", cursor: "pointer",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
+      });
+      let meMarker = null;
+      locBtn.onclick = () => {
+        if (!navigator.geolocation) return;
+        locBtn.innerHTML = "…";
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const me = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            if (meMarker) meMarker.setMap(null);
+            meMarker = new maps.Marker({
+              position: me, map, zIndex: 1200,
+              icon: { path: maps.SymbolPath.CIRCLE, scale: 8, fillColor: "#4285F4", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3 },
+            });
+            map.panTo(me); map.setZoom(14);
+            locBtn.innerHTML = "◎";
+          },
+          () => { locBtn.innerHTML = "◎"; },
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+      };
+      map.controls[maps.ControlPosition.RIGHT_BOTTOM].push(locBtn);
+
+      // Place markers → clustered
+      const markers = [];
       for (const p of (places || [])) {
         if (!p.address) continue;
         const coords = await cachedGeocode(geocoder, `${p.address}, ${destination}`);
         if (cancelled) return;
         if (!coords) continue;
         const color = PIN_COLORS[p.category] || "#64748b";
-        const marker = new maps.Marker({ position: coords, map, title: p.label, icon: pinIcon(maps, color) });
+        const marker = new maps.Marker({ position: coords, title: p.label, icon: pinIcon(maps, color) });
         const nav = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.address}, ${destination}`)}`;
         const navLabel = lang === "he" ? "ניווט" : lang === "es" ? "Ir" : "Navigate";
         marker.addListener("click", () => {
@@ -136,15 +199,17 @@ export default function MapGoogle({ destination, places, lang }) {
           </div>`);
           info.open(map, marker);
         });
+        markers.push(marker);
         bounds.extend(coords);
       }
 
-      // Fit to all markers if we have more than just the destination
+      if (!cancelled && markers.length > 0) {
+        new MarkerClusterer({ map, markers, renderer: clusterRenderer(maps) });
+      }
+
       if (!cancelled && !bounds.isEmpty() && (places || []).length > 0) {
         map.fitBounds(bounds, 60);
-        maps.event.addListenerOnce(map, "idle", () => {
-          if (map.getZoom() > 15) map.setZoom(15);
-        });
+        maps.event.addListenerOnce(map, "idle", () => { if (map.getZoom() > 15) map.setZoom(15); });
       }
     }).catch((e) => { if (!cancelled) { setStatus("error"); setErrCode(e?.message || "load-failed"); } });
 
@@ -152,18 +217,18 @@ export default function MapGoogle({ destination, places, lang }) {
   }, [destination, places, lang]);
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative", background: "#e8edf2" }}>
+    <div style={{ width: "100%", height: "100%", position: "relative", background: "#0f2438" }}>
       <div ref={mapEl} style={{ width: "100%", height: "100%" }} />
       {status !== "ready" && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, background: "#e8edf2", pointerEvents: "none" }}>
-          <div style={{ width: 44, height: 44, borderRadius: "50%", border: "3px solid rgba(13,33,55,0.15)", borderTopColor: "#0d2137", animation: "spin 0.8s linear infinite" }}/>
-          <span style={{ color: "rgba(13,33,55,0.5)", fontSize: 13, fontFamily: RF }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, background: "#0f2438", pointerEvents: "none" }}>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", border: "3px solid rgba(100,223,223,0.15)", borderTopColor: "#64dfdf", animation: "spin 0.8s linear infinite" }}/>
+          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, fontFamily: RF }}>
             {status === "error"
               ? (lang === "he" ? "לא ניתן לטעון את המפה" : lang === "es" ? "No se pudo cargar el mapa" : "Couldn't load the map")
               : (lang === "he" ? "טוען מפה…" : lang === "es" ? "Cargando mapa…" : "Loading map…")}
           </span>
           {status === "error" && errCode && (
-            <span style={{ color: "rgba(13,33,55,0.4)", fontSize: 11, fontFamily: RF, direction: "ltr" }}>{errCode}</span>
+            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: RF, direction: "ltr" }}>{errCode}</span>
           )}
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
