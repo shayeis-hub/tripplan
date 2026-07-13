@@ -43,14 +43,15 @@ function loadMaps() {
   mapsPromise = new Promise((resolve, reject) => {
     if (!KEY) { reject(new Error("no-key")); return; }
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}&loading=async&v=weekly&libraries=geocoding`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}&loading=async&v=weekly`;
     s.async = true;
     s.onload = async () => {
       try {
+        if (!window.google?.maps?.importLibrary) throw new Error("no-importLibrary");
         await window.google.maps.importLibrary("maps");
         await window.google.maps.importLibrary("geocoding");
         resolve(window.google.maps);
-      } catch (e) { reject(new Error("lib-load-failed")); }
+      } catch (e) { reject(new Error("lib:" + (e?.message || String(e)).slice(0, 60))); }
     };
     s.onerror = () => reject(new Error("load-failed"));
     document.head.appendChild(s);
