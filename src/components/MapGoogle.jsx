@@ -23,9 +23,16 @@ function loadMaps() {
   mapsPromise = new Promise((resolve, reject) => {
     if (!KEY) { reject(new Error("no-key")); return; }
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}&loading=async&v=weekly`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}&loading=async&v=weekly&libraries=geocoding`;
     s.async = true;
-    s.onload = () => resolve(window.google.maps);
+    s.onload = async () => {
+      try {
+        // With loading=async the classes are lazy — import them before use.
+        await window.google.maps.importLibrary("maps");
+        await window.google.maps.importLibrary("geocoding");
+        resolve(window.google.maps);
+      } catch (e) { reject(new Error("lib-load-failed")); }
+    };
     s.onerror = () => reject(new Error("load-failed"));
     document.head.appendChild(s);
   });
