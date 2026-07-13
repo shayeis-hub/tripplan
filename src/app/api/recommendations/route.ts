@@ -5,11 +5,19 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
-    const { destination, lang } = await req.json();
+    const { destination, lang, kosher } = await req.json();
 
     if (!destination) {
       return NextResponse.json({ error: "Missing destination" }, { status: 400 });
     }
+
+    const kosherNote = kosher
+      ? (lang === "he"
+          ? `\n\nחשוב מאוד: תחת "restaurants" כלול אך ורק מסעדות שהן כשרות באמת (בהשגחה/כשרות ידועה) ביעד הזה או בקרבתו, למשל ליד בית חב"ד. אם אינך בטוח לגבי מסעדה — אל תכלול אותה. עדיף להחזיר פחות מסעדות מאשר להמציא. הוסף בשדה cuisine את המילה "כשר".`
+          : lang === "es"
+          ? `\n\nMUY IMPORTANTE: en "restaurants" incluye SOLO restaurantes que sean realmente kosher (con certificación conocida) en o cerca de este destino, p. ej. cerca de una Casa Jabad. Si no estás seguro de un restaurante, NO lo incluyas. Es mejor devolver menos que inventar. Añade "kosher" en el campo cuisine.`
+          : `\n\nVERY IMPORTANT: under "restaurants" include ONLY genuinely kosher restaurants (with known certification) in or near this destination, e.g. near a Chabad House. If you are unsure about a restaurant, do NOT include it. Returning fewer is better than inventing. Add "kosher" to the cuisine field.`)
+      : "";
 
     const prompt =
       lang === "he"
@@ -78,7 +86,7 @@ Return JSON in exactly this format (no explanation, no markdown):
     const response = await client.messages.create({
       model: "claude-haiku-4-5",
       max_tokens: 1024,
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: prompt + kosherNote }],
     });
 
     const raw = (response.content[0] as { type: string; text: string }).text.trim();

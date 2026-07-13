@@ -2761,16 +2761,17 @@ function DiscoverScreen({trip}){
   const[recs,setRecs]=useState(null);
   const[recsLoading,setRecsLoading]=useState(false);
   const[recsErr,setRecsErr]=useState(false);
+  const[kosher,setKosher]=useState(false);
   const prevDestLangRef=useRef("");
 
-  const loadRecs=useCallback(async()=>{
+  const loadRecs=useCallback(async(kosherFlag=false)=>{
     if(!trip.destination)return;
     setRecsLoading(true);setRecsErr(false);setRecs(null);
     try{
       const res=await fetch("/api/recommendations",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({destination:trip.destination,lang:"en"}),
+        body:JSON.stringify({destination:trip.destination,lang:"en",kosher:kosherFlag}),
       });
       const data=await res.json();
       if(!res.ok||data.error){setRecsErr(true);}
@@ -2779,11 +2780,13 @@ function DiscoverScreen({trip}){
     finally{setRecsLoading(false);}
   },[trip.destination]);
 
+  const toggleKosher=()=>{const next=!kosher;setKosher(next);loadRecs(next);};
+
   useEffect(()=>{
     const key=trip.destination;
     if(key!==prevDestLangRef.current){
       prevDestLangRef.current=key;
-      loadRecs();
+      loadRecs(kosher);
     }
   },[trip.destination,loadRecs]);
 
@@ -2910,7 +2913,24 @@ function DiscoverScreen({trip}){
 
                 {/* Restaurants */}
                 <Card>
-                  <h2 style={{fontFamily:RF,fontSize:15,fontWeight:700,marginBottom:12,color:"#ffffff"}}>{t("disc_restaurants",lang)}</h2>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,gap:8}}>
+                    <h2 style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{t("disc_restaurants",lang)}</h2>
+                    <button onClick={toggleKosher}
+                      style={{display:"flex",alignItems:"center",gap:6,padding:"5px 11px",borderRadius:999,cursor:"pointer",fontFamily:RF,fontWeight:700,fontSize:12,
+                        border:`0.5px solid ${kosher?"rgba(74,222,128,0.5)":"rgba(255,255,255,0.15)"}`,
+                        background:kosher?"rgba(74,222,128,0.12)":"rgba(255,255,255,0.04)",
+                        color:kosher?"#4ade80":"rgba(255,255,255,0.5)"}}>
+                      <span style={{width:15,height:15,borderRadius:4,border:`1.5px solid ${kosher?"#4ade80":"rgba(255,255,255,0.3)"}`,background:kosher?"#4ade80":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                        {kosher&&<Check size={11} color="#0d2137" strokeWidth={3}/>}
+                      </span>
+                      {lang==="he"?"כשר":lang==="es"?"Kosher":"Kosher"}
+                    </button>
+                  </div>
+                  {kosher&&(
+                    <div style={{fontSize:11,color:"rgba(74,222,128,0.7)",marginBottom:10,lineHeight:1.5}}>
+                      {lang==="he"?"✓ מציג רק מסעדות כשרות — תמיד כדאי לוודא מול בית חב\"ד המקומי":lang==="es"?"✓ Solo restaurantes kosher — verifica siempre con la Casa Jabad local":"✓ Kosher only — always verify with the local Chabad House"}
+                    </div>
+                  )}
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {(recs.restaurants||[]).map((r,i)=>(
                       <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,background:W05}}>
@@ -2925,6 +2945,11 @@ function DiscoverScreen({trip}){
                         </button>
                       </div>
                     ))}
+                    {kosher&&(recs.restaurants||[]).length===0&&(
+                      <div style={{fontSize:12,color:W40,lineHeight:1.6,padding:"6px 2px"}}>
+                        {lang==="he"?"לא נמצאו מסעדות כשרות מאומתות ליעד זה. מומלץ לפנות לבית חב\"ד המקומי.":lang==="es"?"No se encontraron restaurantes kosher verificados. Consulta la Casa Jabad local.":"No verified kosher restaurants found. Check with the local Chabad House."}
+                      </div>
+                    )}
                   </div>
                 </Card>
 
