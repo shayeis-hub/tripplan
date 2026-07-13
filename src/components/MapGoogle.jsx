@@ -42,17 +42,14 @@ function loadMaps() {
   if (mapsPromise) return mapsPromise;
   mapsPromise = new Promise((resolve, reject) => {
     if (!KEY) { reject(new Error("no-key")); return; }
+    // Classic callback loader: when the callback fires, every class (Map,
+    // Marker, Geocoder) is fully ready. More reliable in WebViews than the
+    // loading=async + importLibrary pattern, which had timing gaps.
+    const cbName = "__gmapsReady";
+    window[cbName] = () => { resolve(window.google.maps); };
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}&loading=async&v=weekly`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}&v=weekly&callback=${cbName}`;
     s.async = true;
-    s.onload = async () => {
-      try {
-        if (!window.google?.maps?.importLibrary) throw new Error("no-importLibrary");
-        await window.google.maps.importLibrary("maps");
-        await window.google.maps.importLibrary("geocoding");
-        resolve(window.google.maps);
-      } catch (e) { reject(new Error("lib:" + (e?.message || String(e)).slice(0, 60))); }
-    };
     s.onerror = () => reject(new Error("load-failed"));
     document.head.appendChild(s);
   });
