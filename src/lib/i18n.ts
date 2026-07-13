@@ -242,6 +242,11 @@ export const translations = {
   cam_cancel:       { he: "ביטול",                     en: "Cancel",               es: "Cancelar" },
   cam_denied:       { he: "אין גישה למצלמה — פותח מצלמת המכשיר", en: "No camera access — opening device camera", es: "Sin acceso a cámara — abriendo cámara del dispositivo" },
 
+  // ── Map route ─────────────────────────────────────────
+  map_route:        { he: "מסלול היום",   en: "Day route",   es: "Ruta del día" },
+  map_route_clear:  { he: "נקה מסלול",    en: "Clear route", es: "Borrar ruta" },
+  map_route_none:   { he: "צריך לפחות 2 מקומות ביום זה למסלול", en: "Need at least 2 places on this day for a route", es: "Se necesitan al menos 2 lugares este día para una ruta" },
+
   // ── Converter ─────────────────────────────────────────
   conv_title:       { he: "💱 מחשבון המרת מטבע",     en: "💱 Currency Converter", es: "💱 Conversor de monedas" },
   conv_ph:          { he: "הכנס סכום...",             en: "Enter amount...",      es: "Introduce el importe..." },

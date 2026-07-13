@@ -105,13 +105,14 @@ function clusterRenderer(maps) {
   };
 }
 
-export default function MapGoogle({ destination, places, lang, dayFilter = "all", searchPin = null }) {
+export default function MapGoogle({ destination, places, lang, dayFilter = "all", searchPin = null, routeActive = false, onRouteInfo }) {
   const mapEl = useRef(null);
   const mapsRef = useRef(null);
   const mapObjRef = useRef(null);
   const clustererRef = useRef(null);
   const taggedRef = useRef([]); // [{ marker, date, coords }]
   const searchMarkerRef = useRef(null);
+  const dirRendererRef = useRef(null);
   const [status, setStatus] = useState("loading");
   const [errCode, setErrCode] = useState("");
 
@@ -238,6 +239,32 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
     map.panTo(pos);
     if (map.getZoom() < 13) map.setZoom(15);
   }, [searchPin, status]);
+
+  // Draw / clear the day route (Directions API)
+  useEffect(() => {
+    const maps = mapsRef.current, map = mapObjRef.current, tagged = taggedRef.current;
+    if (!maps || !map || status !== "ready") return;
+    if (dirRendererRef.current) { dirRendererRef.current.setMap(null); dirRendererRef.current = null; }
+    if (!routeActive) { onRouteInfo && onRouteInfo(null); return; }
+    const pts = tagged.filter(t => dayFilter === "all" || t.date === dayFilter).map(t => t.coords);
+    if (pts.length < 2) { onRouteInfo && onRouteInfo(null); return; }
+    const svc = new maps.DirectionsService();
+    svc.route({
+      origin: pts[0], destination: pts[pts.length - 1],
+      waypoints: pts.slice(1, -1).map(p => ({ location: p, stopover: true })),
+      optimizeWaypoints: true, travelMode: maps.TravelMode.DRIVING,
+    }, (res, st) => {
+      if (st !== "OK" || !res) { onRouteInfo && onRouteInfo(null); return; }
+      dirRendererRef.current = new maps.DirectionsRenderer({
+        map, directions: res, suppressMarkers: true,
+        polylineOptions: { strokeColor: "#64dfdf", strokeWeight: 5, strokeOpacity: 0.9 },
+      });
+      let dist = 0, dur = 0;
+      res.routes[0].legs.forEach(l => { dist += l.distance.value; dur += l.duration.value; });
+      onRouteInfo && onRouteInfo({ km: (dist / 1000).toFixed(1), min: Math.round(dur / 60) });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeActive, dayFilter, status]);
 
   // React to the day filter without rebuilding the whole map
   useEffect(() => {

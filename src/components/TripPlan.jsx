@@ -3295,6 +3295,12 @@ function MapScreen({trip,expenses,onAddActivity}){
   const[dayFilter,setDayFilter]=useState("all");
   const placeDays=useMemo(()=>new Set(places.map(p=>p.date).filter(Boolean)),[places]);
   const showDayRow=days.length>1&&placeDays.size>1;
+  const[routeActive,setRouteActive]=useState(false);
+  const[routeInfo,setRouteInfo]=useState(null);
+  const pickDay=(v)=>{setDayFilter(v);setRouteActive(false);setRouteInfo(null);};
+  // How many places fall on the currently selected day
+  const dayPlaceCount=useMemo(()=>dayFilter==="all"?places.filter(p=>p.address).length:places.filter(p=>p.address&&p.date===dayFilter).length,[places,dayFilter]);
+  const canRoute=dayPlaceCount>=2;
 
   return(
     <div style={{height:"100vh",background:"#0d2137",display:"flex",flexDirection:"column",fontFamily:RF,position:"relative",overflow:"hidden"}}>
@@ -3368,7 +3374,7 @@ function MapScreen({trip,expenses,onAddActivity}){
               const active=dayFilter===val;
               const has=val==="all"||placeDays.has(val);
               return(
-                <button key={val} onClick={()=>setDayFilter(val)} disabled={!has}
+                <button key={val} onClick={()=>pickDay(val)} disabled={!has}
                   style={{flexShrink:0,padding:"7px 13px",borderRadius:999,border:`0.5px solid ${active?TEAL:"rgba(255,255,255,0.12)"}`,
                     background:active?"rgba(100,223,223,0.9)":"rgba(9,25,40,0.88)",backdropFilter:"blur(14px)",
                     color:active?"#0d2137":has?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.25)",
@@ -3381,10 +3387,26 @@ function MapScreen({trip,expenses,onAddActivity}){
         </div>
       )}
 
+      {/* ── Day route button + info (bottom-left) ── */}
+      {dest&&canRoute&&process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY&&(
+        <div style={{position:"absolute",bottom:24,left:16,zIndex:1000,display:"flex",flexDirection:"column",gap:8,alignItems:"flex-start"}}>
+          {routeActive&&routeInfo&&(
+            <div style={{background:"rgba(9,25,40,0.92)",backdropFilter:"blur(14px)",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",padding:"8px 13px",fontFamily:RF,fontSize:12,fontWeight:700,color:"#fff",whiteSpace:"nowrap"}}>
+              🚗 {routeInfo.km} {lang==="he"?'ק"מ':"km"} · {routeInfo.min} {lang==="he"?"דק'":"min"}
+            </div>
+          )}
+          <button onClick={()=>{setRouteActive(a=>!a);if(routeActive)setRouteInfo(null);}}
+            style={{background:routeActive?"rgba(100,223,223,0.92)":"rgba(9,25,40,0.92)",backdropFilter:"blur(14px)",border:`0.5px solid ${routeActive?TEAL:"rgba(100,223,223,0.25)"}`,borderRadius:12,padding:"10px 16px",color:routeActive?"#0d2137":TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:7,boxShadow:"0 4px 16px rgba(0,0,0,0.3)"}}>
+            <Map size={15} strokeWidth={2}/>
+            {routeActive?t("map_route_clear",lang):t("map_route",lang)}
+          </button>
+        </div>
+      )}
+
       {/* ── Real map ── */}
       <div style={{flex:1,position:"relative"}}>
         {dest?(
-          <MapLeaflet destination={dest} places={places} lang={lang} dayFilter={dayFilter} searchPin={searchPin}/>
+          <MapLeaflet destination={dest} places={places} lang={lang} dayFilter={dayFilter} searchPin={searchPin} routeActive={routeActive} onRouteInfo={setRouteInfo}/>
         ):(
           <div style={{flex:1,height:"100%",display:"flex",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center",background:"#091928"}}>
             <div>
