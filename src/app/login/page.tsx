@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "firebase/auth";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 import { AlertCircle, Loader, Globe } from "lucide-react";
@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [passVal,  setPassVal]  = useState("");
   const [isNew,    setIsNew]    = useState(false);
   const [errMsg,   setErrMsg]   = useState("");
+  const [okMsg,    setOkMsg]    = useState("");
   const [busy,     setBusy]     = useState(false);
 
   const dir = lang === "he" ? "rtl" : "ltr";
@@ -45,9 +46,21 @@ export default function LoginPage() {
     }
   };
 
+  const doReset = async () => {
+    setErrMsg(""); setOkMsg("");
+    if (!emailVal.trim()) { setErrMsg(t("login_reset_need_email", lang)); return; }
+    setBusy(true);
+    try {
+      await sendPasswordResetEmail(auth, emailVal.trim());
+    } catch { /* deliberately silent — same message either way, prevents account enumeration */ }
+    // Firebase succeeds silently for unknown emails too; show one generic message.
+    setOkMsg(t("login_reset_sent", lang));
+    setBusy(false);
+  };
+
   const doSubmit = async () => {
     if (!emailVal || !passVal) return;
-    setBusy(true); setErrMsg("");
+    setBusy(true); setErrMsg(""); setOkMsg("");
     try {
       if (isNew) {
         await createUserWithEmailAndPassword(auth, emailVal, passVal);
@@ -139,14 +152,24 @@ export default function LoginPage() {
             onKeyDown={ev => { if (ev.key === "Enter") doSubmit(); }}
             autoComplete={isNew ? "new-password" : "current-password"}/>
 
+          {!isNew && (
+            <div style={{textAlign:dir==="rtl"?"left":"right",marginTop:-4,marginBottom:12}}>
+              <button onClick={doReset} disabled={busy}
+                style={{border:"none",background:"transparent",color:"rgba(100,223,223,0.65)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Rubik',sans-serif",padding:0}}>
+                {t("login_forgot", lang)}
+              </button>
+            </div>
+          )}
+
           {errMsg && <div className="err"><AlertCircle size={15} color="#ff6b6b" style={{flexShrink:0}}/> {errMsg}</div>}
+          {okMsg && <div className="err" style={{background:"rgba(74,222,128,0.08)",borderColor:"rgba(74,222,128,0.35)",color:"#4ade80"}}>✓ {okMsg}</div>}
 
           <button className="btn-main" onClick={doSubmit} disabled={busy}>
             {busy ? <Loader size={16} color="#0d2137" style={{animation:"spin 1s linear infinite"}}/> : isNew ? t("login_register_btn", lang) : t("login_btn", lang)}
           </button>
 
           <div className="div"/>
-          <button className="btn-sec" onClick={() => { setIsNew(n => !n); setErrMsg(""); }}>
+          <button className="btn-sec" onClick={() => { setIsNew(n => !n); setErrMsg(""); setOkMsg(""); }}>
             {isNew ? t("login_switch_existing", lang) : t("login_switch_new", lang)}
           </button>
 
