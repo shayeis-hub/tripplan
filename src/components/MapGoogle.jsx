@@ -105,12 +105,13 @@ function clusterRenderer(maps) {
   };
 }
 
-export default function MapGoogle({ destination, places, lang, dayFilter = "all" }) {
+export default function MapGoogle({ destination, places, lang, dayFilter = "all", searchPin = null }) {
   const mapEl = useRef(null);
   const mapsRef = useRef(null);
   const mapObjRef = useRef(null);
   const clustererRef = useRef(null);
   const taggedRef = useRef([]); // [{ marker, date, coords }]
+  const searchMarkerRef = useRef(null);
   const [status, setStatus] = useState("loading");
   const [errCode, setErrCode] = useState("");
 
@@ -222,6 +223,21 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
 
     return () => { cancelled = true; };
   }, [destination, places, lang]);
+
+  // Drop / move a highlighted marker for a searched place and pan to it
+  useEffect(() => {
+    const maps = mapsRef.current, map = mapObjRef.current;
+    if (!maps || !map || status !== "ready") return;
+    if (searchMarkerRef.current) { searchMarkerRef.current.setMap(null); searchMarkerRef.current = null; }
+    if (!searchPin) return;
+    const pos = { lat: searchPin.lat, lng: searchPin.lng };
+    searchMarkerRef.current = new maps.Marker({
+      position: pos, map, title: searchPin.name, zIndex: 1500,
+      icon: pinIcon(maps, "#ef4444"), animation: maps.Animation.DROP,
+    });
+    map.panTo(pos);
+    if (map.getZoom() < 13) map.setZoom(15);
+  }, [searchPin, status]);
 
   // React to the day filter without rebuilding the whole map
   useEffect(() => {

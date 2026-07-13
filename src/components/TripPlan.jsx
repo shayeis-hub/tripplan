@@ -3221,10 +3221,33 @@ function PackingListScreen({trip,onUpdate}){
 // ── MAP SCREEN ────────────────────────────────────────────────────────────────
 const MAP_PIN_COLORS={"flight":TEAL,"hotel":"#818cf8","attraction":"#f472b6","food":"#fbbf24","taxi":"#4ade80","other":"#94a3b8"};
 
-function MapScreen({trip,expenses}){
+function MapScreen({trip,expenses,onAddActivity}){
   const{lang}=useLang();
   const dest=trip.destination||"";
   const dc=trip.displayCurrency||"ILS";
+  const[q,setQ]=useState("");
+  const[results,setResults]=useState(null); // null | [] | [{name,address,lat,lng}]
+  const[searching,setSearching]=useState(false);
+  const[searchPin,setSearchPin]=useState(null); // {lat,lng,name}
+  const[addPick,setAddPick]=useState(null); // {name} being added → shows day picker
+
+  const runSearch=async()=>{
+    if(!q.trim())return;
+    setSearching(true);setResults(null);setAddPick(null);
+    try{
+      const{Place}=await window.google.maps.importLibrary("places");
+      const{places}=await Place.searchByText({
+        textQuery:`${q}, ${dest}`,
+        fields:["displayName","formattedAddress","location"],
+        maxResultCount:6,
+      });
+      setResults((places||[]).map(p=>({
+        name:p.displayName,address:p.formattedAddress||"",
+        lat:p.location.lat(),lng:p.location.lng(),
+      })));
+    }catch{setResults([]);}
+    setSearching(false);
+  };
 
   // Build places array from expenses that have an address
   const places=useMemo(()=>(expenses||[])
@@ -3251,17 +3274,18 @@ function MapScreen({trip,expenses}){
   return(
     <div style={{height:"100vh",background:"#0d2137",display:"flex",flexDirection:"column",fontFamily:RF,position:"relative",overflow:"hidden"}}>
 
-      {/* ── Floating top bar ── */}
+      {/* ── Floating top bar: search ── */}
       <div style={{position:"absolute",top:16,left:16,right:16,zIndex:1000,display:"flex",gap:10,alignItems:"stretch"}}>
-        {/* Destination chip */}
-        <div style={{flex:1,background:"rgba(9,25,40,0.88)",backdropFilter:"blur(14px)",borderRadius:14,padding:"10px 14px",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",gap:8,overflow:"hidden"}}>
-          <MapPin size={14} color={TEAL} strokeWidth={1.5} style={{flexShrink:0}}/>
-          <span style={{fontSize:14,fontWeight:700,color:"#ffffff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-            {dest||(lang==="he"?"מפה":lang==="es"?"Mapa":"Map")}
-          </span>
+        {/* Search box */}
+        <div style={{flex:1,background:"rgba(9,25,40,0.92)",backdropFilter:"blur(14px)",borderRadius:14,padding:"8px 12px",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",gap:8,overflow:"hidden"}}>
+          <Search size={15} color={TEAL} strokeWidth={1.5} style={{flexShrink:0}}/>
+          <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")runSearch();}}
+            placeholder={dest?(lang==="he"?`חפש ב${dest}…`:lang==="es"?`Buscar en ${dest}…`:`Search in ${dest}…`):(lang==="he"?"חפש מקום…":"Search a place…")}
+            style={{flex:1,background:"none",border:"none",outline:"none",color:"#fff",fontFamily:RF,fontSize:14,minWidth:0}}/>
+          {q&&<button onClick={()=>{setQ("");setResults(null);setSearchPin(null);setAddPick(null);}} style={{background:"none",border:"none",color:W40,cursor:"pointer",fontSize:16,padding:0,flexShrink:0}}>✕</button>}
         </div>
         {/* Google Maps button */}
-        {dest&&(
+        {dest&&!q&&(
           <button
             onClick={()=>window.open(`https://www.google.com/maps/search/${encodeURIComponent(dest)}`,"_blank")}
             style={{background:"rgba(66,133,244,0.88)",backdropFilter:"blur(14px)",border:"none",borderRadius:14,padding:"10px 16px",color:"#fff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:7,whiteSpace:"nowrap",flexShrink:0,boxShadow:"0 4px 16px rgba(66,133,244,0.35)"}}>
@@ -3271,8 +3295,47 @@ function MapScreen({trip,expenses}){
         )}
       </div>
 
+      {/* ── Search results dropdown ── */}
+      {(searching||results)&&(
+        <div style={{position:"absolute",top:60,left:16,right:16,zIndex:1001,background:"rgba(9,25,40,0.97)",backdropFilter:"blur(14px)",borderRadius:14,border:"0.5px solid rgba(100,223,223,0.2)",overflow:"hidden",maxHeight:"55vh",overflowY:"auto",boxShadow:"0 12px 40px rgba(0,0,0,0.5)"}}>
+          {searching&&<div style={{padding:"16px",textAlign:"center",color:W40,fontSize:13}}>{lang==="he"?"מחפש…":lang==="es"?"Buscando…":"Searching…"}</div>}
+          {results&&results.length===0&&<div style={{padding:"16px",textAlign:"center",color:W40,fontSize:13}}>{lang==="he"?"לא נמצאו תוצאות":lang==="es"?"Sin resultados":"No results"}</div>}
+          {results&&results.map((r,i)=>(
+            <div key={i} style={{padding:"11px 14px",borderBottom:i<results.length-1?"0.5px solid rgba(255,255,255,0.06)":"none"}}>
+              <div onClick={()=>{setSearchPin({lat:r.lat,lng:r.lng,name:r.name});setAddPick(addPick?.name===r.name?null:{name:r.name});}} style={{cursor:"pointer"}}>
+                <div style={{fontSize:14,fontWeight:700,color:"#fff"}}>{r.name}</div>
+                {r.address&&<div style={{fontSize:11,color:W40,marginTop:2}}>{r.address}</div>}
+              </div>
+              {addPick?.name===r.name&&(
+                <div style={{marginTop:10,display:"flex",flexDirection:"column",gap:8}}>
+                  <div style={{display:"flex",gap:8}}>
+                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name+", "+dest)}`} target="_blank" rel="noopener noreferrer"
+                      style={{flex:1,textAlign:"center",padding:"8px",borderRadius:9,background:"rgba(66,133,244,0.9)",color:"#fff",fontFamily:RF,fontWeight:700,fontSize:12,textDecoration:"none"}}>
+                      {lang==="he"?"ניווט ↗":lang==="es"?"Ir ↗":"Navigate ↗"}
+                    </a>
+                  </div>
+                  {onAddActivity&&days.length>0&&(
+                    <div>
+                      <div style={{fontSize:10,color:"rgba(100,223,223,0.6)",marginBottom:5,letterSpacing:"0.5px",textTransform:"uppercase"}}>{lang==="he"?"הוסף ליום":lang==="es"?"Añadir al día":"Add to day"}</div>
+                      <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                        {days.map((d,di)=>(
+                          <button key={d} onClick={()=>{onAddActivity(d,r.name);setAddPick(null);setResults(null);setQ("");setSearchPin(null);}}
+                            style={{padding:"6px 11px",borderRadius:999,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
+                            {lang==="he"?"יום":lang==="es"?"Día":"Day"} {di+1}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ── Day filter chips ── */}
-      {showDayRow&&(
+      {!results&&showDayRow&&(
         <div style={{position:"absolute",top:64,left:0,right:0,zIndex:1000,padding:"0 16px"}}>
           <style>{`.mapday::-webkit-scrollbar{display:none}`}</style>
           <div className="mapday" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",paddingBottom:2}}>
@@ -3296,7 +3359,7 @@ function MapScreen({trip,expenses}){
       {/* ── Real map ── */}
       <div style={{flex:1,position:"relative"}}>
         {dest?(
-          <MapLeaflet destination={dest} places={places} lang={lang} dayFilter={dayFilter}/>
+          <MapLeaflet destination={dest} places={places} lang={lang} dayFilter={dayFilter} searchPin={searchPin}/>
         ):(
           <div style={{flex:1,height:"100%",display:"flex",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center",background:"#091928"}}>
             <div>
@@ -4083,7 +4146,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
               {screen==="discover"&&<DiscoverScreen trip={active}/>}
               {screen==="packing"&&<PackingListScreen trip={active} onUpdate={updTrip}/>}
-              {screen==="map"&&<MapScreen trip={active} expenses={expenses}/>}
+              {screen==="map"&&<MapScreen trip={active} expenses={expenses} onAddActivity={isViewOnly?null:(date,text)=>{const acts={...(active.activities||{})};const list=(acts[date]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);acts[date]=[...list,{text,time:""}];updTrip({activities:acts});}}/>}
             </div>
           </div>
           <NavBar screens={tripScreens} current={screen} onNav={s=>{pushNav("screen",activeId,"trip",s);setScreen(s);}}/>
