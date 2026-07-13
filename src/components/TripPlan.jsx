@@ -39,6 +39,7 @@ const MapLeaflet = dynamic(_mapLoad, {
 });
 import { db } from "@/lib/firebase";
 import { setDoc, doc } from "firebase/firestore";
+import { loadGoogleMaps } from "@/lib/gmaps";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildBookingUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
@@ -2780,13 +2781,42 @@ function DiscoverScreen({trip}){
     finally{setRecsLoading(false);}
   },[trip.destination]);
 
-  const toggleKosher=()=>{const next=!kosher;setKosher(next);loadRecs(next);};
+  // Kosher restaurants come from the REAL Places API (AI under-reports them).
+  const[kosherLoading,setKosherLoading]=useState(false);
+  const fetchKosherRestaurants=useCallback(async()=>{
+    if(!trip.destination)return;
+    setKosherLoading(true);
+    try{
+      const maps=await loadGoogleMaps();
+      const{Place}=await maps.importLibrary("places");
+      const{places:found}=await Place.searchByText({
+        textQuery:`kosher restaurant in ${trip.destination}`,
+        fields:["displayName","formattedAddress","rating","userRatingCount"],
+        maxResultCount:10,
+      });
+      const list=(found||[]).map(p=>({
+        name:p.displayName,
+        description:p.formattedAddress||"",
+        cuisine:p.rating?`⭐ ${p.rating} (${p.userRatingCount||0})`:"",
+        real:true,
+      }));
+      setRecs(r=>({...(r||{attractions:[],tip:null}),restaurants:list}));
+    }catch{setRecs(r=>({...(r||{attractions:[],tip:null}),restaurants:[]}));}
+    finally{setKosherLoading(false);}
+  },[trip.destination]);
+
+  const toggleKosher=()=>{
+    const next=!kosher;setKosher(next);
+    if(next)fetchKosherRestaurants();   // real Google data
+    else loadRecs(false);               // back to AI recommendations
+  };
 
   useEffect(()=>{
     const key=trip.destination;
     if(key!==prevDestLangRef.current){
       prevDestLangRef.current=key;
-      loadRecs(kosher);
+      setKosher(false);        // new destination → fresh AI recs
+      loadRecs(false);
     }
   },[trip.destination,loadRecs]);
 
@@ -2928,11 +2958,14 @@ function DiscoverScreen({trip}){
                   </div>
                   {kosher&&(
                     <div style={{fontSize:11,color:"rgba(74,222,128,0.7)",marginBottom:10,lineHeight:1.5}}>
-                      {lang==="he"?"✓ מציג רק מסעדות כשרות — תמיד כדאי לוודא מול בית חב\"ד המקומי":lang==="es"?"✓ Solo restaurantes kosher — verifica siempre con la Casa Jabad local":"✓ Kosher only — always verify with the local Chabad House"}
+                      {lang==="he"?"✓ מסעדות כשרות מ-Google — תמיד כדאי לוודא רמת כשרות מול בית חב\"ד":lang==="es"?"✓ Restaurantes kosher de Google — verifica el nivel con la Casa Jabad":"✓ Kosher restaurants from Google — verify the level with the local Chabad"}
                     </div>
                   )}
+                  {kosherLoading&&(
+                    <div style={{fontSize:12,color:W40,padding:"8px 2px"}}>{lang==="he"?"מחפש מסעדות כשרות ב-Google…":lang==="es"?"Buscando restaurantes kosher en Google…":"Searching kosher restaurants on Google…"}</div>
+                  )}
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {(recs.restaurants||[]).map((r,i)=>(
+                    {!kosherLoading&&(recs.restaurants||[]).map((r,i)=>(
                       <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,background:W05}}>
                         <div style={{width:36,height:36,borderRadius:10,background:"rgba(251,191,36,0.13)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Utensils size={18} color="#fbbf24" strokeWidth={1.5}/></div>
                         <div style={{flex:1,minWidth:0}}>
@@ -2945,7 +2978,7 @@ function DiscoverScreen({trip}){
                         </button>
                       </div>
                     ))}
-                    {kosher&&(recs.restaurants||[]).length===0&&(
+                    {kosher&&!kosherLoading&&(recs.restaurants||[]).length===0&&(
                       <div style={{fontSize:12,color:W40,lineHeight:1.6,padding:"6px 2px"}}>
                         {lang==="he"?"לא נמצאו מסעדות כשרות מאומתות ליעד זה. מומלץ לפנות לבית חב\"ד המקומי.":lang==="es"?"No se encontraron restaurantes kosher verificados. Consulta la Casa Jabad local.":"No verified kosher restaurants found. Check with the local Chabad House."}
                       </div>

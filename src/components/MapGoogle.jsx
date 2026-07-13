@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { loadGoogleMaps } from "@/lib/gmaps";
 
 const RF = "'Rubik',sans-serif";
 const KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "";
@@ -35,26 +36,7 @@ const DARK_STYLE = [
   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#3d5975" }] },
 ];
 
-let mapsPromise = null;
-function loadMaps() {
-  if (typeof window === "undefined") return Promise.reject(new Error("ssr"));
-  if (window.google?.maps) return Promise.resolve(window.google.maps);
-  if (mapsPromise) return mapsPromise;
-  mapsPromise = new Promise((resolve, reject) => {
-    if (!KEY) { reject(new Error("no-key")); return; }
-    // Classic callback loader: when the callback fires, every class (Map,
-    // Marker, Geocoder) is fully ready. More reliable in WebViews than the
-    // loading=async + importLibrary pattern, which had timing gaps.
-    const cbName = "__gmapsReady";
-    window[cbName] = () => { resolve(window.google.maps); };
-    const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}&v=weekly&callback=${cbName}`;
-    s.async = true;
-    s.onerror = () => reject(new Error("load-failed"));
-    document.head.appendChild(s);
-  });
-  return mapsPromise;
-}
+const loadMaps = loadGoogleMaps;
 
 function cachedGeocode(geocoder, query) {
   const cacheKey = `gmc_${query}`;
