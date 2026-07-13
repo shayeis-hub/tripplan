@@ -126,13 +126,15 @@ function LinkCard({
   logo: string; title: string; desc: string; builder: () => string; lang: "he"|"en"|"es";
 }) {
   const visitText = T.visit[lang];
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+  // Rendered as a <button>, not an <a>: the TravelPayouts page script rewrites
+  // anchor hrefs asynchronously and drops our subid3 partner ref. Buttons are
+  // left alone, so window.open(builder()) always carries full attribution.
+  const handleClick = () => {
     window.open(builder(), "_blank", "noopener,noreferrer");
   };
   return (
-    <a href={builder()} onClick={handleClick} target="_blank" rel="noopener noreferrer" style={{
-      display: "block", textDecoration: "none",
+    <button onClick={handleClick} style={{
+      display: "block", width: "100%", textAlign: "inherit", fontFamily: "inherit",
       background: "rgba(255,255,255,0.04)",
       border: "0.5px solid rgba(255,255,255,0.09)",
       borderRadius: 16, padding: "18px 20px",
@@ -156,7 +158,7 @@ function LinkCard({
           {visitText} ↗
         </div>
       </div>
-    </a>
+    </button>
   );
 }
 
