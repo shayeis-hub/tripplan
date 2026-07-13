@@ -105,8 +105,12 @@ function clusterRenderer(maps) {
   };
 }
 
-export default function MapGoogle({ destination, places, lang }) {
+export default function MapGoogle({ destination, places, lang, dayFilter = "all" }) {
   const mapEl = useRef(null);
+  const mapsRef = useRef(null);
+  const mapObjRef = useRef(null);
+  const clustererRef = useRef(null);
+  const taggedRef = useRef([]); // [{ marker, date, coords }]
   const [status, setStatus] = useState("loading");
   const [errCode, setErrCode] = useState("");
 
@@ -179,6 +183,7 @@ export default function MapGoogle({ destination, places, lang }) {
 
       // Place markers → clustered
       const markers = [];
+      const tagged = [];
       for (const p of (places || [])) {
         if (!p.address) continue;
         const coords = await cachedGeocode(geocoder, `${p.address}, ${destination}`);
@@ -186,6 +191,7 @@ export default function MapGoogle({ destination, places, lang }) {
         if (!coords) continue;
         const color = PIN_COLORS[p.category] || "#64748b";
         const marker = new maps.Marker({ position: coords, title: p.label, icon: pinIcon(maps, color) });
+        tagged.push({ marker, date: p.date || "", coords });
         const nav = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.address}, ${destination}`)}`;
         const navLabel = lang === "he" ? "ניווט" : lang === "es" ? "Ir" : "Navigate";
         marker.addListener("click", () => {
@@ -201,8 +207,11 @@ export default function MapGoogle({ destination, places, lang }) {
         bounds.extend(coords);
       }
 
+      mapsRef.current = maps;
+      mapObjRef.current = map;
+      taggedRef.current = tagged;
       if (!cancelled && markers.length > 0) {
-        new MarkerClusterer({ map, markers, renderer: clusterRenderer(maps) });
+        clustererRef.current = new MarkerClusterer({ map, markers, renderer: clusterRenderer(maps) });
       }
 
       if (!cancelled && !bounds.isEmpty() && (places || []).length > 0) {
@@ -213,6 +222,21 @@ export default function MapGoogle({ destination, places, lang }) {
 
     return () => { cancelled = true; };
   }, [destination, places, lang]);
+
+  // React to the day filter without rebuilding the whole map
+  useEffect(() => {
+    const maps = mapsRef.current, clusterer = clustererRef.current, map = mapObjRef.current, tagged = taggedRef.current;
+    if (!maps || !clusterer || !map || status !== "ready") return;
+    const visible = tagged.filter(t => dayFilter === "all" || t.date === dayFilter);
+    clusterer.clearMarkers();
+    clusterer.addMarkers(visible.map(t => t.marker));
+    if (visible.length > 0) {
+      const b = new maps.LatLngBounds();
+      visible.forEach(t => b.extend(t.coords));
+      map.fitBounds(b, 60);
+      maps.event.addListenerOnce(map, "idle", () => { if (map.getZoom() > 15) map.setZoom(15); });
+    }
+  }, [dayFilter, status]);
 
   return (
     <div style={{ width: "100%", height: "100%", position: "relative", background: "#0f2438" }}>

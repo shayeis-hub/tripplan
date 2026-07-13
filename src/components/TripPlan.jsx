@@ -3242,6 +3242,12 @@ function MapScreen({trip,expenses}){
       };
     }),[expenses,lang,dc]);
 
+  // Trip days for the day filter — only show the row if places span >1 day
+  const days=useMemo(()=>getRange(trip.startDate,trip.endDate),[trip.startDate,trip.endDate]);
+  const[dayFilter,setDayFilter]=useState("all");
+  const placeDays=useMemo(()=>new Set(places.map(p=>p.date).filter(Boolean)),[places]);
+  const showDayRow=days.length>1&&placeDays.size>1;
+
   return(
     <div style={{height:"100vh",background:"#0d2137",display:"flex",flexDirection:"column",fontFamily:RF,position:"relative",overflow:"hidden"}}>
 
@@ -3265,10 +3271,32 @@ function MapScreen({trip,expenses}){
         )}
       </div>
 
-      {/* ── Real Leaflet map ── */}
+      {/* ── Day filter chips ── */}
+      {showDayRow&&(
+        <div style={{position:"absolute",top:64,left:0,right:0,zIndex:1000,padding:"0 16px"}}>
+          <style>{`.mapday::-webkit-scrollbar{display:none}`}</style>
+          <div className="mapday" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",paddingBottom:2}}>
+            {[["all",lang==="he"?"הכל":lang==="es"?"Todo":"All"],...days.map((d,i)=>[d,`${lang==="he"?"יום":lang==="es"?"Día":"Day"} ${i+1}`])].map(([val,label])=>{
+              const active=dayFilter===val;
+              const has=val==="all"||placeDays.has(val);
+              return(
+                <button key={val} onClick={()=>setDayFilter(val)} disabled={!has}
+                  style={{flexShrink:0,padding:"7px 13px",borderRadius:999,border:`0.5px solid ${active?TEAL:"rgba(255,255,255,0.12)"}`,
+                    background:active?"rgba(100,223,223,0.9)":"rgba(9,25,40,0.88)",backdropFilter:"blur(14px)",
+                    color:active?"#0d2137":has?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.25)",
+                    fontFamily:RF,fontWeight:700,fontSize:12,cursor:has?"pointer":"default",whiteSpace:"nowrap"}}>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Real map ── */}
       <div style={{flex:1,position:"relative"}}>
         {dest?(
-          <MapLeaflet destination={dest} places={places} lang={lang}/>
+          <MapLeaflet destination={dest} places={places} lang={lang} dayFilter={dayFilter}/>
         ):(
           <div style={{flex:1,height:"100%",display:"flex",alignItems:"center",justifyContent:"center",padding:24,textAlign:"center",background:"#091928"}}>
             <div>
