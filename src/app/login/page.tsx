@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithCredential, sendPasswordResetEmail } from "firebase/auth";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 import { AlertCircle, Loader, Globe } from "lucide-react";
@@ -33,7 +33,29 @@ export default function LoginPage() {
   }, []);
 
   const doGoogle = async () => {
-    setBusy(true); setErrMsg("");
+    setBusy(true); setErrMsg(""); setOkMsg("");
+    // Google blocks OAuth popups inside a native WebView. In the Capacitor app
+    // use the native Google Sign-In plugin, then hand the credential to Firebase.
+    const cap = (window as any).Capacitor;
+    if (cap?.isNativePlatform?.()) {
+      try {
+        const { FirebaseAuthentication } = cap.Plugins;
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        const idToken = result?.credential?.idToken;
+        if (!idToken) throw new Error("no-id-token");
+        const credential = GoogleAuthProvider.credential(idToken);
+        await signInWithCredential(auth, credential);
+        window.location.href = "/";
+      } catch (nativeErr: any) {
+        const code = nativeErr?.code || nativeErr?.message || "";
+        if (!/cancel|canceled|closed/i.test(code)) {
+          setErrMsg(lang === "he" ? "התחברות Google נכשלה. נסו שוב או התחברו עם אימייל וסיסמה." : lang === "es" ? "Error al iniciar sesión con Google. Intenta de nuevo o usa correo y contraseña." : "Google sign-in failed. Try again or use email & password.");
+        }
+        setBusy(false);
+      }
+      return;
+    }
+    // Web browser: popup works fine
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
