@@ -3735,10 +3735,16 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                   ?<Bell size={15} color="#4ade80" strokeWidth={1.5}/>
                   :<BellOff size={15} color={W35} strokeWidth={1.5}/>}
               </button>
+              <button onClick={()=>setSideMenu(true)}
+                title={lang==="he"?"תפריט":lang==="es"?"Menú":"Menu"}
+                style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                <Menu size={15} color={W40} strokeWidth={1.5}/>
+              </button>
             </div>
           </div>
           {/* Currency Converter */}
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]}/>}
+          {sideMenu&&renderSideMenu()}
           <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates}/>
         </div>
       </>
@@ -3952,8 +3958,9 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         <style>{GS}</style>
         {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)",fontFamily:RF}}>
-          {/* Minimal top bar — back link only */}
-          <div style={{padding:"16px 20px 0",display:"flex",justifyContent:"flex-end"}}>
+          {/* Minimal top bar — back link + menu */}
+          <div style={{padding:"16px 20px 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <button onClick={()=>setSideMenu(true)} className="tap-btn" style={{background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.6)",width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><Menu size={16} strokeWidth={1.5}/></button>
             <button onClick={handleBack} style={{background:"none",border:"none",color:"rgba(100,223,223,0.7)",fontFamily:RF,fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
               {t("home_trips",lang)||"הטיולים שלי"} <ChevronRight size={14} color="rgba(100,223,223,0.7)" strokeWidth={2}/>
             </button>
