@@ -25,7 +25,11 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
-const MapLeaflet = dynamic(() => import("./MapLeaflet"), {
+// Google Maps when a key is configured, else the free Leaflet map. The env var
+// is inlined at build time so exactly one implementation ships.
+const _mapLoad = () =>
+  process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ? import("./MapGoogle") : import("./MapLeaflet");
+const MapLeaflet = dynamic(_mapLoad, {
   ssr: false,
   loading: () => (
     <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",background:"#091928"}}>
