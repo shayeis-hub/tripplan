@@ -67,10 +67,14 @@ export default function MapGoogle({ destination, places, lang }) {
   const mapEl = useRef(null);
   const mapRef = useRef(null);
   const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [errCode, setErrCode] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    if (!destination) { setStatus("error"); return; }
+    if (!destination) { setStatus("error"); setErrCode("no-destination"); return; }
+    if (!KEY) { setStatus("error"); setErrCode("no-key"); return; }
+    // Google calls this global on auth/referer/billing failures
+    window.gm_authFailure = () => { if (!cancelled) { setStatus("error"); setErrCode("auth-failure (key/referrer/billing)"); } };
 
     loadMaps().then(async (maps) => {
       if (cancelled || !mapEl.current) return;
@@ -135,7 +139,7 @@ export default function MapGoogle({ destination, places, lang }) {
           if (map.getZoom() > 15) map.setZoom(15);
         });
       }
-    }).catch(() => { if (!cancelled) setStatus("error"); });
+    }).catch((e) => { if (!cancelled) { setStatus("error"); setErrCode(e?.message || "load-failed"); } });
 
     return () => { cancelled = true; };
   }, [destination, places, lang]);
@@ -151,6 +155,9 @@ export default function MapGoogle({ destination, places, lang }) {
               ? (lang === "he" ? "לא ניתן לטעון את המפה" : lang === "es" ? "No se pudo cargar el mapa" : "Couldn't load the map")
               : (lang === "he" ? "טוען מפה…" : lang === "es" ? "Cargando mapa…" : "Loading map…")}
           </span>
+          {status === "error" && errCode && (
+            <span style={{ color: "rgba(13,33,55,0.4)", fontSize: 11, fontFamily: RF, direction: "ltr" }}>{errCode}</span>
+          )}
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
       )}
