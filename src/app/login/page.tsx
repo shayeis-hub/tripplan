@@ -47,9 +47,10 @@ export default function LoginPage() {
         await signInWithCredential(auth, credential);
         window.location.href = "/";
       } catch (nativeErr: any) {
-        const code = nativeErr?.code || nativeErr?.message || "";
+        const code = nativeErr?.code || nativeErr?.message || String(nativeErr);
         if (!/cancel|canceled|closed/i.test(code)) {
-          setErrMsg(lang === "he" ? "התחברות Google נכשלה. נסו שוב או התחברו עם אימייל וסיסמה." : lang === "es" ? "Error al iniciar sesión con Google. Intenta de nuevo o usa correo y contraseña." : "Google sign-in failed. Try again or use email & password.");
+          const base = lang === "he" ? "התחברות Google נכשלה. התחברו בינתיים עם אימייל וסיסמה." : lang === "es" ? "Error al iniciar sesión con Google. Usa correo y contraseña por ahora." : "Google sign-in failed. Use email & password for now.";
+          setErrMsg(`${base}  [${code}]`);
         }
         setBusy(false);
       }
