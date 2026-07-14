@@ -3290,6 +3290,7 @@ function MapScreen({trip,expenses,onAddActivity}){
   const[searching,setSearching]=useState(false);
   const[searchPin,setSearchPin]=useState(null); // {lat,lng,name}
   const[addPick,setAddPick]=useState(null); // {name} being added → shows day picker
+  const[addTime,setAddTime]=useState(""); // optional time for the added activity
 
   const runSearch=async()=>{
     if(!q.trim())return;
@@ -3382,10 +3383,16 @@ function MapScreen({trip,expenses,onAddActivity}){
                   </div>
                   {onAddActivity&&days.length>0&&(
                     <div>
-                      <div style={{fontSize:10,color:"rgba(100,223,223,0.6)",marginBottom:5,letterSpacing:"0.5px",textTransform:"uppercase"}}>{lang==="he"?"הוסף ליום":lang==="es"?"Añadir al día":"Add to day"}</div>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,gap:8}}>
+                        <div style={{fontSize:10,color:"rgba(100,223,223,0.6)",letterSpacing:"0.5px",textTransform:"uppercase"}}>{lang==="he"?"הוסף ליום":lang==="es"?"Añadir al día":"Add to day"}</div>
+                        <input type="time" value={addTime} onChange={e=>setAddTime(e.target.value)}
+                          onClick={e=>e.stopPropagation()}
+                          style={{background:"rgba(255,255,255,0.07)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#fff",fontFamily:RF,fontSize:12,padding:"4px 8px",outline:"none"}}
+                          title={lang==="he"?"שעה (אופציונלי)":lang==="es"?"Hora (opcional)":"Time (optional)"}/>
+                      </div>
                       <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                         {days.map((d,di)=>(
-                          <button key={d} onClick={()=>{onAddActivity(d,r.name);setAddPick(null);setResults(null);setQ("");setSearchPin(null);}}
+                          <button key={d} onClick={()=>{onAddActivity(d,r.name,addTime);setAddPick(null);setResults(null);setQ("");setSearchPin(null);setAddTime("");}}
                             style={{padding:"6px 11px",borderRadius:999,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
                             {lang==="he"?"יום":lang==="es"?"Día":"Day"} {di+1}
                           </button>
@@ -4228,7 +4235,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
               {screen==="discover"&&<DiscoverScreen trip={active}/>}
               {screen==="packing"&&<PackingListScreen trip={active} onUpdate={updTrip}/>}
-              {screen==="map"&&<MapScreen trip={active} expenses={expenses} onAddActivity={isViewOnly?null:(date,text)=>{const acts={...(active.activities||{})};const list=(acts[date]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);acts[date]=[...list,{text,time:""}];updTrip({activities:acts});}}/>}
+              {screen==="map"&&<MapScreen trip={active} expenses={expenses} onAddActivity={isViewOnly?null:(date,text,time="")=>{const acts={...(active.activities||{})};const list=(acts[date]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);acts[date]=[...list,{text,time}];updTrip({activities:acts});}}/>}
             </div>
           </div>
           <NavBar screens={tripScreens} current={screen} onNav={s=>{pushNav("screen",activeId,"trip",s);setScreen(s);}}/>
