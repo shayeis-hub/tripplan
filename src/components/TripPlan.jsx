@@ -89,6 +89,20 @@ const CATS=[
   {id:"shopping",  label:"שופינג",   icon:"🛍️", Icon:ShoppingCart,color:"#ec4899", bg:"rgba(236,72,153,0.13)"},
   {id:"other",     label:"אחר",      icon:"📦", Icon:Package,     color:"#94a3b8", bg:"rgba(148,163,184,0.13)"},
 ];
+// Country (as Google autocomplete returns it, English) → local currency code.
+const COUNTRY_CURRENCY={
+  "Israel":"ILS","United States":"USD","Canada":"CAD","Mexico":"MXN","United Kingdom":"GBP","Switzerland":"CHF",
+  "Sweden":"SEK","Norway":"NOK","Denmark":"DKK","Poland":"PLN","Hungary":"HUF","Czechia":"CZK","Czech Republic":"CZK",
+  "Romania":"RON","Bulgaria":"BGN","Turkey":"TRY","Türkiye":"TRY","Iceland":"ISK","Russia":"RUB","Ukraine":"UAH","Georgia":"GEL",
+  "France":"EUR","Germany":"EUR","Italy":"EUR","Spain":"EUR","Netherlands":"EUR","Greece":"EUR","Portugal":"EUR",
+  "Austria":"EUR","Belgium":"EUR","Ireland":"EUR","Finland":"EUR","Croatia":"EUR","Slovakia":"EUR","Slovenia":"EUR","Cyprus":"EUR","Estonia":"EUR","Latvia":"EUR","Lithuania":"EUR",
+  "Thailand":"THB","Japan":"JPY","China":"CNY","Hong Kong":"HKD","Singapore":"SGD","Malaysia":"MYR","Indonesia":"IDR",
+  "Vietnam":"VND","Philippines":"PHP","India":"INR","South Korea":"KRW","Taiwan":"TWD","Sri Lanka":"LKR","Nepal":"NPR","Cambodia":"USD","Laos":"LAK","Maldives":"MVR",
+  "United Arab Emirates":"AED","Qatar":"QAR","Saudi Arabia":"SAR","Jordan":"JOD","Egypt":"EGP","Morocco":"MAD","Bahrain":"BHD","Oman":"OMR","Kuwait":"KWD","Lebanon":"LBP",
+  "South Africa":"ZAR","Kenya":"KES","Tanzania":"TZS","Ethiopia":"ETB","Mauritius":"MUR","Seychelles":"SCR",
+  "Australia":"AUD","New Zealand":"NZD","Fiji":"FJD",
+  "Brazil":"BRL","Argentina":"ARS","Chile":"CLP","Peru":"PEN","Colombia":"COP","Uruguay":"UYU","Costa Rica":"CRC","Panama":"USD","Ecuador":"USD",
+};
 // ברירת מחדל – תמיד זמינים
 const DEFAULT_CURRENCIES=[
   {code:"ILS",label:"שקל ישראלי",symbol:"₪"},
@@ -1372,9 +1386,20 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
       setSugg((suggestions||[]).slice(0,6).map(s=>s.placePrediction?.text?.text).filter(Boolean));
     }catch{setSugg([]);}
   };
+  const[autoCur,setAutoCur]=useState(null); // local currency just auto-added
   const pickCity=(full)=>{
     const parts=full.split(",").map(x=>x.trim());
-    onUpdate({destination:full,city:parts[0]||full,country:parts[parts.length-1]||""});
+    const country=parts[parts.length-1]||"";
+    const patch={destination:full,city:parts[0]||full,country};
+    // Auto-add the local currency (keep home currency as display)
+    const local=COUNTRY_CURRENCY[country];
+    if(local&&local!==(trip.displayCurrency||"ILS")){
+      const cur=new Set([...(trip.currencies||["ILS","USD","EUR"]),local]);
+      patch.currencies=[...cur];
+      patch.defaultCurrency=local; // new expenses default to the local currency
+      setAutoCur(local);
+    }else setAutoCur(null);
+    onUpdate(patch);
     setCityQ(full);setSugg([]);
   };
   const copyShare=()=>{
@@ -1432,6 +1457,12 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
               <div style={{padding:"12px 16px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:12,textAlign:"center"}}>
                 <span style={{fontFamily:RF,fontSize:24,fontWeight:800,color:TEAL}}>{nights}</span>
                 <span style={{fontSize:14,fontWeight:600,color:W70,marginRight:6}}>{t("days",lang)}</span>
+              </div>
+            )}
+            {autoCur&&(
+              <div style={{marginTop:12,padding:"10px 14px",background:"rgba(74,222,128,0.08)",border:"0.5px solid rgba(74,222,128,0.3)",borderRadius:12,fontSize:12,color:"#4ade80",fontFamily:RF,display:"flex",alignItems:"center",gap:8}}>
+                <Check size={14} color="#4ade80"/>
+                {lang==="he"?`נוסף מטבע מקומי: ${getCurrSymbol(autoCur)} ${autoCur}`:lang==="es"?`Moneda local añadida: ${getCurrSymbol(autoCur)} ${autoCur}`:`Local currency added: ${getCurrSymbol(autoCur)} ${autoCur}`}
               </div>
             )}
           </>
