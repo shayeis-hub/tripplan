@@ -1353,7 +1353,170 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
   );
 }
 
-function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
+// ── New-trip wizard: 3 light steps (where → money → who) ──
+function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,newName,setNewName,addPerson,removePerson,valid,lang}){
+  const[step,setStep]=useState(1);
+  const[cityQ,setCityQ]=useState(trip.destination||"");
+  const[sugg,setSugg]=useState([]);
+  const[copied,setCopied]=useState(false);
+  const nights=trip.startDate&&trip.endDate&&new Date(trip.endDate)>=new Date(trip.startDate)
+    ?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
+
+  const cityInput=async(v)=>{
+    setCityQ(v);onUpdate({destination:v});
+    if(v.trim().length<2){setSugg([]);return;}
+    try{
+      const maps=await loadGoogleMaps();
+      const{AutocompleteSuggestion}=await maps.importLibrary("places");
+      const{suggestions}=await AutocompleteSuggestion.fetchAutocompleteSuggestions({input:v,includedPrimaryTypes:["(cities)"]});
+      setSugg((suggestions||[]).slice(0,6).map(s=>s.placePrediction?.text?.text).filter(Boolean));
+    }catch{setSugg([]);}
+  };
+  const pickCity=(full)=>{
+    const parts=full.split(",").map(x=>x.trim());
+    onUpdate({destination:full,city:parts[0]||full,country:parts[parts.length-1]||""});
+    setCityQ(full);setSugg([]);
+  };
+  const copyShare=()=>{
+    navigator.clipboard.writeText(`https://tulon.app/trip/${trip.shareId||trip.id}`);
+    setCopied(true);setTimeout(()=>setCopied(false),2000);
+  };
+
+  const step1Valid=trip.destination&&trip.startDate&&trip.endDate&&new Date(trip.endDate)>=new Date(trip.startDate);
+  const inp={width:"100%",padding:"13px 16px",borderRadius:14,border:"0.5px solid rgba(100,223,223,0.25)",fontFamily:RF,fontSize:15,color:"#fff",background:W07,outline:"none",boxSizing:"border-box"};
+  const lbl={display:"block",fontSize:12,fontWeight:600,color:W40,marginBottom:7,letterSpacing:"0.4px"};
+
+  return(
+    <div style={{minHeight:"70vh",display:"flex",flexDirection:"column"}}>
+      {/* Progress */}
+      <div style={{padding:"22px 22px 8px"}}>
+        <div style={{display:"flex",gap:6,marginBottom:12}}>
+          {[1,2,3].map(s=>(
+            <div key={s} style={{flex:1,height:5,borderRadius:999,background:s<=step?TEAL:"rgba(255,255,255,0.1)",transition:"background 0.3s"}}/>
+          ))}
+        </div>
+        <div style={{fontSize:12,color:W40,fontFamily:RF}}>{t("wiz_step",lang)} {step} {t("wiz_of",lang)} 3</div>
+      </div>
+
+      <div style={{flex:1,padding:"8px 22px 20px"}}>
+        {/* ── STEP 1: Where ── */}
+        {step===1&&(
+          <>
+            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",marginBottom:4}}>{t("wiz_where",lang)}</h2>
+            <p style={{fontSize:13,color:W35,marginBottom:22}}>{t("wiz_where_sub",lang)}</p>
+            <div style={{position:"relative",marginBottom:16}}>
+              <label style={lbl}>{t("wiz_city",lang)}</label>
+              <input value={cityQ} onChange={e=>cityInput(e.target.value)} placeholder={t("wiz_city_ph",lang)} style={inp} autoFocus/>
+              {sugg.length>0&&(
+                <div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:50,marginTop:4,background:"#0a2035",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:12,overflow:"hidden",boxShadow:"0 12px 40px rgba(0,0,0,0.5)"}}>
+                  {sugg.map((s,i)=>(
+                    <div key={i} onClick={()=>pickCity(s)} style={{padding:"11px 15px",cursor:"pointer",fontSize:14,color:"#fff",fontFamily:RF,borderBottom:i<sugg.length-1?"0.5px solid rgba(255,255,255,0.06)":"none"}}
+                      onMouseEnter={e=>e.currentTarget.style.background="rgba(100,223,223,0.08)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      📍 {s}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div style={{display:"flex",gap:10,marginBottom:16}}>
+              <div style={{flex:1}}>
+                <label style={lbl}>{t("dest_depart",lang)}</label>
+                <input type="date" value={trip.startDate} onChange={e=>onUpdate({startDate:e.target.value})} style={inp}/>
+              </div>
+              <div style={{flex:1}}>
+                <label style={lbl}>{t("dest_return",lang)}</label>
+                <input type="date" value={trip.endDate} min={trip.startDate} onChange={e=>onUpdate({endDate:e.target.value})} style={inp}/>
+              </div>
+            </div>
+            {nights>0&&(
+              <div style={{padding:"12px 16px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:12,textAlign:"center"}}>
+                <span style={{fontFamily:RF,fontSize:24,fontWeight:800,color:TEAL}}>{nights}</span>
+                <span style={{fontSize:14,fontWeight:600,color:W70,marginRight:6}}>{t("days",lang)}</span>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── STEP 2: Money ── */}
+        {step===2&&(
+          <>
+            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",marginBottom:4}}>{t("wiz_money",lang)}</h2>
+            <p style={{fontSize:13,color:W35,marginBottom:20}}>{t("wiz_money_sub",lang)}</p>
+            <div style={{marginBottom:14}}>
+              <label style={lbl}>{lang==="he"?"מטבע תצוגה":lang==="es"?"Moneda de visualización":"Display currency"}</label>
+              <div style={{display:"flex",gap:8}}>
+                {[{code:"ILS",l:"₪ שקל",le:"₪ ILS"},{code:"USD",l:"$ דולר",le:"$ USD"},{code:"EUR",l:"€ יורו",le:"€ EUR"}].map(({code,l,le})=>{
+                  const active=(trip.displayCurrency||"ILS")===code;
+                  return(<button key={code} onClick={()=>onUpdate({displayCurrency:code})} style={{flex:1,padding:"11px 6px",borderRadius:12,border:`1.5px solid ${active?TEAL:"rgba(100,223,223,0.2)"}`,background:active?"rgba(100,223,223,0.15)":"rgba(255,255,255,0.03)",color:active?TEAL:W35,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{lang==="he"?l:le}</button>);
+                })}
+              </div>
+            </div>
+            <div style={{marginBottom:14}}><CurrencyManager trip={trip} onUpdate={onUpdate} allCodes={allCodes} rates={rates}/></div>
+            <div>
+              <label style={lbl}>{t("dest_budget",lang)}</label>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <input type="number" value={trip.budget||""} onChange={e=>onUpdate({budget:e.target.value?parseFloat(e.target.value):null})} placeholder={t("dest_budget_ph",lang)} style={{...inp,direction:"ltr"}}/>
+                <span style={{color:W50,fontFamily:RF,fontSize:15,flexShrink:0}}>{symFor(trip.displayCurrency||"ILS")}</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── STEP 3: Who ── */}
+        {step===3&&(
+          <>
+            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",marginBottom:4}}>{t("wiz_who",lang)}</h2>
+            <p style={{fontSize:13,color:W35,marginBottom:20}}>{t("wiz_who_sub",lang)}</p>
+            <div style={{display:"flex",gap:8,marginBottom:12}}>
+              <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder={t("dest_people_ph",lang)} onKeyDown={e=>e.key==="Enter"&&addPerson()} style={inp}/>
+              <button onClick={addPerson} style={{padding:"11px 16px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,cursor:"pointer",display:"flex",alignItems:"center"}}><Plus size={16} color={DARK_BG} strokeWidth={2.5}/></button>
+            </div>
+            {people.length>0&&(
+              <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:18}}>
+                {people.map(p=>(
+                  <div key={p.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:14,background:p.color+"15",border:`0.5px solid ${p.color}40`}}>
+                    <span style={{fontSize:13,fontWeight:700,color:"#fff"}}>{p.name}</span>
+                    <button onClick={()=>removePerson(p.id)} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex"}}><X size={13} color={W35}/></button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{display:"flex",gap:8,marginTop:6}}>
+              <button onClick={copyShare} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+                {copied?<><Check size={14}/> {t("copy_link",lang)}</>:<><Copy size={14}/> {t("wiz_copy_share",lang)}</>}
+              </button>
+              {onShare&&(
+                <button onClick={onShare} style={{flex:1,padding:"12px",borderRadius:12,border:"none",background:"#25D366",color:"#fff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+                  <Share2 size={14}/> {t("wiz_share",lang)}
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Footer nav */}
+      <div style={{padding:"14px 22px 26px",borderTop:"0.5px solid rgba(255,255,255,0.06)",display:"flex",gap:10,alignItems:"center"}}>
+        {step>1&&(
+          <button onClick={()=>setStep(step-1)} style={{padding:"14px 20px",borderRadius:14,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.04)",color:W50,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer"}}>{t("wiz_back",lang)}</button>
+        )}
+        {step<3&&step>1&&(
+          <button onClick={()=>setStep(step+1)} style={{padding:"14px 16px",borderRadius:14,border:"none",background:"transparent",color:W40,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer"}}>{t("wiz_skip",lang)}</button>
+        )}
+        <div style={{flex:1}}/>
+        {step<3?(
+          <button onClick={()=>setStep(step+1)} disabled={step===1&&!step1Valid}
+            style={{padding:"14px 28px",borderRadius:14,border:"none",background:(step===1&&!step1Valid)?"rgba(100,223,223,0.25)":TEAL,color:DARK_BG,fontFamily:RF,fontWeight:800,fontSize:15,cursor:(step===1&&!step1Valid)?"default":"pointer"}}>{t("wiz_next",lang)} →</button>
+        ):(
+          <button onClick={onFinish} disabled={!valid}
+            style={{padding:"14px 24px",borderRadius:14,border:"none",background:valid?TEAL:"rgba(100,223,223,0.25)",color:DARK_BG,fontFamily:RF,fontWeight:800,fontSize:15,cursor:valid?"pointer":"default"}}>{t("wiz_finish",lang)} ✓</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare}){
   const{lang}=useLang();
   const valid=trip.destination&&trip.startDate&&trip.endDate&&new Date(trip.endDate)>=new Date(trip.startDate);
   const people=trip.people||[];
@@ -1366,6 +1529,9 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
     setNewName("");
   };
   const removePerson=id=>onUpdate({people:people.filter(p=>p.id!==id)});
+
+  if(wizard) return <NewTripWizard trip={trip} onUpdate={onUpdate} onFinish={onNext} allCodes={allCodes} rates={rates} onShare={onShare}
+    people={people} newName={newName} setNewName={setNewName} addPerson={addPerson} removePerson={removePerson} valid={valid} lang={lang}/>;
 
   return(
     <div>
@@ -3572,6 +3738,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[inspireLink,setInspireLink]=useState(null);
   const[inspireSaving,setInspireSaving]=useState(false);
   const[showConverter,setShowConverter]=useState(false);
+  const[wizardMode,setWizardMode]=useState(false); // new-trip wizard vs settings edit
   const[expensePrefill,setExpensePrefill]=useState(null); // from map "add as expense"
   const[convAmount,setConvAmount]=useState("");
   const[convFrom,setConvFrom]=useState("USD");
@@ -3789,6 +3956,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     setActiveId(t.id);
     setSection("budget");
     setScreen("destination");
+    setWizardMode(true); // new trip → stepped wizard
   };
 
   const handleSelect=id=>{
@@ -4232,13 +4400,13 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             {/* Trip settings button */}
             {screen!=="destination"&&(
               <div style={{padding:"12px 14px 0"}}>
-                <button onClick={()=>{pushNav("screen",activeId,"budget","destination");setScreen("destination");}} style={{width:"100%",padding:"12px 16px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(100,223,223,0.06)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                <button onClick={()=>{setWizardMode(false);pushNav("screen",activeId,"budget","destination");setScreen("destination");}} style={{width:"100%",padding:"12px 16px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(100,223,223,0.06)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
                   <Settings size={15} color={TEAL} strokeWidth={1.5}/> {lang==="he"?"הגדרות טיול":lang==="es"?"Ajustes del viaje":"Trip Settings"}
                 </button>
               </div>
             )}
             <div key={screen} className="screen-enter">
-              {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
+              {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>{setWizardMode(false);setScreen("expenses");}} allCodes={allCodes} rates={rates} wizard={wizardMode} onShare={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}}/>}
               {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)}/>}
               {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates}/>}
             </div>

@@ -242,6 +242,24 @@ export const translations = {
   cam_cancel:       { he: "ביטול",                     en: "Cancel",               es: "Cancelar" },
   cam_denied:       { he: "אין גישה למצלמה — פותח מצלמת המכשיר", en: "No camera access — opening device camera", es: "Sin acceso a cámara — abriendo cámara del dispositivo" },
 
+  // ── New-trip wizard ───────────────────────────────────
+  wiz_step:         { he: "שלב",           en: "Step",        es: "Paso" },
+  wiz_of:           { he: "מתוך",          en: "of",          es: "de" },
+  wiz_where:        { he: "לאן טסים?",     en: "Where to?",   es: "¿A dónde?" },
+  wiz_where_sub:    { he: "בחרו יעד ותאריכים",          en: "Pick a destination and dates", es: "Elige destino y fechas" },
+  wiz_city:         { he: "עיר",           en: "City",        es: "Ciudad" },
+  wiz_city_ph:      { he: "הקלידו עיר…",   en: "Type a city…", es: "Escribe una ciudad…" },
+  wiz_money:        { he: "מטבע ותקציב",   en: "Money & budget", es: "Moneda y presupuesto" },
+  wiz_money_sub:    { he: "אפשר להשלים גם אחר כך",       en: "You can add this later too", es: "Puedes añadirlo más tarde" },
+  wiz_who:          { he: "מי מגיע?",      en: "Who's coming?", es: "¿Quién viene?" },
+  wiz_who_sub:      { he: "משתתפים לחלוקת הוצאות + שיתוף", en: "Members for splitting expenses + sharing", es: "Miembros para dividir gastos + compartir" },
+  wiz_back:         { he: "חזרה",          en: "Back",        es: "Atrás" },
+  wiz_next:         { he: "המשך",          en: "Continue",    es: "Continuar" },
+  wiz_skip:         { he: "אוסיף אחר כך",  en: "I'll add later", es: "Lo añado luego" },
+  wiz_finish:       { he: "סיום ויצירת הטיול", en: "Finish & create trip", es: "Finalizar y crear viaje" },
+  wiz_copy_share:   { he: "העתק קישור שיתוף", en: "Copy share link", es: "Copiar enlace" },
+  wiz_share:        { he: "שתף טיול",      en: "Share trip",  es: "Compartir viaje" },
+
   // ── Map route ─────────────────────────────────────────
   map_route:        { he: "מסלול היום",   en: "Day route",   es: "Ruta del día" },
   map_route_clear:  { he: "נקה מסלול",    en: "Clear route", es: "Borrar ruta" },
