@@ -1454,7 +1454,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates}){
 
 const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:defaultTripDate(dates),checkIn:defaultTripDate(dates),checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",isShared:true,participants:people.map(p=>p.id),payers:[]});
 
-function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo}){
+function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo,prefill,onPrefillDone}){
   const{lang}=useLang();
   const dates=getRange(trip.startDate,trip.endDate);
   const people=trip.people||[];
@@ -1462,6 +1462,15 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const[form,setForm]=useState(()=>mkForm(dates,trip.defaultCurrency,trip.people||[]));
   const[show,setShow]=useState(false);
   const[editId,setEditId]=useState(null); // expense being edited
+
+  // Open a fresh form pre-filled from the map ("add as expense")
+  useEffect(()=>{
+    if(!prefill)return;
+    setForm({...mkForm(dates,trip.defaultCurrency,people),date:defaultTripDate(dates),checkIn:defaultTripDate(dates),category:prefill.category||"other",description:prefill.description||"",address:prefill.address||""});
+    setEditId(null);setShow(true);
+    onPrefillDone&&onPrefillDone();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[prefill]);
   // search & filter
   const[search,setSearch]=useState("");
   const[filterCat,setFilterCat]=useState("all");
@@ -3281,7 +3290,7 @@ function PackingListScreen({trip,onUpdate}){
 // ── MAP SCREEN ────────────────────────────────────────────────────────────────
 const MAP_PIN_COLORS={"flight":TEAL,"hotel":"#818cf8","attraction":"#f472b6","food":"#fbbf24","taxi":"#4ade80","other":"#94a3b8"};
 
-function MapScreen({trip,expenses,onAddActivity}){
+function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
   const{lang}=useLang();
   const dest=trip.destination||"";
   const dc=trip.displayCurrency||"ILS";
@@ -3380,6 +3389,12 @@ function MapScreen({trip,expenses,onAddActivity}){
                       style={{flex:1,textAlign:"center",padding:"8px",borderRadius:9,background:"rgba(66,133,244,0.9)",color:"#fff",fontFamily:RF,fontWeight:700,fontSize:12,textDecoration:"none"}}>
                       {lang==="he"?"ניווט ↗":lang==="es"?"Ir ↗":"Navigate ↗"}
                     </a>
+                    {onAddExpense&&(
+                      <button onClick={()=>onAddExpense({name:r.name,address:r.address})}
+                        style={{flex:1,padding:"8px",borderRadius:9,border:"none",background:"rgba(251,191,36,0.9)",color:"#0d2137",fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
+                        {lang==="he"?"➕ הוסף כהוצאה":lang==="es"?"➕ Añadir gasto":"➕ Add as expense"}
+                      </button>
+                    )}
                   </div>
                   {onAddActivity&&days.length>0&&(
                     <div>
@@ -3531,6 +3546,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[inspireLink,setInspireLink]=useState(null);
   const[inspireSaving,setInspireSaving]=useState(false);
   const[showConverter,setShowConverter]=useState(false);
+  const[expensePrefill,setExpensePrefill]=useState(null); // from map "add as expense"
   const[convAmount,setConvAmount]=useState("");
   const[convFrom,setConvFrom]=useState("USD");
   const[convTo,setConvTo]=useState("ILS");
@@ -4197,7 +4213,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             )}
             <div key={screen} className="screen-enter">
               {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>setScreen("expenses")} allCodes={allCodes} rates={rates}/>}
-              {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info}/>}
+              {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)}/>}
               {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates}/>}
             </div>
           </div>
@@ -4235,7 +4251,9 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
               {screen==="discover"&&<DiscoverScreen trip={active}/>}
               {screen==="packing"&&<PackingListScreen trip={active} onUpdate={updTrip}/>}
-              {screen==="map"&&<MapScreen trip={active} expenses={expenses} onAddActivity={isViewOnly?null:(date,text,time="")=>{const acts={...(active.activities||{})};const list=(acts[date]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);acts[date]=[...list,{text,time}];updTrip({activities:acts});}}/>}
+              {screen==="map"&&<MapScreen trip={active} expenses={expenses}
+                onAddActivity={isViewOnly?null:(date,text,time="")=>{const acts={...(active.activities||{})};const list=(acts[date]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);acts[date]=[...list,{text,time}];updTrip({activities:acts});}}
+                onAddExpense={isViewOnly?null:(place)=>{setExpensePrefill({description:place.name,address:place.address,category:place.category||"other"});pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}/>}
             </div>
           </div>
           <NavBar screens={tripScreens} current={screen} onNav={s=>{pushNav("screen",activeId,"trip",s);setScreen(s);}}/>
