@@ -2763,7 +2763,30 @@ function DiscoverScreen({trip}){
   const[recsLoading,setRecsLoading]=useState(false);
   const[recsErr,setRecsErr]=useState(false);
   const[kosher,setKosher]=useState(false);
+  const[attractions,setAttractions]=useState(null); // real Places attractions
+  const[attrLoading,setAttrLoading]=useState(false);
   const prevDestLangRef=useRef("");
+
+  // Top attractions from the real Places API (rated), not AI.
+  const fetchAttractions=useCallback(async()=>{
+    if(!trip.destination)return;
+    setAttrLoading(true);setAttractions(null);
+    try{
+      const maps=await loadGoogleMaps();
+      const{Place}=await maps.importLibrary("places");
+      const{places:found}=await Place.searchByText({
+        textQuery:`top tourist attractions in ${trip.destination}`,
+        fields:["displayName","formattedAddress","rating","userRatingCount"],
+        maxResultCount:8,
+      });
+      setAttractions((found||[]).map(p=>({
+        name:p.displayName,
+        description:p.formattedAddress||"",
+        rating:p.rating,ratingCount:p.userRatingCount,
+      })));
+    }catch{setAttractions([]);}
+    finally{setAttrLoading(false);}
+  },[trip.destination]);
 
   const loadRecs=useCallback(async(kosherFlag=false)=>{
     if(!trip.destination)return;
@@ -2815,10 +2838,11 @@ function DiscoverScreen({trip}){
     const key=trip.destination;
     if(key!==prevDestLangRef.current){
       prevDestLangRef.current=key;
-      setKosher(false);        // new destination → fresh AI recs
+      setKosher(false);        // new destination → fresh recs
       loadRecs(false);
+      fetchAttractions();
     }
-  },[trip.destination,loadRecs]);
+  },[trip.destination,loadRecs,fetchAttractions]);
 
   const open=url=>window.open(url,"_blank");
 
@@ -2891,13 +2915,31 @@ function DiscoverScreen({trip}){
               <div style={{flexShrink:0,width:32,height:32,borderRadius:10,background:"rgba(100,223,223,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><Globe size={18} color={TEAL} strokeWidth={1.5}/></div>
             </button>
 
-            {/* ── AI Recommendations ── */}
+            {/* ── Top attractions (real Places data) ── */}
+            <Card>
+              <h2 style={{fontFamily:RF,fontSize:15,fontWeight:700,marginBottom:12,color:"#ffffff"}}>{t("disc_attractions",lang)}</h2>
+              {attrLoading&&<div style={{fontSize:12,color:W40,padding:"6px 2px"}}>{lang==="he"?"טוען אטרקציות מובילות…":lang==="es"?"Cargando atracciones…":"Loading top attractions…"}</div>}
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {(attractions||[]).map((a,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,background:W05}}>
+                    <div style={{width:36,height:36,borderRadius:10,background:"rgba(244,114,182,0.13)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Ticket size={18} color="#f472b6" strokeWidth={1.5}/></div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.name}</div>
+                      <div style={{fontSize:11,color:W35,marginTop:2,lineHeight:1.4}}>{a.rating?`⭐ ${a.rating} · ${a.ratingCount||0} ${lang==="he"?"ביקורות":lang==="es"?"reseñas":"reviews"}`:a.description}</div>
+                    </div>
+                    <button onClick={()=>open(mapsUrl(a.name))}
+                      style={{background:"rgba(66,153,225,0.15)",border:"0.5px solid rgba(66,153,225,0.4)",borderRadius:8,padding:"5px 9px",cursor:"pointer",fontSize:11,color:"#63b3ed",fontFamily:RF,flexShrink:0,whiteSpace:"nowrap"}}>
+                      {t("disc_maps",lang)}
+                    </button>
+                  </div>
+                ))}
+                {!attrLoading&&attractions&&attractions.length===0&&<div style={{fontSize:12,color:W40,padding:"6px 2px"}}>{lang==="he"?"לא נמצאו אטרקציות":lang==="es"?"Sin atracciones":"No attractions found"}</div>}
+              </div>
+            </Card>
+
+            {/* ── AI recommendations (restaurants + tip) ── */}
             {recsLoading&&(
               <>
-                <Card>
-                  <div className="skeleton" style={{height:13,width:"45%",marginBottom:14,borderRadius:6}}/>
-                  <SkeletonRec/>
-                </Card>
                 <Card>
                   <div className="skeleton" style={{height:13,width:"40%",marginBottom:14,borderRadius:6}}/>
                   <SkeletonRec/>
@@ -2921,26 +2963,6 @@ function DiscoverScreen({trip}){
             )}
             {recs&&!recsLoading&&(
               <>
-                {/* Attractions */}
-                <Card>
-                  <h2 style={{fontFamily:RF,fontSize:15,fontWeight:700,marginBottom:12,color:"#ffffff"}}>{t("disc_attractions",lang)}</h2>
-                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {(recs.attractions||[]).map((a,i)=>(
-                      <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,background:W05}}>
-                        <div style={{width:36,height:36,borderRadius:10,background:"rgba(244,114,182,0.13)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Ticket size={18} color="#f472b6" strokeWidth={1.5}/></div>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.name}</div>
-                          <div style={{fontSize:11,color:W35,marginTop:2,lineHeight:1.4}}>{a.description}</div>
-                        </div>
-                        <button onClick={()=>open(mapsUrl(a.name))}
-                          style={{background:"rgba(66,153,225,0.15)",border:"0.5px solid rgba(66,153,225,0.4)",borderRadius:8,padding:"5px 9px",cursor:"pointer",fontSize:11,color:"#63b3ed",fontFamily:RF,flexShrink:0,whiteSpace:"nowrap"}}>
-                          {t("disc_maps",lang)}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-
                 {/* Restaurants */}
                 <Card>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,gap:8}}>
