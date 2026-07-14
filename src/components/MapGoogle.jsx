@@ -94,6 +94,7 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
   const clustererRef = useRef(null);
   const taggedRef = useRef([]); // [{ marker, date, coords }]
   const searchMarkerRef = useRef(null);
+  const searchInfoRef = useRef(null);
   const dirRendererRef = useRef(null);
   const [status, setStatus] = useState("loading");
   const [errCode, setErrCode] = useState("");
@@ -207,10 +208,11 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
     return () => { cancelled = true; };
   }, [destination, places, lang]);
 
-  // Drop / move a highlighted marker for a searched place and pan to it
+  // Drop / move a highlighted marker for a searched place, label it, and pan to it
   useEffect(() => {
     const maps = mapsRef.current, map = mapObjRef.current;
     if (!maps || !map || status !== "ready") return;
+    if (searchInfoRef.current) { searchInfoRef.current.close(); searchInfoRef.current = null; }
     if (searchMarkerRef.current) { searchMarkerRef.current.setMap(null); searchMarkerRef.current = null; }
     if (!searchPin) return;
     const pos = { lat: searchPin.lat, lng: searchPin.lng };
@@ -218,6 +220,11 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
       position: pos, map, title: searchPin.name, zIndex: 1500,
       icon: pinIcon(maps, "#ef4444"), animation: maps.Animation.DROP,
     });
+    // Name label so it's clear what the new pin is
+    searchInfoRef.current = new maps.InfoWindow({
+      content: `<div style="font-family:${RF};font-weight:700;font-size:13px;color:#0d2137;padding:1px 2px">📍 ${searchPin.name || ""}</div>`,
+    });
+    searchInfoRef.current.open(map, searchMarkerRef.current);
     map.panTo(pos);
     if (map.getZoom() < 13) map.setZoom(15);
   }, [searchPin, status]);

@@ -3339,7 +3339,7 @@ function MapScreen({trip,expenses,onAddActivity}){
   const canRoute=dayPlaceCount>=2;
 
   return(
-    <div style={{height:"100vh",background:"#0d2137",display:"flex",flexDirection:"column",fontFamily:RF,position:"relative",overflow:"hidden"}}>
+    <div style={{height:"100%",background:"#0d2137",display:"flex",flexDirection:"column",fontFamily:RF,position:"relative",overflow:"hidden"}}>
 
       {/* ── Floating top bar: search ── */}
       <div style={{position:"absolute",top:16,left:16,right:16,zIndex:1000,display:"flex",gap:10,alignItems:"stretch"}}>
@@ -4213,7 +4213,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       <>
         <style>{GS}</style>
         {joinBanner}
-        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
+        <div style={{maxWidth:480,margin:"0 auto",height:"100dvh",overflow:"hidden",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             <button onClick={handleHome} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><MapPin size={16} strokeWidth={1.5}/></button>
@@ -4230,8 +4230,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
           {sideMenu&&renderSideMenu()}
-          <div style={{flex:1,overflowY:"auto"}}>
-            <div key={screen} className="screen-enter">
+          <div style={{flex:1,overflowY:screen==="map"?"hidden":"auto",position:"relative",minHeight:0}}>
+            <div key={screen} className="screen-enter" style={screen==="map"?{height:"100%"}:undefined}>
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
               {screen==="discover"&&<DiscoverScreen trip={active}/>}
               {screen==="packing"&&<PackingListScreen trip={active} onUpdate={updTrip}/>}
