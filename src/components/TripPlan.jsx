@@ -2804,45 +2804,41 @@ function DiscoverScreen({trip}){
     finally{setRecsLoading(false);}
   },[trip.destination]);
 
-  // Kosher restaurants come from the REAL Places API (AI under-reports them).
-  const[kosherLoading,setKosherLoading]=useState(false);
-  const fetchKosherRestaurants=useCallback(async()=>{
+  // Restaurants come from the REAL Places API — kosher toggle just changes the query.
+  const[restaurants,setRestaurants]=useState(null);
+  const[restLoading,setRestLoading]=useState(false);
+  const fetchRestaurants=useCallback(async(kosherFlag=false)=>{
     if(!trip.destination)return;
-    setKosherLoading(true);
+    setRestLoading(true);setRestaurants(null);
     try{
       const maps=await loadGoogleMaps();
       const{Place}=await maps.importLibrary("places");
       const{places:found}=await Place.searchByText({
-        textQuery:`kosher restaurant in ${trip.destination}`,
+        textQuery:`${kosherFlag?"kosher restaurant":"best restaurants"} in ${trip.destination}`,
         fields:["displayName","formattedAddress","rating","userRatingCount"],
         maxResultCount:10,
       });
-      const list=(found||[]).map(p=>({
+      setRestaurants((found||[]).map(p=>({
         name:p.displayName,
         description:p.formattedAddress||"",
-        cuisine:p.rating?`⭐ ${p.rating} (${p.userRatingCount||0})`:"",
-        real:true,
-      }));
-      setRecs(r=>({...(r||{attractions:[],tip:null}),restaurants:list}));
-    }catch{setRecs(r=>({...(r||{attractions:[],tip:null}),restaurants:[]}));}
-    finally{setKosherLoading(false);}
+        rating:p.rating,ratingCount:p.userRatingCount,
+      })));
+    }catch{setRestaurants([]);}
+    finally{setRestLoading(false);}
   },[trip.destination]);
 
-  const toggleKosher=()=>{
-    const next=!kosher;setKosher(next);
-    if(next)fetchKosherRestaurants();   // real Google data
-    else loadRecs(false);               // back to AI recommendations
-  };
+  const toggleKosher=()=>{const next=!kosher;setKosher(next);fetchRestaurants(next);};
 
   useEffect(()=>{
     const key=trip.destination;
     if(key!==prevDestLangRef.current){
       prevDestLangRef.current=key;
-      setKosher(false);        // new destination → fresh recs
-      loadRecs(false);
+      setKosher(false);        // new destination → fresh data
+      loadRecs(false);         // AI: local tip only
       fetchAttractions();
+      fetchRestaurants(false);
     }
-  },[trip.destination,loadRecs,fetchAttractions]);
+  },[trip.destination,loadRecs,fetchAttractions,fetchRestaurants]);
 
   const open=url=>window.open(url,"_blank");
 
@@ -2939,86 +2935,70 @@ function DiscoverScreen({trip}){
 
             {/* ── AI recommendations (restaurants + tip) ── */}
             {recsLoading&&(
-              <>
-                <Card>
-                  <div className="skeleton" style={{height:13,width:"40%",marginBottom:14,borderRadius:6}}/>
-                  <SkeletonRec/>
-                </Card>
-                <div style={{background:"rgba(246,173,85,0.06)",border:"0.5px solid rgba(246,173,85,0.15)",borderRadius:14,padding:"14px 16px",display:"flex",gap:12,alignItems:"center"}}>
-                  <div className="skeleton" style={{width:36,height:36,borderRadius:10,flexShrink:0}}/>
-                  <div style={{flex:1,display:"flex",flexDirection:"column",gap:6}}>
-                    <div className="skeleton" style={{height:11,width:"35%"}}/>
-                    <div className="skeleton" style={{height:9,width:"70%"}}/>
-                  </div>
+              <div style={{background:"rgba(246,173,85,0.06)",border:"0.5px solid rgba(246,173,85,0.15)",borderRadius:14,padding:"14px 16px",display:"flex",gap:12,alignItems:"center"}}>
+                <div className="skeleton" style={{width:36,height:36,borderRadius:10,flexShrink:0}}/>
+                <div style={{flex:1,display:"flex",flexDirection:"column",gap:6}}>
+                  <div className="skeleton" style={{height:11,width:"35%"}}/>
+                  <div className="skeleton" style={{height:9,width:"70%"}}/>
                 </div>
-              </>
-            )}
-            {recsErr&&!recsLoading&&(
-              <div style={{textAlign:"center",padding:"24px 0",color:W35}}>
-                <div style={{fontSize:13,marginBottom:10}}>{t("disc_load_err",lang)}</div>
-                <button onClick={loadRecs} style={{background:TEAL,color:"#fff",border:"none",borderRadius:10,padding:"8px 18px",fontSize:13,cursor:"pointer",fontFamily:RF}}>
-                  {t("disc_retry",lang)}
-                </button>
               </div>
             )}
-            {recs&&!recsLoading&&(
-              <>
-                {/* Restaurants */}
-                <Card>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,gap:8}}>
-                    <h2 style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{t("disc_restaurants",lang)}</h2>
-                    <button onClick={toggleKosher}
-                      style={{display:"flex",alignItems:"center",gap:6,padding:"5px 11px",borderRadius:999,cursor:"pointer",fontFamily:RF,fontWeight:700,fontSize:12,
-                        border:`0.5px solid ${kosher?"rgba(74,222,128,0.5)":"rgba(255,255,255,0.15)"}`,
-                        background:kosher?"rgba(74,222,128,0.12)":"rgba(255,255,255,0.04)",
-                        color:kosher?"#4ade80":"rgba(255,255,255,0.5)"}}>
-                      <span style={{width:15,height:15,borderRadius:4,border:`1.5px solid ${kosher?"#4ade80":"rgba(255,255,255,0.3)"}`,background:kosher?"#4ade80":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                        {kosher&&<Check size={11} color="#0d2137" strokeWidth={3}/>}
-                      </span>
-                      {lang==="he"?"כשר":lang==="es"?"Kosher":"Kosher"}
+            {/* ── Restaurants (real Places data) ── */}
+            <Card>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,gap:8}}>
+                <h2 style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{t("disc_restaurants",lang)}</h2>
+                <button onClick={toggleKosher}
+                  style={{display:"flex",alignItems:"center",gap:6,padding:"5px 11px",borderRadius:999,cursor:"pointer",fontFamily:RF,fontWeight:700,fontSize:12,
+                    border:`0.5px solid ${kosher?"rgba(74,222,128,0.5)":"rgba(255,255,255,0.15)"}`,
+                    background:kosher?"rgba(74,222,128,0.12)":"rgba(255,255,255,0.04)",
+                    color:kosher?"#4ade80":"rgba(255,255,255,0.5)"}}>
+                  <span style={{width:15,height:15,borderRadius:4,border:`1.5px solid ${kosher?"#4ade80":"rgba(255,255,255,0.3)"}`,background:kosher?"#4ade80":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    {kosher&&<Check size={11} color="#0d2137" strokeWidth={3}/>}
+                  </span>
+                  {lang==="he"?"כשר":lang==="es"?"Kosher":"Kosher"}
+                </button>
+              </div>
+              {kosher&&(
+                <div style={{fontSize:11,color:"rgba(74,222,128,0.7)",marginBottom:10,lineHeight:1.5}}>
+                  {lang==="he"?"✓ מסעדות כשרות מ-Google — תמיד כדאי לוודא רמת כשרות מול בית חב\"ד":lang==="es"?"✓ Restaurantes kosher de Google — verifica el nivel con la Casa Jabad":"✓ Kosher restaurants from Google — verify the level with the local Chabad"}
+                </div>
+              )}
+              {restLoading&&(
+                <div style={{fontSize:12,color:W40,padding:"6px 2px"}}>{lang==="he"?(kosher?"מחפש מסעדות כשרות…":"טוען מסעדות…"):kosher?"Searching kosher…":"Loading restaurants…"}</div>
+              )}
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {!restLoading&&(restaurants||[]).map((r,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,background:W05}}>
+                    <div style={{width:36,height:36,borderRadius:10,background:"rgba(251,191,36,0.13)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Utensils size={18} color="#fbbf24" strokeWidth={1.5}/></div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.name}</div>
+                      <div style={{fontSize:11,color:W35,marginTop:2,lineHeight:1.4}}>{r.rating?`⭐ ${r.rating} · ${r.ratingCount||0} ${lang==="he"?"ביקורות":lang==="es"?"reseñas":"reviews"}`:r.description}</div>
+                    </div>
+                    <button onClick={()=>open(mapsUrl(r.name))}
+                      style={{background:"rgba(66,153,225,0.15)",border:"0.5px solid rgba(66,153,225,0.4)",borderRadius:8,padding:"5px 9px",cursor:"pointer",fontSize:11,color:"#63b3ed",fontFamily:RF,flexShrink:0,whiteSpace:"nowrap"}}>
+                      {t("disc_maps",lang)}
                     </button>
                   </div>
-                  {kosher&&(
-                    <div style={{fontSize:11,color:"rgba(74,222,128,0.7)",marginBottom:10,lineHeight:1.5}}>
-                      {lang==="he"?"✓ מסעדות כשרות מ-Google — תמיד כדאי לוודא רמת כשרות מול בית חב\"ד":lang==="es"?"✓ Restaurantes kosher de Google — verifica el nivel con la Casa Jabad":"✓ Kosher restaurants from Google — verify the level with the local Chabad"}
-                    </div>
-                  )}
-                  {kosherLoading&&(
-                    <div style={{fontSize:12,color:W40,padding:"8px 2px"}}>{lang==="he"?"מחפש מסעדות כשרות ב-Google…":lang==="es"?"Buscando restaurantes kosher en Google…":"Searching kosher restaurants on Google…"}</div>
-                  )}
-                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {!kosherLoading&&(recs.restaurants||[]).map((r,i)=>(
-                      <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,background:W05}}>
-                        <div style={{width:36,height:36,borderRadius:10,background:"rgba(251,191,36,0.13)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Utensils size={18} color="#fbbf24" strokeWidth={1.5}/></div>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.name}</div>
-                          <div style={{fontSize:11,color:W35,marginTop:2,lineHeight:1.4}}>{r.description}{r.cuisine?` · ${r.cuisine}`:""}</div>
-                        </div>
-                        <button onClick={()=>open(mapsUrl(r.name))}
-                          style={{background:"rgba(66,153,225,0.15)",border:"0.5px solid rgba(66,153,225,0.4)",borderRadius:8,padding:"5px 9px",cursor:"pointer",fontSize:11,color:"#63b3ed",fontFamily:RF,flexShrink:0,whiteSpace:"nowrap"}}>
-                          {t("disc_maps",lang)}
-                        </button>
-                      </div>
-                    ))}
-                    {kosher&&!kosherLoading&&(recs.restaurants||[]).length===0&&(
-                      <div style={{fontSize:12,color:W40,lineHeight:1.6,padding:"6px 2px"}}>
-                        {lang==="he"?"לא נמצאו מסעדות כשרות מאומתות ליעד זה. מומלץ לפנות לבית חב\"ד המקומי.":lang==="es"?"No se encontraron restaurantes kosher verificados. Consulta la Casa Jabad local.":"No verified kosher restaurants found. Check with the local Chabad House."}
-                      </div>
-                    )}
-                  </div>
-                </Card>
-
-                {/* Local tip */}
-                {recs.tip&&(
-                  <div style={{background:"linear-gradient(135deg,rgba(246,173,85,0.12),rgba(237,137,54,0.08))",border:"0.5px solid rgba(246,173,85,0.3)",borderRadius:14,padding:"14px 16px",display:"flex",gap:12,alignItems:"flex-start"}}>
-                    <div style={{width:36,height:36,borderRadius:10,background:"rgba(246,173,85,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Sparkles size={18} color="#f6ad55" strokeWidth={1.5}/></div>
-                    <div>
-                      <div style={{fontFamily:RF,fontSize:13,fontWeight:700,color:"#f6ad55",marginBottom:4}}>{t("disc_local_tip",lang)}</div>
-                      <div style={{fontSize:13,color:W40,lineHeight:1.5}}>{recs.tip}</div>
-                    </div>
+                ))}
+                {!restLoading&&restaurants&&restaurants.length===0&&(
+                  <div style={{fontSize:12,color:W40,lineHeight:1.6,padding:"6px 2px"}}>
+                    {kosher
+                      ?(lang==="he"?"לא נמצאו מסעדות כשרות ליעד זה. מומלץ לפנות לבית חב\"ד המקומי.":lang==="es"?"No se encontraron restaurantes kosher. Consulta la Casa Jabad local.":"No kosher restaurants found. Check with the local Chabad House.")
+                      :(lang==="he"?"לא נמצאו מסעדות":lang==="es"?"Sin restaurantes":"No restaurants found")}
                   </div>
                 )}
-              </>
+              </div>
+            </Card>
+
+            {/* ── Local tip (AI) ── */}
+            {recs&&!recsLoading&&recs.tip&&(
+              <div style={{background:"linear-gradient(135deg,rgba(246,173,85,0.12),rgba(237,137,54,0.08))",border:"0.5px solid rgba(246,173,85,0.3)",borderRadius:14,padding:"14px 16px",display:"flex",gap:12,alignItems:"flex-start"}}>
+                <div style={{width:36,height:36,borderRadius:10,background:"rgba(246,173,85,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Sparkles size={18} color="#f6ad55" strokeWidth={1.5}/></div>
+                <div>
+                  <div style={{fontFamily:RF,fontSize:13,fontWeight:700,color:"#f6ad55",marginBottom:4}}>{t("disc_local_tip",lang)}</div>
+                  <div style={{fontSize:13,color:W40,lineHeight:1.5}}>{recs.tip}</div>
+                </div>
+              </div>
             )}
 
             <div style={{fontSize:11,color:"rgba(255,255,255,0.18)",textAlign:"center",fontFamily:RF,lineHeight:1.6}}>
