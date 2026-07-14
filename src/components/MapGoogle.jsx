@@ -176,7 +176,7 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
         if (!coords) continue;
         const color = PIN_COLORS[p.category] || "#64748b";
         const marker = new maps.Marker({ position: coords, title: p.label, icon: pinIcon(maps, color) });
-        tagged.push({ marker, date: p.date || "", coords });
+        tagged.push({ marker, date: p.date || "", time: p.time || "", coords });
         const nav = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.address}, ${destination}`)}`;
         const navLabel = lang === "he" ? "ניווט" : lang === "es" ? "Ir" : "Navigate";
         marker.addListener("click", () => {
@@ -235,13 +235,17 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
     if (!maps || !map || status !== "ready") return;
     if (dirRendererRef.current) { dirRendererRef.current.setMap(null); dirRendererRef.current = null; }
     if (!routeActive) { onRouteInfo && onRouteInfo(null); return; }
-    const pts = tagged.filter(t => dayFilter === "all" || t.date === dayFilter).map(t => t.coords);
+    // Order the day's places by time so the route follows the schedule
+    const pts = tagged
+      .filter(t => dayFilter === "all" || t.date === dayFilter)
+      .sort((a, b) => (a.time || "~").localeCompare(b.time || "~"))
+      .map(t => t.coords);
     if (pts.length < 2) { onRouteInfo && onRouteInfo(null); return; }
     const svc = new maps.DirectionsService();
     svc.route({
       origin: pts[0], destination: pts[pts.length - 1],
       waypoints: pts.slice(1, -1).map(p => ({ location: p, stopover: true })),
-      optimizeWaypoints: true, travelMode: maps.TravelMode.DRIVING,
+      optimizeWaypoints: false, travelMode: maps.TravelMode.WALKING,
     }, (res, st) => {
       if (st !== "OK" || !res) { onRouteInfo && onRouteInfo(null); return; }
       dirRendererRef.current = new maps.DirectionsRenderer({

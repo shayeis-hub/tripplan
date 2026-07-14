@@ -3319,27 +3319,49 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
     setSearching(false);
   };
 
-  // Build places array from expenses that have an address
-  const places=useMemo(()=>(expenses||[])
-    .filter(e=>e.address)
-    .map(e=>{
-      const cat=CATS.find(c=>c.id===e.category);
-      return{
+  // Places = expenses that have an address + calendar activities (each shown as a pin)
+  const places=useMemo(()=>{
+    const fromExpenses=(expenses||[])
+      .filter(e=>e.address)
+      .map(e=>({
         label:      e.description||catLabel(e.category,lang)||e.category,
         address:    e.address,
         category:   e.category,
         amount:     e.amountILS?"₪"+Math.round(e.amountILS).toLocaleString():null,
         amountFmt:  fmtAmt(e.amountILS,dc,{}),
         date:       e.date||"",
+        time:       e.time||"",
         id:         e.id,
-      };
-    }),[expenses,lang,dc]);
+      }));
+    const fromActivities=[];
+    Object.entries(trip.activities||{}).forEach(([date,list])=>{
+      (list||[]).forEach((a,i)=>{
+        const item=typeof a==="string"?{text:a,time:""}:a;
+        if(!item.text)return;
+        fromActivities.push({
+          label:    item.text,
+          address:  item.address||item.text, // geocode by stored address, else by name
+          category: "attraction",
+          amount:   null, amountFmt:null,
+          date, time:item.time||"",
+          id:`act-${date}-${i}`,
+          isActivity:true,
+        });
+      });
+    });
+    return[...fromExpenses,...fromActivities];
+  },[expenses,trip.activities,lang,dc]);
 
   // Trip days for the day filter — only show the row if places span >1 day
   const days=useMemo(()=>getRange(trip.startDate,trip.endDate),[trip.startDate,trip.endDate]);
   const[dayFilter,setDayFilter]=useState("all");
   const placeDays=useMemo(()=>new Set(places.map(p=>p.date).filter(Boolean)),[places]);
   const showDayRow=days.length>1&&placeDays.size>1;
+  // Places for the selected day (used by the bottom list), sorted by time
+  const visiblePlaces=useMemo(()=>{
+    const list=dayFilter==="all"?places:places.filter(p=>p.date===dayFilter);
+    return[...list].sort((a,b)=>(a.time||"~").localeCompare(b.time||"~"));
+  },[places,dayFilter]);
   const[routeActive,setRouteActive]=useState(false);
   const[routeInfo,setRouteInfo]=useState(null);
   const pickDay=(v)=>{setDayFilter(v);setRouteActive(false);setRouteInfo(null);};
@@ -3407,7 +3429,7 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
                       </div>
                       <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                         {days.map((d,di)=>(
-                          <button key={d} onClick={()=>{onAddActivity(d,r.name,addTime);setAddPick(null);setResults(null);setQ("");setSearchPin(null);setAddTime("");}}
+                          <button key={d} onClick={()=>{onAddActivity(d,r.name,addTime,r.address);setAddPick(null);setResults(null);setQ("");setSearchPin(null);setAddTime("");}}
                             style={{padding:"6px 11px",borderRadius:999,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer"}}>
                             {lang==="he"?"יום":lang==="es"?"Día":"Day"} {di+1}
                           </button>
@@ -3449,7 +3471,7 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
         <div style={{position:"absolute",bottom:24,left:16,zIndex:1000,display:"flex",flexDirection:"column",gap:8,alignItems:"flex-start"}}>
           {routeActive&&routeInfo&&(
             <div style={{background:"rgba(9,25,40,0.92)",backdropFilter:"blur(14px)",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",padding:"8px 13px",fontFamily:RF,fontSize:12,fontWeight:700,color:"#fff",whiteSpace:"nowrap"}}>
-              🚗 {routeInfo.km} {lang==="he"?'ק"מ':"km"} · {routeInfo.min} {lang==="he"?"דק'":"min"}
+              🚶 {routeInfo.km} {lang==="he"?'ק"מ':"km"} · {routeInfo.min} {lang==="he"?"דק'":"min"}
             </div>
           )}
           <button onClick={()=>{setRouteActive(a=>!a);if(routeActive)setRouteInfo(null);}}
@@ -3475,33 +3497,37 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
         )}
       </div>
 
-      {/* ── Bottom list — places with addresses ── */}
-      {places.length>0&&(
+      {/* ── Bottom list — places (day-filtered) ── */}
+      {visiblePlaces.length>0&&(
         <div style={{background:"#0d2137",borderTop:"0.5px solid rgba(100,223,223,0.15)",flexShrink:0,maxHeight:"45%",display:"flex",flexDirection:"column"}}>
           {/* drag handle + header */}
           <div style={{padding:"10px 16px 6px",flexShrink:0}}>
             <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.15)",margin:"0 auto 10px"}}/>
             <div style={{fontSize:11,fontWeight:700,color:W40,display:"flex",alignItems:"center",gap:6,letterSpacing:"0.8px",textTransform:"uppercase"}}>
               <MapPin size={11} color={TEAL} strokeWidth={2}/>
-              {lang==="he"?`${places.length} מקומות`:lang==="es"?`${places.length} lugar${places.length!==1?"es":""}`:`${places.length} place${places.length!==1?"s":""}`}
+              {lang==="he"?`${visiblePlaces.length} מקומות`:lang==="es"?`${visiblePlaces.length} lugar${visiblePlaces.length!==1?"es":""}`:`${visiblePlaces.length} place${visiblePlaces.length!==1?"s":""}`}
+              {dayFilter!=="all"&&` · ${lang==="he"?"יום":lang==="es"?"Día":"Day"} ${days.indexOf(dayFilter)+1}`}
             </div>
           </div>
           <div style={{overflowY:"auto",padding:"0 16px 20px",flex:1}}>
 
-          {places.map((p,i)=>{
+          {visiblePlaces.map((p,i)=>{
             const cat=CATS.find(c=>c.id===p.category);
             const color=MAP_PIN_COLORS[p.category]||"#94a3b8";
             const gmLink=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address+", "+dest)}`;
             return(
-              <div key={p.id||i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:i<places.length-1?"0.5px solid rgba(255,255,255,0.06)":"none"}}>
+              <div key={p.id||i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:i<visiblePlaces.length-1?"0.5px solid rgba(255,255,255,0.06)":"none"}}>
                 {/* Category icon */}
                 <div style={{width:36,height:36,borderRadius:10,background:`${color}22`,border:`1.5px solid ${color}44`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                   {cat?.Icon?<cat.Icon size={16} color={color} strokeWidth={1.5}/>:<MapPin size={16} color={color} strokeWidth={1.5}/>}
                 </div>
                 {/* Text */}
                 <div style={{flex:1,overflow:"hidden"}}>
-                  <div style={{fontSize:13,fontWeight:600,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.label}</div>
-                  <div style={{fontSize:11,color:W40,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:2}}>{p.address}</div>
+                  <div style={{fontSize:13,fontWeight:600,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:6}}>
+                    {p.time&&<span style={{fontSize:11,fontWeight:800,color:TEAL,flexShrink:0}}>{p.time}</span>}
+                    <span style={{overflow:"hidden",textOverflow:"ellipsis"}}>{p.label}</span>
+                  </div>
+                  <div style={{fontSize:11,color:W40,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:2}}>{p.isActivity&&p.address===p.label?"":p.address}</div>
                 </div>
                 {/* Amount */}
                 {p.amount&&<div style={{fontSize:13,fontWeight:700,color,flexShrink:0}}>{p.amountFmt}</div>}
@@ -4252,7 +4278,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               {screen==="discover"&&<DiscoverScreen trip={active}/>}
               {screen==="packing"&&<PackingListScreen trip={active} onUpdate={updTrip}/>}
               {screen==="map"&&<MapScreen trip={active} expenses={expenses}
-                onAddActivity={isViewOnly?null:(date,text,time="")=>{const acts={...(active.activities||{})};const list=(acts[date]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);acts[date]=[...list,{text,time}];updTrip({activities:acts});}}
+                onAddActivity={isViewOnly?null:(date,text,time="",address="")=>{const acts={...(active.activities||{})};const list=(acts[date]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);acts[date]=[...list,{text,time,address}];updTrip({activities:acts});}}
                 onAddExpense={isViewOnly?null:(place)=>{setExpensePrefill({description:place.name,address:place.address,category:place.category||"other"});pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}/>}
             </div>
           </div>
