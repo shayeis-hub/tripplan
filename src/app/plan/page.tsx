@@ -2,17 +2,9 @@
 import { useLang } from "@/lib/LangContext";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
-import { buildAgodaUrl, buildBookingUrl, buildViatorUrl, buildGygUrl, buildAiraloUrl, getPartnerRef } from "@/lib/affiliate";
+import { buildAgodaUrl, buildBookingUrl, buildViatorUrl, buildGygUrl, buildAiraloUrl } from "@/lib/affiliate";
 
 const UTM = "utm_source=tulon&utm_medium=web&utm_campaign=plan-page";
-
-// Generic plain destinations get a ref attached at click time so partner attribution
-// works even from the marketing page (no need to wait for a render after RefCapture).
-function withRef(base: string): string {
-  const ref = getPartnerRef();
-  const sep = base.includes("?") ? "&" : "?";
-  return ref ? `${base}${sep}utm_content=${encodeURIComponent(ref)}&aff_sub=${encodeURIComponent(ref)}` : base;
-}
 
 const linkBuilders = {
   agoda:      () => buildAgodaUrl({source:"plan-page", destination:""}),
@@ -20,10 +12,10 @@ const linkBuilders = {
   viator:     () => buildViatorUrl({source:"plan-page", destination:""}),
   gyg:        () => buildGygUrl({source:"plan-page", destination:""}),
   airalo:     () => buildAiraloUrl({source:"plan-page"}),
-  kiwi:       () => withRef(`https://www.kiwi.com/?${UTM}`),
-  skyscanner: () => withRef(`https://www.skyscanner.net/?${UTM}`),
-  gflights:   () => withRef(`https://flights.google.com/?${UTM}`),
-  maps:       () => withRef(`https://maps.google.com/?${UTM}`),
+  kiwi:       () => `https://www.kiwi.com/?${UTM}`,
+  skyscanner: () => `https://www.skyscanner.net/?${UTM}`,
+  gflights:   () => `https://flights.google.com/?${UTM}`,
+  maps:       () => `https://maps.google.com/?${UTM}`,
 };
 
 const T = {
@@ -127,8 +119,8 @@ function LinkCard({
 }) {
   const visitText = T.visit[lang];
   // Rendered as a <button>, not an <a>: the TravelPayouts page script rewrites
-  // anchor hrefs asynchronously and drops our subid3 partner ref. Buttons are
-  // left alone, so window.open(builder()) always carries full attribution.
+  // anchor hrefs asynchronously and can drop query params. Buttons are left
+  // alone, so window.open(builder()) always carries the full URL.
   const handleClick = () => {
     window.open(builder(), "_blank", "noopener,noreferrer");
   };

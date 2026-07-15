@@ -1,4 +1,4 @@
-// Centralized builders for affiliate / partner deep-links.
+// Centralized builders for affiliate deep-links.
 // Every URL produced here carries UTM params so we can measure
 // which surface inside the app drove the click — see Vercel / GA dashboards
 // filter by utm_campaign to know where the revenue is coming from.
@@ -100,39 +100,12 @@ const AIRALO_COUNTRY_SLUG: Record<string, string> = {
   "Tanzania":"tanzania","Zanzibar":"tanzania",
 };
 
-// Partner / influencer referral code captured by <RefCapture/>.
-// Returns "" on SSR or when no valid code is stored / expired.
-const REF_TTL_MS = 90 * 24 * 60 * 60 * 1000;
-export function getPartnerRef(): string {
-  if (typeof window === "undefined") return "";
-  try {
-    const raw = window.localStorage.getItem("tulon_ref");
-    if (!raw) return "";
-    const { code, ts } = JSON.parse(raw);
-    if (!code || typeof code !== "string") return "";
-    if (Date.now() - ts > REF_TTL_MS) return "";
-    return code;
-  } catch { return ""; }
-}
+const utm = (source: AffSource) =>
+  `utm_source=tulon&utm_medium=app&utm_campaign=${source}`;
 
-const utm = (source: AffSource) => {
-  const ref = getPartnerRef();
-  const refPart = ref ? `&utm_content=${encodeURIComponent(ref)}&aff_sub=${encodeURIComponent(ref)}` : "";
-  return `utm_source=tulon&utm_medium=app&utm_campaign=${source}${refPart}`;
-};
-
-// TravelPayouts short links (*.tpk.ro / tp.st) track a SINGLE parameter named
-// `sub_id` — underscore, not `subid1/2/3`. Anything else is ignored and the
-// SubID column in the TP reports stays empty (no per-source / per-partner data).
-// So we fold both the in-app source and the partner referral code into one
-// underscore-joined sub_id. Allowed chars: [A-Za-z0-9_]. We lead with the
-// partner code so partner-attributed clicks are easy to spot / filter in TP.
-const cleanSub = (s: string) => s.replace(/[^A-Za-z0-9_]/g, "_");
-const tpSubId = (source: AffSource) => {
-  const ref = getPartnerRef();
-  const parts = ref ? [cleanSub(ref), cleanSub(source)] : [cleanSub(source)];
-  return `?sub_id=${parts.join("_")}`;
-};
+// TravelPayouts short links (*.tpk.ro / tp.st) track a single `sub_id` param
+// (underscore). We use it to identify which in-app surface drove the click.
+const tpSubId = (source: AffSource) => `?sub_id=${source}`;
 
 const dates = (checkIn?: string, checkOut?: string, agoda = false) => {
   if (!checkIn || !checkOut) return "";
