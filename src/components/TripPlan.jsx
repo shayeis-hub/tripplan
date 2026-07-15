@@ -1305,12 +1305,9 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
   };
 
   // filtered search results
-  // Prefer known/named currencies first; match on code, name AND country
-  const orderedCodes=useMemo(()=>{
-    const known=CURRENCIES.map(c=>c[0]).filter(c=>allCodes.includes(c));
-    const rest=allCodes.filter(c=>!CURR_COUNTRY[c]);
-    return[...known,...rest];
-  },[allCodes]);
+  // Only offer named+flagged currencies that also have a live rate — keeps the
+  // list clean (no bare codes). Order follows the CURRENCIES dataset.
+  const orderedCodes=useMemo(()=>CURRENCIES.map(c=>c[0]).filter(c=>allCodes.includes(c)),[allCodes]);
   const filtered=orderedCodes.filter(code=>{
     if(tripCurrencies.includes(code))return false;
     const q=search.toLowerCase().trim();
