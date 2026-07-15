@@ -3796,6 +3796,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[inspireLink,setInspireLink]=useState(null);
   const[inspireSaving,setInspireSaving]=useState(false);
   const[showConverter,setShowConverter]=useState(false);
+  const[showGuide,setShowGuide]=useState(false); // in-app user guide modal
   const[wizardMode,setWizardMode]=useState(false); // new-trip wizard vs settings edit
   const[expensePrefill,setExpensePrefill]=useState(null); // from map "add as expense"
   const[convAmount,setConvAmount]=useState("");
@@ -4051,6 +4052,23 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     setSideMenu(false);
   };
   const guideUrl=lang==="he"?"/guide-he.html":lang==="es"?"/guide-es.html":"/guide-en.html";
+  // In-app guide viewer — keeps the user inside the app instead of a new tab
+  const renderGuideModal=()=>(
+    <div style={{position:"fixed",inset:0,zIndex:600,background:DARK_BG,display:"flex",flexDirection:"column"}} dir={lang==="he"?"rtl":"ltr"}>
+      <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.15)",flexShrink:0}}>
+        <button onClick={()=>setShowGuide(false)} className="tap-btn" style={{background:"rgba(255,255,255,0.08)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:9,color:"#fff",width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <X size={17} strokeWidth={2}/>
+        </button>
+        <div style={{flex:1,textAlign:"center"}}>
+          <span style={{fontFamily:RF,color:"#fff",fontSize:15,fontWeight:700}}>{lang==="he"?"חוברת הסבר":lang==="es"?"Guía del usuario":"User Guide"}</span>
+        </div>
+        <button onClick={()=>window.open(guideUrl,"_blank")} className="tap-btn" title={lang==="he"?"פתח בחלון חדש":lang==="es"?"Abrir en pestaña":"Open in tab"} style={{background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.1)",borderRadius:9,color:W40,width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <LinkIcon size={15} strokeWidth={1.8}/>
+        </button>
+      </div>
+      <iframe src={guideUrl} title="guide" style={{flex:1,width:"100%",border:"none",background:"#fff"}}/>
+    </div>
+  );
   const menuScreens=[
     {Icon:Calendar,    label:lang==="he"?"יומן":lang==="es"?"Calendario":"Calendar",    sec:"trip",   scr:"calendar"},
     {Icon:Sparkles,    label:lang==="he"?"גלה ↗":lang==="es"?"Descubre ↗":"Discover ↗",     sec:"trip",   scr:"discover"},
@@ -4106,7 +4124,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               <div style={{margin:"10px 20px",height:"0.5px",background:"rgba(255,255,255,0.06)"}}/>
             </>
           )}
-          <button onClick={()=>{window.open(guideUrl,"_blank");setSideMenu(false);}}
+          <button onClick={()=>{setShowGuide(true);setSideMenu(false);}}
             style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
             <BookOpen size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"חוברת הסבר":lang==="es"?"Guía de usuario":"User Guide"}
           </button>
@@ -4196,7 +4214,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           </div>
           {/* Currency Converter */}
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]} defaultCurrency={trips[0]?.defaultCurrency} displayCurrency={trips[0]?.displayCurrency}/>}
-          {sideMenu&&renderSideMenu()}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}
           <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates}/>
         </div>
       </>
@@ -4419,7 +4437,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           </div>
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}
           <div style={{flex:1,overflowY:"auto"}}>
             <TripSplashScreen trip={active} expenses={active.expenses||[]}
               onBudget={()=>{pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}
@@ -4453,7 +4471,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}
           <div style={{flex:1,overflowY:"auto"}}>
             {/* Trip settings button */}
             {screen!=="destination"&&(
@@ -4497,7 +4515,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}
           <div style={{flex:1,overflowY:screen==="map"?"hidden":"auto",position:"relative",minHeight:0}}>
             <div key={screen} className="screen-enter" style={screen==="map"?{height:"100%"}:undefined}>
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
