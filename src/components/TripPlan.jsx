@@ -666,7 +666,8 @@ function CurrencyConverter({rates,onClose,tripCurrencies,defaultCurrency,display
   const[from,setFrom]=useState(defaultCurrency||tripCurrencies?.[1]||"USD");
   const[to,setTo]=useState(displayCurrency||"ILS");
 
-  const allCodes=Object.keys(rates).filter(c=>rates[c]>0).sort();
+  // Only named+flagged currencies that have a live rate (no bare codes)
+  const allCodes=CURRENCIES.map(c=>c[0]).filter(c=>rates[c]>0);
   const converted=amount&&!isNaN(amount)
     ? (parseFloat(amount)*rates[from]/rates[to]).toFixed(2)
     : "";
