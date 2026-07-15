@@ -34,19 +34,39 @@ export async function GET(req: Request) {
     const newUsersToday  = userList.users.filter(u => now - new Date(u.metadata.creationTime).getTime() < day).length;
     const newUsersWeek   = userList.users.filter(u => now - new Date(u.metadata.creationTime).getTime() < 7 * day).length;
     const newUsersMonth  = userList.users.filter(u => now - new Date(u.metadata.creationTime).getTime() < 30 * day).length;
+    const activeWeek     = userList.users.filter(u => u.metadata.lastSignInTime && now - new Date(u.metadata.lastSignInTime).getTime() < 7 * day).length;
+
+    // Per-day series for the last 30 days (signups + active/returning users)
+    const DAYS = 30;
+    const key = (t: string | number | Date) => {
+      const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    };
+    const signupMap: Record<string, number> = {};
+    const activeMap: Record<string, number> = {};
+    for (let i = DAYS - 1; i >= 0; i--) { const kk = key(now - i * day); signupMap[kk] = 0; activeMap[kk] = 0; }
+    userList.users.forEach(u => {
+      const c = key(u.metadata.creationTime); if (c in signupMap) signupMap[c]++;
+      if (u.metadata.lastSignInTime) { const l = key(u.metadata.lastSignInTime); if (l in activeMap) activeMap[l]++; }
+    });
+    const signupsByDay = Object.keys(signupMap).map(date => ({ date, count: signupMap[date] }));
+    const activeByDay  = Object.keys(activeMap).map(date => ({ date, count: activeMap[date] }));
 
     // Trips count
     const tripsSnap = await adminDb.collection("trips").get();
     const tripCount = tripsSnap.size;
 
-    // Expenses count + total ILS
+    // Expenses count + total ILS + activated users (own at least one trip)
     let expenseCount = 0;
     let totalILS = 0;
+    const owners = new Set<string>();
     tripsSnap.forEach(doc => {
-      const expenses = doc.data().expenses || [];
+      const data = doc.data();
+      if (data.owner) owners.add(data.owner);
+      const expenses = data.expenses || [];
       expenseCount += expenses.length;
       expenses.forEach((e: any) => { totalILS += e.amountILS || 0; });
     });
+    const activationRate = userCount > 0 ? Math.round((owners.size / userCount) * 100) : 0;
 
     // Recent users (last 5)
     const recentUsers = userList.users
@@ -59,8 +79,10 @@ export async function GET(req: Request) {
       }));
 
     return NextResponse.json({
-      users: { total: userCount, today: newUsersToday, week: newUsersWeek, month: newUsersMonth, recent: recentUsers },
-      trips: { total: tripCount, expenses: expenseCount, totalILS: Math.round(totalILS) },
+      users: { total: userCount, today: newUsersToday, week: newUsersWeek, month: newUsersMonth, activeWeek, recent: recentUsers },
+      trips: { total: tripCount, expenses: expenseCount, totalILS: Math.round(totalILS), activatedUsers: owners.size, activationRate },
+      signupsByDay,
+      activeByDay,
     });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

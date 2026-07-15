@@ -8,9 +8,54 @@ const RF = "'Rubik',sans-serif";
 const TEAL = "#64dfdf";
 const BG = "#0d2137";
 
+interface DayPoint { date: string; count: number }
 interface Stats {
-  users: { total: number; today: number; week: number; month: number; recent: { email: string; created: string; lastSignIn: string }[] };
-  trips: { total: number; expenses: number; totalILS: number };
+  users: { total: number; today: number; week: number; month: number; activeWeek: number; recent: { email: string; created: string; lastSignIn: string }[] };
+  trips: { total: number; expenses: number; totalILS: number; activatedUsers: number; activationRate: number };
+  signupsByDay: DayPoint[];
+  activeByDay: DayPoint[];
+}
+
+// Simple SVG area/line chart in the app palette
+function LineChart({ data, color = TEAL, label }: { data: DayPoint[]; color?: string; label: string }) {
+  const days = data.slice(-14);
+  const W = 640, H = 180, PAD = 24, PB = 22;
+  const max = Math.max(1, ...days.map(d => d.count));
+  const x = (i: number) => PAD + (i * (W - PAD * 2)) / Math.max(1, days.length - 1);
+  const y = (v: number) => (H - PB) - (v / max) * (H - PB - 10);
+  const pts = days.map((d, i) => `${x(i)},${y(d.count)}`).join(" ");
+  const area = `${x(0)},${H - PB} ${pts} ${x(days.length - 1)},${H - PB}`;
+  const gid = "g" + label.replace(/\W/g, "");
+  const totalRange = days.reduce((s, d) => s + d.count, 0);
+  const fmt = (s: string) => { const dt = new Date(s); return `${dt.getMonth() + 1}/${dt.getDate()}`; };
+  return (
+    <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "18px 20px" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: RF }}>{label}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: RF }}>14 ימים · סה״כ {totalRange}</div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {[0, 0.5, 1].map(f => (
+          <line key={f} x1={PAD} x2={W - PAD} y1={y(max * f)} y2={y(max * f)} stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+        ))}
+        <polygon points={area} fill={`url(#${gid})`} />
+        <polyline points={pts} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        {days.map((d, i) => d.count > 0 && (
+          <circle key={i} cx={x(i)} cy={y(d.count)} r="3" fill={color} />
+        ))}
+        {days.map((d, i) => (i % 2 === 0) && (
+          <text key={i} x={x(i)} y={H - 6} fontSize="10" fill="rgba(255,255,255,0.35)" textAnchor="middle" fontFamily="sans-serif">{fmt(d.date)}</text>
+        ))}
+        <text x={PAD - 4} y={y(max) + 3} fontSize="10" fill="rgba(255,255,255,0.35)" textAnchor="end" fontFamily="sans-serif">{max}</text>
+      </svg>
+    </div>
+  );
 }
 
 interface Partner {
@@ -210,19 +255,17 @@ export default function AdminPage() {
           <>
             {/* Users KPIs */}
             <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>👥 משתמשים</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 28 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
               <KPI label="סה״כ משתמשים" value={stats.users.total} />
-              <KPI label="הצטרפו היום" value={stats.users.today} color="#4ade80" />
-              <KPI label="השבוע" value={stats.users.week} color="#4ade80" />
-              <KPI label="החודש" value={stats.users.month} color="#4ade80" />
+              <KPI label="פעילים השבוע" value={stats.users.activeWeek ?? "—"} color="#64dfdf" sub="נכנסו ב-7 ימים" />
+              <KPI label="נרשמו השבוע" value={stats.users.week} color="#4ade80" />
+              <KPI label="הפעילו טיול" value={`${stats.trips.activationRate ?? 0}%`} color="#a78bfa" sub={`${stats.trips.activatedUsers ?? 0} משתמשים`} />
             </div>
 
-            {/* Trips KPIs */}
-            <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>✈️ טיולים</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 28 }}>
-              <KPI label="סה״כ טיולים" value={stats.trips.total} color="#a78bfa" />
-              <KPI label="סה״כ הוצאות" value={stats.trips.expenses} color="#a78bfa" />
-              <KPI label="סכום כולל בש״ח" value={`₪${stats.trips.totalILS.toLocaleString()}`} color="#fbbf24" />
+            {/* Charts */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 28 }}>
+              {stats.signupsByDay && <LineChart data={stats.signupsByDay} color="#64dfdf" label="📈 הרשמות חדשות ליום" />}
+              {stats.activeByDay && <LineChart data={stats.activeByDay} color="#4ade80" label="🟢 משתמשים פעילים ליום (כניסה אחרונה)" />}
             </div>
 
             {/* Recent users */}
@@ -239,6 +282,13 @@ export default function AdminPage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Secondary: trip data (muted) */}
+            <div style={{ marginTop: 18, display: "flex", gap: 18, flexWrap: "wrap", fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: RF, padding: "0 4px" }}>
+              <span>✈️ טיולים: <b style={{ color: "rgba(255,255,255,0.7)" }}>{stats.trips.total}</b></span>
+              <span>🧾 הוצאות: <b style={{ color: "rgba(255,255,255,0.7)" }}>{stats.trips.expenses}</b></span>
+              <span>💰 מחזור מנוהל: <b style={{ color: "rgba(255,255,255,0.7)" }}>₪{stats.trips.totalILS.toLocaleString()}</b></span>
             </div>
 
             {/* Partners */}
