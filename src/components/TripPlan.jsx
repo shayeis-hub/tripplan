@@ -109,57 +109,86 @@ const DEFAULT_CURRENCIES=[
   {code:"USD",label:"דולר אמריקאי",symbol:"$"},
   {code:"EUR",label:"יורו",symbol:"€"},
 ];
-const CURRENCY_NAMES={
-  ILS:"שקל ישראלי",USD:"דולר אמריקאי",EUR:"יורו",GBP:"לירה שטרלינג",
-  JPY:"ין יפני",THB:"בהט תאילנדי",TRY:"לירה טורקית",AED:"דירהם אמירתי",
-  CHF:"פרנק שוויצרי",CAD:"דולר קנדי",AUD:"דולר אוסטרלי",INR:"רופי הודי",
-  MXN:"פסו מקסיקני",BRL:"ריאל ברזילאי",SGD:"דולר סינגפורי",HKD:"דולר הונג קונגי",
-  SEK:"כתר שוודי",NOK:"כתר נורווגי",DKK:"כתר דני",PLN:"זלוטי פולני",
-  CNY:"יואן סיני",KRW:"וון קוריאני",MYR:"רינגיט מלזי",
-  IDR:"רופיה אינדונזית",PHP:"פסו פיליפיני",EGP:"לירה מצרית",ZAR:"ראנד ד.א.",
-  MAD:"דירהם מרוקאי",JOD:"דינר ירדני",
-};
-const CURRENCY_NAMES_EN={
-  ILS:"Israeli Shekel",USD:"US Dollar",EUR:"Euro",GBP:"British Pound",
-  JPY:"Japanese Yen",THB:"Thai Baht",TRY:"Turkish Lira",AED:"UAE Dirham",
-  CHF:"Swiss Franc",CAD:"Canadian Dollar",AUD:"Australian Dollar",INR:"Indian Rupee",
-  MXN:"Mexican Peso",BRL:"Brazilian Real",SGD:"Singapore Dollar",HKD:"Hong Kong Dollar",
-  SEK:"Swedish Krona",NOK:"Norwegian Krone",DKK:"Danish Krone",PLN:"Polish Zloty",
-  CNY:"Chinese Yuan",KRW:"South Korean Won",MYR:"Malaysian Ringgit",
-  IDR:"Indonesian Rupiah",PHP:"Philippine Peso",EGP:"Egyptian Pound",ZAR:"South African Rand",
-  MAD:"Moroccan Dirham",JOD:"Jordanian Dinar",
-};
-const CURRENCY_NAMES_ES={
-  ILS:"Séquel israelí",USD:"Dólar estadounidense",EUR:"Euro",GBP:"Libra esterlina",
-  JPY:"Yen japonés",THB:"Baht tailandés",TRY:"Lira turca",AED:"Dírham emiratí",
-  CHF:"Franco suizo",CAD:"Dólar canadiense",AUD:"Dólar australiano",INR:"Rupia india",
-  MXN:"Peso mexicano",BRL:"Real brasileño",SGD:"Dólar de Singapur",HKD:"Dólar de Hong Kong",
-  SEK:"Corona sueca",NOK:"Corona noruega",DKK:"Corona danesa",PLN:"Zloty polaco",
-  CNY:"Yuan chino",KRW:"Won surcoreano",MYR:"Ringgit malayo",
-  IDR:"Rupia indonesia",PHP:"Peso filipino",EGP:"Libra egipcia",ZAR:"Rand sudafricano",
-  MAD:"Dírham marroquí",JOD:"Dinar jordano",
-};
-const CURR_SYMBOLS={
-  ILS:"₪",USD:"$",EUR:"€",GBP:"£",JPY:"¥",THB:"฿",TRY:"₺",
-  CHF:"Fr",CAD:"C$",AUD:"A$",INR:"₹",BRL:"R$",SGD:"S$",HKD:"HK$",
-  SEK:"kr",NOK:"kr",DKK:"kr",PLN:"zł",CNY:"¥",KRW:"₩",RUB:"₽",
-};
-// Flag emoji per currency code (ISO 4217 → ISO 3166-1 alpha-2)
-const CURR_FLAG={
-  ILS:"🇮🇱",USD:"🇺🇸",EUR:"🇪🇺",GBP:"🇬🇧",JPY:"🇯🇵",CHF:"🇨🇭",
-  CAD:"🇨🇦",AUD:"🇦🇺",NZD:"🇳🇿",SGD:"🇸🇬",HKD:"🇭🇰",
-  CNY:"🇨🇳",KRW:"🇰🇷",TWD:"🇹🇼",
-  INR:"🇮🇳",THB:"🇹🇭",MYR:"🇲🇾",IDR:"🇮🇩",PHP:"🇵🇭",VND:"🇻🇳",
-  PKR:"🇵🇰",BDT:"🇧🇩",LKR:"🇱🇰",
-  AED:"🇦🇪",SAR:"🇸🇦",QAR:"🇶🇦",KWD:"🇰🇼",BHD:"🇧🇭",OMR:"🇴🇲",JOD:"🇯🇴",
-  EGP:"🇪🇬",MAD:"🇲🇦",TND:"🇹🇳",
-  TRY:"🇹🇷",RUB:"🇷🇺",UAH:"🇺🇦",GEL:"🇬🇪",AMD:"🇦🇲",AZN:"🇦🇿",
-  SEK:"🇸🇪",NOK:"🇳🇴",DKK:"🇩🇰",ISK:"🇮🇸",
-  PLN:"🇵🇱",CZK:"🇨🇿",HUF:"🇭🇺",RON:"🇷🇴",BGN:"🇧🇬",HRK:"🇭🇷",
-  MXN:"🇲🇽",BRL:"🇧🇷",ARS:"🇦🇷",CLP:"🇨🇱",COP:"🇨🇴",PEN:"🇵🇪",
-  ZAR:"🇿🇦",KES:"🇰🇪",NGN:"🇳🇬",GHS:"🇬🇭",
-  RSD:"🇷🇸",MKD:"🇲🇰",ALL:"🇦🇱",
-};
+// Single source of truth for currencies — names, symbol, flag and country.
+// [code, symbol, flag, he-name, en-name, es-name, he-country, en-country]
+const CURRENCIES=[
+  ["ILS","₪","🇮🇱","שקל","Israeli Shekel","Séquel","ישראל","Israel"],
+  ["USD","$","🇺🇸","דולר אמריקאי","US Dollar","Dólar EE.UU.","ארה\"ב","United States"],
+  ["EUR","€","🇪🇺","יורו","Euro","Euro","גוש היורו","Eurozone"],
+  ["GBP","£","🇬🇧","לירה שטרלינג","British Pound","Libra esterlina","בריטניה","United Kingdom"],
+  ["CHF","Fr","🇨🇭","פרנק שוויצרי","Swiss Franc","Franco suizo","שווייץ","Switzerland"],
+  ["JPY","¥","🇯🇵","ין יפני","Japanese Yen","Yen japonés","יפן","Japan"],
+  ["CNY","¥","🇨🇳","יואן סיני","Chinese Yuan","Yuan chino","סין","China"],
+  ["HKD","HK$","🇭🇰","דולר הונג קונגי","Hong Kong Dollar","Dólar HK","הונג קונג","Hong Kong"],
+  ["TWD","NT$","🇹🇼","דולר טאיוואני","Taiwan Dollar","Dólar taiwanés","טאיוואן","Taiwan"],
+  ["KRW","₩","🇰🇷","וון דרום קוריאני","South Korean Won","Won surcoreano","דרום קוריאה","South Korea"],
+  ["THB","฿","🇹🇭","באט תאילנדי","Thai Baht","Baht tailandés","תאילנד","Thailand"],
+  ["VND","₫","🇻🇳","דונג וייטנאמי","Vietnamese Dong","Dong vietnamita","וייטנאם","Vietnam"],
+  ["SGD","S$","🇸🇬","דולר סינגפורי","Singapore Dollar","Dólar de Singapur","סינגפור","Singapore"],
+  ["MYR","RM","🇲🇾","רינגיט מלזי","Malaysian Ringgit","Ringgit malayo","מלזיה","Malaysia"],
+  ["IDR","Rp","🇮🇩","רופיה אינדונזית","Indonesian Rupiah","Rupia indonesia","אינדונזיה","Indonesia"],
+  ["PHP","₱","🇵🇭","פסו פיליפיני","Philippine Peso","Peso filipino","הפיליפינים","Philippines"],
+  ["INR","₹","🇮🇳","רופי הודי","Indian Rupee","Rupia india","הודו","India"],
+  ["LKR","Rs","🇱🇰","רופי סרי-לנקי","Sri Lankan Rupee","Rupia esrilanquesa","סרי לנקה","Sri Lanka"],
+  ["NPR","₨","🇳🇵","רופי נפאלי","Nepalese Rupee","Rupia nepalí","נפאל","Nepal"],
+  ["LAK","₭","🇱🇦","קיפ לאוסי","Lao Kip","Kip laosiano","לאוס","Laos"],
+  ["MVR","Rf","🇲🇻","רופיה מלדיבית","Maldivian Rufiyaa","Rufiyaa","המלדיביים","Maldives"],
+  ["AED","د.إ","🇦🇪","דירהם אמירתי","UAE Dirham","Dírham emiratí","איחוד האמירויות","UAE"],
+  ["SAR","﷼","🇸🇦","ריאל סעודי","Saudi Riyal","Riyal saudí","ערב הסעודית","Saudi Arabia"],
+  ["QAR","﷼","🇶🇦","ריאל קטארי","Qatari Riyal","Riyal catarí","קטאר","Qatar"],
+  ["BHD",".د.ب","🇧🇭","דינר בחרייני","Bahraini Dinar","Dinar bareiní","בחריין","Bahrain"],
+  ["OMR","﷼","🇴🇲","ריאל עומאני","Omani Rial","Rial omaní","עומאן","Oman"],
+  ["KWD","د.ك","🇰🇼","דינר כוויתי","Kuwaiti Dinar","Dinar kuwaití","כווית","Kuwait"],
+  ["JOD","د.ا","🇯🇴","דינר ירדני","Jordanian Dinar","Dinar jordano","ירדן","Jordan"],
+  ["EGP","£","🇪🇬","לירה מצרית","Egyptian Pound","Libra egipcia","מצרים","Egypt"],
+  ["TRY","₺","🇹🇷","לירה טורקית","Turkish Lira","Lira turca","טורקיה","Turkey"],
+  ["MAD","د.م.","🇲🇦","דירהם מרוקאי","Moroccan Dirham","Dírham marroquí","מרוקו","Morocco"],
+  ["TND","د.ت","🇹🇳","דינר טוניסאי","Tunisian Dinar","Dinar tunecino","תוניסיה","Tunisia"],
+  ["ZAR","R","🇿🇦","ראנד דרום אפריקאי","South African Rand","Rand sudafricano","דרום אפריקה","South Africa"],
+  ["KES","KSh","🇰🇪","שילינג קנייתי","Kenyan Shilling","Chelín keniano","קניה","Kenya"],
+  ["TZS","TSh","🇹🇿","שילינג טנזני","Tanzanian Shilling","Chelín tanzano","טנזניה","Tanzania"],
+  ["ETB","Br","🇪🇹","בר אתיופי","Ethiopian Birr","Birr etíope","אתיופיה","Ethiopia"],
+  ["MUR","₨","🇲🇺","רופי מאוריציאני","Mauritian Rupee","Rupia mauriciana","מאוריציוס","Mauritius"],
+  ["SCR","₨","🇸🇨","רופי סיישלי","Seychellois Rupee","Rupia seychelense","סיישל","Seychelles"],
+  ["NGN","₦","🇳🇬","נאירה ניגרי","Nigerian Naira","Naira nigeriana","ניגריה","Nigeria"],
+  ["GHS","₵","🇬🇭","סדי גאני","Ghanaian Cedi","Cedi ghanés","גאנה","Ghana"],
+  ["CAD","C$","🇨🇦","דולר קנדי","Canadian Dollar","Dólar canadiense","קנדה","Canada"],
+  ["MXN","$","🇲🇽","פסו מקסיקני","Mexican Peso","Peso mexicano","מקסיקו","Mexico"],
+  ["BRL","R$","🇧🇷","ריאל ברזילאי","Brazilian Real","Real brasileño","ברזיל","Brazil"],
+  ["ARS","$","🇦🇷","פסו ארגנטינאי","Argentine Peso","Peso argentino","ארגנטינה","Argentina"],
+  ["CLP","$","🇨🇱","פסו צ'יליאני","Chilean Peso","Peso chileno","צ'ילה","Chile"],
+  ["COP","$","🇨🇴","פסו קולומביאני","Colombian Peso","Peso colombiano","קולומביה","Colombia"],
+  ["PEN","S/","🇵🇪","סול פרואני","Peruvian Sol","Sol peruano","פרו","Peru"],
+  ["UYU","$U","🇺🇾","פסו אורוגוואי","Uruguayan Peso","Peso uruguayo","אורוגוואי","Uruguay"],
+  ["CRC","₡","🇨🇷","קולון קוסטה-ריקני","Costa Rican Colón","Colón","קוסטה ריקה","Costa Rica"],
+  ["AUD","A$","🇦🇺","דולר אוסטרלי","Australian Dollar","Dólar australiano","אוסטרליה","Australia"],
+  ["NZD","NZ$","🇳🇿","דולר ניו-זילנדי","NZ Dollar","Dólar neozelandés","ניו זילנד","New Zealand"],
+  ["FJD","FJ$","🇫🇯","דולר פיג'י","Fijian Dollar","Dólar fiyiano","פיג'י","Fiji"],
+  ["SEK","kr","🇸🇪","כתר שוודי","Swedish Krona","Corona sueca","שוודיה","Sweden"],
+  ["NOK","kr","🇳🇴","כתר נורווגי","Norwegian Krone","Corona noruega","נורווגיה","Norway"],
+  ["DKK","kr","🇩🇰","כתר דני","Danish Krone","Corona danesa","דנמרק","Denmark"],
+  ["ISK","kr","🇮🇸","כתר איסלנדי","Icelandic Króna","Corona islandesa","איסלנד","Iceland"],
+  ["PLN","zł","🇵🇱","זלוטי פולני","Polish Zloty","Zloty polaco","פולין","Poland"],
+  ["CZK","Kč","🇨🇿","כתר צ'כי","Czech Koruna","Corona checa","צ'כיה","Czechia"],
+  ["HUF","Ft","🇭🇺","פורינט הונגרי","Hungarian Forint","Forinto húngaro","הונגריה","Hungary"],
+  ["RON","lei","🇷🇴","לאו רומני","Romanian Leu","Leu rumano","רומניה","Romania"],
+  ["BGN","лв","🇧🇬","לב בולגרי","Bulgarian Lev","Lev búlgaro","בולגריה","Bulgaria"],
+  ["RSD","дин","🇷🇸","דינר סרבי","Serbian Dinar","Dinar serbio","סרביה","Serbia"],
+  ["MKD","ден","🇲🇰","דינר מקדוני","Macedonian Denar","Denar","מקדוניה","N. Macedonia"],
+  ["ALL","L","🇦🇱","לק אלבני","Albanian Lek","Lek albanés","אלבניה","Albania"],
+  ["RUB","₽","🇷🇺","רובל רוסי","Russian Ruble","Rublo ruso","רוסיה","Russia"],
+  ["UAH","₴","🇺🇦","הריבניה אוקראינית","Ukrainian Hryvnia","Grivna","אוקראינה","Ukraine"],
+  ["GEL","₾","🇬🇪","לארי גאורגי","Georgian Lari","Lari georgiano","גאורגיה","Georgia"],
+  ["AMD","֏","🇦🇲","דראם ארמני","Armenian Dram","Dram armenio","ארמניה","Armenia"],
+  ["AZN","₼","🇦🇿","מנאט אזרי","Azerbaijani Manat","Manat azerí","אזרבייג'ן","Azerbaijan"],
+];
+const CURRENCY_NAMES    =Object.fromEntries(CURRENCIES.map(c=>[c[0],c[3]]));
+const CURRENCY_NAMES_EN =Object.fromEntries(CURRENCIES.map(c=>[c[0],c[4]]));
+const CURRENCY_NAMES_ES =Object.fromEntries(CURRENCIES.map(c=>[c[0],c[5]]));
+const CURR_SYMBOLS      =Object.fromEntries(CURRENCIES.map(c=>[c[0],c[1]]));
+const CURR_FLAG         =Object.fromEntries(CURRENCIES.map(c=>[c[0],c[2]]));
+const CURR_COUNTRY      =Object.fromEntries(CURRENCIES.map(c=>[c[0],{he:c[6],en:c[7]}]));
+const getCurrCountry=(code,lang="he")=>{const c=CURR_COUNTRY[code];return c?(lang==="he"?c.he:c.en):"";};
 // Returns "🇮🇱 ILS – שקל ישראלי" or "🇺🇸 USD – US Dollar"
 const currLabel=(code,lang)=>{
   const flag=CURR_FLAG[code]||"";
@@ -630,11 +659,12 @@ async function sendPushToUser(userId,title,body,url="/"){
   }catch(e){}
 }
 
-function CurrencyConverter({rates,onClose,tripCurrencies}){
+function CurrencyConverter({rates,onClose,tripCurrencies,defaultCurrency,displayCurrency}){
   const{lang}=useLang();
   const[amount,setAmount]=useState("");
-  const[from,setFrom]=useState(tripCurrencies?.[1]||"USD");
-  const[to,setTo]=useState("ILS");
+  // From = the trip's local/default currency; To = the display (home) currency
+  const[from,setFrom]=useState(defaultCurrency||tripCurrencies?.[1]||"USD");
+  const[to,setTo]=useState(displayCurrency||"ILS");
 
   const allCodes=Object.keys(rates).filter(c=>rates[c]>0).sort();
   const converted=amount&&!isNaN(amount)
@@ -1275,12 +1305,21 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
   };
 
   // filtered search results
-  const filtered=allCodes.filter(code=>{
+  // Prefer known/named currencies first; match on code, name AND country
+  const orderedCodes=useMemo(()=>{
+    const known=CURRENCIES.map(c=>c[0]).filter(c=>allCodes.includes(c));
+    const rest=allCodes.filter(c=>!CURR_COUNTRY[c]);
+    return[...known,...rest];
+  },[allCodes]);
+  const filtered=orderedCodes.filter(code=>{
     if(tripCurrencies.includes(code))return false;
-    const label=getCurrLabel(code,lang).toLowerCase();
-    const q=search.toLowerCase();
-    return !q||code.toLowerCase().includes(q)||label.includes(q);
-  }).slice(0,40);
+    const q=search.toLowerCase().trim();
+    if(!q)return true;
+    return code.toLowerCase().includes(q)
+      ||getCurrLabel(code,lang).toLowerCase().includes(q)
+      ||getCurrCountry(code,lang).toLowerCase().includes(q)
+      ||getCurrCountry(code,"en").toLowerCase().includes(q);
+  }).slice(0,50);
 
   return(
     <Card>
@@ -1328,39 +1367,29 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
               {t("loading",lang)}
             </div>
           )}
-          {/* Popular first if no search */}
-          {!search&&(
-            <div style={{marginBottom:8}}>
-              <div style={{fontSize:11,fontWeight:700,color:W35,marginBottom:6}}>{t("dest_curr_popular",lang)}</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                {["THB","GBP","JPY","AED","TRY","AUD","CAD","CHF","SGD","INR","EGP","MAD","JOD"]
-                  .filter(c=>!tripCurrencies.includes(c))
-                  .slice(0,10)
-                  .map(code=>(
-                    <button key={code} onClick={()=>addCurrency(code)}
-                      style={{padding:"5px 11px",borderRadius:999,border:`1.5px solid ${C.sandDark}`,background:W05,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",color:"#ffffff"}}>
-                      {getCurrSymbol(code)} {code} <span style={{color:W35,fontWeight:400}}>{getCurrLabel(code,lang)}</span>
-                    </button>
-                  ))}
-              </div>
-            </div>
-          )}
-          {/* Search results */}
-          {search&&(
-            <div style={{maxHeight:180,overflowY:"auto",display:"flex",flexDirection:"column",gap:4}}>
-              {filtered.length===0?<div style={{color:W35,fontSize:13,textAlign:"center",padding:"8px"}}>{t("exp_no_results",lang)}</div>
-              :filtered.map(code=>(
-                <button key={code} onClick={()=>addCurrency(code)}
-                  style={{padding:"8px 12px",borderRadius:10,border:"none",background:W05,fontFamily:RF,fontSize:13,cursor:"pointer",textAlign:"right",display:"flex",alignItems:"center",gap:10,transition:"background 0.1s"}}
-                  onMouseEnter={e=>(e.target.style.background=C.sandDark)} onMouseLeave={e=>(e.target.style.background=C.white)}>
-                  <span style={{fontWeight:800,color:TEAL,minWidth:36}}>{getCurrSymbol(code)}</span>
-                  <span style={{fontWeight:700}}>{code}</span>
-                  <span style={{color:W35,fontSize:12}}>{getCurrLabel(code,lang)}</span>
-                  {rates[code]&&code!=="ILS"&&<span style={{color:W35,fontSize:11,marginRight:"auto"}}>₪{rates[code].toFixed(3)}</span>}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Unified clean list: flag · code · name · country */}
+          <div style={{maxHeight:260,overflowY:"auto",display:"flex",flexDirection:"column",gap:3}}>
+            {allCodes.length>0&&filtered.length===0&&(
+              <div style={{color:W35,fontSize:13,textAlign:"center",padding:"10px"}}>{t("exp_no_results",lang)}</div>
+            )}
+            {filtered.map(code=>(
+              <button key={code} onClick={()=>addCurrency(code)}
+                style={{padding:"9px 12px",borderRadius:10,border:"none",background:"rgba(255,255,255,0.03)",cursor:"pointer",display:"flex",alignItems:"center",gap:11,transition:"background 0.1s",textAlign:lang==="he"?"right":"left"}}
+                onMouseEnter={e=>e.currentTarget.style.background="rgba(100,223,223,0.08)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.03)"}>
+                <span style={{fontSize:20,flexShrink:0}}>{CURR_FLAG[code]||"🌐"}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"baseline",gap:7}}>
+                    <span style={{fontFamily:RF,fontWeight:800,fontSize:14,color:"#fff"}}>{code}</span>
+                    <span style={{fontFamily:RF,fontSize:13,color:W50,fontWeight:600}}>{getCurrSymbol(code)}</span>
+                    <span style={{fontFamily:RF,fontSize:12,color:W40,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{getCurrLabel(code,lang)}</span>
+                  </div>
+                  {getCurrCountry(code,lang)&&<div style={{fontSize:10,color:W25,marginTop:1}}>{getCurrCountry(code,lang)}</div>}
+                </div>
+                {rates[code]&&code!=="ILS"&&<span style={{color:W35,fontSize:11,flexShrink:0,fontFamily:RF}}>₪{rates[code].toFixed(3)}</span>}
+                <Plus size={15} color={TEAL} strokeWidth={2} style={{flexShrink:0}}/>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </Card>
@@ -4168,7 +4197,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             </div>
           </div>
           {/* Currency Converter */}
-          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]}/>}
+          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]} defaultCurrency={trips[0]?.defaultCurrency} displayCurrency={trips[0]?.displayCurrency}/>}
           {sideMenu&&renderSideMenu()}
           <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates}/>
         </div>
@@ -4423,7 +4452,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><Menu size={16} strokeWidth={1.5}/></button>
             </div>
           </div>
-          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
+          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
           {sideMenu&&renderSideMenu()}
@@ -4467,7 +4496,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><Menu size={16} strokeWidth={1.5}/></button>
             </div>
           </div>
-          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]}/>}
+          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
           {sideMenu&&renderSideMenu()}
