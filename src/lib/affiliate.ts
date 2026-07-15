@@ -121,9 +121,17 @@ const utm = (source: AffSource) => {
   return `utm_source=tulon&utm_medium=app&utm_campaign=${source}${refPart}`;
 };
 
-const tpRef = () => {
+// TravelPayouts short links (*.tpk.ro / tp.st) track a SINGLE parameter named
+// `sub_id` — underscore, not `subid1/2/3`. Anything else is ignored and the
+// SubID column in the TP reports stays empty (no per-source / per-partner data).
+// So we fold both the in-app source and the partner referral code into one
+// underscore-joined sub_id. Allowed chars: [A-Za-z0-9_]. We lead with the
+// partner code so partner-attributed clicks are easy to spot / filter in TP.
+const cleanSub = (s: string) => s.replace(/[^A-Za-z0-9_]/g, "_");
+const tpSubId = (source: AffSource) => {
   const ref = getPartnerRef();
-  return ref ? `&subid3=${encodeURIComponent(ref)}` : "";
+  const parts = ref ? [cleanSub(ref), cleanSub(source)] : [cleanSub(source)];
+  return `?sub_id=${parts.join("_")}`;
 };
 
 const dates = (checkIn?: string, checkOut?: string, agoda = false) => {
@@ -159,18 +167,18 @@ export function buildGygUrl({ destination, source }: BuildParams): string {
 }
 
 // Airalo eSIM — TravelPayouts SmartLink (all tracking built-in).
-// The SmartLink handles affiliate attribution; we add subid1 for source tracking.
+// The SmartLink handles affiliate attribution; we add sub_id for source + partner tracking.
 const AIRALO_TP_URL = "https://airalo.tpk.ro/A5T0EOcn";
 
 export function buildAiraloUrl({ source }: Pick<BuildParams, "source">): string {
-  return `${AIRALO_TP_URL}?subid1=tulon&subid2=${source}${tpRef()}`;
+  return `${AIRALO_TP_URL}${tpSubId(source)}`;
 }
 
 // GetTransfer airport transfers — TravelPayouts SmartLink (all tracking built-in).
 const GETTRANSFER_TP_URL = "https://gettransfer.tpk.ro/Ge13JWCO";
 
 export function buildGetTransferUrl({ source }: Pick<BuildParams, "source">): string {
-  return `${GETTRANSFER_TP_URL}?subid1=tulon&subid2=${source}${tpRef()}`;
+  return `${GETTRANSFER_TP_URL}${tpSubId(source)}`;
 }
 
 // One-stop helper if you want all five URLs at once for a given trip context.
