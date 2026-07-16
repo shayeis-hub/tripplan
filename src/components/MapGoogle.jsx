@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { loadGoogleMaps } from "@/lib/gmaps";
+import { useOnlineStatus } from "@/lib/useOnlineStatus";
 
 const RF = "'Rubik',sans-serif";
 const KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "";
@@ -98,17 +99,7 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
   const dirRendererRef = useRef(null);
   const [status, setStatus] = useState("loading");
   const [errCode, setErrCode] = useState("");
-  const [isOffline, setIsOffline] = useState(typeof navigator !== "undefined" && !navigator.onLine);
-
-  // No point waiting on Google Maps to time out when the device has no connection —
-  // detect it up front and show a usable fallback instead of a spinner.
-  useEffect(() => {
-    const goOffline = () => setIsOffline(true);
-    const goOnline = () => setIsOffline(false);
-    window.addEventListener("offline", goOffline);
-    window.addEventListener("online", goOnline);
-    return () => { window.removeEventListener("offline", goOffline); window.removeEventListener("online", goOnline); };
-  }, []);
+  const isOffline = useOnlineStatus();
 
   useEffect(() => {
     let cancelled = false;

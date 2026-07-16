@@ -40,6 +40,7 @@ const MapLeaflet = dynamic(_mapLoad, {
 import { db } from "@/lib/firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { loadGoogleMaps } from "@/lib/gmaps";
+import { useOnlineStatus } from "@/lib/useOnlineStatus";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildBookingUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
@@ -3516,6 +3517,7 @@ const MAP_PIN_COLORS={"flight":TEAL,"hotel":"#818cf8","attraction":"#f472b6","fo
 
 function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
   const{lang}=useLang();
+  const isOffline=useOnlineStatus();
   const dest=trip.destination||"";
   const dc=trip.displayCurrency||"ILS";
   const[q,setQ]=useState("");
@@ -3596,7 +3598,8 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
   return(
     <div style={{height:"100%",background:"#0d2137",display:"flex",flexDirection:"column",fontFamily:RF,position:"relative",overflow:"hidden"}}>
 
-      {/* ── Floating top bar: search ── */}
+      {/* ── Floating top bar: search (hidden offline — nothing here works without a connection) ── */}
+      {!isOffline&&(
       <div style={{position:"absolute",top:16,left:16,right:16,zIndex:1000,display:"flex",gap:10,alignItems:"stretch"}}>
         {/* Search box */}
         <div style={{flex:1,background:"rgba(9,25,40,0.92)",backdropFilter:"blur(14px)",borderRadius:14,padding:"8px 12px",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",gap:8,overflow:"hidden"}}>
@@ -3616,9 +3619,10 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
           </button>
         )}
       </div>
+      )}
 
       {/* ── Search results dropdown ── */}
-      {(searching||results)&&(
+      {!isOffline&&(searching||results)&&(
         <div style={{position:"absolute",top:60,left:16,right:16,zIndex:1001,background:"rgba(9,25,40,0.97)",backdropFilter:"blur(14px)",borderRadius:14,border:"0.5px solid rgba(100,223,223,0.2)",overflow:"hidden",maxHeight:"55vh",overflowY:"auto",boxShadow:"0 12px 40px rgba(0,0,0,0.5)"}}>
           {searching&&<div style={{padding:"16px",textAlign:"center",color:W40,fontSize:13}}>{lang==="he"?"מחפש…":lang==="es"?"Buscando…":"Searching…"}</div>}
           {results&&results.length===0&&<div style={{padding:"16px",textAlign:"center",color:W40,fontSize:13}}>{lang==="he"?"לא נמצאו תוצאות":lang==="es"?"Sin resultados":"No results"}</div>}
@@ -3668,6 +3672,16 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
         </div>
       )}
 
+      {/* ── Offline banner (replaces the search bar) ── */}
+      {isOffline&&(
+        <div style={{position:"absolute",top:16,left:16,right:16,zIndex:1000,background:"rgba(9,25,40,0.92)",backdropFilter:"blur(14px)",borderRadius:14,padding:"10px 14px",border:"0.5px solid rgba(255,255,255,0.15)",display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:15}}>📡</span>
+          <span style={{fontSize:12.5,fontWeight:700,color:"#fff",fontFamily:RF}}>
+            {lang==="he"?"אין חיבור לאינטרנט — מציג רשימת מקומות":lang==="es"?"Sin conexión — mostrando lista de lugares":"No connection — showing a place list"}
+          </span>
+        </div>
+      )}
+
       {/* ── Day filter chips ── */}
       {!results&&showDayRow&&(
         <div style={{position:"absolute",top:64,left:0,right:0,zIndex:1000,padding:"0 16px"}}>
@@ -3691,7 +3705,7 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
       )}
 
       {/* ── Day route button + info (bottom-left) ── */}
-      {dest&&canRoute&&process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY&&(
+      {!isOffline&&dest&&canRoute&&process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY&&(
         <div style={{position:"absolute",bottom:24,left:16,zIndex:1000,display:"flex",flexDirection:"column",gap:8,alignItems:"flex-start"}}>
           {routeActive&&routeInfo&&(
             <div style={{background:"rgba(9,25,40,0.92)",backdropFilter:"blur(14px)",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",padding:"8px 13px",fontFamily:RF,fontSize:12,fontWeight:700,color:"#fff",whiteSpace:"nowrap"}}>
@@ -3721,8 +3735,8 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
         )}
       </div>
 
-      {/* ── Bottom list — places (day-filtered) ── */}
-      {visiblePlaces.length>0&&(
+      {/* ── Bottom list — places (day-filtered); hidden offline since MapGoogle shows its own list ── */}
+      {!isOffline&&visiblePlaces.length>0&&(
         <div style={{background:"#0d2137",borderTop:"0.5px solid rgba(100,223,223,0.15)",flexShrink:0,maxHeight:"45%",display:"flex",flexDirection:"column"}}>
           {/* drag handle + header */}
           <div style={{padding:"10px 16px 6px",flexShrink:0}}>
@@ -3769,7 +3783,7 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
       )}
 
       {/* Empty state when no places (but destination exists) */}
-      {places.length===0&&dest&&(
+      {!isOffline&&places.length===0&&dest&&(
         <div style={{position:"absolute",bottom:30,left:0,right:0,display:"flex",justifyContent:"center",pointerEvents:"none",zIndex:800}}>
           <div style={{background:"rgba(9,25,40,0.9)",backdropFilter:"blur(12px)",borderRadius:16,padding:"14px 20px",border:"0.5px solid rgba(100,223,223,0.15)",textAlign:"center",maxWidth:280}}>
             <div style={{fontSize:13,fontWeight:700,color:"#ffffff",marginBottom:4}}>{lang==="he"?"אין מקומות ממופים":lang==="es"?"No hay lugares en el mapa":"No mapped places"}</div>
