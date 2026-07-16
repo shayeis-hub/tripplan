@@ -208,7 +208,20 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
       }
     }).catch((e) => { if (!cancelled) { setStatus("error"); setErrCode(e?.message || "load-failed"); } });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      // Google Maps has no official teardown API — clear the container by hand so
+      // its internal DOM (attribution bar, controls) doesn't linger under the
+      // offline fallback / next map instance.
+      if (mapEl.current) mapEl.current.innerHTML = "";
+      mapsRef.current = null;
+      mapObjRef.current = null;
+      clustererRef.current = null;
+      taggedRef.current = [];
+      dirRendererRef.current = null;
+      searchMarkerRef.current = null;
+      searchInfoRef.current = null;
+    };
   }, [destination, places, lang, isOffline]);
 
   // Drop / move a highlighted marker for a searched place, label it, and pan to it
