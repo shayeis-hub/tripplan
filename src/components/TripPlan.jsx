@@ -42,6 +42,7 @@ import { setDoc, doc } from "firebase/firestore";
 import { loadGoogleMaps } from "@/lib/gmaps";
 import { useOnlineStatus } from "@/lib/useOnlineStatus";
 import OfflineBanner from "@/components/OfflineBanner";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildBookingUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
@@ -4568,9 +4569,28 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
               {screen==="discover"&&<DiscoverScreen trip={active}/>}
               {screen==="packing"&&<PackingListScreen trip={active} onUpdate={updTrip}/>}
-              {screen==="map"&&<MapScreen trip={active} expenses={expenses}
-                onAddActivity={isViewOnly?null:(date,text,time="",address="")=>{const acts={...(active.activities||{})};const list=(acts[date]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);acts[date]=[...list,{text,time,address}];updTrip({activities:acts});}}
-                onAddExpense={isViewOnly?null:(place)=>{setExpensePrefill({description:place.name,address:place.address,category:place.category||"other"});pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}/>}
+              {screen==="map"&&(
+                <ErrorBoundary fallback={(error,retry)=>{
+                  const isChunkFail=/ChunkLoadError|Failed to load chunk/i.test(error?.name+" "+error?.message);
+                  return(
+                    <div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,padding:24,textAlign:"center",background:"#0f2438"}}>
+                      <div style={{fontSize:34}}>📡</div>
+                      <div style={{fontSize:14,fontWeight:700,color:"#fff",fontFamily:RF,maxWidth:280,lineHeight:1.6}}>
+                        {isChunkFail
+                          ?(lang==="he"?"מסך המפה טרם נטען במכשיר הזה. יש להתחבר לאינטרנט פעם אחת כדי לטעון אותו — לאחר מכן הוא יעבוד גם ללא רשת.":lang==="es"?"El mapa aún no se ha cargado en este dispositivo. Conéctate a internet una vez para cargarlo — después funcionará también sin conexión.":"The map hasn't loaded on this device yet. Connect to the internet once to load it — after that it'll work offline too.")
+                          :(lang==="he"?"לא הצלחנו לטעון את המסך הזה.":lang==="es"?"No se pudo cargar esta pantalla.":"Couldn't load this screen.")}
+                      </div>
+                      <button onClick={retry} style={{padding:"10px 24px",borderRadius:12,border:"none",background:TEAL,color:"#0d2137",fontFamily:RF,fontWeight:800,fontSize:13,cursor:"pointer"}}>
+                        {lang==="he"?"נסה שוב":lang==="es"?"Reintentar":"Try again"}
+                      </button>
+                    </div>
+                  );
+                }}>
+                  <MapScreen trip={active} expenses={expenses}
+                    onAddActivity={isViewOnly?null:(date,text,time="",address="")=>{const acts={...(active.activities||{})};const list=(acts[date]||[]).map(a=>typeof a==="string"?{text:a,time:""}:a);acts[date]=[...list,{text,time,address}];updTrip({activities:acts});}}
+                    onAddExpense={isViewOnly?null:(place)=>{setExpensePrefill({description:place.name,address:place.address,category:place.category||"other"});pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}/>
+                </ErrorBoundary>
+              )}
             </div>
           </div>
           <NavBar screens={tripScreens} current={screen} onNav={s=>{pushNav("screen",activeId,"trip",s);setScreen(s);}}/>
