@@ -12,9 +12,12 @@ export default function OfflineBanner() {
   const isOffline = useOnlineStatus();
   const { lang } = useLang();
   if (!isOffline) return null;
+  // Normal document flow, not fixed — a fixed overlay would sit on top of the
+  // app's own fixed-height screens (each is exactly 100dvh) instead of
+  // pushing them down, hiding their header underneath it.
   return (
     <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 99999,
+      flexShrink: 0, zIndex: 500,
       background: "#7c2d12", color: "#fff",
       fontFamily: "'Rubik',sans-serif", fontSize: 12.5, fontWeight: 700,
       textAlign: "center", padding: "6px 10px",

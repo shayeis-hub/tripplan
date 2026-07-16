@@ -14,7 +14,9 @@ export function loadGoogleMaps() {
     const s = document.createElement("script");
     s.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}&v=weekly&callback=__gmapsReady`;
     s.async = true;
-    s.onerror = () => reject(new Error("load-failed"));
+    // Reset the cached promise on failure (e.g. offline) so the next call
+    // retries instead of returning this same rejected promise forever.
+    s.onerror = () => { promise = null; reject(new Error("load-failed")); };
     document.head.appendChild(s);
   });
   return promise;

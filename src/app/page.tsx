@@ -5,6 +5,7 @@ import { useTrips } from "@/lib/useTrips";
 import TripPlan from "@/components/TripPlan";
 import LandingPage from "@/components/LandingPage";
 import OfflineBanner from "@/components/OfflineBanner";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
@@ -40,8 +41,7 @@ export default function Home() {
   );
 
   return (
-    <>
-      <OfflineBanner />
+    <ErrorBoundary>
       {loading ? loadingScreen
         : !user ? <LandingPage />
         : tripsLoading ? loadingScreen
@@ -57,6 +57,6 @@ export default function Home() {
             userId={user.uid}
           />
         )}
-    </>
+    </ErrorBoundary>
   );
 }

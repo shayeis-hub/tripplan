@@ -41,6 +41,7 @@ import { db } from "@/lib/firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { loadGoogleMaps } from "@/lib/gmaps";
 import { useOnlineStatus } from "@/lib/useOnlineStatus";
+import OfflineBanner from "@/components/OfflineBanner";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildBookingUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
@@ -1700,6 +1701,7 @@ const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"I
 
 function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo,prefill,onPrefillDone}){
   const{lang}=useLang();
+  const isOffline=useOnlineStatus();
   const dates=getRange(trip.startDate,trip.endDate);
   const people=trip.people||[];
   const[sel,setSel]=useState(dates[0]||"");
@@ -1917,7 +1919,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         subtitle={trip.destination?`${trip.destination}${nights>0?` · ${nights} ${t("days",lang)}`:""}`:""}
         action={
           <div style={{display:"flex",gap:8}}>
-            <button onClick={()=>isNativeApp?nativeScan():setShowCamera(true)} disabled={scanning}
+            <button onClick={()=>{if(isOffline){alert(t("scan_offline",lang));return;}isNativeApp?nativeScan():setShowCamera(true);}} disabled={scanning}
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:scanning?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:scanning?"default":"pointer",opacity:scanning?0.5:1}}>
               {scanning?<Loader size={16} color={W40} strokeWidth={1.5} style={{animation:"spin 1s linear infinite"}}/>:<Camera size={17} color={W40} strokeWidth={1.5}/>}
             </button>
@@ -4209,6 +4211,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       <>
         <style>{GS}</style>
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",fontFamily:RF}}>
+          <OfflineBanner/>
           {/* user bar */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             {/* App name */}
@@ -4469,6 +4472,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         <style>{GS}</style>
         {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)",fontFamily:RF}}>
+          <OfflineBanner/>
           {/* Minimal top bar — back link + menu */}
           <div style={{padding:"16px 20px 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <button onClick={()=>setSideMenu(true)} className="tap-btn" style={{background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.6)",width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><Menu size={16} strokeWidth={1.5}/></button>
@@ -4497,6 +4501,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         <style>{GS}</style>
         {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
+          <OfflineBanner/>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             <button onClick={handleHome} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><MapPin size={16} strokeWidth={1.5}/></button>
@@ -4541,6 +4546,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         <style>{GS}</style>
         {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",height:"100dvh",overflow:"hidden",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
+          <OfflineBanner/>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             <button onClick={handleHome} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><MapPin size={16} strokeWidth={1.5}/></button>
