@@ -98,9 +98,21 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
   const dirRendererRef = useRef(null);
   const [status, setStatus] = useState("loading");
   const [errCode, setErrCode] = useState("");
+  const [isOffline, setIsOffline] = useState(typeof navigator !== "undefined" && !navigator.onLine);
+
+  // No point waiting on Google Maps to time out when the device has no connection —
+  // detect it up front and show a usable fallback instead of a spinner.
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true);
+    const goOnline = () => setIsOffline(false);
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+    return () => { window.removeEventListener("offline", goOffline); window.removeEventListener("online", goOnline); };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
+    if (isOffline) { setStatus("offline"); return; }
     if (!destination) { setStatus("error"); setErrCode("no-destination"); return; }
     if (!KEY) { setStatus("error"); setErrCode("no-key"); return; }
     window.gm_authFailure = () => { if (!cancelled) { setStatus("error"); setErrCode("auth-failure (key/referrer/billing)"); } };
@@ -206,7 +218,7 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
     }).catch((e) => { if (!cancelled) { setStatus("error"); setErrCode(e?.message || "load-failed"); } });
 
     return () => { cancelled = true; };
-  }, [destination, places, lang]);
+  }, [destination, places, lang, isOffline]);
 
   // Drop / move a highlighted marker for a searched place, label it, and pan to it
   useEffect(() => {
@@ -273,6 +285,50 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
       maps.event.addListenerOnce(map, "idle", () => { if (map.getZoom() > 15) map.setZoom(15); });
     }
   }, [dayFilter, status]);
+
+  if (status === "offline") {
+    const list = (places || [])
+      .filter(p => p.address && (dayFilter === "all" || p.date === dayFilter))
+      .sort((a, b) => `${a.date || ""}${a.time || ""}`.localeCompare(`${b.date || ""}${b.time || ""}`));
+    const T = {
+      title: { he: "אין חיבור לאינטרנט", en: "No internet connection", es: "Sin conexión a internet" },
+      sub:   { he: "מציג רשימת מיקומים במקום מפה חיה", en: "Showing a location list instead of a live map", es: "Mostrando una lista de lugares en vez de un mapa en vivo" },
+      empty: { he: "אין כתובות בטיול הזה עדיין", en: "No addresses in this trip yet", es: "Aún no hay direcciones en este viaje" },
+      nav:   { he: "ניווט", en: "Navigate", es: "Ir" },
+    };
+    return (
+      <div style={{ width: "100%", height: "100%", overflowY: "auto", background: "#0f2438", padding: "20px 16px" }}>
+        <div style={{ textAlign: "center", marginBottom: 18 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", fontFamily: RF }}>📡 {T.title[lang]}</div>
+          <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.45)", fontFamily: RF, marginTop: 4 }}>{T.sub[lang]}</div>
+        </div>
+        {list.length === 0 ? (
+          <div style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 13, fontFamily: RF, padding: "24px 0" }}>{T.empty[lang]}</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 480, margin: "0 auto" }}>
+            {list.map((p, i) => {
+              const color = PIN_COLORS[p.category] || "#64748b";
+              const nav = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.address}, ${destination}`)}`;
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 14px" }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#fff", fontFamily: RF, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.label || p.address}</div>
+                    <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.4)", fontFamily: RF, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {p.date ? `${p.date}${p.time ? ` · ${p.time}` : ""} · ` : ""}{p.address}
+                    </div>
+                  </div>
+                  <a href={nav} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0, background: "#4285F4", color: "#fff", padding: "6px 12px", borderRadius: 8, fontSize: 11.5, fontWeight: 700, textDecoration: "none", fontFamily: RF }}>
+                    {T.nav[lang]} ↗
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: "100%", height: "100%", position: "relative", background: "#0f2438" }}>
