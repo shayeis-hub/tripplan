@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, X, RotateCcw, Check, Image as ImageIcon } from "lucide-react";
 import { t } from "@/lib/i18n";
+import { useOnlineStatus } from "@/lib/useOnlineStatus";
 
 const RF = "'Rubik',sans-serif";
 const TEAL = "#64dfdf";
@@ -16,6 +17,7 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
   const galleryRef = useRef(null);  // pick existing photo (no capture)
   const [shot, setShot] = useState(null); // captured data URL (preview before confirm)
   const [ready, setReady] = useState(false);
+  const isOffline = useOnlineStatus();
 
   useEffect(() => {
     let cancelled = false;
@@ -117,6 +119,12 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
           <div style={{ color: "#fff", fontFamily: RF, fontWeight: 800, fontSize: 17 }}>{t("cam_title", lang)}</div>
           <div style={{ width: 36 }} />
         </div>
+        {!shot && isOffline && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, background: "rgba(124,45,18,0.85)", borderRadius: 10, padding: "8px 12px" }}>
+            <span style={{ fontSize: 15, flexShrink: 0 }}>📡</span>
+            <span style={{ color: "#fff", fontFamily: RF, fontSize: 12.5, fontWeight: 600, lineHeight: 1.35 }}>{t("scan_offline", lang)}</span>
+          </div>
+        )}
         {!shot && (
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
             {[t("cam_tip1", lang), t("cam_tip2", lang), t("cam_tip3", lang)].map((tip, i) => (

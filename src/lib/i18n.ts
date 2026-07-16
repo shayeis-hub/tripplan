@@ -230,6 +230,7 @@ export const translations = {
   scan_btn:         { he: "📷 סרוק קבלה",             en: "📷 Scan receipt",      es: "📷 Escanear recibo" },
   scan_loading:     { he: "⏳ מזהה קבלה...",           en: "⏳ Reading receipt...", es: "⏳ Leyendo recibo..." },
   scan_error:       { he: "לא הצלחתי לקרוא את הקבלה. נסה שוב.", en: "Could not read the receipt. Please try again.", es: "No se pudo leer el recibo. Inténtalo de nuevo." },
+  scan_offline:     { he: "אין חיבור לאינטרנט — סריקת קבלות דורשת רשת. הפרטים יתמלאו ידנית.", en: "No internet connection — receipt scanning needs a connection. Fill in the details manually.", es: "Sin conexión — el escaneo de recibos necesita conexión. Completa los datos manualmente." },
   scan_success:     { he: "✓ הנתונים זוהו – בדוק ותקן לפי הצורך", en: "✓ Data detected – review and adjust as needed", es: "✓ Datos detectados — revisa y ajusta si es necesario" },
   cam_title:        { he: "צילום קבלה",                en: "Capture receipt",      es: "Capturar recibo" },
   cam_tip1:         { he: "מקם את הקבלה בתוך המסגרת",  en: "Place the receipt inside the frame", es: "Coloca el recibo dentro del marco" },

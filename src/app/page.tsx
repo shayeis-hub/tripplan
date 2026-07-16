@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useTrips } from "@/lib/useTrips";
 import TripPlan from "@/components/TripPlan";
 import LandingPage from "@/components/LandingPage";
+import OfflineBanner from "@/components/OfflineBanner";
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
@@ -25,22 +26,7 @@ export default function Home() {
     }
   }, [user, loading]);
 
-  if (loading) return (
-    <div style={{
-      minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
-      background:"linear-gradient(160deg,#091928,#0d2137)",
-      fontFamily:"'Rubik',sans-serif",
-    }}>
-      <div style={{textAlign:"center",color:"white"}}>
-        <div style={{fontSize:42,fontWeight:900,letterSpacing:"-1px",marginBottom:10}}>TU<span style={{color:"#64dfdf"}}>lon</span></div>
-        <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",fontWeight:300}}>טוען...</div>
-      </div>
-    </div>
-  );
-
-  if (!user) return <LandingPage />;
-
-  if (tripsLoading) return (
+  const loadingScreen = (
     <div style={{
       minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
       background:"linear-gradient(160deg,#091928,#0d2137)",
@@ -54,15 +40,23 @@ export default function Home() {
   );
 
   return (
-    <TripPlan
-      trips={trips}
-      onSaveTrip={saveTrip}
-      onDeleteTrip={deleteTrip}
-      onShareTrip={shareTrip}
-      onRemoveShare={removeShare}
-      onLogout={logout}
-      userEmail={user.email || ""}
-      userId={user.uid}
-    />
+    <>
+      <OfflineBanner />
+      {loading ? loadingScreen
+        : !user ? <LandingPage />
+        : tripsLoading ? loadingScreen
+        : (
+          <TripPlan
+            trips={trips}
+            onSaveTrip={saveTrip}
+            onDeleteTrip={deleteTrip}
+            onShareTrip={shareTrip}
+            onRemoveShare={removeShare}
+            onLogout={logout}
+            userEmail={user.email || ""}
+            userId={user.uid}
+          />
+        )}
+    </>
   );
 }

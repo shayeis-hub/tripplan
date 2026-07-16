@@ -247,11 +247,23 @@ const defaultTripDate=(dates)=>{
 const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
 const remTime=(t,hrs=5)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-(hrs*60);if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
 
+const RATES_CACHE_KEY="tulon_rates_cache";
+function loadCachedRates(){
+  try{
+    const raw=localStorage.getItem(RATES_CACHE_KEY);
+    if(!raw)return null;
+    const parsed=JSON.parse(raw);
+    if(parsed?.rates?.ILS)return parsed;
+  }catch{}
+  return null;
+}
+
 function useRates(){
   // rates: { CODE: ILS_value } — e.g. rates.USD = 3.7 means 1 USD = 3.7 ILS
-  const[rates,setRates]=useState({ILS:1,USD:3.7,EUR:4.0,THB:0.105});
-  const[allCodes,setAllCodes]=useState([]); // all available codes from API
-  const[info,setInfo]=useState({updated:null,error:null});
+  const cached=typeof window!=="undefined"?loadCachedRates():null;
+  const[rates,setRates]=useState(cached?.rates||{ILS:1,USD:3.7,EUR:4.0,THB:0.105});
+  const[allCodes,setAllCodes]=useState(cached?.allCodes||[]); // all available codes from API
+  const[info,setInfo]=useState({updated:cached?.updated||null,error:null});
   useEffect(()=>{
     fetch("https://open.er-api.com/v6/latest/ILS")
       .then(r=>r.json())
@@ -260,12 +272,19 @@ function useRates(){
           // convert: 1 ILS = d.rates[CODE] => 1 CODE = 1/d.rates[CODE] ILS
           const r={ILS:1};
           Object.keys(d.rates).forEach(code=>{ r[code]=1/d.rates[code]; });
+          const codes=Object.keys(d.rates).sort();
+          const updated=new Date().toLocaleTimeString("he-IL");
           setRates(r);
-          setAllCodes(Object.keys(d.rates).sort());
-          setInfo({updated:new Date().toLocaleTimeString("he-IL"),error:null});
+          setAllCodes(codes);
+          setInfo({updated,error:null});
+          try{localStorage.setItem(RATES_CACHE_KEY,JSON.stringify({rates:r,allCodes:codes,updated}));}catch{}
         }
       })
-      .catch(()=>setInfo({updated:null,error:"שערים קבועים (API לא זמין בתצוגה מקדימה)"}));
+      .catch(()=>{
+        // Offline / API down — keep whatever we already have (cached from a
+        // previous session, or the hardcoded fallback) instead of resetting it.
+        setInfo(i=>({updated:i.updated,error:i.updated?"אין חיבור — מציג שערים אחרונים ידועים":"שערים קבועים (אין חיבור לאינטרנט)"}));
+      });
   },[]);
   const toILS=useCallback((amt,cur)=>amt*(rates[cur]??1),[rates]);
   return{rates,allCodes,info,toILS};
@@ -1734,33 +1753,41 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     try{
       const reader=new FileReader();
       reader.onload=async(ev)=>{
-        const dataUrl=ev.target.result;
-        const base64=dataUrl.split(",")[1];
-        const mediaType=file.type||"image/jpeg";
-        const res=await fetch("/api/scan-receipt",{
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({imageBase64:base64,mediaType,lang,currencies:trip.currencies||["ILS"]}),
-        });
-        const data=await res.json();
-        if(!res.ok||data.error){
-          setScanMsg({type:"err",text:t("scan_error",lang)});
+        try{
+          const dataUrl=ev.target.result;
+          const base64=dataUrl.split(",")[1];
+          const mediaType=file.type||"image/jpeg";
+          const res=await fetch("/api/scan-receipt",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({imageBase64:base64,mediaType,lang,currencies:trip.currencies||["ILS"]}),
+          });
+          const data=await res.json();
+          if(!res.ok||data.error){
+            setScanMsg({type:"err",text:t("scan_error",lang)});
+            setScanning(false);
+            return;
+          }
+          // Pre-fill form and open it
+          const patch={};
+          if(data.amount)     patch.amount=String(data.amount);
+          if(data.currency&&(trip.currencies||["ILS"]).includes(data.currency)) patch.currency=data.currency;
+          if(data.description) patch.description=data.description;
+          if(data.category)    patch.category=data.category;
+          if(data.date&&dates.includes(data.date)) patch.date=data.date;
+          else patch.date=sel;
+          if(data.category==="hotel"){ patch.checkIn=patch.date||sel; patch.checkOut=patch.date||sel; }
+          set(patch);
+          setScanMsg({type:"ok",text:t("scan_success",lang)});
+          setShow(true);
           setScanning(false);
-          return;
+        }catch(e){
+          // Network failure (e.g. offline) — without this the UI would be
+          // stuck on "scanning..." forever since fetch() runs outside the
+          // outer try/catch (this callback fires after readAsDataURL returns).
+          setScanMsg({type:"err",text:!navigator.onLine?t("scan_offline",lang):t("scan_error",lang)});
+          setScanning(false);
         }
-        // Pre-fill form and open it
-        const patch={};
-        if(data.amount)     patch.amount=String(data.amount);
-        if(data.currency&&(trip.currencies||["ILS"]).includes(data.currency)) patch.currency=data.currency;
-        if(data.description) patch.description=data.description;
-        if(data.category)    patch.category=data.category;
-        if(data.date&&dates.includes(data.date)) patch.date=data.date;
-        else patch.date=sel;
-        if(data.category==="hotel"){ patch.checkIn=patch.date||sel; patch.checkOut=patch.date||sel; }
-        set(patch);
-        setScanMsg({type:"ok",text:t("scan_success",lang)});
-        setShow(true);
-        setScanning(false);
       };
       reader.readAsDataURL(file);
     }catch(e){
