@@ -9,14 +9,15 @@ const RF = "'Rubik',sans-serif";
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null, info: null };
   }
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
   }
-  componentDidCatch(error) {
+  componentDidCatch(error, info) {
     // eslint-disable-next-line no-console
-    console.error("Caught by ErrorBoundary:", error);
+    console.error("Caught by ErrorBoundary:", error, info);
+    this.setState({ info });
   }
   render() {
     if (!this.state.hasError) return this.props.children;
@@ -38,6 +39,14 @@ export default class ErrorBoundary extends Component {
         }}>
           🔄 רענן
         </button>
+        {this.state.error && (
+          <details style={{ marginTop: 10, maxWidth: 340, textAlign: "left", direction: "ltr" }}>
+            <summary style={{ cursor: "pointer", fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Details</summary>
+            <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.4)", fontFamily: "monospace", whiteSpace: "pre-wrap", marginTop: 6, maxHeight: 160, overflowY: "auto" }}>
+              {String(this.state.error?.stack || this.state.error?.message || this.state.error)}
+            </div>
+          </details>
+        )}
       </div>
     );
   }
