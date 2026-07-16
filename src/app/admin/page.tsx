@@ -18,6 +18,7 @@ interface Stats {
 
 // Simple SVG area/line chart in the app palette
 function LineChart({ data, color = TEAL, label }: { data: DayPoint[]; color?: string; label: string }) {
+  const [hover, setHover] = useState<number | null>(null);
   const days = data.slice(-14);
   const W = 640, H = 180, PAD = 24, PB = 22;
   const max = Math.max(1, ...days.map(d => d.count));
@@ -28,13 +29,14 @@ function LineChart({ data, color = TEAL, label }: { data: DayPoint[]; color?: st
   const gid = "g" + label.replace(/\W/g, "");
   const totalRange = days.reduce((s, d) => s + d.count, 0);
   const fmt = (s: string) => { const dt = new Date(s); return `${dt.getMonth() + 1}/${dt.getDate()}`; };
+  const hd = hover != null ? days[hover] : null;
   return (
     <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "18px 20px" }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: RF }}>{label}</div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: RF }}>14 ימים · סה״כ {totalRange}</div>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity="0.35" />
@@ -46,13 +48,33 @@ function LineChart({ data, color = TEAL, label }: { data: DayPoint[]; color?: st
         ))}
         <polygon points={area} fill={`url(#${gid})`} />
         <polyline points={pts} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        {hover != null && (
+          <line x1={x(hover)} x2={x(hover)} y1={10} y2={H - PB} stroke={color} strokeWidth="1" strokeDasharray="3,3" opacity="0.5" />
+        )}
         {days.map((d, i) => d.count > 0 && (
-          <circle key={i} cx={x(i)} cy={y(d.count)} r="3" fill={color} />
+          <circle key={i} cx={x(i)} cy={y(d.count)} r={hover === i ? 5 : 3} fill={color} style={{ transition: "r 0.1s" }} />
+        ))}
+        {/* Invisible wide hit-targets for hover, one per day */}
+        {days.map((d, i) => (
+          <rect key={i} x={x(i) - (W / days.length) / 2} y={0} width={W / days.length} height={H}
+            fill="transparent" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(h => h === i ? null : h)} />
         ))}
         {days.map((d, i) => (i % 2 === 0) && (
           <text key={i} x={x(i)} y={H - 6} fontSize="10" fill="rgba(255,255,255,0.35)" textAnchor="middle" fontFamily="sans-serif">{fmt(d.date)}</text>
         ))}
         <text x={PAD - 4} y={y(max) + 3} fontSize="10" fill="rgba(255,255,255,0.35)" textAnchor="end" fontFamily="sans-serif">{max}</text>
+        {hd && (()=>{
+          const tw = 74, th = 34;
+          const cx = Math.min(Math.max(x(hover as number), PAD + tw / 2), W - PAD - tw / 2);
+          const cy = Math.max(y(hd.count) - th - 10, 4);
+          return (
+            <g pointerEvents="none">
+              <rect x={cx - tw / 2} y={cy} width={tw} height={th} rx={8} fill="#0d2137" stroke={color} strokeWidth="1" />
+              <text x={cx} y={cy + 15} fontSize="12" fontWeight={800} fill="#fff" textAnchor="middle" fontFamily="sans-serif">{hd.count}</text>
+              <text x={cx} y={cy + 27} fontSize="9" fill="rgba(255,255,255,0.5)" textAnchor="middle" fontFamily="sans-serif">{fmt(hd.date)}</text>
+            </g>
+          );
+        })()}
       </svg>
     </div>
   );
