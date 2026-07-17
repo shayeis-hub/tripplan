@@ -308,17 +308,22 @@ function useWeather(destination,startDate,endDate){
     if(!destination||!startDate||!endDate)return;
     const today=new Date();today.setHours(0,0,0,0);
     const diff=Math.round((new Date(startDate).getTime()-today.getTime())/86400000);
-    if(diff>16){setWxError("תחזית זמינה רק עד 16 יום קדימה");return;}
+    // Open-Meteo's free forecast actually only covers up to today+15 days —
+    // requesting day 16 returns a JSON {error:true} payload (not an HTTP
+    // error), so this bound must match exactly or that response gets
+    // silently accepted as "no weather data" further down.
+    if(diff>15){setWxError("תחזית זמינה רק עד 15 יום קדימה");return;}
     setLoading(true);setWxError(null);setWx(null);
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(translateDest(destination))}&count=1&language=en`)
       .then(r=>r.json()).then(geo=>{
         if(!geo.results?.length)throw new Error("יעד לא נמצא");
         const{latitude:lat,longitude:lon,name,country}=geo.results[0];
-        const maxDate=localDateStr(new Date(today.getTime()+16*86400000));
+        const maxDate=localDateStr(new Date(today.getTime()+15*86400000));
         const end2=endDate>maxDate?maxDate:endDate;
         const start2=startDate<localDateStr(today)?localDateStr(today):startDate;
         return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&start_date=${start2}&end_date=${end2}&timezone=auto`)
           .then(r=>r.json()).then(fc=>{
+            if(fc.error)throw new Error(fc.reason||"forecast-error");
             // Normalise field name: API uses weather_code, fallback to legacy weathercode
             const daily=fc.daily;
             if(daily&&daily.weather_code&&!daily.weathercode) daily.weathercode=daily.weather_code;
@@ -2703,8 +2708,8 @@ function CalendarScreen({trip,expenses,onSaveActs}){
                 </div>
               ):(wErr||!wx)&&!wLoad&&trip.destination&&(
                 <div style={{fontSize:10,color:W25,marginTop:3}}>
-                  {wErr&&wErr.includes("16")?
-                    (lang==="he"?"תחזית זמינה 16 יום מראש":lang==="es"?"Pronóstico disponible 16 días antes":"Forecast available 16 days ahead")
+                  {wErr&&wErr.includes("15")?
+                    (lang==="he"?"תחזית זמינה 15 יום מראש":lang==="es"?"Pronóstico disponible 15 días antes":"Forecast available 15 days ahead")
                     :"–"}
                 </div>
               )}
@@ -2970,7 +2975,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             {trip.destination&&<div style={{fontSize:11,color:"rgba(255,255,255,0.3)",fontFamily:RF}}>
-              {wLoad?t("wx_loading",lang):wx?`🌍 ${wx.name}`:wErr&&wErr.includes("16")?(lang==="he"?"☁️ תחזית זמינה 16 יום מראש":lang==="es"?"☁️ Pronóstico disponible 16 días antes":"☁️ Forecast available 16 days ahead"):""}
+              {wLoad?t("wx_loading",lang):wx?`🌍 ${wx.name}`:wErr&&wErr.includes("15")?(lang==="he"?"☁️ תחזית זמינה 15 יום מראש":lang==="es"?"☁️ Pronóstico disponible 15 días antes":"☁️ Forecast available 15 days ahead"):""}
             </div>}
             {trip.startDate&&trip.endDate&&(
               <button onClick={()=>exportItineraryPDF(trip,expenses,lang)}
