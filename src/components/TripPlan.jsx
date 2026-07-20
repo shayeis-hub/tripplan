@@ -334,6 +334,25 @@ function useWeather(destination,startDate,endDate){
   return{wx,loading,error:wxError};
 }
 
+// App version line for the side-menu footer. Web version comes from
+// package.json (injected at build time); inside the native app we also show
+// the installed shell version so Play-Store staleness is visible too.
+function VersionFooter(){
+  const[shellVer,setShellVer]=useState(null);
+  useEffect(()=>{
+    try{
+      window.Capacitor?.Plugins?.App?.getInfo?.().then(i=>{if(i?.version)setShellVer(i.version);}).catch(()=>{});
+    }catch{}
+  },[]);
+  const webVer=process.env.NEXT_PUBLIC_APP_VERSION;
+  if(!webVer)return null;
+  return(
+    <div style={{padding:"10px 20px 4px",fontFamily:RF,fontSize:10.5,color:"rgba(255,255,255,0.22)",textAlign:"center",direction:"ltr"}}>
+      TUlon v{webVer}{shellVer?` · app ${shellVer}`:""}
+    </div>
+  );
+}
+
 const GS=`
   @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -4207,6 +4226,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:"rgba(255,107,107,0.7)",fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
             <LogOut size={15} color="rgba(255,107,107,0.7)" strokeWidth={1.5}/>{lang==="he"?"התנתקות":lang==="es"?"Cerrar sesión":"Sign out"}
           </button>
+          <VersionFooter/>
         </div>
       </div>
     </>

@@ -1,8 +1,14 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import pkg from "./package.json";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.128"],
+  env: {
+    // Single source of truth for the displayed app version: package.json.
+    // Bump with `npm version x.y.z --no-git-tag-version` before deploying.
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
+  },
 };
 
 export default withSentryConfig(nextConfig, {
