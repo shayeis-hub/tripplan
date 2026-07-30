@@ -608,12 +608,18 @@ function usePushNotifications(userId){
   const[permission,setPermission]=useState(typeof Notification!=="undefined"?Notification.permission:"default");
   const[subscribed,setSubscribed]=useState(false);
 
+  // Best-effort: these run from fire-and-forget listeners on app start, so a
+  // network failure here must never surface as an unhandled rejection (it was
+  // reaching Sentry as "TypeError: Failed to fetch"). The token is re-sent on
+  // the next launch with a working connection, so swallowing is safe.
   const saveFcmToken=async(token,uid)=>{
-    await fetch("/api/push-subscribe",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({fcmToken:token,userId:uid}),
-    });
+    try{
+      await fetch("/api/push-subscribe",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({fcmToken:token,userId:uid}),
+      });
+    }catch(e){console.warn("push: FCM token save failed (will retry next launch)",e);}
   };
 
   const subscribeNative=async()=>{
@@ -651,11 +657,13 @@ function usePushNotifications(userId){
   };
 
   const saveSubscription=async(sub,uid)=>{
-    await fetch("/api/push-subscribe",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({subscription:sub.toJSON(),userId:uid}),
-    });
+    try{
+      await fetch("/api/push-subscribe",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({subscription:sub.toJSON(),userId:uid}),
+      });
+    }catch(e){console.warn("push: subscription save failed (will retry next load)",e);}
   };
 
   useEffect(()=>{
@@ -669,7 +677,7 @@ function usePushNotifications(userId){
             await saveFcmToken(token.value,userId);
             setSubscribed(true);
           });
-          PushNotifications.register();
+          PushNotifications.register().catch(()=>{});
         }
       }).catch(()=>{});
       return;
@@ -679,8 +687,8 @@ function usePushNotifications(userId){
     navigator.serviceWorker.ready.then(reg=>{
       reg.pushManager.getSubscription().then(sub=>{
         if(sub){saveSubscription(sub,userId);setSubscribed(true);}
-      });
-    });
+      }).catch(()=>{});
+    }).catch(()=>{});
   },[userId]);
 
   return{permission,subscribed,subscribe};
