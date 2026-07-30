@@ -88,6 +88,11 @@ export default function DeleteAccountPage() {
         .lang-btn{padding:4px 10px;border-radius:20px;border:0.5px solid rgba(100,223,223,0.3);background:transparent;color:rgba(255,255,255,0.5);font-size:12px;cursor:pointer;font-family:'Rubik',sans-serif;}
         .lang-btn.active{background:rgba(100,223,223,0.15);color:#64dfdf;border-color:#64dfdf;}
         .divider{height:0.5px;background:rgba(255,255,255,0.07);margin:16px 0;}
+        .ident{border-bottom:0.5px solid rgba(255,255,255,0.08);padding-bottom:14px;margin-bottom:4px;direction:ltr;text-align:${isHe?"right":"left"};}
+        .ident-name{font-size:13px;font-weight:700;color:rgba(255,255,255,0.75);line-height:1.5;}
+        .ident-row{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;}
+        .retain{font-size:11.5px;color:rgba(255,255,255,0.35);line-height:1.7;margin-bottom:18px;}
+        .retain strong{color:rgba(255,255,255,0.55);}
       `}</style>
 
       <div className="page" dir={dir}>
@@ -101,14 +106,23 @@ export default function DeleteAccountPage() {
             ))}
           </div>
 
+          {/* App identity — required by Google Play's account-deletion policy:
+              the page must clearly reference the app/developer as named in the
+              Play listing. Kept static (not language-dependent) so it is always
+              visible to a reviewer regardless of locale. */}
           <div className="logo">
-            {isHe ? <>טיולון</> : <><span>TU</span>lon</>}
+            <span>TU</span>lon
+          </div>
+          <div className="ident">
+            <div className="ident-name">טיולון – מתכנן הטיולים שלי (Tulon – My Trip Planner)</div>
+            <div className="ident-row">Google Play package: il.co.tulon.www.twa</div>
+            <div className="ident-row">www.tulon.app · contact@tulon.app</div>
           </div>
 
           {step === "info" && (
             <>
               <div className="title">
-                {tr("🗑️ מחיקת חשבון", "🗑️ Delete Account", "🗑️ Eliminar cuenta")}
+                {tr("מחיקת חשבון", "Delete Account", "Eliminar cuenta")}
               </div>
               <div className="desc">
                 {tr(
@@ -124,6 +138,14 @@ export default function DeleteAccountPage() {
                   <li>{tr("כל ההוצאות והפעילויות", "All expenses and activities", "Todos los gastos y actividades")}</li>
                   <li>{tr("פרטי החשבון (אימייל וסיסמה)", "Account credentials (email & password)", "Datos de la cuenta (correo y contraseña)")}</li>
                 </ul>
+              </div>
+              <div className="retain">
+                <strong>{tr("שמירת נתונים:", "Data retention:", "Retención de datos:")}</strong>{" "}
+                {tr(
+                  "המחיקה מתבצעת מיד ולצמיתות. לא נשמרים אצלנו נתונים נוספים לאחר המחיקה, למעט רשומות שאנו מחויבים לשמור על פי חוק. טיולים ששותפו איתך על ידי משתמשים אחרים נשארים בבעלותם.",
+                  "Deletion is immediate and permanent. No further data is retained after deletion, except records we are legally required to keep. Trips that other users shared with you remain owned by them.",
+                  "La eliminación es inmediata y permanente. No conservamos más datos tras la eliminación, salvo los registros que estemos legalmente obligados a mantener. Los viajes que otros usuarios compartieron contigo siguen siendo de su propiedad."
+                )}
               </div>
               <button className="btn-del" onClick={()=>setStep("auth")}>
                 {tr("המשך למחיקת חשבון", "Continue to Delete Account", "Continuar con la eliminación")}
@@ -147,7 +169,7 @@ export default function DeleteAccountPage() {
                 )}
               </div>
 
-              {errMsg && <div className="err">⚠️ {errMsg}</div>}
+              {errMsg && <div className="err">{errMsg}</div>}
 
               <input className="inp" type="email" dir="ltr"
                 placeholder={tr("אימייל", "Email", "Correo electrónico")}
@@ -172,7 +194,7 @@ export default function DeleteAccountPage() {
           {step === "confirm" && (
             <>
               <div className="title">
-                {tr("⚠️ אישור סופי", "⚠️ Final Confirmation", "⚠️ Confirmación final")}
+                {tr("אישור סופי", "Final Confirmation", "Confirmación final")}
               </div>
               <div className="desc">
                 {tr(
@@ -182,10 +204,10 @@ export default function DeleteAccountPage() {
                 )}
               </div>
 
-              {errMsg && <div className="err">⚠️ {errMsg}</div>}
+              {errMsg && <div className="err">{errMsg}</div>}
 
               <button className="btn-del" onClick={doDelete} disabled={busy}>
-                {busy ? "⏳" : tr("כן, מחק את החשבון שלי לצמיתות", "Yes, permanently delete my account", "Sí, eliminar mi cuenta permanentemente")}
+                {busy ? tr("מוחק...", "Deleting...", "Eliminando...") : tr("כן, מחק את החשבון שלי לצמיתות", "Yes, permanently delete my account", "Sí, eliminar mi cuenta permanentemente")}
               </button>
               <div className="divider"/>
               <button className="btn-sec" onClick={()=>{ setStep("info"); setErrMsg(""); }}>
@@ -196,7 +218,6 @@ export default function DeleteAccountPage() {
 
           {step === "done" && (
             <div className="success">
-              <div className="icon">✅</div>
               <h2>{tr("החשבון נמחק", "Account Deleted", "Cuenta eliminada")}</h2>
               <p>
                 {tr(
