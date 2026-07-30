@@ -9,6 +9,26 @@ const nextConfig: NextConfig = {
     // Bump with `npm version x.y.z --no-git-tag-version` before deploying.
     NEXT_PUBLIC_APP_VERSION: pkg.version,
   },
+  async redirects() {
+    return [
+      // The legacy tulon.co.il domain used to serve the full app in parallel
+      // with tulon.app, which caused Google Play to flag our account-deletion
+      // URL as not matching the listed app. Consolidate on one canonical
+      // domain: permanent (308) redirect, preserving path and query.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "tulon.co.il" }],
+        destination: "https://www.tulon.app/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.tulon.co.il" }],
+        destination: "https://www.tulon.app/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {
