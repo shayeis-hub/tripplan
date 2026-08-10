@@ -18,12 +18,16 @@ export default function Home() {
     removeShare,
   } = useTrips(user?.uid, user?.email ?? undefined);
 
-  // Preserve invite token if present in URL
+  // Preserve invite token / quick-add intent across the sign-in redirect
   useEffect(() => {
     if (!loading && !user) {
       const params = new URLSearchParams(window.location.search);
       const token = params.get("invite");
       if (token) localStorage.setItem("pendingInvite", token);
+      const quickadd = params.get("quickadd");
+      if (quickadd) {
+        try { sessionStorage.setItem("pendingQuickAdd", quickadd); } catch {}
+      }
     }
   }, [user, loading]);
 

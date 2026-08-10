@@ -1742,9 +1742,17 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const[show,setShow]=useState(false);
   const[editId,setEditId]=useState(null); // expense being edited
 
-  // Open a fresh form pre-filled from the map ("add as expense")
+  // Open a fresh form pre-filled from the map ("add as expense") or from a
+  // ?quickadd= deep link. quickadd=scan jumps straight to the receipt camera.
   useEffect(()=>{
     if(!prefill)return;
+    if(prefill.openScan){
+      if(isOffline){alert(t("scan_offline",lang));}
+      else if(isNativeApp){nativeScan();}
+      else{setShowCamera(true);}
+      onPrefillDone&&onPrefillDone();
+      return;
+    }
     setForm({...mkForm(dates,trip.defaultCurrency,people),date:defaultTripDate(dates),checkIn:defaultTripDate(dates),category:prefill.category||"other",description:prefill.description||"",address:prefill.address||""});
     setEditId(null);setShow(true);
     onPrefillDone&&onPrefillDone();
@@ -3939,6 +3947,33 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       }
     }).catch(()=>{});
   },[userEmail]);
+
+  // ── Quick-add deep link: /?quickadd=<category|scan> ──
+  // One tap from a home-screen shortcut (or the Android widget) straight to a
+  // pre-filled expense form on the trip that's currently underway.
+  useEffect(()=>{
+    if(!userEmail||trips.length===0)return;
+    const params=new URLSearchParams(window.location.search);
+    let qa=params.get("quickadd");
+    if(!qa){
+      try{qa=sessionStorage.getItem("pendingQuickAdd");if(qa)sessionStorage.removeItem("pendingQuickAdd");}catch{}
+    }
+    if(!qa)return;
+    try{window.history.replaceState({},"",window.location.pathname);}catch{}
+    if(!(qa==="scan"||CATS.some(c=>c.id===qa)))return;
+    // Target trip: the one covering today, else the most recent non-archived
+    // (trips arrive sorted by updatedAt desc).
+    const today=localDateStr(new Date());
+    const live=trips.filter(t=>!t.archived);
+    const target=live.find(t=>t.startDate&&t.endDate&&t.startDate<=today&&t.endDate>=today)||live[0];
+    if(!target)return;
+    setActiveId(target.id);
+    setSection("budget");
+    setScreen("expenses");
+    pushNav("screen",target.id,"budget","expenses");
+    setExpensePrefill(qa==="scan"?{openScan:true}:{category:qa});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[userEmail,trips.length]);
 
   // ── Generate invite link (via server API to avoid Firestore client perms) ──
   const generateInviteToken=async(tripId,role)=>{
