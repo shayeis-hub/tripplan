@@ -45,7 +45,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
-import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildBookingUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
+import { buildAgodaUrl, buildGygUrl, buildBookingUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
 import ReceiptCamera from "@/components/ReceiptCamera";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
@@ -2886,13 +2886,9 @@ function CalendarScreen({trip,expenses,onSaveActs}){
                   {lang==="he"?`סיורים, חוויות ואטרקציות ב${trip.destination}`:lang==="es"?`Tours, experiencias y atracciones en ${trip.destination}`:`Tours, experiences & attractions in ${trip.destination}`}
                 </div>
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>window.open(buildViatorUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
-                    style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(167,139,250,0.45)",background:"rgba(167,139,250,0.15)",color:"#a78bfa",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
-                    🎡 Viator ↗
-                  </button>
                   <button onClick={()=>window.open(buildGygUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
                     style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(255,107,53,0.4)",background:"rgba(255,107,53,0.1)",color:"#ff9a6c",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
-                    🎫 GetYourGuide ↗
+                    GetYourGuide ↗
                   </button>
                 </div>
               </div>
@@ -2906,13 +2902,9 @@ function CalendarScreen({trip,expenses,onSaveActs}){
               🎡 {lang==="he"?"מחפשים מה לעשות?":lang==="es"?"¿Buscar actividades?":"Things to do?"}
             </div>
             <div style={{display:"flex",gap:6,flexShrink:0}}>
-              <button onClick={()=>window.open(buildViatorUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
-                style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(167,139,250,0.38)",background:"rgba(167,139,250,0.12)",color:"#c4b5fd",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>
-                Viator ↗
-              </button>
               <button onClick={()=>window.open(buildGygUrl({destination:trip.destination,source:"calendar-empty"}),"_blank")}
-                style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(255,107,53,0.33)",background:"rgba(255,107,53,0.08)",color:"#ff9a6c",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>
-                GYG ↗
+                style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(255,107,53,0.33)",background:"rgba(255,107,53,0.08)",color:"#ff9a6c",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer",whiteSpace:"nowrap"}}>
+                GetYourGuide ↗
               </button>
             </div>
           </div>
@@ -3047,6 +3039,29 @@ function CalendarScreen({trip,expenses,onSaveActs}){
 }
 
 
+// Dietary preferences for the Discover restaurant list. Each maps to a Places
+// text query; add new entries here and both the dropdown and the search follow.
+const DIETS=[
+  {id:"",       q:"best restaurants", he:"הכל",    en:"All",    es:"Todo"},
+  {id:"kosher", q:"kosher restaurant", he:"כשר",    en:"Kosher", es:"Kosher"},
+  {id:"vegan",  q:"vegan restaurant",  he:"טבעוני", en:"Vegan",  es:"Vegano"},
+  {id:"halal",  q:"halal restaurant",  he:"חלאל",   en:"Halal",  es:"Halal"},
+];
+const dietLabel=(id,lang)=>{const d=DIETS.find(x=>x.id===id)||DIETS[0];return d[lang]||d.en;};
+// Certification is community-specific and Google's data is not authoritative,
+// so we tell the user to verify locally rather than implying we vouch for it.
+const DIET_NOTE={
+  kosher:{he:'מסעדות כשרות מ-Google — תמיד כדאי לוודא רמת כשרות מול בית חב"ד המקומי',
+          en:"Kosher restaurants from Google — always verify the kashrut level with the local Chabad House",
+          es:"Restaurantes kosher de Google — verifica el nivel con la Casa Jabad local"},
+  halal:{he:"מסעדות חלאל מ-Google — מומלץ לוודא תעודת הכשר במקום",
+         en:"Halal restaurants from Google — please verify certification at the venue",
+         es:"Restaurantes halal de Google — verifica la certificación en el lugar"},
+  vegan:{he:"מסעדות טבעוניות מ-Google — התפריט עשוי להשתנות, כדאי לוודא מראש",
+         en:"Vegan restaurants from Google — menus change, worth confirming ahead",
+         es:"Restaurantes veganos de Google — los menús cambian, confírmalo antes"},
+};
+
 function DiscoverScreen({trip}){
   const{lang}=useLang();
   const dest=translateDest(trip.destination||"");
@@ -3058,7 +3073,7 @@ function DiscoverScreen({trip}){
   const[recs,setRecs]=useState(null);
   const[recsLoading,setRecsLoading]=useState(false);
   const[recsErr,setRecsErr]=useState(false);
-  const[kosher,setKosher]=useState(false);
+  const[diet,setDiet]=useState(""); // "" | "kosher" | "vegan" | "halal"
   const[attractions,setAttractions]=useState(null); // real Places attractions
   const[attrLoading,setAttrLoading]=useState(false);
   const prevDestLangRef=useRef("");
@@ -3100,17 +3115,18 @@ function DiscoverScreen({trip}){
     finally{setRecsLoading(false);}
   },[trip.destination]);
 
-  // Restaurants come from the REAL Places API — kosher toggle just changes the query.
+  // Restaurants come from the REAL Places API — the diet filter changes the query.
   const[restaurants,setRestaurants]=useState(null);
   const[restLoading,setRestLoading]=useState(false);
-  const fetchRestaurants=useCallback(async(kosherFlag=false)=>{
+  const fetchRestaurants=useCallback(async(dietId="")=>{
     if(!trip.destination)return;
     setRestLoading(true);setRestaurants(null);
     try{
       const maps=await loadGoogleMaps();
       const{Place}=await maps.importLibrary("places");
+      const dietQ=(DIETS.find(d=>d.id===dietId)||DIETS[0]).q;
       const{places:found}=await Place.searchByText({
-        textQuery:`${kosherFlag?"kosher restaurant":"best restaurants"} in ${trip.destination}`,
+        textQuery:`${dietQ} in ${trip.destination}`,
         fields:["displayName","formattedAddress","rating","userRatingCount"],
         maxResultCount:10,
       });
@@ -3123,16 +3139,16 @@ function DiscoverScreen({trip}){
     finally{setRestLoading(false);}
   },[trip.destination]);
 
-  const toggleKosher=()=>{const next=!kosher;setKosher(next);fetchRestaurants(next);};
+  const pickDiet=(id)=>{setDiet(id);fetchRestaurants(id);};
 
   useEffect(()=>{
     const key=trip.destination;
     if(key!==prevDestLangRef.current){
       prevDestLangRef.current=key;
-      setKosher(false);        // new destination → fresh data
+      setDiet("");             // new destination → fresh data
       loadRecs(false);         // AI: local tip only
       fetchAttractions();
-      fetchRestaurants(false);
+      fetchRestaurants("");
     }
   },[trip.destination,loadRecs,fetchAttractions,fetchRestaurants]);
 
@@ -3142,12 +3158,10 @@ function DiscoverScreen({trip}){
 
   const agodaTile={name:"Agoda",domain:"agoda.com",color:"#e0455a",label:t("disc_book_hotels",lang),
    url:buildAgodaUrl(affParams)};
-  const actTiles=[
-    {name:"Viator",domain:"viator.com",color:"#2d9cdb",label:t("disc_book_acts",lang),
-     url:buildViatorUrl(affParams)},
-    {name:"GetYourGuide",domain:"getyourguide.com",color:"#ff6b35",label:t("disc_book_acts",lang),
-     url:buildGygUrl(affParams)},
-  ];
+  // Single activities partner: "Viator" / "GYG" side by side read as unclear
+  // abbreviations to users, so we show one clearly-named provider instead.
+  const gygTile={name:"GetYourGuide",domain:"getyourguide.com",color:"#ff6b35",label:t("disc_book_acts",lang),
+   url:buildGygUrl(affParams)};
   const airaloUrl=buildAiraloUrl({source:"discover"});
 
   return(
@@ -3180,19 +3194,18 @@ function DiscoverScreen({trip}){
               <div style={{flexShrink:0,width:32,height:32,borderRadius:10,background:"rgba(224,69,90,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Building2 size={18} color="#e0455a" strokeWidth={1.5}/></div>
             </button>
 
-            {/* ── Activities — Viator + GYG side by side ── */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              {actTiles.map(tile=>(
-                <button key={tile.name} onClick={()=>open(tile.url)}
-                  style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,padding:"18px 12px",borderRadius:16,border:`0.5px solid ${tile.color}50`,background:`${tile.color}12`,cursor:"pointer",minHeight:110}}>
-                  <img src={`https://www.google.com/s2/favicons?domain=${tile.domain}&sz=64`} alt={tile.name}
-                    style={{width:44,height:44,borderRadius:10,objectFit:"contain",background:"#fff",padding:4}}
-                    onError={e=>{e.currentTarget.style.display="none";}}/>
-                  <div style={{fontFamily:RF,fontSize:14,fontWeight:800,color:"#ffffff"}}>{tile.name}</div>
-                  <div style={{fontSize:13,color:"#ffffff",textAlign:"center",lineHeight:1.4,fontWeight:600,padding:"0 4px"}}>{tile.label}</div>
-                </button>
-              ))}
-            </div>
+            {/* ── Activities — GetYourGuide (full width, matches the Agoda row) ── */}
+            <button onClick={()=>open(gygTile.url)}
+              style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"18px 20px",borderRadius:18,border:`0.5px solid ${gygTile.color}55`,background:`linear-gradient(135deg,${gygTile.color}18,${gygTile.color}08)`,cursor:"pointer"}}>
+              <img src={`https://www.google.com/s2/favicons?domain=${gygTile.domain}&sz=64`} alt={gygTile.name}
+                style={{width:48,height:48,borderRadius:12,objectFit:"contain",background:"#fff",padding:4,flexShrink:0}}
+                onError={e=>{e.currentTarget.style.display="none";}}/>
+              <div style={{textAlign:"right",flex:1}}>
+                <div style={{fontFamily:RF,fontSize:16,fontWeight:800,color:"#ffffff"}}>{gygTile.name}</div>
+                <div style={{fontSize:13,color:"#ffffff",fontWeight:600,marginTop:3,lineHeight:1.4,opacity:0.9}}>{gygTile.label}</div>
+              </div>
+              <div style={{flexShrink:0,width:32,height:32,borderRadius:10,background:`${gygTile.color}26`,display:"flex",alignItems:"center",justifyContent:"center"}}><Ticket size={18} color={gygTile.color} strokeWidth={1.5}/></div>
+            </button>
 
             {/* ── Airalo eSIM ── */}
             <button onClick={()=>open(airaloUrl)}
@@ -3243,24 +3256,30 @@ function DiscoverScreen({trip}){
             <Card>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,gap:8}}>
                 <h2 style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{t("disc_restaurants",lang)}</h2>
-                <button onClick={toggleKosher}
-                  style={{display:"flex",alignItems:"center",gap:6,padding:"5px 11px",borderRadius:999,cursor:"pointer",fontFamily:RF,fontWeight:700,fontSize:12,
-                    border:`0.5px solid ${kosher?"rgba(74,222,128,0.5)":"rgba(255,255,255,0.15)"}`,
-                    background:kosher?"rgba(74,222,128,0.12)":"rgba(255,255,255,0.04)",
-                    color:kosher?"#4ade80":"rgba(255,255,255,0.5)"}}>
-                  <span style={{width:15,height:15,borderRadius:4,border:`1.5px solid ${kosher?"#4ade80":"rgba(255,255,255,0.3)"}`,background:kosher?"#4ade80":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    {kosher&&<Check size={11} color="#0d2137" strokeWidth={3}/>}
-                  </span>
-                  {lang==="he"?"כשר":lang==="es"?"Kosher":"Kosher"}
-                </button>
+                <select value={diet} onChange={e=>pickDiet(e.target.value)}
+                  aria-label={lang==="he"?"העדפה תזונתית":lang==="es"?"Preferencia alimentaria":"Dietary preference"}
+                  style={{padding:"6px 11px",borderRadius:999,cursor:"pointer",fontFamily:RF,fontWeight:700,fontSize:12,outline:"none",
+                    border:`0.5px solid ${diet?"rgba(74,222,128,0.5)":"rgba(255,255,255,0.15)"}`,
+                    background:diet?"rgba(74,222,128,0.12)":"rgba(255,255,255,0.04)",
+                    color:diet?"#4ade80":"rgba(255,255,255,0.5)"}}>
+                  {DIETS.map(d=>(
+                    <option key={d.id||"all"} value={d.id} style={{background:"#0d2137",color:"#fff"}}>
+                      {dietLabel(d.id,lang)}
+                    </option>
+                  ))}
+                </select>
               </div>
-              {kosher&&(
+              {diet&&DIET_NOTE[diet]&&(
                 <div style={{fontSize:11,color:"rgba(74,222,128,0.7)",marginBottom:10,lineHeight:1.5}}>
-                  {lang==="he"?"✓ מסעדות כשרות מ-Google — תמיד כדאי לוודא רמת כשרות מול בית חב\"ד":lang==="es"?"✓ Restaurantes kosher de Google — verifica el nivel con la Casa Jabad":"✓ Kosher restaurants from Google — verify the level with the local Chabad"}
+                  {DIET_NOTE[diet][lang]||DIET_NOTE[diet].en}
                 </div>
               )}
               {restLoading&&(
-                <div style={{fontSize:12,color:W40,padding:"6px 2px"}}>{lang==="he"?(kosher?"מחפש מסעדות כשרות…":"טוען מסעדות…"):kosher?"Searching kosher…":"Loading restaurants…"}</div>
+                <div style={{fontSize:12,color:W40,padding:"6px 2px"}}>
+                  {diet
+                    ?(lang==="he"?`מחפש מסעדות ${dietLabel(diet,lang)}…`:lang==="es"?`Buscando ${dietLabel(diet,lang)}…`:`Searching ${dietLabel(diet,lang)}…`)
+                    :(lang==="he"?"טוען מסעדות…":lang==="es"?"Cargando restaurantes…":"Loading restaurants…")}
+                </div>
               )}
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {!restLoading&&(restaurants||[]).map((r,i)=>(
@@ -3278,8 +3297,10 @@ function DiscoverScreen({trip}){
                 ))}
                 {!restLoading&&restaurants&&restaurants.length===0&&(
                   <div style={{fontSize:12,color:W40,lineHeight:1.6,padding:"6px 2px"}}>
-                    {kosher
+                    {diet==="kosher"
                       ?(lang==="he"?"לא נמצאו מסעדות כשרות ליעד זה. מומלץ לפנות לבית חב\"ד המקומי.":lang==="es"?"No se encontraron restaurantes kosher. Consulta la Casa Jabad local.":"No kosher restaurants found. Check with the local Chabad House.")
+                      :diet
+                      ?(lang==="he"?`לא נמצאו מסעדות ${dietLabel(diet,lang)} ליעד זה.`:lang==="es"?`No se encontraron restaurantes ${dietLabel(diet,lang)}.`:`No ${dietLabel(diet,lang).toLowerCase()} restaurants found for this destination.`)
                       :(lang==="he"?"לא נמצאו מסעדות":lang==="es"?"Sin restaurantes":"No restaurants found")}
                   </div>
                 )}
