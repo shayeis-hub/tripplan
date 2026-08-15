@@ -18,3 +18,4 @@ function getAdminApp(): admin.app.App {
 export function getAdminAuth()      { return admin.auth(getAdminApp()); }
 export function getAdminDb()        { return admin.firestore(getAdminApp()); }
 export function getAdminMessaging() { return admin.messaging(getAdminApp()); }
+export function getAdminStorage()   { return admin.storage(getAdminApp()); }

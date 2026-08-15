@@ -168,10 +168,15 @@ export default function AdminPage() {
           <div style={{ fontSize: 24, fontWeight: 900 }}>🛡️ טיולון Admin</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Dashboard</div>
         </div>
-        <button onClick={refresh} disabled={loading}
-          style={{ padding: "10px 20px", borderRadius: 10, border: `0.5px solid ${TEAL}40`, background: "rgba(100,223,223,0.08)", color: TEAL, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: RF }}>
-          {loading ? "⏳ טוען..." : "🔄 רענן"}
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <a href="/admin/instagram" style={{ padding: "10px 20px", borderRadius: 10, border: `0.5px solid ${TEAL}40`, background: "rgba(100,223,223,0.08)", color: TEAL, fontWeight: 700, fontSize: 13, textDecoration: "none", display: "flex", alignItems: "center" }}>
+            Instagram
+          </a>
+          <button onClick={refresh} disabled={loading}
+            style={{ padding: "10px 20px", borderRadius: 10, border: `0.5px solid ${TEAL}40`, background: "rgba(100,223,223,0.08)", color: TEAL, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: RF }}>
+            {loading ? "⏳ טוען..." : "🔄 רענן"}
+          </button>
+        </div>
       </div>
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px" }}>
