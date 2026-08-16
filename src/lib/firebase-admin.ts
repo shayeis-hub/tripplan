@@ -12,6 +12,10 @@ function getAdminApp(): admin.app.App {
       clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
       privateKey:  privateKey.replace(/\\n/g, "\n"),
     }),
+    // Without this, storage().bucket() has no default and throws
+    // "Bucket name not specified or invalid". The NEXT_PUBLIC_ value is
+    // inlined at build time but is also readable here on the server.
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   });
 }
 

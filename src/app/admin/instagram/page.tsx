@@ -1,7 +1,7 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { renderPostCard } from "@/lib/post-card";
 
 const msg = (e: unknown) => e instanceof Error ? e.message : "Unknown error";
@@ -57,6 +57,7 @@ function fileToBase64(file: File): Promise<string> {
 
 export default function InstagramAdminPage() {
   const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [pass, setPass] = useState("");
   const [err, setErr] = useState("");
   const [posts, setPosts] = useState<Post[]>([]);
@@ -85,6 +86,19 @@ export default function InstagramAdminPage() {
       setErr(msg(e));
     } finally { setLoading(false); }
   }, [authHeader]);
+
+  // Firebase persists the session, so a refresh should not demand the password
+  // again — adopt the existing signed-in admin instead of resetting to the gate.
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, user => {
+      if (user?.email === ADMIN_EMAIL) {
+        setAuthed(true);
+        loadQueue();
+      }
+      setChecking(false);
+    });
+    return unsub;
+  }, [loadQueue]);
 
   const login = async () => {
     try {
@@ -227,6 +241,13 @@ export default function InstagramAdminPage() {
       setErr(msg(e));
     } finally { setBusyId(null); }
   };
+
+  // avoid flashing the password gate while the persisted session is restored
+  if (checking) return (
+    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: RF, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
+      טוען...
+    </div>
+  );
 
   if (!authed) return (
     <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: RF }}>
