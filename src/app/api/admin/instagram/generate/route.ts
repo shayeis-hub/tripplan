@@ -23,7 +23,7 @@ Standout features to draw content ideas from:
 
 Brand voice: warm, practical, friendly — like a well-organized friend who already planned five group trips. Speaks directly to the pain of group trip logistics (who owes who, lost receipts, arguing over the itinerary). No emojis. No hard selling — show, don't tell, focused on a single relatable trip-planning pain point per post.`;
 
-interface Idea { topic: string; caption: string; hashtags: string[] }
+interface Idea { topic: string; caption: string; hashtags: string[]; imageQuery?: string }
 
 export async function POST(req: Request) {
   const auth = await requireAdmin(req);
@@ -44,8 +44,9 @@ For each idea return:
 - "topic": short internal label (2-4 words, Hebrew)
 - "caption": the actual Instagram caption in Hebrew, 2-5 short lines, no emojis, no hashtags inline. End with a light call-to-action pointing at the free app (not pushy).
 - "hashtags": 8-12 relevant hashtags as an array of strings (without the # symbol), mixing Hebrew and English, mixing broad travel tags with niche group-trip-planning tags.
+- "imageQuery": a 2-4 word ENGLISH stock-photo search term for a photo that would suit this post (e.g. "friends hiking mountain trail", "couple splitting restaurant bill"). Describe a real photographable scene — not an abstract concept, and never mention the app or a screen.
 
-Return ONLY a JSON array (no markdown fences, no commentary) of ${count} objects with exactly these three keys.`;
+Return ONLY a JSON array (no markdown fences, no commentary) of ${count} objects with exactly these four keys.`;
 
     const response = await client.messages.create({
       model: "claude-sonnet-5",
@@ -73,6 +74,7 @@ Return ONLY a JSON array (no markdown fences, no commentary) of ${count} objects
         topic: idea.topic || topic || "",
         caption: idea.caption,
         hashtags: Array.isArray(idea.hashtags) ? idea.hashtags : [],
+        imageQuery: typeof idea.imageQuery === "string" ? idea.imageQuery : "",
         imagePath: null,
         status: "draft" as const,
         createdAt: FieldValue.serverTimestamp(),

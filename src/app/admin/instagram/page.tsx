@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { renderPostCard } from "@/lib/post-card";
 
 const msg = (e: unknown) => e instanceof Error ? e.message : "Unknown error";
 
@@ -16,11 +17,20 @@ interface Post {
   caption: string;
   hashtags: string[];
   imageUrl: string | null;
+  imageQuery?: string;
   status: "draft" | "approved" | "published" | "failed";
   igPermalink: string | null;
   error: string | null;
   createdAt: string | null;
   publishedAt: string | null;
+}
+
+interface StockPhoto {
+  id: number;
+  url: string;
+  thumb: string;
+  photographer: string;
+  pageUrl: string;
 }
 
 const STATUS_LABEL: Record<Post["status"], string> = {
@@ -54,6 +64,8 @@ export default function InstagramAdminPage() {
   const [generating, setGenerating] = useState(false);
   const [topic, setTopic] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [stockFor, setStockFor] = useState<string | null>(null);
+  const [stockPhotos, setStockPhotos] = useState<StockPhoto[]>([]);
 
   const authHeader = useCallback(async () => {
     if (!auth.currentUser) return {};
@@ -144,6 +156,62 @@ export default function InstagramAdminPage() {
     } finally { setBusyId(null); }
   };
 
+  // Draws the branded card in the browser and pushes it through the normal
+  // upload route, so it lands in Storage exactly like a manual upload would.
+  const makeCard = async (post: Post) => {
+    setBusyId(post.id);
+    setErr("");
+    try {
+      const imageBase64 = await renderPostCard(post.caption);
+      const headers = { "Content-Type": "application/json", ...(await authHeader()) };
+      const res = await fetch("/api/admin/instagram/upload", {
+        method: "POST", headers, body: JSON.stringify({ id: post.id, imageBase64, contentType: "image/png" }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setPosts(ps => ps.map(p => p.id === post.id ? { ...p, imageUrl: data.imageUrl } : p));
+    } catch (e: unknown) {
+      setErr(msg(e));
+    } finally { setBusyId(null); }
+  };
+
+  const findStock = async (post: Post) => {
+    const q = (post.imageQuery || post.topic || "").trim();
+    if (!q) { setErr("אין מונח חיפוש לפוסט הזה"); return; }
+    setStockFor(post.id);
+    setStockPhotos([]);
+    setErr("");
+    try {
+      const headers = await authHeader();
+      const res = await fetch(`/api/admin/instagram/stock?q=${encodeURIComponent(q)}`, { headers });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setStockPhotos(data.photos || []);
+    } catch (e: unknown) {
+      setErr(msg(e));
+      setStockFor(null);
+    }
+  };
+
+  const pickStock = async (id: string, photo: StockPhoto) => {
+    setBusyId(id);
+    setErr("");
+    try {
+      const headers = { "Content-Type": "application/json", ...(await authHeader()) };
+      const res = await fetch("/api/admin/instagram/stock", {
+        method: "POST", headers,
+        body: JSON.stringify({ id, photoUrl: photo.url, credit: `Photo by ${photo.photographer} on Pexels` }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setPosts(ps => ps.map(p => p.id === id ? { ...p, imageUrl: data.imageUrl } : p));
+      setStockFor(null);
+      setStockPhotos([]);
+    } catch (e: unknown) {
+      setErr(msg(e));
+    } finally { setBusyId(null); }
+  };
+
   const publish = async (id: string) => {
     setBusyId(id);
     setErr("");
@@ -226,6 +294,25 @@ export default function InstagramAdminPage() {
                             onChange={e => e.target.files?.[0] && uploadImage(post.id, e.target.files[0])} />
                         </label>
                       )}
+                      {status !== "published" && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+                          <button onClick={() => findStock(post)} disabled={busyId === post.id}
+                            style={{ padding: "6px 8px", borderRadius: 7, border: "0.5px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.75)", fontSize: 11, cursor: "pointer", fontFamily: RF }}>
+                            תמונת סטוק
+                          </button>
+                          <button onClick={() => makeCard(post)} disabled={busyId === post.id}
+                            style={{ padding: "6px 8px", borderRadius: 7, border: "0.5px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.75)", fontSize: 11, cursor: "pointer", fontFamily: RF }}>
+                            {busyId === post.id ? "..." : "כרטיס ממותג"}
+                          </button>
+                          {post.imageUrl && (
+                            <label style={{ padding: "6px 8px", borderRadius: 7, border: "0.5px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 11, cursor: "pointer", fontFamily: RF, textAlign: "center" }}>
+                              החלף ידנית
+                              <input type="file" accept="image/jpeg,image/png" style={{ display: "none" }}
+                                onChange={e => e.target.files?.[0] && uploadImage(post.id, e.target.files[0])} />
+                            </label>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -238,6 +325,25 @@ export default function InstagramAdminPage() {
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>
                         {(post.hashtags || []).map(h => `#${h}`).join(" ")}
                       </div>
+                      {stockFor === post.id && (
+                        <div style={{ marginTop: 10, padding: 10, background: "rgba(0,0,0,0.22)", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.1)" }}>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>
+                            {stockPhotos.length ? `בחר תמונה (חיפוש: ${post.imageQuery || post.topic})` : "מחפש..."}
+                          </div>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {stockPhotos.map(ph => (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img key={ph.id} src={ph.thumb} alt="" title={`צילום: ${ph.photographer}`}
+                                onClick={() => pickStock(post.id, ph)}
+                                style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8, cursor: "pointer", border: "1px solid rgba(255,255,255,0.12)" }} />
+                            ))}
+                          </div>
+                          <button onClick={() => { setStockFor(null); setStockPhotos([]); }}
+                            style={{ marginTop: 8, padding: "4px 10px", borderRadius: 6, border: "none", background: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 11, cursor: "pointer", fontFamily: RF }}>
+                            סגור
+                          </button>
+                        </div>
+                      )}
                       {post.error && <div style={{ fontSize: 11, color: "#ff6b6b", marginTop: 6 }}>שגיאה: {post.error}</div>}
                       {post.igPermalink && (
                         <a href={post.igPermalink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: TEAL, marginTop: 6, display: "inline-block" }}>
