@@ -1748,7 +1748,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     if(!prefill)return;
     if(prefill.openScan){
       if(isOffline){alert(t("scan_offline",lang));}
-      else if(isNativeApp){nativeScan();}
+      else if(isNativeApp){nativeScan("CAMERA");}
       else{setShowCamera(true);}
       onPrefillDone&&onPrefillDone();
       return;
@@ -1772,11 +1772,15 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   // Inside the native app (Capacitor) the real system camera gives a far better
   // capture experience than getUserMedia — use it when available.
   const isNativeApp=typeof window!=="undefined"&&window.Capacitor?.isNativePlatform?.();
-  const nativeScan=async()=>{
+  // source "PROMPT" offers camera-or-gallery; "CAMERA" goes straight to the lens.
+  // The home-screen widget passes CAMERA — the tap already said what the user wants,
+  // so a chooser there is pure friction. The in-app button keeps the prompt, since
+  // picking a receipt photographed earlier is a real case.
+  const nativeScan=async(source="PROMPT")=>{
     try{
       const{Camera}=window.Capacitor.Plugins;
       const photo=await Camera.getPhoto({
-        quality:90,resultType:"base64",source:"PROMPT",saveToGallery:false,
+        quality:90,resultType:"base64",source,saveToGallery:false,
         promptLabelHeader:lang==="he"?"צילום קבלה":lang==="es"?"Capturar recibo":"Capture receipt",
         promptLabelPhoto:lang==="he"?"בחר מהגלריה":lang==="es"?"Elegir de galería":"Choose from gallery",
         promptLabelPicture:lang==="he"?"צלם עכשיו":lang==="es"?"Tomar foto":"Take photo",
