@@ -2,7 +2,7 @@
 import { useLang } from "@/lib/LangContext";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
-import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildAiraloUrl } from "@/lib/affiliate";
+import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildAiraloUrl, buildKiwiUrl } from "@/lib/affiliate";
 
 const UTM = "utm_source=tulon&utm_medium=web&utm_campaign=plan-page";
 
@@ -11,7 +11,7 @@ const linkBuilders = {
   viator:     () => buildViatorUrl({source:"plan-page", destination:""}),
   gyg:        () => buildGygUrl({source:"plan-page", destination:""}),
   airalo:     () => buildAiraloUrl({source:"plan-page"}),
-  kiwi:       () => `https://www.kiwi.com/?${UTM}`,
+  kiwi:       () => buildKiwiUrl({source:"plan-page"}),
   skyscanner: () => `https://www.skyscanner.net/?${UTM}`,
   gflights:   () => `https://flights.google.com/?${UTM}`,
   maps:       () => `https://maps.google.com/?${UTM}`,

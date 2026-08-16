@@ -149,6 +149,20 @@ export function buildGetTransferUrl({ source }: Pick<BuildParams, "source">): st
   return `${GETTRANSFER_TP_URL}${tpSubId(source)}`;
 }
 
+// Kiwi.com flights — TravelPayouts SmartLink (all tracking built-in).
+// The flight links used to be bare kiwi.com URLs carrying only utm_* params.
+// utm is analytics, not attribution: it tells us where our own traffic came
+// from, it does not identify us to Kiwi, so none of those clicks ever paid.
+//
+// Trade-off worth remembering: the SmartLink carries sub_id and nothing else,
+// so it cannot pre-fill destination and dates the way the old /deep URL did.
+// The user lands on Kiwi's search instead of a filled-in search.
+const KIWI_TP_URL = "https://kiwi.tpk.ro/XWfXfxVu";
+
+export function buildKiwiUrl({ source }: Pick<BuildParams, "source">): string {
+  return `${KIWI_TP_URL}${tpSubId(source)}`;
+}
+
 // One-stop helper if you want every URL at once for a given trip context.
 export function buildAllAffiliateUrls(params: BuildParams) {
   return {
@@ -156,5 +170,6 @@ export function buildAllAffiliateUrls(params: BuildParams) {
     viator:  buildViatorUrl(params),
     gyg:     buildGygUrl(params),
     airalo:  buildAiraloUrl(params),
+    kiwi:    buildKiwiUrl(params),
   };
 }

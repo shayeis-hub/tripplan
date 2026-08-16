@@ -45,7 +45,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
-import { buildAgodaUrl, buildGygUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
+import { buildAgodaUrl, buildGygUrl, buildAiraloUrl, buildGetTransferUrl, buildKiwiUrl } from "@/lib/affiliate";
 import ReceiptCamera from "@/components/ReceiptCamera";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
@@ -1296,7 +1296,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,r
             {lang==="he"?"חיפוש מהיר":lang==="es"?"Búsqueda rápida":"Quick search"}
           </div>
           <div style={{display:"flex",gap:8,justifyContent:"center"}}>
-            <a href="https://www.kiwi.com" target="_blank" rel="noopener noreferrer"
+            <a href={buildKiwiUrl({source:"splash"})} target="_blank" rel="noopener noreferrer"
               style={{display:"flex",alignItems:"center",gap:6,padding:"9px 16px",borderRadius:999,border:"0.5px solid rgba(100,223,223,0.2)",background:"rgba(100,223,223,0.06)",textDecoration:"none",cursor:"pointer",transition:"all 0.15s"}}
               onMouseEnter={e=>{e.currentTarget.style.background="rgba(100,223,223,0.12)";e.currentTarget.style.borderColor="rgba(100,223,223,0.35)";}}
               onMouseLeave={e=>{e.currentTarget.style.background="rgba(100,223,223,0.06)";e.currentTarget.style.borderColor="rgba(100,223,223,0.2)";}}>
@@ -3413,7 +3413,7 @@ function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
               </button>
             )}
             {!hasFlight&&(
-              <button onClick={()=>window.open(`https://www.kiwi.com/deep?to=${encodeURIComponent(trip.destination||"")}${trip.startDate?`&depart_after=${trip.startDate}`:""}${trip.endDate?`&return_before=${trip.endDate}`:""}&utm_source=tulon&utm_medium=app&utm_campaign=trip-cta`,"_blank")}
+              <button onClick={()=>window.open(buildKiwiUrl({source:"trip-cta"}),"_blank")}
                 style={{flex:1,minWidth:140,padding:"10px 14px",borderRadius:12,border:"0.5px solid rgba(45,156,219,0.4)",background:"rgba(45,156,219,0.12)",color:"#7ec4f0",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
                 ✈️ {tr("חפש טיסה","Find a flight","Buscar vuelo")} ↗
               </button>
