@@ -46,6 +46,14 @@ const STATUS_COLOR: Record<Post["status"], string> = {
   failed: "#ff6b6b",
 };
 
+// Mirrors the exact caption assembly in api/admin/instagram/publish/route.ts,
+// so the preview shows precisely what gets sent to Instagram.
+function fullCaptionFor(post: Post): string {
+  return [post.caption, (post.hashtags || []).map(h => `#${h}`).join(" ")]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -67,6 +75,7 @@ export default function InstagramAdminPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [stockFor, setStockFor] = useState<string | null>(null);
   const [stockPhotos, setStockPhotos] = useState<StockPhoto[]>([]);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const authHeader = useCallback(async () => {
     if (!auth.currentUser) return {};
@@ -267,8 +276,10 @@ export default function InstagramAdminPage() {
   );
 
   const byStatus = (s: Post["status"]) => posts.filter(p => p.status === s);
+  const previewPost = posts.find(p => p.id === previewId) || null;
 
   return (
+    <>
     <div style={{ minHeight: "100vh", background: BG, fontFamily: RF, color: "#fff" }}>
       <div style={{ background: "linear-gradient(135deg,#091928,#0d2137)", padding: "24px 32px", borderBottom: "0.5px solid rgba(100,223,223,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
@@ -314,6 +325,12 @@ export default function InstagramAdminPage() {
                           <input type="file" accept="image/jpeg,image/png" style={{ display: "none" }}
                             onChange={e => e.target.files?.[0] && uploadImage(post.id, e.target.files[0])} />
                         </label>
+                      )}
+                      {post.imageUrl && (
+                        <button onClick={() => setPreviewId(post.id)}
+                          style={{ width: "100%", marginTop: 8, padding: "6px 8px", borderRadius: 7, border: `0.5px solid ${TEAL}40`, background: "rgba(100,223,223,0.08)", color: TEAL, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: RF }}>
+                          תצוגה מקדימה
+                        </button>
                       )}
                       {status !== "published" && (
                         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
@@ -420,5 +437,52 @@ export default function InstagramAdminPage() {
         )}
       </div>
     </div>
+
+    {previewPost && (
+      <div onClick={() => setPreviewId(null)}
+        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 20 }}>
+        <div onClick={e => e.stopPropagation()}
+          style={{ width: "100%", maxWidth: 420, background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 30px 80px rgba(0,0,0,0.5)", fontFamily: "'Segoe UI', Arial, sans-serif" }}>
+
+          {/* header — mimics the IG post chrome so this reads as "how it'll look there" */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderBottom: "1px solid #efefef" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon-512.png" alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#262626" }}>tulonapp</div>
+            <button onClick={() => setPreviewId(null)}
+              style={{ marginInlineStart: "auto", background: "none", border: "none", color: "#8e8e8e", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>
+              ✕
+            </button>
+          </div>
+
+          {/* image — square, matching what the branded card / stock search both produce */}
+          <div style={{ width: "100%", aspectRatio: "1 / 1", background: "#fafafa" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewPost.imageUrl!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          </div>
+
+          {/* action icons — decorative chrome only, not live counts */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 14px 4px" }}>
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#262626" strokeWidth="1.8"><path d="M12 20.5s-7.5-4.6-9.7-9.1C.6 8 2 4.5 5.4 3.6c2-.5 4 .3 5.1 2 .3.4.9.4 1.2 0 1.1-1.7 3.1-2.5 5.1-2 3.4.9 4.8 4.4 3.1 7.8C19.5 15.9 12 20.5 12 20.5Z"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#262626" strokeWidth="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4c-1.4-.1-2.3-.4-3.6-1L3 20l1.2-4.8a8 8 0 0 1-1-4.2A8.4 8.4 0 0 1 12 3a8.3 8.3 0 0 1 9 8.5Z"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#262626" strokeWidth="1.8"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#262626" strokeWidth="1.8" style={{ marginInlineStart: "auto" }}><path d="M6 3h12v18l-6-4.5L6 21V3Z"/></svg>
+          </div>
+
+          {/* caption — exact concatenation used at publish time */}
+          <div style={{ padding: "8px 14px 16px", fontSize: 13, color: "#262626", lineHeight: 1.5, direction: "rtl", textAlign: "right" }}>
+            <span style={{ fontWeight: 600 }}>tulonapp</span>{" "}
+            <span style={{ whiteSpace: "pre-wrap" }}>
+              {fullCaptionFor(previewPost).split(/(#\S+)/g).map((part, i) =>
+                part.startsWith("#")
+                  ? <span key={i} style={{ color: "#00376b" }}>{part}</span>
+                  : <span key={i}>{part}</span>
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
