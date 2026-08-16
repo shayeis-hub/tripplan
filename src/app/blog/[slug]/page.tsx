@@ -44,10 +44,21 @@ function renderBody(text: string) {
       );
       continue;
     }
-    // Inline bold
-    const parts = trimmed.split(/(\*\*[^*]+\*\*)/g).map((p,i) => {
+    // Inline bold and [text](url) links
+    const parts = trimmed.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g).map((p,i) => {
       if (p.startsWith("**") && p.endsWith("**")) {
         return <strong key={i} style={{color:"#fff",fontWeight:700}}>{p.slice(2,-2)}</strong>;
+      }
+      const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(p);
+      if (link) {
+        // rel="sponsored" because these are affiliate links — Google expects the
+        // disclosure, and an undisclosed paid link is an SEO liability.
+        return (
+          <a key={i} href={link[2]} target="_blank" rel="noopener noreferrer nofollow sponsored"
+             style={{color:"#64dfdf",textDecoration:"underline",fontWeight:600}}>
+            {link[1]}
+          </a>
+        );
       }
       return p;
     });

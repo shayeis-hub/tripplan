@@ -11,6 +11,127 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "tishrei-family-destinations",
+    emoji: "✈️",
+    category: { he: "יעדים", en: "Destinations", es: "Destinos" },
+    date: "2026-08-16",
+    readMin: 6,
+    title: {
+      he: "חגי תשרי מתקרבים: 5 יעדים קרובים וזולים לטיול משפחתי",
+      en: "The Autumn Holidays Are Coming: 5 Close, Affordable Family Destinations",
+      es: "Se Acercan las Fiestas de Otoño: 5 Destinos Cercanos y Económicos en Familia",
+    },
+    excerpt: {
+      he: "חופשה ארוכה, משפחה שלמה ומחירים שמזנקים. הנה חמישה יעדים במרחק טיסה קצרה שמסתדרים עם תקציב אמיתי — ואיך לא לאבד את השליטה עליו בדרך.",
+      en: "A long break, the whole family, and prices that spike. Here are five short-flight destinations that work with a real budget — and how to keep control of it along the way.",
+      es: "Vacaciones largas, toda la familia y precios que se disparan. Aquí hay cinco destinos a corta distancia que funcionan con un presupuesto real — y cómo no perder el control.",
+    },
+    body: {
+      he: `חגי תשרי מתקרבים, ואיתם החופשה המשפחתית הארוכה של השנה. זו גם התקופה שבה מחירי הטיסות והמלונות מזנקים, כי כולם מחפשים בדיוק באותם שבועות.
+
+הפתרון של רוב המשפחות הוא לא לוותר על הטיול אלא לקצר את הטיסה. יעד במרחק שעתיים-שלוש חוסך גם כסף וגם את היום הראשון שהולך לאיבוד על מעבר זמן וילדים עייפים.
+
+**יוון — האי שמתאים לגיל של הילדים**
+רודוס וכרתים גדולים מספיק בשביל שבוע שלם בלי לזוז הרבה, עם חופים רדודים שנוחים לילדים קטנים. האיים הקטנים יפים יותר אבל דורשים מעבורות, וזה פחות מתאים כשנוסעים עם מזוודות ועגלה.
+
+**קפריסין — הטיסה הקצרה ביותר**
+פחות משעה באוויר. זה היעד שהכי קל להתחיל איתו אם זו הפעם הראשונה שאתם טסים עם ילדים קטנים, ואפשר גם לעשות ממנו סופ"ש ארוך במקום שבוע שלם.
+
+**בטומי וטביליסי — הכי הרבה תמורה לכסף**
+גאורגיה נשארת אחד היעדים המשתלמים באזור: אוכל מצוין במחירים נמוכים, ירוק, ואפשר לשלב ים והרים באותו טיול. הטיסה ארוכה קצת יותר מיוון אבל עדיין קצרה.
+
+**בולגריה — טבע בלי לשלם על זה**
+סופיה וההרים סביבה, או החוף בים השחור. יעד שמתאים במיוחד למשפחות שאוהבות טיולי טבע ולא מחפשות חיי לילה או קניות.
+
+**מונטנגרו — היפה שעוד לא התמלא**
+קוטור, בודווה והמפרצים. נראה כמו קרואטיה לפני עשור, במחירים נמוכים יותר ועם פחות עומס. מתאים למשפחות עם ילדים גדולים יותר שמוכנים לנסיעות קצרות ברכב.
+
+**איפה התקציב באמת נשבר**
+לא בטיסה ולא במלון — אלה הוצאות שסגרתם מראש וידעתם עליהן. התקציב נשבר בשבוע עצמו: ארוחות, מוניות, כניסות לאתרים, קפה פה ושם. במטבע זר, כשכולם משלמים לסירוגין, קשה מאוד להחזיק את התמונה בראש.
+
+זה בדיוק מה שטיולון פותר. כל הוצאה נרשמת במטבע שבו שילמתם ומומרת אוטומטית לפי שער חי, כך שאתם רואים כל הזמן כמה באמת הוצאתם — לא כמה נשאר בארנק. אפשר לצלם קבלה והאפליקציה תמלא את הסכום, המטבע והתאריך לבד.
+
+וכשנוסעים כמה משפחות יחד, החלק הכי לא נעים הוא ההתחשבנות בסוף. טיולון עושה אותה לבד: מי שילם על מה, ומה מספר ההעברות המינימלי שיסגור את החשבון. בלי טבלאות אקסל ובלי שיחות מביכות בטרמינל בחזרה.
+
+**לפני שסוגרים**
+תשוו מחירי מלונות מוקדם ככל האפשר — בחגים ההיצע נגמר לפני שהמחירים מתייצבים.
+
+[חיפוש טיסות ב-Kiwi.com](https://kiwi.tpk.ro/XWfXfxVu?sub_id=blog-tishrei)
+
+[חיפוש מלונות ב-Agoda](https://www.agoda.com/search?cid=1966379&utm_source=tulon&utm_medium=blog&utm_campaign=tishrei-family)
+
+חג שמח, ותיסעו בזול.`,
+      en: `The autumn holidays are approaching, and with them the long family break of the year. It is also the stretch when flight and hotel prices spike, because everyone is searching for the very same weeks.
+
+Most families do not solve this by skipping the trip — they solve it by shortening the flight. A destination two or three hours away saves money and also saves the first day, which otherwise disappears into travel time and tired kids.
+
+**Greece — pick the island that fits your kids' ages**
+Rhodes and Crete are big enough for a full week without moving around much, with shallow beaches that suit small children. The smaller islands are prettier but need ferries, which is less appealing with suitcases and a stroller.
+
+**Cyprus — the shortest flight there is**
+Under an hour in the air. This is the easiest destination to start with if it is your first time flying with small children, and it works as a long weekend rather than a full week.
+
+**Batumi and Tbilisi — the most value per shekel**
+Georgia remains one of the best-value destinations in the region: excellent food at low prices, lots of green, and you can combine sea and mountains in one trip. The flight is a little longer than Greece but still short.
+
+**Bulgaria — nature without the price tag**
+Sofia and the mountains around it, or the Black Sea coast. A good fit for families who like hiking and are not looking for nightlife or shopping.
+
+**Montenegro — the beautiful one that has not filled up yet**
+Kotor, Budva and the bays. It looks like Croatia did a decade ago, at lower prices and with less crowding. Best for families with older kids who do not mind short drives.
+
+**Where the budget actually breaks**
+Not on flights and not on hotels — those you booked in advance and knew about. The budget breaks during the week itself: meals, taxis, entrance tickets, coffee here and there. In a foreign currency, with everyone paying in turn, holding that picture in your head is close to impossible.
+
+This is exactly what Tulon solves. Every expense is recorded in the currency you actually paid in and converted automatically at a live rate, so you always see what you have really spent — not what is left in your wallet. Photograph a receipt and the app fills in the amount, currency and date by itself.
+
+And when several families travel together, the least pleasant part is settling up at the end. Tulon does it for you: who paid for what, and the minimum number of transfers that closes the account. No spreadsheets, no awkward conversations in the terminal on the way home.
+
+**Before you book**
+Compare hotel prices as early as you can — over the holidays availability runs out before prices settle.
+
+[Search flights on Kiwi.com](https://kiwi.tpk.ro/XWfXfxVu?sub_id=blog-tishrei)
+
+[Search hotels on Agoda](https://www.agoda.com/search?cid=1966379&utm_source=tulon&utm_medium=blog&utm_campaign=tishrei-family)
+
+Happy holidays, and travel cheap.`,
+      es: `Se acercan las fiestas de otoño y, con ellas, las vacaciones familiares largas del año. Es también la temporada en que los precios de vuelos y hoteles se disparan, porque todo el mundo busca exactamente las mismas semanas.
+
+La mayoría de las familias no lo resuelve renunciando al viaje, sino acortando el vuelo. Un destino a dos o tres horas ahorra dinero y también salva el primer día, que si no se pierde entre el traslado y los niños cansados.
+
+**Grecia — elige la isla según la edad de los niños**
+Rodas y Creta son lo bastante grandes para una semana entera sin moverse mucho, con playas poco profundas cómodas para los más pequeños. Las islas menores son más bonitas pero exigen ferris, algo menos atractivo con maletas y carrito.
+
+**Chipre — el vuelo más corto que hay**
+Menos de una hora en el aire. Es el destino más fácil para empezar si es vuestra primera vez volando con niños pequeños, y funciona como fin de semana largo en lugar de una semana completa.
+
+**Batumi y Tiflis — la mejor relación calidad-precio**
+Georgia sigue siendo uno de los destinos más rentables de la zona: comida excelente a precios bajos, mucho verde, y se pueden combinar mar y montaña en un mismo viaje. El vuelo es algo más largo que a Grecia, pero sigue siendo corto.
+
+**Bulgaria — naturaleza sin pagarla cara**
+Sofía y las montañas de alrededor, o la costa del mar Negro. Encaja bien con familias a las que les gusta el senderismo y no buscan vida nocturna ni compras.
+
+**Montenegro — el bonito que aún no se ha llenado**
+Kotor, Budva y las bahías. Se parece a la Croacia de hace una década, con precios más bajos y menos aglomeraciones. Mejor para familias con niños algo mayores que no se quejen de trayectos cortos en coche.
+
+**Dónde se rompe de verdad el presupuesto**
+No en los vuelos ni en el hotel — eso ya lo reservasteis y lo teníais contado. El presupuesto se rompe durante la semana: comidas, taxis, entradas, un café aquí y allá. En moneda extranjera, y pagando cada uno por turnos, mantener esa foto en la cabeza es casi imposible.
+
+Esto es justo lo que resuelve Tulon. Cada gasto se registra en la moneda en que pagasteis y se convierte automáticamente con tipo de cambio en vivo, así siempre veis lo que habéis gastado de verdad — no lo que queda en la cartera. Fotografiad un recibo y la app rellena sola el importe, la moneda y la fecha.
+
+Y cuando viajan varias familias juntas, la parte más incómoda es cuadrar cuentas al final. Tulon lo hace por vosotros: quién pagó qué, y el número mínimo de transferencias que salda la cuenta. Sin hojas de cálculo y sin conversaciones incómodas en la terminal de vuelta.
+
+**Antes de reservar**
+Comparad precios de hotel cuanto antes — en fiestas la disponibilidad se agota antes de que los precios se estabilicen.
+
+[Buscar vuelos en Kiwi.com](https://kiwi.tpk.ro/XWfXfxVu?sub_id=blog-tishrei)
+
+[Buscar hoteles en Agoda](https://www.agoda.com/search?cid=1966379&utm_source=tulon&utm_medium=blog&utm_campaign=tishrei-family)
+
+Felices fiestas, y viajad barato.`,
+    },
+  },
+  {
     slug: "thailand-kosher-anniversary-trip",
     emoji: "💑",
     category: { he: "סיפורי מטיילים", en: "Traveler Stories", es: "Historias de Viajeros" },
