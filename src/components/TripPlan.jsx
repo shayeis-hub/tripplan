@@ -45,7 +45,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
-import { buildAgodaUrl, buildGygUrl, buildBookingUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
+import { buildAgodaUrl, buildGygUrl, buildAiraloUrl, buildGetTransferUrl } from "@/lib/affiliate";
 import ReceiptCamera from "@/components/ReceiptCamera";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
@@ -2269,10 +2269,6 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                     style={{flex:1,padding:"9px",borderRadius:10,border:"0.5px solid rgba(224,69,90,0.4)",background:"rgba(224,69,90,0.12)",color:"#ff8da0",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
                     🏨 Agoda ↗
                   </button>
-                  <button onClick={()=>window.open(buildBookingUrl({destination:trip.destination,checkIn:trip.startDate,checkOut:trip.endDate,source:"trip-cta"}),"_blank")}
-                    style={{flex:1,padding:"9px",borderRadius:10,border:"0.5px solid rgba(23,100,210,0.4)",background:"rgba(23,100,210,0.12)",color:"#93c5fd",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
-                    🔵 Booking ↗
-                  </button>
                 </div>
               </div>
             )}
@@ -2794,10 +2790,6 @@ function CalendarScreen({trip,expenses,onSaveActs}){
                 <button onClick={()=>window.open(buildAgodaUrl({destination:trip.destination,checkIn:trip.startDate,checkOut:trip.endDate,source:"calendar-empty"}),"_blank")}
                   style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(224,69,90,0.4)",background:"rgba(224,69,90,0.12)",color:"#ff8da0",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>
                   Agoda ↗
-                </button>
-                <button onClick={()=>window.open(buildBookingUrl({destination:trip.destination,checkIn:trip.startDate,checkOut:trip.endDate,source:"calendar-empty"}),"_blank")}
-                  style={{padding:"5px 10px",borderRadius:8,border:"0.5px solid rgba(23,100,210,0.4)",background:"rgba(23,100,210,0.12)",color:"#93c5fd",fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>
-                  Booking ↗
                 </button>
               </div>
             </div>

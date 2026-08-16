@@ -2,13 +2,12 @@
 import { useLang } from "@/lib/LangContext";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
-import { buildAgodaUrl, buildBookingUrl, buildViatorUrl, buildGygUrl, buildAiraloUrl } from "@/lib/affiliate";
+import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildAiraloUrl } from "@/lib/affiliate";
 
 const UTM = "utm_source=tulon&utm_medium=web&utm_campaign=plan-page";
 
 const linkBuilders = {
   agoda:      () => buildAgodaUrl({source:"plan-page", destination:""}),
-  booking:    () => buildBookingUrl({source:"plan-page", destination:""}),
   viator:     () => buildViatorUrl({source:"plan-page", destination:""}),
   gyg:        () => buildGygUrl({source:"plan-page", destination:""}),
   airalo:     () => buildAiraloUrl({source:"plan-page"}),
@@ -74,11 +73,6 @@ const T = {
     he: "מיליוני מלונות ברחבי העולם עם תמחור תחרותי וביקורות אמיתיות",
     en: "Millions of hotels worldwide with competitive pricing and real reviews",
     es: "Millones de hoteles en todo el mundo con precios competitivos y reseñas reales",
-  },
-  bookingDesc: {
-    he: "אחד הסייטים הגדולים בעולם לאירוח — עם אפשרות ביטול חינמי",
-    en: "One of the world's largest accommodation sites — with free cancellation options",
-    es: "Uno de los sitios de alojamiento más grandes del mundo — con opción de cancelación gratuita",
   },
   viatorDesc: {
     he: "אלפי טיולים, סיורים ואטרקציות מקומיות עם ביקורות אמיתיות",
@@ -202,7 +196,6 @@ export default function PlanPage() {
             <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:18}}>{T.hotelsSub[lang]}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               <LinkCard logo="🟡" title="Agoda"       desc={T.agodaDesc[lang]}   builder={linkBuilders.agoda}   lang={lang}/>
-              <LinkCard logo="🔵" title="Booking.com" desc={T.bookingDesc[lang]} builder={linkBuilders.booking} lang={lang}/>
             </div>
           </div>
 

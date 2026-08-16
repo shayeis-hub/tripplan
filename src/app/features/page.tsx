@@ -43,9 +43,9 @@ const T = {
   },
   feat4Title: { he: "גלה מלונות ואטרקציות", en: "Discover Hotels & Activities", es: "Descubre Hoteles y Actividades" },
   feat4Body: {
-    he: "ישירות מהאפליקציה, חפשו מלונות ב-Agoda ו-Booking.com ואטרקציות ב-Viator ו-GetYourGuide — עם לינקים ישירים ליעד הספציפי שלכם.",
-    en: "Directly from the app, search for hotels on Agoda and Booking.com and activities on Viator and GetYourGuide — with direct links to your specific destination.",
-    es: "Directamente desde la app, busca hoteles en Agoda y Booking.com y actividades en Viator y GetYourGuide — con enlaces directos a tu destino específico.",
+    he: "ישירות מהאפליקציה, חפשו מלונות ב-Agoda ואטרקציות ב-Viator ו-GetYourGuide — עם לינקים ישירים ליעד הספציפי שלכם.",
+    en: "Directly from the app, search for hotels on Agoda and activities on Viator and GetYourGuide — with direct links to your specific destination.",
+    es: "Directamente desde la app, busca hoteles en Agoda y actividades en Viator y GetYourGuide — con enlaces directos a tu destino específico.",
   },
   feat5Title: { he: "שיתוף קבוצתי בזמן אמת", en: "Real-Time Group Sharing", es: "Compartir en Grupo en Tiempo Real" },
   feat5Body: {

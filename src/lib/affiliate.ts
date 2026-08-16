@@ -5,10 +5,12 @@
 //
 // Replace the partner IDs by setting these env vars in Vercel:
 //   NEXT_PUBLIC_AGODA_CID
-//   NEXT_PUBLIC_BOOKING_AID
 //   NEXT_PUBLIC_VIATOR_PID
 //   NEXT_PUBLIC_GYG_PARTNER_ID
-//   NEXT_PUBLIC_AIRALO_PARTNER_ID  (Impact.com identifier — sets affiliate base URL)
+//
+// Booking.com was dropped (Aug 2026): its affiliate programme runs through
+// cj.com, registration was never completed, so every Booking click left the
+// app unattributed. Hotel traffic now goes to Agoda alone, which does pay.
 
 export type AffSource =
   | "discover"       // The "Discover" / "גלה" screen — primary recommendations page
@@ -26,7 +28,6 @@ interface BuildParams {
 }
 
 const AGODA_CID    = process.env.NEXT_PUBLIC_AGODA_CID        || "";
-const BOOKING_AID  = process.env.NEXT_PUBLIC_BOOKING_AID      || "";
 const VIATOR_PID   = process.env.NEXT_PUBLIC_VIATOR_PID       || "";
 const VIATOR_MCID  = "42383"; // public Viator default — safe even without partner ID
 const GYG_ID       = process.env.NEXT_PUBLIC_GYG_PARTNER_ID   || "";
@@ -120,12 +121,6 @@ export function buildAgodaUrl({ destination, checkIn, checkOut, source }: BuildP
   return `https://www.agoda.com/search?q=${q}${dates(checkIn, checkOut, true)}&adults=2&rooms=1${cid}&${utm(source)}`;
 }
 
-export function buildBookingUrl({ destination, checkIn, checkOut, source }: BuildParams): string {
-  const q   = encodeURIComponent(destination);
-  const aid = BOOKING_AID ? `&aid=${BOOKING_AID}` : "";
-  return `https://www.booking.com/searchresults.html?ss=${q}${dates(checkIn, checkOut)}${aid}&${utm(source)}`;
-}
-
 export function buildViatorUrl({ destination, source }: BuildParams): string {
   const q = encodeURIComponent(destination);
   // Viator uses ? as the query starter — if no partner_id, still need to attach UTM
@@ -154,11 +149,10 @@ export function buildGetTransferUrl({ source }: Pick<BuildParams, "source">): st
   return `${GETTRANSFER_TP_URL}${tpSubId(source)}`;
 }
 
-// One-stop helper if you want all five URLs at once for a given trip context.
+// One-stop helper if you want every URL at once for a given trip context.
 export function buildAllAffiliateUrls(params: BuildParams) {
   return {
     agoda:   buildAgodaUrl(params),
-    booking: buildBookingUrl(params),
     viator:  buildViatorUrl(params),
     gyg:     buildGygUrl(params),
     airalo:  buildAiraloUrl(params),
