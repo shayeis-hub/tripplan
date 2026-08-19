@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithCredential, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, sendPasswordResetEmail, updateProfile } from "firebase/auth";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
 import { AlertCircle, Loader, Globe } from "lucide-react";
@@ -64,6 +64,51 @@ export default function LoginPage() {
     } catch (firebaseErr: any) {
       if (firebaseErr.code !== "auth/popup-closed-by-user") {
         setErrMsg(lang === "he" ? `שגיאה: ${firebaseErr.code}` : lang === "es" ? `Error: ${firebaseErr.code}` : `Error: ${firebaseErr.code}`);
+      }
+      setBusy(false);
+    }
+  };
+
+  // Apple sign-in is not optional: App Store Guideline 4.8 requires it wherever
+  // Google sign-in is offered, with at least equal prominence. Same shape as
+  // doGoogle — native plugin for the credential, then into the JS SDK, because
+  // Firestore reads depend on the JS SDK's auth state.
+  const doApple = async () => {
+    setBusy(true); setErrMsg(""); setOkMsg("");
+    const cap = (window as any).Capacitor;
+    if (cap?.isNativePlatform?.()) {
+      try {
+        const { FirebaseAuthentication } = cap.Plugins;
+        const result = await FirebaseAuthentication.signInWithApple();
+        const idToken = result?.credential?.idToken;
+        if (!idToken) throw new Error("no-id-token");
+        const provider = new OAuthProvider("apple.com");
+        // rawNonce must be passed through or Firebase rejects the credential.
+        const cred = provider.credential({ idToken, rawNonce: result?.credential?.nonce });
+        const credential = await signInWithCredential(auth, cred);
+        // Apple returns the user's name only on the very first authorization,
+        // and on result.user rather than on the Firebase credential.
+        if (!credential.user.displayName && result?.user?.displayName) {
+          await updateProfile(credential.user, { displayName: result.user.displayName });
+        }
+        window.location.href = "/";
+      } catch (nativeErr: any) {
+        const code = nativeErr?.code || nativeErr?.message || String(nativeErr);
+        if (!/cancel|canceled|closed/i.test(code)) {
+          const base = lang === "he" ? "התחברות Apple נכשלה. התחברו בינתיים עם אימייל וסיסמה." : lang === "es" ? "Error al iniciar sesión con Apple. Usa correo y contraseña por ahora." : "Apple sign-in failed. Use email & password for now.";
+          setErrMsg(`${base}  [${code}]`);
+        }
+        setBusy(false);
+      }
+      return;
+    }
+    try {
+      const provider = new OAuthProvider("apple.com");
+      await signInWithPopup(auth, provider);
+      window.location.href = "/";
+    } catch (firebaseErr: any) {
+      if (firebaseErr.code !== "auth/popup-closed-by-user") {
+        setErrMsg(`Error: ${firebaseErr.code}`);
       }
       setBusy(false);
     }
@@ -131,6 +176,9 @@ export default function LoginPage() {
         .btn-google{width:100%;padding:14px;border-radius:14px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.95);color:#1f1f1f;font-size:15px;font-weight:600;cursor:pointer;font-family:'Rubik',sans-serif;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.15s;}
         .btn-google:hover{background:#fff;}
         .btn-google:disabled{opacity:0.5;cursor:default;}
+        .btn-apple{width:100%;padding:14px;border-radius:14px;border:0.5px solid rgba(255,255,255,0.25);background:#000;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Rubik',sans-serif;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.15s;}
+        .btn-apple:hover{background:#141414;}
+        .btn-apple:disabled{opacity:0.5;cursor:default;}
         .or-divider{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
         .or-divider span{color:rgba(255,255,255,0.2);font-size:12px;white-space:nowrap;}
         .or-divider::before,.or-divider::after{content:'';flex:1;height:0.5px;background:rgba(255,255,255,0.08);}
@@ -159,6 +207,15 @@ export default function LoginPage() {
               <path fill="#34A853" d="M24 47c5.53 0 10.17-1.83 13.56-4.97l-7.14-5.54C28.65 38.1 26.45 39 24 39c-6.24 0-11.56-4.11-13.24-9.76l-8.2 6.54C6.07 43.52 14.43 47 24 47z"/>
             </svg>
             {t("login_google", lang)}
+          </button>
+
+          {/* Apple second, same size and weight as Google — Guideline 4.8 wants
+              equal prominence, not a smaller secondary option. */}
+          <button className="btn-apple" onClick={doApple} disabled={busy}>
+            <svg width="18" height="18" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true">
+              <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+            </svg>
+            {t("login_apple", lang)}
           </button>
 
           <div className="or-divider"><span>{t("login_or", lang)}</span></div>

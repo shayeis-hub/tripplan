@@ -46,6 +46,7 @@ export const translations = {
   login_switch_new: { he: "משתמש חדש? הירשם",   en: "New user? Sign up", es: "¿Usuario nuevo? Regístrate" },
   login_switch_existing: { he: "יש לי חשבון – התחבר", en: "I have an account – Sign in", es: "Ya tengo cuenta – Iniciar sesión" },
   login_google:         { he: "המשך עם Google",   en: "Continue with Google", es: "Continuar con Google" },
+  login_apple:          { he: "המשך עם Apple",    en: "Continue with Apple",  es: "Continuar con Apple" },
   login_or:             { he: "או",               en: "or",               es: "o" },
   login_forgot:         { he: "שכחתי סיסמה",      en: "Forgot password?",  es: "¿Olvidaste tu contraseña?" },
   login_reset_sent:     { he: "אם קיים חשבון עם האימייל הזה — נשלח אליו קישור לאיפוס הסיסמה. בדקו גם בספאם.", en: "If an account exists for this email, a password-reset link has been sent. Check spam too.", es: "Si existe una cuenta con este correo, se envió un enlace para restablecer la contraseña. Revisa también el spam." },
