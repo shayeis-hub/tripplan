@@ -31,6 +31,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  // Capacitor's iOS StatusBar plugin defaults to overlaysWebView: true, so the
+  // WebView content already extends under the notch/status bar and home
+  // indicator. Without viewport-fit=cover, env(safe-area-inset-*) always
+  // evaluates to 0 — this is the prerequisite for the padding added below to
+  // do anything at all, not a redundant flag.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

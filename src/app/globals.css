@@ -71,3 +71,15 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Capacitor's iOS StatusBar plugin defaults to overlaysWebView: true, so the
+   WebView already extends under the notch/Dynamic Island and home indicator.
+   Paired with viewport-fit=cover in layout.tsx (without it these are always
+   0). Covers normal-flow screens; position:fixed full-screen overlays ignore
+   ancestor padding and need env(safe-area-inset-*) applied to them directly. */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}

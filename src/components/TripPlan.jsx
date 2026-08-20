@@ -768,7 +768,32 @@ function CurrencyConverter({rates,onClose,tripCurrencies,defaultCurrency,display
   );
 }
 
-function exportTripPDF(trip,expenses,lang="he"){
+// window.open("","_blank") + document.write is how both HTML "export" reports
+// below hand off to the browser's own print-to-PDF — works in a real browser,
+// but Capacitor's WKWebView has no tabs and returns null from window.open, so
+// on native this silently did nothing (there's already an `if(!w) return`
+// guard, which is exactly why it failed quietly instead of throwing). On
+// native, write the HTML to the cache dir instead and hand it to the system
+// Share Sheet — recipients that can render HTML can still print/save it, it's
+// just not the same one-tap auto-print flow the web version gets.
+async function openHtmlDocument(html, filename){
+  const cap = typeof window!=="undefined" ? window.Capacitor : null;
+  if(cap?.isNativePlatform?.()){
+    try{
+      const{Filesystem,Share}=cap.Plugins;
+      const {uri}=await Filesystem.writeFile({path:filename,data:html,directory:"CACHE",encoding:"utf8"});
+      await Share.share({title:filename,url:uri});
+    }catch{/* user dismissed the share sheet — nothing to do */}
+    return;
+  }
+  const w=window.open("","_blank");
+  if(!w)return;
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+}
+
+async function exportTripPDF(trip,expenses,lang="he"){
   if(!trip) return;
   const isHe=lang==="he";
   const dir=isHe?"rtl":"ltr";
@@ -932,6 +957,11 @@ function exportTripPDF(trip,expenses,lang="he"){
 <div class="footer">${isHe?`נוצר על ידי <span>${appName}</span> – ${appSub}`:`Created with <span>${appName}</span> – ${appSub}`} &nbsp;|&nbsp; ${new Date().toLocaleDateString(isHe?"he-IL":"en-US")}</div>
 </body></html>`;
 
+  const cap=typeof window!=="undefined"?window.Capacitor:null;
+  if(cap?.isNativePlatform?.()){
+    await openHtmlDocument(html,"trip.html");
+    return;
+  }
   const w=window.open("","_blank");
   if(!w) return;
   w.document.write(html);
@@ -946,7 +976,7 @@ function exportTripPDF(trip,expenses,lang="he"){
 //   • Hotel check-ins / check-outs / nights
 //   • Manually-entered calendar activities
 //   • Other timed expenses (attractions, food, taxi…) with `time` field
-function exportItineraryPDF(trip,expenses,lang="he"){
+async function exportItineraryPDF(trip,expenses,lang="he"){
   if(!trip||!trip.startDate||!trip.endDate)return;
 
   // ── Localized labels ─────────────────────────────────────────────────────
@@ -1121,6 +1151,11 @@ function exportItineraryPDF(trip,expenses,lang="he"){
 <div class="footer">${L.createdBy} <span>${L.appName}</span> – ${L.appSub} &nbsp;|&nbsp; ${new Date().toLocaleDateString(locale)}</div>
 </body></html>`;
 
+  const cap=typeof window!=="undefined"?window.Capacitor:null;
+  if(cap?.isNativePlatform?.()){
+    await openHtmlDocument(html,"itinerary.html");
+    return;
+  }
   const w=window.open("","_blank");
   if(!w)return;
   w.document.write(html);
@@ -1795,7 +1830,17 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
       const file=new File([u8],`receipt-${Date.now()}.jpg`,{type:`image/${photo.format||"jpeg"}`});
       handleScan(file);
-    }catch{/* user cancelled the camera — nothing to do */}
+    }catch(err){
+      // Capacitor's camera plugin rejects with a "cancelled" message when the
+      // user backs out of the picker — that's normal, stay silent. Anything
+      // else (permission denied, plugin not linked, etc.) was previously
+      // swallowed here too, which made a real failure look like "the button
+      // does nothing" with no way to diagnose it. Surface it instead.
+      const msg=String(err?.message||err||"");
+      if(!/cancel/i.test(msg)){
+        setScanMsg({type:"err",text:`${lang==="he"?"שגיאת מצלמה":lang==="es"?"Error de cámara":"Camera error"}: ${msg}`});
+      }
+    }
   };
 
   const handleScan=async(file)=>{
