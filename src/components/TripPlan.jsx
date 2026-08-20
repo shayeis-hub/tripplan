@@ -475,7 +475,7 @@ function SI({label,value,onChange,type="text",placeholder,min,max,style}){
     <div style={{marginBottom:14,...style}}>
       {label&&<FL>{label}</FL>}
       <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} min={min} max={max}
-        style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`2px solid ${C.sandDark}`,fontFamily:RF,fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.04)",outline:"none",direction:"rtl",transition:"border 0.2s"}}
+        style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`2px solid ${C.sandDark}`,fontFamily:RF,fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.04)",outline:"none",direction:(type==="date"||type==="time")?"ltr":"rtl",transition:"border 0.2s"}}
         onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
     </div>
   );
@@ -1566,11 +1566,11 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
             <div style={{display:"flex",gap:10,marginBottom:16}}>
               <div style={{flex:1}}>
                 <label style={lbl}>{t("dest_depart",lang)}</label>
-                <input type="date" value={trip.startDate} onChange={e=>onUpdate({startDate:e.target.value})} style={inp}/>
+                <input type="date" value={trip.startDate} onChange={e=>onUpdate({startDate:e.target.value})} style={{...inp,direction:"ltr"}}/>
               </div>
               <div style={{flex:1}}>
                 <label style={lbl}>{t("dest_return",lang)}</label>
-                <input type="date" value={trip.endDate} min={trip.startDate} onChange={e=>onUpdate({endDate:e.target.value})} style={inp}/>
+                <input type="date" value={trip.endDate} min={trip.startDate} onChange={e=>onUpdate({endDate:e.target.value})} style={{...inp,direction:"ltr"}}/>
               </div>
             </div>
             {nights>0&&(
@@ -2194,13 +2194,13 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                       <div style={{flex:1}}>
                         <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:W40,letterSpacing:"0.5px",textTransform:"uppercase"}}>{t("exp_time",lang)}</label>
                         <input type="time" value={form.time} onChange={e=>set({time:e.target.value})}
-                          style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:15,color:"#ffffff",background:W07,outline:"none"}}
+                          style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:15,color:"#ffffff",background:W07,outline:"none",direction:"ltr"}}
                           onFocus={e=>(e.target.style.borderColor=TEAL)} onBlur={e=>(e.target.style.borderColor=TBB)}/>
                       </div>
                       <div style={{flex:1}}>
                         <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:W40,letterSpacing:"0.5px",textTransform:"uppercase"}}>{t("exp_time_end",lang)}</label>
                         <input type="time" value={form.timeEnd} onChange={e=>set({timeEnd:e.target.value})}
-                          style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:15,color:"#ffffff",background:W07,outline:"none"}}
+                          style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:15,color:"#ffffff",background:W07,outline:"none",direction:"ltr"}}
                           onFocus={e=>(e.target.style.borderColor=TEAL)} onBlur={e=>(e.target.style.borderColor=TBB)}/>
                       </div>
                     </div>
@@ -3788,7 +3788,7 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
                         <div style={{fontSize:10,color:"rgba(100,223,223,0.6)",letterSpacing:"0.5px",textTransform:"uppercase"}}>{lang==="he"?"הוסף ליום":lang==="es"?"Añadir al día":"Add to day"}</div>
                         <input type="time" value={addTime} onChange={e=>setAddTime(e.target.value)}
                           onClick={e=>e.stopPropagation()}
-                          style={{background:"rgba(255,255,255,0.07)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#fff",fontFamily:RF,fontSize:12,padding:"4px 8px",outline:"none"}}
+                          style={{background:"rgba(255,255,255,0.07)",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:8,color:"#fff",fontFamily:RF,fontSize:12,padding:"4px 8px",outline:"none",direction:"ltr"}}
                           title={lang==="he"?"שעה (אופציונלי)":lang==="es"?"Hora (opcional)":"Time (optional)"}/>
                       </div>
                       <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
