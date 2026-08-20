@@ -1320,12 +1320,16 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,r
         {/* Legal footer */}
         <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap",paddingTop:8,paddingBottom:4,marginTop:4}}>
           {[
-            {href:"/privacy",label:lang==="he"?"מדיניות פרטיות":lang==="es"?"Política de privacidad":"Privacy Policy"},
-            {href:"/terms",label:lang==="he"?"תנאי שימוש":lang==="es"?"Términos":"Terms"},
-            {href:"/contact",label:lang==="he"?"צור קשר":lang==="es"?"Contacto":"Contact"},
-            {href:"/delete-account",label:lang==="he"?"מחיקת חשבון":lang==="es"?"Eliminar cuenta":"Delete Account"},
+            {href:"/privacy",label:lang==="he"?"מדיניות פרטיות":lang==="es"?"Política de privacidad":"Privacy Policy",blank:true},
+            {href:"/terms",label:lang==="he"?"תנאי שימוש":lang==="es"?"Términos":"Terms",blank:true},
+            {href:"/contact",label:lang==="he"?"צור קשר":lang==="es"?"Contacto":"Contact",blank:true},
+            // No target="_blank": Apple Guideline 5.1.1(v) requires account
+            // deletion to be reachable *within* the app, not handed off to the
+            // external system browser. Same-tab keeps it inside the Capacitor
+            // WebView on native; harmless on web.
+            {href:"/delete-account",label:lang==="he"?"מחיקת חשבון":lang==="es"?"Eliminar cuenta":"Delete Account",blank:false},
           ].map(l=>(
-            <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer"
+            <a key={l.href} href={l.href} target={l.blank?"_blank":undefined} rel={l.blank?"noopener noreferrer":undefined}
               style={{color:"rgba(255,255,255,0.2)",fontSize:11,textDecoration:"none",fontFamily:RF,transition:"color 0.15s"}}
               onMouseEnter={e=>(e.currentTarget.style.color="rgba(100,223,223,0.5)")}
               onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.2)")}>
