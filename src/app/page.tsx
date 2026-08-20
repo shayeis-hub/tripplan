@@ -6,9 +6,12 @@ import TripPlan from "@/components/TripPlan";
 import LandingPage from "@/components/LandingPage";
 import OfflineBanner from "@/components/OfflineBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import RatePrompt from "@/components/RatePrompt";
+import { useLang } from "@/lib/LangContext";
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
+  const { lang } = useLang();
   const {
     trips,
     loading: tripsLoading,
@@ -50,16 +53,19 @@ export default function Home() {
         : !user ? <LandingPage />
         : tripsLoading ? loadingScreen
         : (
-          <TripPlan
-            trips={trips}
-            onSaveTrip={saveTrip}
-            onDeleteTrip={deleteTrip}
-            onShareTrip={shareTrip}
-            onRemoveShare={removeShare}
-            onLogout={logout}
-            userEmail={user.email || ""}
-            userId={user.uid}
-          />
+          <>
+            <TripPlan
+              trips={trips}
+              onSaveTrip={saveTrip}
+              onDeleteTrip={deleteTrip}
+              onShareTrip={shareTrip}
+              onRemoveShare={removeShare}
+              onLogout={logout}
+              userEmail={user.email || ""}
+              userId={user.uid}
+            />
+            <RatePrompt lang={lang} hasTrips={trips.length > 0} />
+          </>
         )}
     </ErrorBoundary>
   );
