@@ -20,6 +20,9 @@ interface Post {
   imageQuery?: string;
   status: "draft" | "approved" | "published" | "failed";
   igPermalink: string | null;
+  postToFacebook?: boolean;
+  fbPermalink?: string | null;
+  fbError?: string | null;
   error: string | null;
   createdAt: string | null;
   publishedAt: string | null;
@@ -363,6 +366,17 @@ export default function InstagramAdminPage() {
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>
                         {(post.hashtags || []).map(h => `#${h}`).join(" ")}
                       </div>
+                      {status !== "published" && (
+                        <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, fontSize: 12, color: "rgba(255,255,255,0.6)", cursor: "pointer" }}>
+                          <input type="checkbox" checked={!!post.postToFacebook}
+                            onChange={e => {
+                              const checked = e.target.checked;
+                              patchPost(post.id, { postToFacebook: checked });
+                              setPosts(ps => ps.map(p => p.id === post.id ? { ...p, postToFacebook: checked } : p));
+                            }} />
+                          גם לדף הפייסבוק
+                        </label>
+                      )}
                       {stockFor === post.id && (
                         <div style={{ marginTop: 10, padding: 10, background: "rgba(0,0,0,0.22)", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.1)" }}>
                           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>
@@ -388,6 +402,12 @@ export default function InstagramAdminPage() {
                           צפה באינסטגרם →
                         </a>
                       )}
+                      {post.fbPermalink && (
+                        <a href={post.fbPermalink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#4267B2", marginTop: 6, marginInlineStart: 12, display: "inline-block" }}>
+                          צפה בפייסבוק →
+                        </a>
+                      )}
+                      {post.fbError && <div style={{ fontSize: 11, color: "#ff6b6b", marginTop: 6 }}>שגיאת פייסבוק: {post.fbError}</div>}
 
                       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                         {status === "draft" && (

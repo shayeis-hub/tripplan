@@ -53,3 +53,29 @@ export async function getMediaPermalink(mediaId: string): Promise<string | null>
   const data = await res.json();
   return data.permalink || null;
 }
+
+// Cross-post the same image + caption to the linked Facebook Page's feed.
+// Reuses IG_ACCESS_TOKEN — Instagram Business publishing already runs through
+// the Page's own access token, so no separate token should be needed unless
+// it's missing the pages_manage_posts permission.
+export async function postToFacebookPage(imageUrl: string, message: string): Promise<{ postId: string; permalink: string | null }> {
+  const { token } = requireEnv();
+  const pageId = process.env.FB_PAGE_ID;
+  if (!pageId) throw new Error("FB_PAGE_ID not configured");
+
+  const data = await graphPost(`${pageId}/photos`, {
+    url: imageUrl,
+    caption: message,
+    access_token: token,
+  });
+  const postId = (data.post_id || data.id) as string;
+
+  let permalink: string | null = null;
+  try {
+    const res = await fetch(`${GRAPH}/${postId}?fields=permalink_url&access_token=${token}`);
+    const pd = await res.json();
+    permalink = pd.permalink_url || null;
+  } catch { /* permalink is a nice-to-have, not required */ }
+
+  return { postId, permalink };
+}

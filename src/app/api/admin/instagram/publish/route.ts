@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, signedUrlFor } from "@/lib/admin-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { createMediaContainer, publishContainer, getMediaPermalink } from "@/lib/instagram";
+import { createMediaContainer, publishContainer, getMediaPermalink, postToFacebookPage } from "@/lib/instagram";
 import { FieldValue } from "firebase-admin/firestore";
 
 export const dynamic = "force-dynamic";
@@ -35,14 +35,29 @@ export async function POST(req: Request) {
     const mediaId = await publishContainer(containerId);
     const permalink = await getMediaPermalink(mediaId).catch(() => null);
 
-    await ref.update({
+    const update: Record<string, unknown> = {
       status: "published",
       igMediaId: mediaId,
       igPermalink: permalink,
       publishedAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
       error: null,
-    });
+    };
+
+    // Facebook cross-post is opt-in per post and best-effort: a failure here
+    // doesn't roll back the Instagram publish, which already succeeded.
+    if (post.postToFacebook) {
+      try {
+        const fb = await postToFacebookPage(imageUrl, fullCaption);
+        update.fbPostId = fb.postId;
+        update.fbPermalink = fb.permalink;
+        update.fbError = null;
+      } catch (fbErr: unknown) {
+        update.fbError = fbErr instanceof Error ? fbErr.message : "Unknown Facebook error";
+      }
+    }
+
+    await ref.update(update);
 
     return NextResponse.json({ ok: true, mediaId, permalink });
   } catch (err: unknown) {

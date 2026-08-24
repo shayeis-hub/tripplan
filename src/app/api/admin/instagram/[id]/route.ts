@@ -5,7 +5,7 @@ import { FieldValue } from "firebase-admin/firestore";
 
 export const dynamic = "force-dynamic";
 
-const EDITABLE_FIELDS = ["caption", "hashtags", "topic", "status"] as const;
+const EDITABLE_FIELDS = ["caption", "hashtags", "topic", "status", "postToFacebook"] as const;
 const ALLOWED_STATUSES = ["draft", "approved", "published", "failed"];
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
