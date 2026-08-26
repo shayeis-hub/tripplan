@@ -50,6 +50,13 @@
   .footer{text-align:center; margin-top:46px; padding-top:22px; border-top:1px solid var(--rule)}
   .footer .big{color:var(--teal); font-weight:800; font-size:18px}
   .footer .sm{color:var(--muted); font-size:14px; margin-top:4px}
+  .footer .ver{color:var(--muted); font-size:12px; margin-top:10px; opacity:.75}
+
+  .shot{margin:18px auto; text-align:center; max-width:230px}
+  .shot img{width:100%; border-radius:20px; border:1px solid var(--card-br);
+    box-shadow:0 10px 30px rgba(13,33,55,.14); display:block}
+  .shot figcaption{margin-top:8px; font-size:12.5px; color:var(--muted)}
+  @media print{ .shot{break-inside:avoid} }
 
   @media print{
     body{background:#fff}
@@ -73,10 +80,14 @@
   <h2>Bienvenido a Tulon</h2>
   <p class="lead">Tulon es tu planificador de viajes inteligente — todo lo que necesitas para planificar y gestionar un viaje, en un solo lugar: presupuesto y gastos, itinerario diario, mapa, recomendaciones, lista de equipaje y compartir con todo el grupo.</p>
   <div class="card">
-    <p><span class="k">Disponible en todas partes:</span> app nativa en Google Play y también directamente en cualquier navegador (www.tulon.app).</p>
+    <p><span class="k">Disponible en todas partes:</span> app nativa en Google Play y en App Store (iPhone y iPad), y también directamente en cualquier navegador (www.tulon.app).</p>
     <p><span class="k">Totalmente gratis:</span> sin pagos, sin premium, sin límites.</p>
     <p><span class="k">Multilingüe:</span> hebreo, inglés y español — con soporte RTL completo.</p>
   </div>
+  <figure class="shot">
+    <img src="/guide-images/01_dashboard.png" alt="Pantalla de lista de viajes de Tulon" loading="lazy">
+    <figcaption>Pantalla principal — todos tus viajes en un solo lugar</figcaption>
+  </figure>
 
   <h2>Inicio rápido — crear un viaje nuevo</h2>
   <p class="lead">Crear un viaje son 3 pasos sencillos. Solo el primero es obligatorio — el resto puedes completarlo más tarde.</p>
@@ -97,6 +108,10 @@
     <li>Añade a los miembros del viaje — para dividir gastos y ajustar cuentas.</li>
     <li>Copia un enlace para compartir o compártelo por WhatsApp para que todos se unan.</li>
   </ul>
+  <figure class="shot">
+    <img src="/guide-images/02_trip_overview.png" alt="Pantalla principal del viaje en Tulon" loading="lazy">
+    <figcaption>Pantalla del viaje — acceso al presupuesto, itinerario y más</figcaption>
+  </figure>
 
   <h2>Gastos y presupuesto</h2>
   <h3>Registrar un gasto</h3>
@@ -104,6 +119,10 @@
   <div class="card">
     <p><span class="k">📸 Escaneo de recibos:</span> toca el icono de la cámara, fotografía el recibo — la app detecta automáticamente el importe, la moneda y la fecha y lo archiva en la categoría correcta. Solo revisa y ajusta si hace falta.</p>
   </div>
+  <figure class="shot">
+    <img src="/guide-images/03_budget.png" alt="Pantalla de presupuesto y gastos de Tulon" loading="lazy">
+    <figcaption>Pantalla de presupuesto — cada gasto ordenado por categoría</figcaption>
+  </figure>
   <h3>Monedas y conversión</h3>
   <ul>
     <li>Cada gasto se registra en la moneda pagada — la conversión a la moneda de visualización es automática, con tipos de cambio en vivo.</li>
@@ -115,6 +134,10 @@
     <li><b>Ajuste automático:</b> al final del viaje la app calcula exactamente quién debe a quién — transparente y justo.</li>
     <li><b>Exportar a PDF:</b> exporta un informe de gastos completo.</li>
   </ul>
+  <figure class="shot">
+    <img src="/guide-images/05_budget_and_settlement.png" alt="Desglose de presupuesto y ajuste de cuentas en Tulon" loading="lazy">
+    <figcaption>Desglose del presupuesto por categoría, y ajuste de cuentas — quién debe a quién</figcaption>
+  </figure>
 
   <h2>Itinerario y planificación</h2>
   <ul>
@@ -123,6 +146,10 @@
     <li><b>Clima:</b> pronóstico para cada día (hasta 15 días de antelación).</li>
     <li><b>Recordatorio de traslado:</b> en los días con vuelo aparece un banner para reservar un traslado del aeropuerto.</li>
   </ul>
+  <figure class="shot">
+    <img src="/guide-images/04_itinerary.png" alt="Pantalla de itinerario de Tulon" loading="lazy">
+    <figcaption>Itinerario — actividades por día y hora</figcaption>
+  </figure>
 
   <h2>Mapa</h2>
   <p class="lead">Un mapa de Google completo con todos los lugares del viaje — incluyendo vista satélite y Street View.</p>
@@ -147,6 +174,9 @@
 
   <h2>Lista de equipaje</h2>
   <p>Gestiona tu equipaje por categorías (documentos, ropa, electrónica, medicina y más), marca lo que ya empacaste y añade tus propios artículos. La lista se sincroniza con todo el grupo.</p>
+
+  <h2>Widget de agregado rápido (Android)</h2>
+  <p>Los usuarios de Android tienen un widget para la pantalla de inicio — agrégalo como cualquier otro widget (mantén pulsada la pantalla de inicio → Widgets → Tulon). Al tocar uno de los cuatro botones (escanear recibo, comida, taxi, atracción) se abre directamente el formulario de gasto con la categoría ya seleccionada — sin necesidad de abrir la app y navegar.</p>
 
   <h2>Compartir y grupo</h2>
   <ul>
@@ -177,6 +207,7 @@
   <div class="footer">
     <div class="big">¡Buen viaje! 🌍 — El equipo de Tulon</div>
     <div class="sm">www.tulon.app · contact@tulon.app</div>
+    <div class="ver">Guía versión 2.6 · Actualizado en agosto de 2026</div>
   </div>
 
 </div>

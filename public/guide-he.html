@@ -65,6 +65,13 @@
   .footer{text-align:center; margin-top:46px; padding-top:22px; border-top:1px solid var(--rule)}
   .footer .big{color:var(--teal); font-weight:800; font-size:18px}
   .footer .sm{color:var(--muted); font-size:14px; margin-top:4px}
+  .footer .ver{color:var(--muted); font-size:12px; margin-top:10px; opacity:.75}
+
+  .shot{margin:18px auto; text-align:center; max-width:230px}
+  .shot img{width:100%; border-radius:20px; border:1px solid var(--card-br);
+    box-shadow:0 10px 30px rgba(13,33,55,.14); display:block}
+  .shot figcaption{margin-top:8px; font-size:12.5px; color:var(--muted)}
+  @media print{ .shot{break-inside:avoid} }
 
   @media print{
     body{background:#fff}
@@ -92,10 +99,14 @@
   <h2>ברוכים הבאים לטיולון</h2>
   <p class="lead">טיולון הוא מתכנן הטיולים החכם שלכם — כל מה שצריך לתכנן ולנהל טיול, במקום אחד: תקציב והוצאות, יומן יומי, מפה, המלצות, רשימת ציוד ושיתוף עם כל חברי הטיול.</p>
   <div class="card">
-    <p><span class="k">זמין בכל מקום:</span> אפליקציה נייטיבית ב-Google Play וגם ישירות בכל דפדפן (www.tulon.app).</p>
+    <p><span class="k">זמין בכל מקום:</span> אפליקציה נייטיבית ב-Google Play וב-App Store (אייפון ואייפד), וגם ישירות בכל דפדפן (www.tulon.app).</p>
     <p><span class="k">חינם לגמרי:</span> ללא תשלום, ללא פרימיום, ללא הגבלות.</p>
     <p><span class="k">רב-לשוני:</span> עברית, אנגלית וספרדית — RTL מלא.</p>
   </div>
+  <figure class="shot">
+    <img src="/guide-images/01_dashboard.png" alt="מסך רשימת הטיולים בטיולון" loading="lazy">
+    <figcaption>מסך הבית — כל הטיולים שלכם במקום אחד</figcaption>
+  </figure>
 
   <!-- 2 -->
   <h2>התחלה מהירה — יצירת טיול חדש</h2>
@@ -117,6 +128,10 @@
     <li>הוסיפו את חברי הטיול — לצורך חלוקת הוצאות והתחשבנות.</li>
     <li>העתיקו קישור שיתוף או שתפו בוואטסאפ כדי שכולם יצטרפו.</li>
   </ul>
+  <figure class="shot">
+    <img src="/guide-images/02_trip_overview.png" alt="מסך הטיול הראשי בטיולון" loading="lazy">
+    <figcaption>מסך הטיול — הכניסה לתקציב, יומן ועוד</figcaption>
+  </figure>
 
   <!-- 3 -->
   <h2>הוצאות ותקציב</h2>
@@ -125,6 +140,10 @@
   <div class="card">
     <p><span class="k">📸 סריקת קבלות:</span> לחצו על אייקון המצלמה, צלמו את הקבלה — והאפליקציה מזהה אוטומטית סכום, מטבע ותאריך ומתייקת לקטגוריה הנכונה. רק בדקו ותקנו לפי הצורך.</p>
   </div>
+  <figure class="shot">
+    <img src="/guide-images/03_budget.png" alt="מסך תקציב והוצאות בטיולון" loading="lazy">
+    <figcaption>מסך התקציב — כל ההוצאות מסודרות לפי קטגוריה</figcaption>
+  </figure>
   <h3>מטבעות והמרה</h3>
   <ul>
     <li>כל הוצאה נרשמת במטבע ששולם — וההמרה למטבע התצוגה אוטומטית לפי שערים חיים.</li>
@@ -136,6 +155,10 @@
     <li><b>התחשבנות אוטומטית:</b> בסוף הטיול האפליקציה מחשבת בדיוק מי חייב למי — שקוף והוגן.</li>
     <li><b>ייצוא PDF:</b> אפשר לייצא דוח הוצאות מלא.</li>
   </ul>
+  <figure class="shot">
+    <img src="/guide-images/05_budget_and_settlement.png" alt="גרף תקציב והתחשבנות בטיולון" loading="lazy">
+    <figcaption>פילוח תקציב לפי קטגוריה, והתחשבנות — מי חייב למי</figcaption>
+  </figure>
 
   <!-- 4 -->
   <h2>יומן ותכנון</h2>
@@ -145,6 +168,10 @@
     <li><b>מזג אוויר:</b> תחזית לכל יום (עד 15 יום מראש).</li>
     <li><b>תזכורת הסעה:</b> בימים עם טיסה מופיע באנר להזמנת הסעה משדה התעופה.</li>
   </ul>
+  <figure class="shot">
+    <img src="/guide-images/04_itinerary.png" alt="מסך יומן הטיול בטיולון" loading="lazy">
+    <figcaption>יומן הטיול — פעילויות לפי יום ושעה</figcaption>
+  </figure>
 
   <!-- 5 -->
   <h2>מפה</h2>
@@ -172,6 +199,10 @@
   <!-- 7 -->
   <h2>רשימת ציוד</h2>
   <p>נהלו את הציוד לפי קטגוריות (מסמכים, ביגוד, אלקטרוניקה, רפואה ועוד), סמנו פריטים שנארזו, והוסיפו פריטים משלכם. הרשימה מסתנכרנת עם כל חברי הטיול.</p>
+
+  <!-- 7b -->
+  <h2>וידג'ט הוספה מהירה (אנדרואיד)</h2>
+  <p>למשתמשי אנדרואיד יש וידג'ט למסך הבית — הוסיפו אותו כמו כל וידג'ט אחר (לחיצה ארוכה על מסך הבית → וידג'טים → טיולון). לחיצה על אחד מארבעת הכפתורים (סריקת קבלה, אוכל, מונית, אטרקציה) פותחת ישירות טופס הוספת הוצאה עם הקטגוריה כבר ממולאת — בלי לפתוח את האפליקציה ולנווט.</p>
 
   <!-- 8 -->
   <h2>שיתוף וקבוצה</h2>
@@ -206,6 +237,7 @@
   <div class="footer">
     <div class="big">נסיעה טובה! 🌍 — צוות טיולון</div>
     <div class="sm">www.tulon.app · contact@tulon.app</div>
+    <div class="ver">גרסת מדריך 2.6 · עודכן אוגוסט 2026</div>
   </div>
 
 </div>

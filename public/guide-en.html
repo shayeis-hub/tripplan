@@ -50,6 +50,13 @@
   .footer{text-align:center; margin-top:46px; padding-top:22px; border-top:1px solid var(--rule)}
   .footer .big{color:var(--teal); font-weight:800; font-size:18px}
   .footer .sm{color:var(--muted); font-size:14px; margin-top:4px}
+  .footer .ver{color:var(--muted); font-size:12px; margin-top:10px; opacity:.75}
+
+  .shot{margin:18px auto; text-align:center; max-width:230px}
+  .shot img{width:100%; border-radius:20px; border:1px solid var(--card-br);
+    box-shadow:0 10px 30px rgba(13,33,55,.14); display:block}
+  .shot figcaption{margin-top:8px; font-size:12.5px; color:var(--muted)}
+  @media print{ .shot{break-inside:avoid} }
 
   @media print{
     body{background:#fff}
@@ -73,10 +80,14 @@
   <h2>Welcome to Tulon</h2>
   <p class="lead">Tulon is your smart trip planner — everything you need to plan and manage a trip, all in one place: budget and expenses, a daily itinerary, a map, recommendations, a packing list, and sharing with everyone on the trip.</p>
   <div class="card">
-    <p><span class="k">Available everywhere:</span> a native app on Google Play, and directly in any browser (www.tulon.app).</p>
+    <p><span class="k">Available everywhere:</span> a native app on Google Play and the App Store (iPhone and iPad), and directly in any browser (www.tulon.app).</p>
     <p><span class="k">Completely free:</span> no payment, no premium, no limits.</p>
     <p><span class="k">Multilingual:</span> Hebrew, English and Spanish — full RTL support.</p>
   </div>
+  <figure class="shot">
+    <img src="/guide-images/01_dashboard.png" alt="Tulon trip list screen" loading="lazy">
+    <figcaption>Home screen — all your trips in one place</figcaption>
+  </figure>
 
   <h2>Quick start — creating a new trip</h2>
   <p class="lead">Creating a trip takes 3 easy steps. Only the first is required — you can fill in the rest later.</p>
@@ -97,6 +108,10 @@
     <li>Add trip members — for splitting expenses and settling up.</li>
     <li>Copy a share link or share on WhatsApp so everyone can join.</li>
   </ul>
+  <figure class="shot">
+    <img src="/guide-images/02_trip_overview.png" alt="Tulon main trip screen" loading="lazy">
+    <figcaption>Trip screen — the gateway to budget, itinerary and more</figcaption>
+  </figure>
 
   <h2>Expenses &amp; budget</h2>
   <h3>Logging an expense</h3>
@@ -104,6 +119,10 @@
   <div class="card">
     <p><span class="k">📸 Receipt scanning:</span> tap the camera icon, snap the receipt — the app automatically detects the amount, currency and date and files it in the right category. Just review and adjust if needed.</p>
   </div>
+  <figure class="shot">
+    <img src="/guide-images/03_budget.png" alt="Tulon budget and expenses screen" loading="lazy">
+    <figcaption>Budget screen — every expense sorted by category</figcaption>
+  </figure>
   <h3>Currencies &amp; conversion</h3>
   <ul>
     <li>Every expense is logged in the currency you paid — conversion to the display currency is automatic, at live exchange rates.</li>
@@ -115,6 +134,10 @@
     <li><b>Automatic settlement:</b> at the end of the trip the app calculates exactly who owes whom — transparent and fair.</li>
     <li><b>PDF export:</b> export a full expense report.</li>
   </ul>
+  <figure class="shot">
+    <img src="/guide-images/05_budget_and_settlement.png" alt="Tulon budget breakdown and settlement" loading="lazy">
+    <figcaption>Budget breakdown by category, and settlement — who owes whom</figcaption>
+  </figure>
 
   <h2>Itinerary &amp; planning</h2>
   <ul>
@@ -123,6 +146,10 @@
     <li><b>Weather:</b> a forecast for each day (up to 15 days ahead).</li>
     <li><b>Transfer reminder:</b> on days with a flight, a banner appears to book an airport transfer.</li>
   </ul>
+  <figure class="shot">
+    <img src="/guide-images/04_itinerary.png" alt="Tulon itinerary screen" loading="lazy">
+    <figcaption>Itinerary — activities by day and time</figcaption>
+  </figure>
 
   <h2>Map</h2>
   <p class="lead">A full Google map with all your trip's places — including satellite view and Street View.</p>
@@ -147,6 +174,9 @@
 
   <h2>Packing list</h2>
   <p>Manage your gear by category (documents, clothing, electronics, medical and more), check off packed items, and add your own. The list syncs with everyone on the trip.</p>
+
+  <h2>Quick-add widget (Android)</h2>
+  <p>Android users get a home-screen widget — add it like any other widget (long-press the home screen → Widgets → Tulon). Tapping one of the four buttons (scan a receipt, food, taxi, attraction) opens the expense form directly with the category already filled in — no need to open the app and navigate.</p>
 
   <h2>Sharing &amp; group</h2>
   <ul>
@@ -177,6 +207,7 @@
   <div class="footer">
     <div class="big">Have a great trip! 🌍 — The Tulon team</div>
     <div class="sm">www.tulon.app · contact@tulon.app</div>
+    <div class="ver">Guide version 2.6 · Updated August 2026</div>
   </div>
 
 </div>
