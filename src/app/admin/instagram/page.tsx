@@ -86,6 +86,7 @@ export default function InstagramAdminPage() {
   const [manualTopic, setManualTopic] = useState("");
   const [manualSchedule, setManualSchedule] = useState("");
   const [manualFacebook, setManualFacebook] = useState(false);
+  const [manualImage, setManualImage] = useState<File | null>(null);
   const [manualBusy, setManualBusy] = useState(false);
 
   const authHeader = useCallback(async () => {
@@ -166,7 +167,18 @@ export default function InstagramAdminPage() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setManualCaption(""); setManualHashtags(""); setManualTopic(""); setManualSchedule(""); setManualFacebook(false);
+
+      if (manualImage) {
+        const imageBase64 = await fileToBase64(manualImage);
+        const uploadRes = await fetch("/api/admin/instagram/upload", {
+          method: "POST", headers,
+          body: JSON.stringify({ id: data.id, imageBase64, contentType: manualImage.type }),
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.error) throw new Error(uploadData.error);
+      }
+
+      setManualCaption(""); setManualHashtags(""); setManualTopic(""); setManualSchedule(""); setManualFacebook(false); setManualImage(null);
       setManualOpen(false);
       await loadQueue();
     } catch (e: unknown) {
@@ -363,6 +375,18 @@ export default function InstagramAdminPage() {
                   style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14, fontFamily: RF, outline: "none" }} />
                 <input type="datetime-local" value={manualSchedule} onChange={e => setManualSchedule(e.target.value)}
                   style={{ padding: "12px 14px", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14, fontFamily: RF, outline: "none", direction: "ltr" }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <label style={{ padding: "8px 12px", borderRadius: 8, border: "0.5px dashed rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.65)", fontSize: 12, cursor: "pointer", fontFamily: RF }}>
+                  {manualImage ? manualImage.name : "בחר תמונה"}
+                  <input type="file" accept="image/jpeg,image/png" style={{ display: "none" }}
+                    onChange={e => setManualImage(e.target.files?.[0] || null)} />
+                </label>
+                {manualImage && (
+                  <button onClick={() => setManualImage(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 12, cursor: "pointer" }}>
+                    הסר
+                  </button>
+                )}
               </div>
               <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.6)", cursor: "pointer" }}>
                 <input type="checkbox" checked={manualFacebook} onChange={e => setManualFacebook(e.target.checked)} />
