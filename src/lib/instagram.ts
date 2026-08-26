@@ -36,9 +36,29 @@ export async function createMediaContainer(imageUrl: string, caption: string): P
   return data.id as string;
 }
 
+// Instagram fetches/processes the image from image_url asynchronously after
+// createMediaContainer returns — publishing before that finishes fails with
+// "Media ID is not available". Poll status_code until it's FINISHED (or fail
+// fast on ERROR/EXPIRED) before calling media_publish.
+async function waitForContainerReady(containerId: string, token: string): Promise<void> {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    const res = await fetch(`${GRAPH}/${containerId}?fields=status_code&access_token=${token}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || "Instagram API error");
+    if (data.status_code === "FINISHED") return;
+    if (data.status_code === "ERROR" || data.status_code === "EXPIRED") {
+      throw new Error(`Instagram media container failed to process (status: ${data.status_code})`);
+    }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  throw new Error("Timed out waiting for Instagram to process the image");
+}
+
 // Step 2: publish a previously created container.
 export async function publishContainer(containerId: string): Promise<string> {
   const { token, igUserId } = requireEnv();
+  await waitForContainerReady(containerId, token);
   const data = await graphPost(`${igUserId}/media_publish`, {
     creation_id: containerId,
     access_token: token,

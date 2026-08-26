@@ -251,6 +251,7 @@ export default function InstagramAdminPage() {
       await loadQueue();
     } catch (e: unknown) {
       setErr(msg(e));
+      await loadQueue(); // server already flipped status to "failed" — pull that in, don't leave stale "approved" state showing
     } finally { setBusyId(null); }
   };
 
