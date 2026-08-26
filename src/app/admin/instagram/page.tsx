@@ -85,6 +85,7 @@ export default function InstagramAdminPage() {
   const [manualHashtags, setManualHashtags] = useState("");
   const [manualTopic, setManualTopic] = useState("");
   const [manualSchedule, setManualSchedule] = useState("");
+  const [manualFacebook, setManualFacebook] = useState(false);
   const [manualBusy, setManualBusy] = useState(false);
 
   const authHeader = useCallback(async () => {
@@ -160,11 +161,12 @@ export default function InstagramAdminPage() {
           hashtags: manualHashtags.split(",").map(h => h.trim().replace(/^#/, "")).filter(Boolean),
           topic: manualTopic,
           scheduledFor: manualSchedule || null,
+          postToFacebook: manualFacebook,
         }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setManualCaption(""); setManualHashtags(""); setManualTopic(""); setManualSchedule("");
+      setManualCaption(""); setManualHashtags(""); setManualTopic(""); setManualSchedule(""); setManualFacebook(false);
       setManualOpen(false);
       await loadQueue();
     } catch (e: unknown) {
@@ -362,6 +364,10 @@ export default function InstagramAdminPage() {
                 <input type="datetime-local" value={manualSchedule} onChange={e => setManualSchedule(e.target.value)}
                   style={{ padding: "12px 14px", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14, fontFamily: RF, outline: "none", direction: "ltr" }} />
               </div>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.6)", cursor: "pointer" }}>
+                <input type="checkbox" checked={manualFacebook} onChange={e => setManualFacebook(e.target.checked)} />
+                גם לדף הפייסבוק
+              </label>
               <button onClick={createManual} disabled={manualBusy}
                 style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: TEAL, color: BG, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: RF, alignSelf: "flex-start" }}>
                 {manualBusy ? "יוצר..." : "הוסף לתור כטיוטה"}

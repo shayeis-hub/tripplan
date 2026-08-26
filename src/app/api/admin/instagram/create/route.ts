@@ -16,6 +16,7 @@ export async function POST(req: Request) {
   const hashtags: string[] = Array.isArray(body?.hashtags) ? body.hashtags : [];
   const topic: string = typeof body?.topic === "string" ? body.topic : "";
   const scheduledFor: string | null = typeof body?.scheduledFor === "string" && body.scheduledFor ? body.scheduledFor : null;
+  const postToFacebook: boolean = !!body?.postToFacebook;
 
   const adminDb = getAdminDb();
   const ref = adminDb.collection("instagramPosts").doc();
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
     imagePath: null,
     status: "draft" as const,
     scheduledFor,
-    postToFacebook: false,
+    postToFacebook,
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
     publishedAt: null,
