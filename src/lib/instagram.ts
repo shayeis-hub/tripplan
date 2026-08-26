@@ -75,12 +75,17 @@ export async function getMediaPermalink(mediaId: string): Promise<string | null>
 }
 
 // Cross-post the same image + caption to the linked Facebook Page's feed.
-// Reuses IG_ACCESS_TOKEN — Instagram Business publishing already runs through
-// the Page's own access token, so no separate token should be needed unless
-// it's missing the pages_manage_posts permission.
+// Needs its own Page Access Token with pages_manage_posts — IG_ACCESS_TOKEN
+// turned out NOT to carry that permission (confirmed live: Graph API #200
+// "This app is not allowed to publish to other users' timelines", the
+// classic symptom of using a user token instead of a page token here).
+// Get one via Graph API Explorer: grant pages_manage_posts + pages_show_list
+// on a user token, call GET /me/accounts, and copy that Page's own
+// access_token from the response — not the top-level user token.
 export async function postToFacebookPage(imageUrl: string, message: string): Promise<{ postId: string; permalink: string | null }> {
-  const { token } = requireEnv();
+  const token = process.env.FB_PAGE_ACCESS_TOKEN;
   const pageId = process.env.FB_PAGE_ID;
+  if (!token) throw new Error("FB_PAGE_ACCESS_TOKEN not configured");
   if (!pageId) throw new Error("FB_PAGE_ID not configured");
 
   const data = await graphPost(`${pageId}/photos`, {
