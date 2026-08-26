@@ -23,6 +23,7 @@ interface Post {
   postToFacebook?: boolean;
   fbPermalink?: string | null;
   fbError?: string | null;
+  scheduledFor?: string | null;
   error: string | null;
   createdAt: string | null;
   publishedAt: string | null;
@@ -79,6 +80,12 @@ export default function InstagramAdminPage() {
   const [stockFor, setStockFor] = useState<string | null>(null);
   const [stockPhotos, setStockPhotos] = useState<StockPhoto[]>([]);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualCaption, setManualCaption] = useState("");
+  const [manualHashtags, setManualHashtags] = useState("");
+  const [manualTopic, setManualTopic] = useState("");
+  const [manualSchedule, setManualSchedule] = useState("");
+  const [manualBusy, setManualBusy] = useState(false);
 
   const authHeader = useCallback(async () => {
     if (!auth.currentUser) return {};
@@ -136,6 +143,38 @@ export default function InstagramAdminPage() {
     } catch (e: unknown) {
       setErr(msg(e));
     } finally { setGenerating(false); }
+  };
+
+  // Manual post creation — independent of the AI generator, for pasting in
+  // pre-written content like the "one feature a day" series.
+  const createManual = async () => {
+    if (!manualCaption.trim()) { setErr("צריך כיתוב לפוסט"); return; }
+    setManualBusy(true);
+    setErr("");
+    try {
+      const headers = { "Content-Type": "application/json", ...(await authHeader()) };
+      const res = await fetch("/api/admin/instagram/create", {
+        method: "POST", headers,
+        body: JSON.stringify({
+          caption: manualCaption,
+          hashtags: manualHashtags.split(",").map(h => h.trim().replace(/^#/, "")).filter(Boolean),
+          topic: manualTopic,
+          scheduledFor: manualSchedule || null,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setManualCaption(""); setManualHashtags(""); setManualTopic(""); setManualSchedule("");
+      setManualOpen(false);
+      await loadQueue();
+    } catch (e: unknown) {
+      setErr(msg(e));
+    } finally { setManualBusy(false); }
+  };
+
+  const setSchedule = async (id: string, scheduledFor: string) => {
+    await patchPost(id, { scheduledFor: scheduledFor || null } as Partial<Post>);
+    setPosts(ps => ps.map(p => p.id === id ? { ...p, scheduledFor: scheduledFor || null } : p));
   };
 
   const patchPost = async (id: string, patch: Partial<Post>) => {
@@ -305,6 +344,32 @@ export default function InstagramAdminPage() {
           </button>
         </div>
 
+        {/* Manual post — independent of the AI generator */}
+        <div style={{ marginBottom: 28 }}>
+          <button onClick={() => setManualOpen(o => !o)}
+            style={{ padding: "10px 16px", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.75)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: RF }}>
+            {manualOpen ? "סגור" : "+ פוסט ידני"}
+          </button>
+          {manualOpen && (
+            <div style={{ marginTop: 10, background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 10 }}>
+              <textarea placeholder="כיתוב הפוסט" value={manualCaption} onChange={e => setManualCaption(e.target.value)}
+                style={{ minHeight: 90, padding: "12px 14px", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14, fontFamily: RF, outline: "none", resize: "vertical" }} />
+              <input placeholder="האשטגים, מופרדים בפסיקים" value={manualHashtags} onChange={e => setManualHashtags(e.target.value)}
+                style={{ padding: "12px 14px", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14, fontFamily: RF, outline: "none" }} />
+              <div style={{ display: "flex", gap: 10 }}>
+                <input placeholder="נושא (תווית פנימית, אופציונלי)" value={manualTopic} onChange={e => setManualTopic(e.target.value)}
+                  style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14, fontFamily: RF, outline: "none" }} />
+                <input type="datetime-local" value={manualSchedule} onChange={e => setManualSchedule(e.target.value)}
+                  style={{ padding: "12px 14px", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 14, fontFamily: RF, outline: "none", direction: "ltr" }} />
+              </div>
+              <button onClick={createManual} disabled={manualBusy}
+                style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: TEAL, color: BG, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: RF, alignSelf: "flex-start" }}>
+                {manualBusy ? "יוצר..." : "הוסף לתור כטיוטה"}
+              </button>
+            </div>
+          )}
+        </div>
+
         {err && <div style={{ background: "rgba(255,107,107,0.1)", border: "0.5px solid rgba(255,107,107,0.3)", borderRadius: 12, padding: "12px 16px", color: "#ff6b6b", marginBottom: 20 }}>{err}</div>}
         {loading && <div style={{ textAlign: "center", padding: 30, color: "rgba(255,255,255,0.4)" }}>טוען...</div>}
 
@@ -377,6 +442,20 @@ export default function InstagramAdminPage() {
                             }} />
                           גם לדף הפייסבוק
                         </label>
+                      )}
+                      {status !== "published" && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                          <label style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>תזמון פרסום:</label>
+                          <input type="datetime-local" value={post.scheduledFor || ""}
+                            onChange={e => setSchedule(post.id, e.target.value)}
+                            style={{ padding: "6px 10px", borderRadius: 7, border: "0.5px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 12, fontFamily: RF, outline: "none", direction: "ltr" }} />
+                        </div>
+                      )}
+                      {post.scheduledFor && status === "approved" && (
+                        <div style={{ fontSize: 11, color: TEAL, marginTop: 4 }}>
+                          מתוזמן ל-{new Date(post.scheduledFor).toLocaleString("he-IL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                          {" · "}הפרסום בפועל תלוי בזמן הרצת ה-cron היומי, לא מדויק לדקה
+                        </div>
                       )}
                       {stockFor === post.id && (
                         <div style={{ marginTop: 10, padding: 10, background: "rgba(0,0,0,0.22)", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.1)" }}>
