@@ -67,6 +67,46 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+// Photos straight from an image generator can be several MB — base64-encoded
+// in a JSON body that blows past Vercel's ~4.5MB request limit, which fails
+// as a platform-level 413 (non-JSON body, breaks a bare res.json() call)
+// before our route code ever runs. Downscale/re-encode through a canvas
+// first; Instagram recompresses to ~1080px wide anyway, so this loses
+// nothing visible.
+function compressImage(file: File, maxDim = 1600, quality = 0.85): Promise<{ base64: string; contentType: string }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
+      resolve({ base64: dataUrl.split(",")[1], contentType: "image/jpeg" });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read image")); };
+    img.src = url;
+  });
+}
+
+// A non-2xx response isn't guaranteed to be JSON (platform-level errors like
+// a 413 "Request Entity Too Large" come back as plain text) — res.json()
+// on those throws a confusing "Unexpected token" instead of the real error.
+async function parseJsonResponse(res: Response): Promise<{ error?: string; [key: string]: unknown }> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: res.ok ? "Unexpected response" : (text.slice(0, 200) || `HTTP ${res.status}`) };
+  }
+}
+
 export default function InstagramAdminPage() {
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -100,9 +140,9 @@ export default function InstagramAdminPage() {
     try {
       const headers = await authHeader();
       const res = await fetch("/api/admin/instagram/queue", { headers });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.error) throw new Error(data.error);
-      setPosts(data.posts);
+      setPosts(data.posts as Post[]);
     } catch (e: unknown) {
       setErr(msg(e));
     } finally { setLoading(false); }
@@ -139,7 +179,7 @@ export default function InstagramAdminPage() {
       const res = await fetch("/api/admin/instagram/generate", {
         method: "POST", headers, body: JSON.stringify({ topic: topic || undefined, count: 3 }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.error) throw new Error(data.error);
       await loadQueue();
     } catch (e: unknown) {
@@ -165,16 +205,16 @@ export default function InstagramAdminPage() {
           postToFacebook: manualFacebook,
         }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.error) throw new Error(data.error);
 
       if (manualImage) {
-        const imageBase64 = await fileToBase64(manualImage);
+        const { base64: imageBase64, contentType } = await compressImage(manualImage);
         const uploadRes = await fetch("/api/admin/instagram/upload", {
           method: "POST", headers,
-          body: JSON.stringify({ id: data.id, imageBase64, contentType: manualImage.type }),
+          body: JSON.stringify({ id: data.id, imageBase64, contentType }),
         });
-        const uploadData = await uploadRes.json();
+        const uploadData = await parseJsonResponse(uploadRes);
         if (uploadData.error) throw new Error(uploadData.error);
       }
 
@@ -222,14 +262,14 @@ export default function InstagramAdminPage() {
     setBusyId(id);
     setErr("");
     try {
-      const imageBase64 = await fileToBase64(file);
+      const { base64: imageBase64, contentType } = await compressImage(file);
       const headers = { "Content-Type": "application/json", ...(await authHeader()) };
       const res = await fetch("/api/admin/instagram/upload", {
-        method: "POST", headers, body: JSON.stringify({ id, imageBase64, contentType: file.type }),
+        method: "POST", headers, body: JSON.stringify({ id, imageBase64, contentType }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.error) throw new Error(data.error);
-      setPosts(ps => ps.map(p => p.id === id ? { ...p, imageUrl: data.imageUrl } : p));
+      setPosts(ps => ps.map(p => p.id === id ? { ...p, imageUrl: data.imageUrl as string } : p));
     } catch (e: unknown) {
       setErr(msg(e));
     } finally { setBusyId(null); }
@@ -246,9 +286,9 @@ export default function InstagramAdminPage() {
       const res = await fetch("/api/admin/instagram/upload", {
         method: "POST", headers, body: JSON.stringify({ id: post.id, imageBase64, contentType: "image/png" }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.error) throw new Error(data.error);
-      setPosts(ps => ps.map(p => p.id === post.id ? { ...p, imageUrl: data.imageUrl } : p));
+      setPosts(ps => ps.map(p => p.id === post.id ? { ...p, imageUrl: data.imageUrl as string } : p));
     } catch (e: unknown) {
       setErr(msg(e));
     } finally { setBusyId(null); }
@@ -263,9 +303,9 @@ export default function InstagramAdminPage() {
     try {
       const headers = await authHeader();
       const res = await fetch(`/api/admin/instagram/stock?q=${encodeURIComponent(q)}`, { headers });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.error) throw new Error(data.error);
-      setStockPhotos(data.photos || []);
+      setStockPhotos((data.photos as StockPhoto[]) || []);
     } catch (e: unknown) {
       setErr(msg(e));
       setStockFor(null);
@@ -281,9 +321,9 @@ export default function InstagramAdminPage() {
         method: "POST", headers,
         body: JSON.stringify({ id, photoUrl: photo.url, credit: `Photo by ${photo.photographer} on Pexels` }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.error) throw new Error(data.error);
-      setPosts(ps => ps.map(p => p.id === id ? { ...p, imageUrl: data.imageUrl } : p));
+      setPosts(ps => ps.map(p => p.id === id ? { ...p, imageUrl: data.imageUrl as string } : p));
       setStockFor(null);
       setStockPhotos([]);
     } catch (e: unknown) {
@@ -299,7 +339,7 @@ export default function InstagramAdminPage() {
       const res = await fetch("/api/admin/instagram/publish", {
         method: "POST", headers, body: JSON.stringify({ id }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       if (data.error) throw new Error(data.error);
       await loadQueue();
     } catch (e: unknown) {
