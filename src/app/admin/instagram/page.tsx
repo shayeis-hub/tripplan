@@ -524,7 +524,7 @@ export default function InstagramAdminPage() {
                       {post.scheduledFor && status === "approved" && (
                         <div style={{ fontSize: 11, color: TEAL, marginTop: 4 }}>
                           מתוזמן ל-{new Date(post.scheduledFor).toLocaleString("he-IL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                          {" · "}הפרסום בפועל תלוי בזמן הרצת ה-cron היומי, לא מדויק לדקה
+                          {" · "}הפרסום יוצא בטווח של עד 10 דקות מהשעה שנקבעה
                         </div>
                       )}
                       {stockFor === post.id && (

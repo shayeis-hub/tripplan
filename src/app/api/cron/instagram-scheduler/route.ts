@@ -4,11 +4,10 @@ import { publishInstagramPost } from "@/lib/instagram-publish";
 
 export const dynamic = "force-dynamic";
 
-// Runs once a day (Vercel Hobby plan caps cron frequency at daily — see
-// vercel.json). Publishes every approved post whose scheduledFor has come
-// due since the last run. Because this only fires once a day, the time
-// portion of scheduledFor doesn't get minute-precision: anything scheduled
-// for "today" goes out whenever this cron happens to run.
+// Runs every 10 minutes (Vercel Pro — see vercel.json). Publishes every
+// approved post whose scheduledFor has come due since the last run.
+// Naturally duplicate-safe: a published post's status flips away from
+// "approved", so it drops out of the query on the next tick.
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
