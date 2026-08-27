@@ -58,6 +58,16 @@ function fullCaptionFor(post: Post): string {
     .join("\n\n");
 }
 
+// Converts a stored UTC ISO timestamp back into the naive local-time string
+// a <input type="datetime-local"> expects (YYYY-MM-DDTHH:mm), in this
+// browser's own timezone — the inverse of the conversion in setSchedule.
+function toLocalInputValue(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -201,7 +211,7 @@ export default function InstagramAdminPage() {
           caption: manualCaption,
           hashtags: manualHashtags.split(",").map(h => h.trim().replace(/^#/, "")).filter(Boolean),
           topic: manualTopic,
-          scheduledFor: manualSchedule || null,
+          scheduledFor: manualSchedule ? new Date(manualSchedule).toISOString() : null,
           postToFacebook: manualFacebook,
         }),
       });
@@ -226,9 +236,14 @@ export default function InstagramAdminPage() {
     } finally { setManualBusy(false); }
   };
 
-  const setSchedule = async (id: string, scheduledFor: string) => {
-    await patchPost(id, { scheduledFor: scheduledFor || null } as Partial<Post>);
-    setPosts(ps => ps.map(p => p.id === id ? { ...p, scheduledFor: scheduledFor || null } : p));
+  const setSchedule = async (id: string, localValue: string) => {
+    // datetime-local gives a naive string with no timezone. Resolve it in
+    // the browser's own local time (this device's timezone) before storing
+    // — the server runs in UTC and would otherwise misread "11:55" as
+    // 11:55 UTC instead of 11:55 Israel time, off by 2-3 hours.
+    const scheduledFor = localValue ? new Date(localValue).toISOString() : null;
+    await patchPost(id, { scheduledFor } as Partial<Post>);
+    setPosts(ps => ps.map(p => p.id === id ? { ...p, scheduledFor } : p));
   };
 
   const patchPost = async (id: string, patch: Partial<Post>) => {
@@ -516,7 +531,7 @@ export default function InstagramAdminPage() {
                       {status !== "published" && (
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
                           <label style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>תזמון פרסום:</label>
-                          <input type="datetime-local" value={post.scheduledFor || ""}
+                          <input type="datetime-local" value={toLocalInputValue(post.scheduledFor)}
                             onChange={e => setSchedule(post.id, e.target.value)}
                             style={{ padding: "6px 10px", borderRadius: 7, border: "0.5px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 12, fontFamily: RF, outline: "none", direction: "ltr" }} />
                         </div>
