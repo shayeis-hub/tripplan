@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
           const remHours = exp.reminderHours || 5;
           const remM = fh * 60 + fm - (remHours * 60);
           const curM = nowHour * 60 + nowMin;
-          if (remM >= curM && remM < curM + 60) {
+          if (remM >= curM && remM < curM + 10) {
             const remTime = `${String(Math.floor(remM/60)).padStart(2,"0")}:${String(remM%60).padStart(2,"0")}`;
             const remHoursLabel = exp.reminderHours || 5;
             await sendPush(userId, "✈️ תזכורת טיסה!", `טיסתך ב-${exp.departureTime} – עוד ${remHoursLabel} שעות, הגיע הזמן להתכונן!`);
@@ -55,14 +55,14 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        // ── Hotel check-in: 8am ──
-        if (exp.category === "hotel" && exp.checkIn === today && nowHour === 8) {
+        // ── Hotel check-in: 8:00-8:09am (fires once per day at the 10-minute cron tick that covers 8am) ──
+        if (exp.category === "hotel" && exp.checkIn === today && nowHour === 8 && nowMin < 10) {
           await sendPush(userId, "🏨 היום צ׳ק אין!", `צ׳ק אין ב${exp.description || "מלון"} – שיהיה נסיעה טובה!`);
           notifications.push(`hotel-in-${userId}`);
         }
 
-        // ── Hotel check-out: 8am ──
-        if (exp.category === "hotel" && exp.checkOut === today && nowHour === 8) {
+        // ── Hotel check-out: 8:00-8:09am ──
+        if (exp.category === "hotel" && exp.checkOut === today && nowHour === 8 && nowMin < 10) {
           await sendPush(userId, "🏨 היום צ׳ק אאוט!", `אל תשכח לפנות את החדר ב${exp.description || "מלון"}`);
           notifications.push(`hotel-out-${userId}`);
         }
