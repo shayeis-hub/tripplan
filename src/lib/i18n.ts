@@ -201,6 +201,7 @@ export const translations = {
   disc_retry:         { he: "נסה שוב",                  en: "Try again",            es: "Reintentar" },
   disc_book_hotels:   { he: "לחץ להזמנת מלון ביעד שלך", en: "Tap to book a hotel at your destination", es: "Toca para reservar un hotel en tu destino" },
   disc_book_acts:     { he: "לחץ לחיפוש סיורים ופעילויות", en: "Tap to find tours & activities", es: "Toca para buscar tours y actividades" },
+  disc_experiences:   { he: "🎫 חוויות מומלצות",         en: "🎫 Recommended Experiences", es: "🎫 Experiencias recomendadas" },
 
   // ── Share ─────────────────────────────────────────────
   share_title:      { he: "👥 שתף טיול",             en: "👥 Share Trip",        es: "👥 Compartir viaje" },

@@ -3146,6 +3146,25 @@ const DIET_NOTE={
          es:"Restaurantes veganos de Google — los menús cambian, confírmalo antes"},
 };
 
+// Collapsible section used on the Discover screen — mirrors the accordion
+// pattern already used in PackingListScreen for visual consistency.
+function DiscSection({title,Icon,iconColor,iconBg,isOpen,onToggle,headerExtra,children}){
+  return(
+    <div style={{borderRadius:16,overflow:"hidden",border:`0.5px solid ${isOpen?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.06)"}`,background:W05}}>
+      <div onClick={onToggle} style={{display:"flex",alignItems:"center",gap:10,padding:"14px 14px",cursor:"pointer",userSelect:"none"}}>
+        <ChevronRight size={16} color={W35} strokeWidth={2.5}
+          style={{transform:isOpen?"rotate(90deg)":"rotate(0deg)",transition:"transform 0.2s",flexShrink:0}}/>
+        <div style={{width:36,height:36,borderRadius:10,background:iconBg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <Icon size={18} color={iconColor} strokeWidth={1.5}/>
+        </div>
+        <div style={{flex:1,fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{title}</div>
+        {headerExtra&&<div onClick={e=>e.stopPropagation()}>{headerExtra}</div>}
+      </div>
+      {isOpen&&<div style={{borderTop:"0.5px solid rgba(255,255,255,0.06)",padding:"12px 14px 14px"}}>{children}</div>}
+    </div>
+  );
+}
+
 function DiscoverScreen({trip}){
   const{lang}=useLang();
   const{user}=useAuth();
@@ -3256,6 +3275,11 @@ function DiscoverScreen({trip}){
   useEffect(()=>{rankOnce(attractions,"attraction",setAttractions);},[attractions&&attractions.length,rankOnce]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(()=>{rankOnce(restaurants,"restaurant",setRestaurants);},[restaurants&&restaurants.length,rankOnce]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Real content (attractions/restaurants) open by default; affiliate
+  // sections start collapsed to keep the screen from feeling cluttered.
+  const[openSec,setOpenSec]=useState({attractions:true,restaurants:true,experiences:false,hotels:false});
+  const toggleSec=id=>setOpenSec(o=>({...o,[id]:!o[id]}));
+
   useEffect(()=>{
     const key=trip.destination;
     if(key!==prevDestLangRef.current){
@@ -3281,7 +3305,9 @@ function DiscoverScreen({trip}){
 
   return(
     <div>
-      <WaveHeader title={t("disc_title",lang)} subtitle={trip.destination?(lang==="he"?`מלון, פעילויות ועוד ל${trip.destination}`:lang==="es"?`Hoteles, actividades y más para ${trip.destination}`:`Hotels, activities & more for ${trip.destination}`):t("disc_subtitle",lang)}/>
+      <WaveHeader
+        title={trip.destination?(lang==="he"?`מה לעשות ב${trip.destination}`:lang==="es"?`Qué hacer en ${trip.destination}`:`What to do in ${trip.destination}`):t("disc_title",lang)}
+        subtitle={trip.destination?(lang==="he"?`מלון, פעילויות ועוד ל${trip.destination}`:lang==="es"?`Hoteles, actividades y más para ${trip.destination}`:`Hotels, activities & more for ${trip.destination}`):t("disc_subtitle",lang)}/>
       <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:14}}>
         {!trip.destination?(
           <div style={{textAlign:"center",padding:"48px 0",color:W35}}>
@@ -3296,48 +3322,9 @@ function DiscoverScreen({trip}){
               {checkIn&&checkOut?` · ${fmtDate(checkIn)} – ${fmtDate(checkOut)}`:""}
             </div>
 
-            {/* ── Agoda — full-width hotel booking ── */}
-            <button onClick={()=>open(agodaTile.url)}
-              style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"18px 20px",borderRadius:18,border:`0.5px solid ${agodaTile.color}55`,background:`linear-gradient(135deg,${agodaTile.color}18,${agodaTile.color}08)`,cursor:"pointer"}}>
-              <img src={`https://www.google.com/s2/favicons?domain=${agodaTile.domain}&sz=64`} alt="Agoda"
-                style={{width:48,height:48,borderRadius:12,objectFit:"contain",background:"#fff",padding:4,flexShrink:0}}
-                onError={e=>{e.currentTarget.style.display="none";}}/>
-              <div style={{textAlign:"right",flex:1}}>
-                <div style={{fontFamily:RF,fontSize:16,fontWeight:800,color:"#ffffff"}}>{agodaTile.name}</div>
-                <div style={{fontSize:13,color:"#ffffff",fontWeight:600,marginTop:3,lineHeight:1.4,opacity:0.9}}>{agodaTile.label}</div>
-              </div>
-              <div style={{flexShrink:0,width:32,height:32,borderRadius:10,background:"rgba(224,69,90,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Building2 size={18} color="#e0455a" strokeWidth={1.5}/></div>
-            </button>
-
-            {/* ── Activities — GetYourGuide (full width, matches the Agoda row) ── */}
-            <button onClick={()=>open(gygTile.url)}
-              style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"18px 20px",borderRadius:18,border:`0.5px solid ${gygTile.color}55`,background:`linear-gradient(135deg,${gygTile.color}18,${gygTile.color}08)`,cursor:"pointer"}}>
-              <img src={`https://www.google.com/s2/favicons?domain=${gygTile.domain}&sz=64`} alt={gygTile.name}
-                style={{width:48,height:48,borderRadius:12,objectFit:"contain",background:"#fff",padding:4,flexShrink:0}}
-                onError={e=>{e.currentTarget.style.display="none";}}/>
-              <div style={{textAlign:"right",flex:1}}>
-                <div style={{fontFamily:RF,fontSize:16,fontWeight:800,color:"#ffffff"}}>{gygTile.name}</div>
-                <div style={{fontSize:13,color:"#ffffff",fontWeight:600,marginTop:3,lineHeight:1.4,opacity:0.9}}>{gygTile.label}</div>
-              </div>
-              <div style={{flexShrink:0,width:32,height:32,borderRadius:10,background:`${gygTile.color}26`,display:"flex",alignItems:"center",justifyContent:"center"}}><Ticket size={18} color={gygTile.color} strokeWidth={1.5}/></div>
-            </button>
-
-            {/* ── Airalo eSIM ── */}
-            <button onClick={()=>open(airaloUrl)}
-              style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"18px 20px",borderRadius:18,border:"0.5px solid rgba(100,223,223,0.35)",background:"linear-gradient(135deg,rgba(100,223,223,0.12),rgba(100,223,223,0.05))",cursor:"pointer"}}>
-              <div style={{width:48,height:48,borderRadius:12,background:"rgba(100,223,223,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:26}}>📶</div>
-              <div style={{textAlign:"right",flex:1}}>
-                <div style={{fontFamily:RF,fontSize:16,fontWeight:800,color:"#ffffff"}}>Airalo eSIM</div>
-                <div style={{fontSize:13,color:"#ffffff",fontWeight:600,marginTop:3,lineHeight:1.4,opacity:0.85}}>
-                  {lang==="he"?"גלישה בחו\"ל בלי להחליף כרטיס":lang==="es"?"Internet en el extranjero sin cambiar SIM":"Browse abroad without swapping your SIM"}
-                </div>
-              </div>
-              <div style={{flexShrink:0,width:32,height:32,borderRadius:10,background:"rgba(100,223,223,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><Globe size={18} color={TEAL} strokeWidth={1.5}/></div>
-            </button>
-
             {/* ── Top attractions (real Places data) ── */}
-            <Card>
-              <h2 style={{fontFamily:RF,fontSize:15,fontWeight:700,marginBottom:12,color:"#ffffff"}}>{t("disc_attractions",lang)}</h2>
+            <DiscSection title={t("disc_attractions",lang)} Icon={Ticket} iconColor="#f472b6" iconBg="rgba(244,114,182,0.13)"
+              isOpen={openSec.attractions} onToggle={()=>toggleSec("attractions")}>
               {attrLoading&&<div style={{fontSize:12,color:W40,padding:"6px 2px"}}>{lang==="he"?"טוען אטרקציות מובילות…":lang==="es"?"Cargando atracciones…":"Loading top attractions…"}</div>}
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {(attractions||[]).map((a,i)=>(
@@ -3356,7 +3343,7 @@ function DiscoverScreen({trip}){
                 ))}
                 {!attrLoading&&attractions&&attractions.length===0&&<div style={{fontSize:12,color:W40,padding:"6px 2px"}}>{lang==="he"?"לא נמצאו אטרקציות":lang==="es"?"Sin atracciones":"No attractions found"}</div>}
               </div>
-            </Card>
+            </DiscSection>
 
             {/* ── AI recommendations (restaurants + tip) ── */}
             {recsLoading&&(
@@ -3369,9 +3356,9 @@ function DiscoverScreen({trip}){
               </div>
             )}
             {/* ── Restaurants (real Places data) ── */}
-            <Card>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,gap:8}}>
-                <h2 style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff"}}>{t("disc_restaurants",lang)}</h2>
+            <DiscSection title={t("disc_restaurants",lang)} Icon={Utensils} iconColor="#fbbf24" iconBg="rgba(251,191,36,0.13)"
+              isOpen={openSec.restaurants} onToggle={()=>toggleSec("restaurants")}
+              headerExtra={
                 <select value={diet} onChange={e=>pickDiet(e.target.value)}
                   aria-label={lang==="he"?"העדפה תזונתית":lang==="es"?"Preferencia alimentaria":"Dietary preference"}
                   style={{padding:"6px 11px",borderRadius:999,cursor:"pointer",fontFamily:RF,fontWeight:700,fontSize:12,outline:"none",
@@ -3384,7 +3371,7 @@ function DiscoverScreen({trip}){
                     </option>
                   ))}
                 </select>
-              </div>
+              }>
               {diet&&DIET_NOTE[diet]&&(
                 <div style={{fontSize:11,color:"rgba(74,222,128,0.7)",marginBottom:10,lineHeight:1.5}}>
                   {DIET_NOTE[diet][lang]||DIET_NOTE[diet].en}
@@ -3422,7 +3409,50 @@ function DiscoverScreen({trip}){
                   </div>
                 )}
               </div>
-            </Card>
+            </DiscSection>
+
+            {/* ── Experiences — GetYourGuide (affiliate link for now) ── */}
+            <DiscSection title={t("disc_experiences",lang)} Icon={Ticket} iconColor={gygTile.color} iconBg={`${gygTile.color}26`}
+              isOpen={openSec.experiences} onToggle={()=>toggleSec("experiences")}>
+              <button onClick={()=>open(gygTile.url)}
+                style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderRadius:14,border:`0.5px solid ${gygTile.color}55`,background:`linear-gradient(135deg,${gygTile.color}18,${gygTile.color}08)`,cursor:"pointer"}}>
+                <img src={`https://www.google.com/s2/favicons?domain=${gygTile.domain}&sz=64`} alt={gygTile.name}
+                  style={{width:40,height:40,borderRadius:10,objectFit:"contain",background:"#fff",padding:4,flexShrink:0}}
+                  onError={e=>{e.currentTarget.style.display="none";}}/>
+                <div style={{textAlign:"right",flex:1}}>
+                  <div style={{fontFamily:RF,fontSize:15,fontWeight:800,color:"#ffffff"}}>{gygTile.name}</div>
+                  <div style={{fontSize:12,color:"#ffffff",fontWeight:600,marginTop:2,lineHeight:1.4,opacity:0.9}}>{gygTile.label}</div>
+                </div>
+              </button>
+            </DiscSection>
+
+            {/* ── Hotels — Agoda (affiliate link for now) ── */}
+            <DiscSection title={t("disc_hotels",lang)} Icon={Building2} iconColor="#e0455a" iconBg="rgba(224,69,90,0.15)"
+              isOpen={openSec.hotels} onToggle={()=>toggleSec("hotels")}>
+              <button onClick={()=>open(agodaTile.url)}
+                style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderRadius:14,border:`0.5px solid ${agodaTile.color}55`,background:`linear-gradient(135deg,${agodaTile.color}18,${agodaTile.color}08)`,cursor:"pointer"}}>
+                <img src={`https://www.google.com/s2/favicons?domain=${agodaTile.domain}&sz=64`} alt="Agoda"
+                  style={{width:40,height:40,borderRadius:10,objectFit:"contain",background:"#fff",padding:4,flexShrink:0}}
+                  onError={e=>{e.currentTarget.style.display="none";}}/>
+                <div style={{textAlign:"right",flex:1}}>
+                  <div style={{fontFamily:RF,fontSize:15,fontWeight:800,color:"#ffffff"}}>{agodaTile.name}</div>
+                  <div style={{fontSize:12,color:"#ffffff",fontWeight:600,marginTop:2,lineHeight:1.4,opacity:0.9}}>{agodaTile.label}</div>
+                </div>
+              </button>
+            </DiscSection>
+
+            {/* ── Airalo eSIM ── */}
+            <button onClick={()=>open(airaloUrl)}
+              style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"18px 20px",borderRadius:18,border:"0.5px solid rgba(100,223,223,0.35)",background:"linear-gradient(135deg,rgba(100,223,223,0.12),rgba(100,223,223,0.05))",cursor:"pointer"}}>
+              <div style={{width:48,height:48,borderRadius:12,background:"rgba(100,223,223,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:26}}>📶</div>
+              <div style={{textAlign:"right",flex:1}}>
+                <div style={{fontFamily:RF,fontSize:16,fontWeight:800,color:"#ffffff"}}>Airalo eSIM</div>
+                <div style={{fontSize:13,color:"#ffffff",fontWeight:600,marginTop:3,lineHeight:1.4,opacity:0.85}}>
+                  {lang==="he"?"גלישה בחו\"ל בלי להחליף כרטיס":lang==="es"?"Internet en el extranjero sin cambiar SIM":"Browse abroad without swapping your SIM"}
+                </div>
+              </div>
+              <div style={{flexShrink:0,width:32,height:32,borderRadius:10,background:"rgba(100,223,223,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><Globe size={18} color={TEAL} strokeWidth={1.5}/></div>
+            </button>
 
             {/* ── Local tip (AI) ── */}
             {recs&&!recsLoading&&recs.tip&&(
