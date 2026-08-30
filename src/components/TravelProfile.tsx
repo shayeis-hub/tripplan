@@ -166,7 +166,7 @@ export default function TravelProfile({ onClose }: { onClose: () => void }) {
         <div style={{ width: 40 }} />
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 100px", maxWidth: 560, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 100px", paddingBottom: "calc(100px + env(safe-area-inset-bottom))", maxWidth: 560, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
         <div style={{ fontFamily: RF, color: W40, fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>{SUBTITLE[lang]}</div>
 
         {loading ? (
@@ -196,7 +196,7 @@ export default function TravelProfile({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <div style={{ position: "fixed", bottom: 0, insetInlineStart: 0, insetInlineEnd: 0, padding: "16px 20px", background: DARK_BG, borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
+      <div style={{ position: "fixed", bottom: 0, insetInlineStart: 0, insetInlineEnd: 0, padding: "16px 20px", paddingBottom: "calc(16px + env(safe-area-inset-bottom))", background: DARK_BG, borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
         {error && (
           <div style={{ maxWidth: 560, margin: "0 auto 10px", textAlign: "center", color: "#ff6b6b", fontFamily: RF, fontSize: 13 }}>
             {SAVE_ERROR[lang]}
