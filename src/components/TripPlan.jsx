@@ -44,9 +44,11 @@ import { useOnlineStatus } from "@/lib/useOnlineStatus";
 import OfflineBanner from "@/components/OfflineBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useLang } from "@/lib/LangContext";
+import { useAuth } from "@/lib/AuthContext";
 import { t } from "@/lib/i18n";
 import { buildAgodaUrl, buildGygUrl, buildAiraloUrl, buildGetTransferUrl, buildKiwiUrl } from "@/lib/affiliate";
 import ReceiptCamera from "@/components/ReceiptCamera";
+import TravelProfile from "@/components/TravelProfile";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
   Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send,
@@ -248,6 +250,35 @@ const defaultTripDate=(dates)=>{
 };
 const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
 const remTime=(t,hrs=5)=>{if(!t)return null;const[h,m]=t.split(":").map(Number),tot=h*60+m-(hrs*60);if(tot<0)return null;return`${String(Math.floor(tot/60)).padStart(2,"0")}:${String(tot%60).padStart(2,"0")}`;};
+
+// ── Personal Travel Profile: ranked-Discover-results cache ────────────────────
+// Mirrors the RATES_CACHE_KEY pattern above. Avoids re-calling the AI ranking
+// endpoint every time the same (destination, category, diet, place list) is
+// shown again in a session — ranking is a paid AI call, the place list itself
+// rarely changes within a TTL window.
+const RANK_CACHE_KEY="tulon_rank_cache";
+const RANK_CACHE_TTL_MS=6*60*60*1000; // 6h
+const RANK_CACHE_MAX_ENTRIES=30;
+function rankCacheGet(key){
+  try{
+    const all=JSON.parse(localStorage.getItem(RANK_CACHE_KEY)||"{}");
+    const hit=all[key];
+    if(hit&&Date.now()-hit.ts<RANK_CACHE_TTL_MS)return hit.places;
+  }catch{}
+  return null;
+}
+function rankCacheSet(key,places){
+  try{
+    const all=JSON.parse(localStorage.getItem(RANK_CACHE_KEY)||"{}");
+    all[key]={places,ts:Date.now()};
+    const keys=Object.keys(all);
+    if(keys.length>RANK_CACHE_MAX_ENTRIES){
+      keys.sort((a,b)=>all[a].ts-all[b].ts);
+      for(const k of keys.slice(0,keys.length-RANK_CACHE_MAX_ENTRIES))delete all[k];
+    }
+    localStorage.setItem(RANK_CACHE_KEY,JSON.stringify(all));
+  }catch{}
+}
 
 const RATES_CACHE_KEY="tulon_rates_cache";
 function loadCachedRates(){
@@ -3117,6 +3148,7 @@ const DIET_NOTE={
 
 function DiscoverScreen({trip}){
   const{lang}=useLang();
+  const{user}=useAuth();
   const dest=translateDest(trip.destination||"");
   const checkIn=trip.startDate||"";
   const checkOut=trip.endDate||"";
@@ -3193,6 +3225,36 @@ function DiscoverScreen({trip}){
   },[trip.destination]);
 
   const pickDiet=(id)=>{setDiet(id);fetchRestaurants(id);};
+
+  // ── Personal Travel Profile: optional reranking layer ──────────────────────
+  // Purely additive — runs only for signed-in users, after the real Places
+  // results above are already set exactly as before. If the user has no
+  // saved profile, the server responds with the same places unranked
+  // (why:null) and nothing is visibly different. Never blocks the initial
+  // render: the plain list shows first, then re-sorts in place if a ranked
+  // result comes back.
+  const rankOnce=useCallback(async(list,category,setList)=>{
+    if(!user||!list||list.length===0)return;
+    const cacheKey=`${trip.destination}|${category}|${diet}|${list.map(p=>p.name).join(",")}`;
+    const cached=rankCacheGet(cacheKey);
+    if(cached){setList(cached);return;}
+    try{
+      const token=await user.getIdToken();
+      const res=await fetch("/api/rank-places",{
+        method:"POST",
+        headers:{"Content-Type":"application/json",authorization:`Bearer ${token}`},
+        body:JSON.stringify({places:list,destination:trip.destination,category,lang}),
+      });
+      const data=await res.json();
+      if(Array.isArray(data.places)&&data.places.length===list.length){
+        setList(data.places);
+        rankCacheSet(cacheKey,data.places);
+      }
+    }catch{/* ranking is a nice-to-have — leave the existing unranked list as-is */}
+  },[user,trip.destination,diet,lang]);
+
+  useEffect(()=>{rankOnce(attractions,"attraction",setAttractions);},[attractions&&attractions.length,rankOnce]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(()=>{rankOnce(restaurants,"restaurant",setRestaurants);},[restaurants&&restaurants.length,rankOnce]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(()=>{
     const key=trip.destination;
@@ -3284,6 +3346,7 @@ function DiscoverScreen({trip}){
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.name}</div>
                       <div style={{fontSize:11,color:W35,marginTop:2,lineHeight:1.4}}>{a.rating?`⭐ ${a.rating} · ${a.ratingCount||0} ${lang==="he"?"ביקורות":lang==="es"?"reseñas":"reviews"}`:a.description}</div>
+                      {a.why&&<div style={{fontSize:11,color:TEAL,marginTop:3,lineHeight:1.4}}>✨ {a.why}</div>}
                     </div>
                     <button onClick={()=>open(mapsUrl(a.name))}
                       style={{background:"rgba(66,153,225,0.15)",border:"0.5px solid rgba(66,153,225,0.4)",borderRadius:8,padding:"5px 9px",cursor:"pointer",fontSize:11,color:"#63b3ed",fontFamily:RF,flexShrink:0,whiteSpace:"nowrap"}}>
@@ -3341,6 +3404,7 @@ function DiscoverScreen({trip}){
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.name}</div>
                       <div style={{fontSize:11,color:W35,marginTop:2,lineHeight:1.4}}>{r.rating?`⭐ ${r.rating} · ${r.ratingCount||0} ${lang==="he"?"ביקורות":lang==="es"?"reseñas":"reviews"}`:r.description}</div>
+                      {r.why&&<div style={{fontSize:11,color:TEAL,marginTop:3,lineHeight:1.4}}>✨ {r.why}</div>}
                     </div>
                     <button onClick={()=>open(mapsUrl(r.name))}
                       style={{background:"rgba(66,153,225,0.15)",border:"0.5px solid rgba(66,153,225,0.4)",borderRadius:8,padding:"5px 9px",cursor:"pointer",fontSize:11,color:"#63b3ed",fontFamily:RF,flexShrink:0,whiteSpace:"nowrap"}}>
@@ -3947,6 +4011,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[inspireSaving,setInspireSaving]=useState(false);
   const[showConverter,setShowConverter]=useState(false);
   const[showGuide,setShowGuide]=useState(false); // in-app user guide modal
+  const[showTravelProfile,setShowTravelProfile]=useState(false); // Personal Travel Profile modal
   const[wizardMode,setWizardMode]=useState(false); // new-trip wizard vs settings edit
   const[expensePrefill,setExpensePrefill]=useState(null); // from map "add as expense"
   const[convAmount,setConvAmount]=useState("");
@@ -4301,6 +4366,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               <div style={{margin:"10px 20px",height:"0.5px",background:"rgba(255,255,255,0.06)"}}/>
             </>
           )}
+          <button onClick={()=>{setShowTravelProfile(true);setSideMenu(false);}}
+            style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
+            <Sparkles size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"פרופיל הטיולים שלי":lang==="es"?"Mi perfil de viaje":"My Travel Profile"}
+          </button>
           <button onClick={()=>{setShowGuide(true);setSideMenu(false);}}
             style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
             <BookOpen size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"חוברת הסבר":lang==="es"?"Guía de usuario":"User Guide"}
@@ -4393,7 +4462,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           </div>
           {/* Currency Converter */}
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]} defaultCurrency={trips[0]?.defaultCurrency} displayCurrency={trips[0]?.displayCurrency}/>}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}
           <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates}/>
         </div>
       </>
@@ -4617,7 +4686,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           </div>
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             <TripSplashScreen trip={active} expenses={active.expenses||[]}
               onBudget={()=>{pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}
@@ -4652,7 +4721,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             {/* Trip settings button */}
             {screen!=="destination"&&(
@@ -4697,7 +4766,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}
           <div style={{flex:1,overflowY:screen==="map"?"hidden":"auto",position:"relative",minHeight:0}}>
             <div key={screen} className="screen-enter" style={screen==="map"?{height:"100%"}:undefined}>
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
