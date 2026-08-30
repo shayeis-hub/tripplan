@@ -3275,9 +3275,8 @@ function DiscoverScreen({trip}){
   useEffect(()=>{rankOnce(attractions,"attraction",setAttractions);},[attractions&&attractions.length,rankOnce]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(()=>{rankOnce(restaurants,"restaurant",setRestaurants);},[restaurants&&restaurants.length,rankOnce]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Real content (attractions/restaurants) open by default; affiliate
-  // sections start collapsed to keep the screen from feeling cluttered.
-  const[openSec,setOpenSec]=useState({attractions:true,restaurants:true,experiences:false,hotels:false});
+  // All sections start collapsed to keep the screen uncluttered.
+  const[openSec,setOpenSec]=useState({attractions:false,restaurants:false,experiences:false,hotels:false});
   const toggleSec=id=>setOpenSec(o=>({...o,[id]:!o[id]}));
 
   useEffect(()=>{
