@@ -13,23 +13,31 @@ interface Place {
   ratingCount?: number;
 }
 
+// Traveler DNA — stable across every trip, read server-side from the
+// caller's own profile doc.
 const PROFILE_LABELS: Record<string, Record<string, string>> = {
-  pace: { relaxed: "relaxed, unhurried pace", balanced: "balanced pace", packed: "packed, sees as much as possible" },
   foodImportance: { casual: "food is a minor part of the trip", important: "food is an important part of the trip", central: "food is central — plans around meals" },
-  touristyVsLocal: { touristy: "prefers well-known touristy spots", mixed: "mix of touristy and local", local: "prefers local, off-the-beaten-path spots" },
+  cuisineAdventure: { familiar: "prefers familiar food", mixed: "open to some new food", adventurous: "adventurous, seeks out new/unusual food" },
   budgetStyle: { budget: "budget-conscious, price comes first", value: "value for money", splurge: "willing to pay more for something great" },
+  cultureInterest: { low: "not very interested in museums/history", some: "somewhat interested in culture/history", high: "very interested in museums, culture and history" },
+  accommodationStyle: { simple: "prefers simple, functional accommodation", comfortable: "prefers comfortable accommodation", pampering: "enjoys pampering, high-comfort accommodation" },
+};
+
+// Trip Preferences — specific to this trip, sent by the client from the
+// trip document (trip.tripPrefs), since they change trip to trip.
+const TRIP_PREFS_LABELS: Record<string, Record<string, string>> = {
+  pace: { relaxed: "relaxed, unhurried pace", balanced: "balanced pace", packed: "packed, sees as much as possible" },
+  touristyVsLocal: { touristy: "prefers well-known touristy spots", mixed: "mix of touristy and local", local: "prefers local, off-the-beaten-path spots" },
   walkingVsTransit: { walking: "prefers walking", mixed: "mix of walking and transit", transit: "prefers public transit/taxis" },
   atmosphere: { quiet: "prefers quiet places", mixed: "no strong preference on noise", lively: "prefers lively, energetic places" },
-  cuisineAdventure: { familiar: "prefers familiar food", mixed: "open to some new food", adventurous: "adventurous, seeks out new/unusual food" },
   groupType: { family: "traveling with family", couple: "traveling as a couple", friends: "traveling with friends", solo: "traveling solo" },
 };
 
-function describeProfile(profile: Record<string, string>, lang: string): string {
-  const parts = Object.entries(PROFILE_LABELS)
-    .map(([key, labels]) => (profile[key] && labels[profile[key]]) || null)
-    .filter(Boolean);
-  if (lang === "he") return parts.join("; ");
-  return parts.join("; ");
+function describe(source: Record<string, string> | undefined, labels: Record<string, Record<string, string>>): string[] {
+  if (!source) return [];
+  return Object.entries(labels)
+    .map(([key, opts]) => (source[key] && opts[source[key]]) || null)
+    .filter((v): v is string => Boolean(v));
 }
 
 export async function POST(req: Request) {
@@ -49,20 +57,28 @@ export async function POST(req: Request) {
   const destination: string = body?.destination || "";
   const category: string = body?.category === "restaurant" ? "restaurant" : "attraction";
   const lang: string = body?.lang === "he" || body?.lang === "es" ? body.lang : "en";
+  // Trip Preferences come from the request body (the client already has its
+  // own trip doc loaded) — unlike the DNA profile, these aren't sensitive
+  // per-user data, just this-trip context the caller is asking about.
+  const tripPrefs: Record<string, string> | undefined =
+    body?.tripPrefs && typeof body.tripPrefs === "object" ? body.tripPrefs : undefined;
 
   if (!places.length || !destination) {
     return NextResponse.json({ error: "Missing places or destination" }, { status: 400 });
   }
 
-  // Profile is read server-side from the verified caller's own doc — never
-  // trusted from the request body, so one user can't rank with another's
-  // stated preferences.
+  // Traveler DNA is read server-side from the verified caller's own doc —
+  // never trusted from the request body, so one user can't rank with
+  // another's stated preferences.
   const profileSnap = await getAdminDb().collection("travelProfiles").doc(uid).get();
-  if (!profileSnap.exists) {
-    // No-op: caller has no profile, hand back the original order unchanged.
+  const dnaParts = profileSnap.exists ? describe(profileSnap.data() as Record<string, string>, PROFILE_LABELS) : [];
+  const tripParts = describe(tripPrefs, TRIP_PREFS_LABELS);
+  const allParts = [...dnaParts, ...tripParts];
+  if (allParts.length === 0) {
+    // No-op: nothing to personalize on, hand back the original order unchanged.
     return NextResponse.json({ places: places.map(p => ({ ...p, why: null })) });
   }
-  const profileText = describeProfile(profileSnap.data() as Record<string, string>, lang);
+  const profileText = allParts.join("; ");
 
   const placesList = places.map((p, i) => `${i}. ${p.name}${p.rating ? ` (${p.rating}★, ${p.ratingCount || 0} reviews)` : ""}${p.description ? ` — ${p.description}` : ""}`).join("\n");
 

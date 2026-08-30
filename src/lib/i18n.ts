@@ -256,6 +256,8 @@ export const translations = {
   wiz_money_sub:    { he: "אפשר להשלים גם אחר כך",       en: "You can add this later too", es: "Puedes añadirlo más tarde" },
   wiz_who:          { he: "מי מגיע?",      en: "Who's coming?", es: "¿Quién viene?" },
   wiz_who_sub:      { he: "משתתפים לחלוקת הוצאות + שיתוף", en: "Members for splitting expenses + sharing", es: "Miembros para dividir gastos + compartir" },
+  wiz_prefs:        { he: "איך אתם אוהבים לטייל?", en: "How do you like to travel?", es: "¿Cómo te gusta viajar?" },
+  wiz_prefs_sub:    { he: "כדי לדייק את ההמלצות בטיול הזה", en: "To fine-tune recommendations for this trip", es: "Para ajustar las recomendaciones de este viaje" },
   wiz_back:         { he: "חזרה",          en: "Back",        es: "Atrás" },
   wiz_next:         { he: "המשך",          en: "Continue",    es: "Continuar" },
   wiz_skip:         { he: "אוסיף אחר כך",  en: "I'll add later", es: "Lo añado luego" },

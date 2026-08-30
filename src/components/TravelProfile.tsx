@@ -17,16 +17,10 @@ interface Question {
   options: { value: string; label: L3 }[];
 }
 
+// Traveler DNA — stable, asked once, applies across every trip. Trip-specific
+// preferences (pace, touristy-vs-local, walking-vs-transit, atmosphere,
+// group type) live per-trip instead, since they change trip to trip.
 const QUESTIONS: Question[] = [
-  {
-    id: "pace",
-    q: { he: "איזה קצב מתאים לכם?", en: "What pace suits you?", es: "¿Qué ritmo te conviene?" },
-    options: [
-      { value: "relaxed", label: { he: "רגוע", en: "Relaxed", es: "Relajado" } },
-      { value: "balanced", label: { he: "מאוזן", en: "Balanced", es: "Equilibrado" } },
-      { value: "packed", label: { he: "עמוס", en: "Packed", es: "Intenso" } },
-    ],
-  },
   {
     id: "foodImportance",
     q: { he: "כמה אוכל חשוב בטיול?", en: "How important is food on the trip?", es: "¿Qué tan importante es la comida?" },
@@ -34,15 +28,6 @@ const QUESTIONS: Question[] = [
       { value: "casual", label: { he: "שיהיה טעים", en: "Just tasty", es: "Que sea rico" } },
       { value: "important", label: { he: "חלק משמעותי", en: "A meaningful part", es: "Parte importante" } },
       { value: "central", label: { he: "בונה סביבו טיולים", en: "Plans around meals", es: "Planifica en torno a esto" } },
-    ],
-  },
-  {
-    id: "touristyVsLocal",
-    q: { he: "תיירותי או מקומי?", en: "Touristy or local?", es: "¿Turístico o local?" },
-    options: [
-      { value: "touristy", label: { he: "אתרי חובה", en: "Must-see sights", es: "Lugares imperdibles" } },
-      { value: "mixed", label: { he: "שילוב", en: "A mix", es: "Una mezcla" } },
-      { value: "local", label: { he: "מקומי", en: "Local", es: "Local" } },
     ],
   },
   {
@@ -55,24 +40,6 @@ const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: "walkingVsTransit",
-    q: { he: "איך אתם אוהבים להתנייד?", en: "How do you like getting around?", es: "¿Cómo prefieres moverte?" },
-    options: [
-      { value: "walking", label: { he: "הרבה הליכה", en: "Lots of walking", es: "Mucho a pie" } },
-      { value: "mixed", label: { he: "שילוב", en: "A mix", es: "Una mezcla" } },
-      { value: "transit", label: { he: "תחבורה/מונית", en: "Transit / taxi", es: "Transporte / taxi" } },
-    ],
-  },
-  {
-    id: "atmosphere",
-    q: { he: "איזו אווירה אתם מעדיפים?", en: "What atmosphere do you prefer?", es: "¿Qué ambiente prefieres?" },
-    options: [
-      { value: "quiet", label: { he: "שקטה", en: "Quiet", es: "Tranquilo" } },
-      { value: "mixed", label: { he: "לא משנה", en: "No strong preference", es: "Sin preferencia" } },
-      { value: "lively", label: { he: "תוססת", en: "Lively", es: "Animado" } },
-    ],
-  },
-  {
     id: "cuisineAdventure",
     q: { he: "עד כמה הרפתקני באוכל?", en: "How adventurous with food?", es: "¿Qué tan aventurero con la comida?" },
     options: [
@@ -82,13 +49,21 @@ const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: "groupType",
-    q: { he: "עם מי אתם בדרך כלל מטיילים?", en: "Who do you usually travel with?", es: "¿Con quién sueles viajar?" },
+    id: "cultureInterest",
+    q: { he: "כמה מעניין אתכם תרבות והיסטוריה?", en: "How interested are you in culture & history?", es: "¿Cuánto te interesa la cultura e historia?" },
     options: [
-      { value: "family", label: { he: "משפחה", en: "Family", es: "Familia" } },
-      { value: "couple", label: { he: "זוגי", en: "Couple", es: "Pareja" } },
-      { value: "friends", label: { he: "חברים", en: "Friends", es: "Amigos" } },
-      { value: "solo", label: { he: "לבד", en: "Solo", es: "Solo" } },
+      { value: "low", label: { he: "פחות", en: "Not much", es: "Poco" } },
+      { value: "some", label: { he: "קצת", en: "Some", es: "Algo" } },
+      { value: "high", label: { he: "מאוד — מוזיאונים ואתרים", en: "A lot — museums & sites", es: "Mucho — museos y sitios" } },
+    ],
+  },
+  {
+    id: "accommodationStyle",
+    q: { he: "איזה סגנון לינה מתאים לכם?", en: "What accommodation style suits you?", es: "¿Qué estilo de alojamiento prefieres?" },
+    options: [
+      { value: "simple", label: { he: "פשוט ותכליתי", en: "Simple & functional", es: "Sencillo y funcional" } },
+      { value: "comfortable", label: { he: "נוח", en: "Comfortable", es: "Cómodo" } },
+      { value: "pampering", label: { he: "מפנק", en: "Pampering", es: "Consentidor" } },
     ],
   },
 ];
@@ -99,16 +74,22 @@ const SUBTITLE: L3 = {
   en: "A few quick questions so your recommendations in Discover match your taste",
   es: "Unas preguntas rápidas para que tus recomendaciones en Descubre coincidan con tu gusto",
 };
+const SUBTITLE_ONBOARDING: L3 = {
+  he: "כמה שאלות קצרות שישרתו אתכם בכל טיול — לא רק בזה",
+  en: "A few quick questions that carry over to every trip — not just this one",
+  es: "Unas preguntas rápidas que se aplican a todos tus viajes, no solo a este",
+};
 const SAVE: L3 = { he: "שמור", en: "Save", es: "Guardar" };
 const SAVED: L3 = { he: "נשמר", en: "Saved", es: "Guardado" };
 const CLOSE: L3 = { he: "סגור", en: "Close", es: "Cerrar" };
+const SKIP: L3 = { he: "דלג", en: "Skip", es: "Omitir" };
 const SAVE_ERROR: L3 = {
   he: "לא הצלחנו לשמור — נסו שוב",
   en: "Couldn't save — please try again",
   es: "No se pudo guardar — inténtalo de nuevo",
 };
 
-export default function TravelProfile({ onClose }: { onClose: () => void }) {
+export default function TravelProfile({ onClose, onboarding, onSaved }: { onClose: () => void; onboarding?: boolean; onSaved?: () => void }) {
   const { lang } = useLang() as { lang: Lang };
   const { user } = useAuth();
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -152,6 +133,8 @@ export default function TravelProfile({ onClose }: { onClose: () => void }) {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setSaved(true);
+      onSaved?.();
+      if (onboarding) setTimeout(onClose, 700); // brief "saved" confirmation, then continue automatically
     } catch { setError(true); }
     finally { setSaving(false); }
   };
@@ -160,14 +143,14 @@ export default function TravelProfile({ onClose }: { onClose: () => void }) {
     <div style={{ position: "fixed", inset: 0, zIndex: 700, background: DARK_BG, display: "flex", flexDirection: "column" }} dir={lang === "he" ? "rtl" : "ltr"}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "0.5px solid rgba(255,255,255,0.08)" }}>
         <button onClick={onClose} style={{ background: "none", border: "none", color: W40, fontFamily: RF, fontSize: 14, cursor: "pointer" }}>
-          {CLOSE[lang]}
+          {(onboarding ? SKIP : CLOSE)[lang]}
         </button>
         <div style={{ fontFamily: RF, color: "#fff", fontSize: 16, fontWeight: 700 }}>{TITLE[lang]}</div>
         <div style={{ width: 40 }} />
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 100px", paddingBottom: "calc(100px + env(safe-area-inset-bottom))", maxWidth: 560, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
-        <div style={{ fontFamily: RF, color: W40, fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>{SUBTITLE[lang]}</div>
+        <div style={{ fontFamily: RF, color: W40, fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>{(onboarding ? SUBTITLE_ONBOARDING : SUBTITLE)[lang]}</div>
 
         {loading ? (
           <div style={{ textAlign: "center", color: W40, fontFamily: RF, padding: 40 }}>...</div>

@@ -1518,9 +1518,56 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
   );
 }
 
-// ── New-trip wizard: 3 light steps (where → money → who) ──
-function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,newName,setNewName,addPerson,removePerson,valid,lang}){
+// Trip Preferences — asked once per trip (step 4 of the wizard), since these
+// change trip to trip even for the same traveler. Kept separate from the
+// stable Traveler DNA profile (TravelProfile.tsx), which is asked once ever.
+const TRIP_PREF_QUESTIONS=[
+  {id:"pace",q:{he:"איזה קצב מתאים לטיול הזה?",en:"What pace suits this trip?",es:"¿Qué ritmo conviene a este viaje?"},
+    options:[
+      {value:"relaxed",label:{he:"רגוע",en:"Relaxed",es:"Relajado"}},
+      {value:"balanced",label:{he:"מאוזן",en:"Balanced",es:"Equilibrado"}},
+      {value:"packed",label:{he:"עמוס",en:"Packed",es:"Intenso"}},
+    ]},
+  {id:"touristyVsLocal",q:{he:"תיירותי או מקומי?",en:"Touristy or local?",es:"¿Turístico o local?"},
+    options:[
+      {value:"touristy",label:{he:"אתרי חובה",en:"Must-see sights",es:"Lugares imperdibles"}},
+      {value:"mixed",label:{he:"שילוב",en:"A mix",es:"Una mezcla"}},
+      {value:"local",label:{he:"מקומי",en:"Local",es:"Local"}},
+    ]},
+  {id:"walkingVsTransit",q:{he:"איך אתם אוהבים להתנייד?",en:"How do you like getting around?",es:"¿Cómo prefieres moverte?"},
+    options:[
+      {value:"walking",label:{he:"הרבה הליכה",en:"Lots of walking",es:"Mucho a pie"}},
+      {value:"mixed",label:{he:"שילוב",en:"A mix",es:"Una mezcla"}},
+      {value:"transit",label:{he:"תחבורה/מונית",en:"Transit / taxi",es:"Transporte / taxi"}},
+    ]},
+  {id:"atmosphere",q:{he:"איזו אווירה אתם מעדיפים?",en:"What atmosphere do you prefer?",es:"¿Qué ambiente prefieres?"},
+    options:[
+      {value:"quiet",label:{he:"שקטה",en:"Quiet",es:"Tranquilo"}},
+      {value:"mixed",label:{he:"לא משנה",en:"No strong preference",es:"Sin preferencia"}},
+      {value:"lively",label:{he:"תוססת",en:"Lively",es:"Animado"}},
+    ]},
+];
+const GROUP_TYPE_OPTIONS=[
+  {value:"solo",label:{he:"לבד",en:"Solo",es:"Solo"}},
+  {value:"couple",label:{he:"זוגי",en:"Couple",es:"Pareja"}},
+  {value:"friends",label:{he:"חברים",en:"Friends",es:"Amigos"}},
+  {value:"family",label:{he:"משפחה",en:"Family",es:"Familia"}},
+];
+// Only used as an initial guess when there's no previous trip to copy from —
+// headcount alone can't really tell couple from friends from family, so this
+// is a starting point the user is expected to tap-correct, not a real inference.
+const guessGroupType=peopleCount=>peopleCount>=3?"family":peopleCount===2?"couple":"solo";
+
+// ── New-trip wizard: 4 light steps (where → money → who → preferences) ──
+function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,newName,setNewName,addPerson,removePerson,valid,lang,lastTripPrefs}){
   const[step,setStep]=useState(1);
+  const prefsInitRef=useRef(false);
+  useEffect(()=>{
+    if(prefsInitRef.current||trip.tripPrefs)return;
+    prefsInitRef.current=true;
+    onUpdate({tripPrefs:lastTripPrefs?{...lastTripPrefs}:{groupType:guessGroupType(people.length)}});
+  },[lastTripPrefs,trip.tripPrefs,people.length,onUpdate]);
+  const setPref=(field,value)=>onUpdate({tripPrefs:{...(trip.tripPrefs||{}),[field]:value}});
   const[cityQ,setCityQ]=useState(trip.destination||"");
   const[sugg,setSugg]=useState([]);
   const[copied,setCopied]=useState(false);
@@ -1567,11 +1614,11 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
       {/* Progress */}
       <div style={{padding:"22px 22px 8px"}}>
         <div style={{display:"flex",gap:6,marginBottom:12}}>
-          {[1,2,3].map(s=>(
+          {[1,2,3,4].map(s=>(
             <div key={s} style={{flex:1,height:5,borderRadius:999,background:s<=step?TEAL:"rgba(255,255,255,0.1)",transition:"background 0.3s"}}/>
           ))}
         </div>
-        <div style={{fontSize:12,color:W40,fontFamily:RF}}>{t("wiz_step",lang)} {step} {t("wiz_of",lang)} 3</div>
+        <div style={{fontSize:12,color:W40,fontFamily:RF}}>{t("wiz_step",lang)} {step} {t("wiz_of",lang)} 4</div>
       </div>
 
       <div style={{flex:1,padding:"8px 22px 20px"}}>
@@ -1675,6 +1722,52 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
             </div>
           </>
         )}
+
+        {/* ── STEP 4: Trip Preferences ── */}
+        {step===4&&(
+          <>
+            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",marginBottom:4}}>{t("wiz_prefs",lang)}</h2>
+            <p style={{fontSize:13,color:W35,marginBottom:20}}>{t("wiz_prefs_sub",lang)}</p>
+            <div style={{marginBottom:20}}>
+              <div style={{fontFamily:RF,fontSize:13,fontWeight:600,color:"#fff",marginBottom:9}}>
+                {lang==="he"?"עם מי אתם נוסעים הפעם?":lang==="es"?"¿Con quién viajas esta vez?":"Who's traveling this time?"}
+              </div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                {GROUP_TYPE_OPTIONS.map(opt=>{
+                  const active=(trip.tripPrefs?.groupType)===opt.value;
+                  return(
+                    <button key={opt.value} onClick={()=>setPref("groupType",opt.value)}
+                      style={{padding:"9px 16px",borderRadius:999,fontFamily:RF,fontSize:13,fontWeight:600,cursor:"pointer",
+                        border:`1.5px solid ${active?TEAL:"rgba(255,255,255,0.15)"}`,
+                        background:active?"rgba(100,223,223,0.12)":"rgba(255,255,255,0.04)",
+                        color:active?TEAL:"rgba(255,255,255,0.7)"}}>
+                      {opt.label[lang]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            {TRIP_PREF_QUESTIONS.map(question=>(
+              <div key={question.id} style={{marginBottom:20}}>
+                <div style={{fontFamily:RF,fontSize:13,fontWeight:600,color:"#fff",marginBottom:9}}>{question.q[lang]}</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                  {question.options.map(opt=>{
+                    const active=(trip.tripPrefs?.[question.id])===opt.value;
+                    return(
+                      <button key={opt.value} onClick={()=>setPref(question.id,opt.value)}
+                        style={{padding:"9px 16px",borderRadius:999,fontFamily:RF,fontSize:13,fontWeight:600,cursor:"pointer",
+                          border:`1.5px solid ${active?TEAL:"rgba(255,255,255,0.15)"}`,
+                          background:active?"rgba(100,223,223,0.12)":"rgba(255,255,255,0.04)",
+                          color:active?TEAL:"rgba(255,255,255,0.7)"}}>
+                        {opt.label[lang]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
       </div>
 
       {/* Footer nav */}
@@ -1682,11 +1775,11 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
         {step>1&&(
           <button onClick={()=>setStep(step-1)} style={{padding:"14px 20px",borderRadius:14,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.04)",color:W50,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer"}}>{t("wiz_back",lang)}</button>
         )}
-        {step<3&&step>1&&(
+        {step<4&&step>1&&(
           <button onClick={()=>setStep(step+1)} style={{padding:"14px 16px",borderRadius:14,border:"none",background:"transparent",color:W40,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer"}}>{t("wiz_skip",lang)}</button>
         )}
         <div style={{flex:1}}/>
-        {step<3?(
+        {step<4?(
           <button onClick={()=>setStep(step+1)} disabled={step===1&&!step1Valid}
             style={{padding:"14px 28px",borderRadius:14,border:"none",background:(step===1&&!step1Valid)?"rgba(100,223,223,0.25)":TEAL,color:DARK_BG,fontFamily:RF,fontWeight:800,fontSize:15,cursor:(step===1&&!step1Valid)?"default":"pointer"}}>{t("wiz_next",lang)} →</button>
         ):(
@@ -1698,7 +1791,7 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
   );
 }
 
-function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare}){
+function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,lastTripPrefs}){
   const{lang}=useLang();
   const valid=trip.destination&&trip.startDate&&trip.endDate&&new Date(trip.endDate)>=new Date(trip.startDate);
   const people=trip.people||[];
@@ -1713,7 +1806,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare})
   const removePerson=id=>onUpdate({people:people.filter(p=>p.id!==id)});
 
   if(wizard) return <NewTripWizard trip={trip} onUpdate={onUpdate} onFinish={onNext} allCodes={allCodes} rates={rates} onShare={onShare}
-    people={people} newName={newName} setNewName={setNewName} addPerson={addPerson} removePerson={removePerson} valid={valid} lang={lang}/>;
+    people={people} newName={newName} setNewName={setNewName} addPerson={addPerson} removePerson={removePerson} valid={valid} lang={lang} lastTripPrefs={lastTripPrefs}/>;
 
   return(
     <div>
@@ -3254,7 +3347,8 @@ function DiscoverScreen({trip}){
   // result comes back.
   const rankOnce=useCallback(async(list,category,setList)=>{
     if(!user||!list||list.length===0)return;
-    const cacheKey=`${trip.destination}|${category}|${diet}|${list.map(p=>p.name).join(",")}`;
+    const tripPrefs=trip.tripPrefs||null;
+    const cacheKey=`${trip.destination}|${category}|${diet}|${JSON.stringify(tripPrefs)}|${list.map(p=>p.name).join(",")}`;
     const cached=rankCacheGet(cacheKey);
     if(cached){setList(cached);return;}
     try{
@@ -3262,7 +3356,7 @@ function DiscoverScreen({trip}){
       const res=await fetch("/api/rank-places",{
         method:"POST",
         headers:{"Content-Type":"application/json",authorization:`Bearer ${token}`},
-        body:JSON.stringify({places:list,destination:trip.destination,category,lang}),
+        body:JSON.stringify({places:list,destination:trip.destination,category,lang,tripPrefs}),
       });
       const data=await res.json();
       if(Array.isArray(data.places)&&data.places.length===list.length){
@@ -3270,7 +3364,7 @@ function DiscoverScreen({trip}){
         rankCacheSet(cacheKey,data.places);
       }
     }catch{/* ranking is a nice-to-have — leave the existing unranked list as-is */}
-  },[user,trip.destination,diet,lang]);
+  },[user,trip.destination,diet,lang,trip.tripPrefs]);
 
   useEffect(()=>{rankOnce(attractions,"attraction",setAttractions);},[attractions&&attractions.length,rankOnce]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(()=>{rankOnce(restaurants,"restaurant",setRestaurants);},[restaurants&&restaurants.length,rankOnce]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -4026,6 +4120,7 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
 
 export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId}){
   const{lang,setLang}=useLang();
+  const{user}=useAuth();
   const[trips,setTrips]=useState(initialTrips);
   const[activeId,setActiveId]=useState(null);
   const[section,setSection]=useState(null); // null=splash | "budget" | "trip"
@@ -4040,7 +4135,9 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[inspireSaving,setInspireSaving]=useState(false);
   const[showConverter,setShowConverter]=useState(false);
   const[showGuide,setShowGuide]=useState(false); // in-app user guide modal
-  const[showTravelProfile,setShowTravelProfile]=useState(false); // Personal Travel Profile modal
+  const[showTravelProfile,setShowTravelProfile]=useState(false); // Personal Travel Profile modal (manual edit, from menu)
+  const[onboarding,setOnboarding]=useState(false); // Traveler DNA onboarding — shown once, before a user's first trip
+  const[hasProfile,setHasProfile]=useState(true); // assume yes until checked, so we never flash onboarding needlessly
   const[wizardMode,setWizardMode]=useState(false); // new-trip wizard vs settings edit
   const[expensePrefill,setExpensePrefill]=useState(null); // from map "add as expense"
   const[convAmount,setConvAmount]=useState("");
@@ -4059,6 +4156,31 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   useEffect(()=>{
     setTrips(initialTrips);
   },[initialTrips]);
+
+  // Check once whether this user already has a Traveler DNA profile, so
+  // handleCreate() knows whether to show onboarding before a new trip.
+  useEffect(()=>{
+    if(!user)return;
+    let cancelled=false;
+    (async()=>{
+      try{
+        const token=await user.getIdToken();
+        const res=await fetch("/api/travel-profile",{headers:{authorization:`Bearer ${token}`}});
+        const data=await res.json();
+        if(!cancelled)setHasProfile(Boolean(data.profile));
+      }catch{/* assume yes on failure — never block trip creation over this */}
+    })();
+    return()=>{cancelled=true;};
+  },[user]);
+
+  // Most recent other trip's preferences, offered as a pre-filled starting
+  // point in step 4 of the new-trip wizard ("these are your usual — change
+  // anything?") instead of asking from scratch every time.
+  const lastTripPrefs=useMemo(()=>{
+    const others=trips.filter(t=>t.id!==activeId&&t.tripPrefs);
+    if(others.length===0)return null;
+    return [...others].sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||""))[0].tripPrefs;
+  },[trips,activeId]);
 
   // ── Process invite token from URL or localStorage ──
   useEffect(()=>{
@@ -4278,7 +4400,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     return()=>window.removeEventListener("popstate",onPop);
   },[]);
 
-  const handleCreate=()=>{
+  const startWizard=()=>{
     const t=newTrip(userId);
     setTrips((ts)=>[...ts,t]);
     onSaveTrip(t);
@@ -4287,6 +4409,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     setSection("budget");
     setScreen("destination");
     setWizardMode(true); // new trip → stepped wizard
+  };
+  const handleCreate=()=>{
+    if(!hasProfile){setOnboarding(true);return;} // Traveler DNA once, before the first trip
+    startWizard();
   };
 
   const handleSelect=id=>{
@@ -4491,7 +4617,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           </div>
           {/* Currency Converter */}
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]} defaultCurrency={trips[0]?.defaultCurrency} displayCurrency={trips[0]?.displayCurrency}/>}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates}/>
         </div>
       </>
@@ -4715,7 +4841,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           </div>
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             <TripSplashScreen trip={active} expenses={active.expenses||[]}
               onBudget={()=>{pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}
@@ -4750,7 +4876,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             {/* Trip settings button */}
             {screen!=="destination"&&(
@@ -4761,7 +4887,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               </div>
             )}
             <div key={screen} className="screen-enter">
-              {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>{setWizardMode(false);setScreen("expenses");}} allCodes={allCodes} rates={rates} wizard={wizardMode} onShare={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}}/>}
+              {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>{setWizardMode(false);setScreen("expenses");}} allCodes={allCodes} rates={rates} wizard={wizardMode} onShare={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} lastTripPrefs={lastTripPrefs}/>}
               {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)}/>}
               {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates}/>}
             </div>
@@ -4795,7 +4921,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           {shareModal&&renderShareModal()}
           {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}
+          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:screen==="map"?"hidden":"auto",position:"relative",minHeight:0}}>
             <div key={screen} className="screen-enter" style={screen==="map"?{height:"100%"}:undefined}>
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}

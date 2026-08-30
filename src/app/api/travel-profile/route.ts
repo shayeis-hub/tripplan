@@ -4,15 +4,15 @@ import { FieldValue } from "firebase-admin/firestore";
 
 export const dynamic = "force-dynamic";
 
+// Traveler DNA — stable fields asked once, reused across every trip. Trip-
+// specific fields (pace, touristyVsLocal, walkingVsTransit, atmosphere,
+// groupType) live on the trip document instead (trip.tripPrefs).
 const FIELDS = [
-  "pace",
   "foodImportance",
-  "touristyVsLocal",
-  "budgetStyle",
-  "walkingVsTransit",
-  "atmosphere",
   "cuisineAdventure",
-  "groupType",
+  "budgetStyle",
+  "cultureInterest",
+  "accommodationStyle",
 ] as const;
 
 async function requireUid(req: Request) {
