@@ -85,14 +85,23 @@ async function sendPush(userId: string, title: string, body: string) {
           data: { url: "/" },
           android: { notification: { icon: "ic_launcher", color: "#0d2137" }, priority: "high" },
         });
-      } catch (e) {}
+      } catch (e) {
+        // Was a bare catch — a failed send here was completely invisible.
+        // Logged so a future missed reminder shows up in Vercel logs
+        // instead of requiring manual forensics to even confirm it tried.
+        console.error(`push-cron: FCM send failed for ${userId}`, e);
+      }
     }
     if (subscription) {
       try {
         await webpush.sendNotification(subscription, JSON.stringify({ title, body }));
-      } catch (e) {}
+      } catch (e) {
+        console.error(`push-cron: web-push send failed for ${userId}`, e);
+      }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error(`push-cron: sendPush failed for ${userId}`, e);
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -155,8 +164,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, sent: notifications.length });
+    return NextResponse.json({ success: true, sent: notifications.length, notifications });
   } catch (err) {
+    console.error("push-cron: run failed", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
