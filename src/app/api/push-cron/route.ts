@@ -25,10 +25,22 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const now = new Date();
-    const nowHour = now.getHours();
-    const nowMin = now.getMinutes();
-    const today = now.toISOString().slice(0, 10);
+    // exp.date/departureTime are naive Israel-local strings, but this
+    // function runs on Vercel's Node runtime in UTC — new Date().getHours()
+    // here returns UTC hour, not Israel hour. Comparing that against
+    // Israel-local reminder minutes silently offset every check by Israel's
+    // UTC offset (+2/+3h depending on DST), so reminders fired ~3 hours late
+    // instead of not firing at all. Read the clock through Asia/Jerusalem
+    // explicitly instead of trusting the server's own timezone.
+    const nowParts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jerusalem",
+        year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+      }).formatToParts(new Date()).map(p => [p.type, p.value])
+    );
+    const nowHour = Number(nowParts.hour);
+    const nowMin = Number(nowParts.minute);
+    const today = `${nowParts.year}-${nowParts.month}-${nowParts.day}`;
 
     const tripsSnap = await getDocs(collection(db, "trips"));
     const notifications: string[] = [];
