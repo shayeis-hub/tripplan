@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { getAdminMessaging } from "@/lib/firebase-admin";
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -58,12 +59,33 @@ function nowInZone(tz: string) {
   return result;
 }
 
+// Mirrors /api/push-send's dual-channel logic — this used to only attempt
+// web-push, so a native-app user (whose pushSubscriptions doc holds an
+// fcmToken, not a web `subscription`) could never actually receive a cron
+// reminder even when the timing logic correctly fired: `subscription` was
+// undefined, webpush.sendNotification(undefined, ...) threw, and the bare
+// catch swallowed it silently.
 async function sendPush(userId: string, title: string, body: string) {
   try {
     const subDoc = await getDoc(doc(db, "pushSubscriptions", userId));
     if (!subDoc.exists()) return;
-    const { subscription } = subDoc.data();
-    await webpush.sendNotification(subscription, JSON.stringify({ title, body }));
+    const { subscription, fcmToken } = subDoc.data();
+
+    if (fcmToken) {
+      try {
+        await getAdminMessaging().send({
+          token: fcmToken,
+          notification: { title, body },
+          data: { url: "/" },
+          android: { notification: { icon: "ic_launcher", color: "#0d2137" }, priority: "high" },
+        });
+      } catch (e) {}
+    }
+    if (subscription) {
+      try {
+        await webpush.sendNotification(subscription, JSON.stringify({ title, body }));
+      } catch (e) {}
+    }
   } catch (e) {}
 }
 
