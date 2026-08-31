@@ -180,6 +180,7 @@ export const translations = {
   cal_set_dest:     { he: "הגדר יעד ותאריכים",       en: "Set a destination & dates", es: "Define un destino y fechas" },
   cal_flight_dep:   { he: "✈️ המראה",               en: "✈️ Departure",          es: "✈️ Despegue" },
   cal_arrive_by:    { he: "🔔 הגעה לשדה עד",         en: "🔔 Arrive by",         es: "🔔 Llegar al aeropuerto antes de" },
+  cal_flight_land:  { he: "נחיתה",                    en: "Landing",              es: "Aterrizaje" },
   cal_hotel_in:     { he: "🏨 צ׳ק אין –",           en: "🏨 Check-in –",        es: "🏨 Check-in –" },
   cal_hotel_out:    { he: "🏨 צ׳ק אאוט –",          en: "🏨 Check-out –",       es: "🏨 Check-out –" },
   cat_activities:   { he: "פעילויות",               en: "Activities",           es: "Actividades" },

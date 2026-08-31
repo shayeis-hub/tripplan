@@ -237,6 +237,13 @@ const PERSON_COLORS=[C.ocean,C.coral,C.palm,C.sunset,C.purple,C.oceanLight,"#C03
 const fmtDate=(d)=>d?new Date(d).toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"}):"";
 const localDateStr=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const getRange=(s,e)=>{const a=[];if(!s||!e)return a;const c=new Date(s),l=new Date(e);while(c<=l){a.push(localDateStr(c));c.setDate(c.getDate()+1);}return a;};
+const nextDateStr=(d)=>{const c=new Date(d);c.setDate(c.getDate()+1);return localDateStr(c);};
+// Flights only store one `date` (departure) plus bare departureTime/landingTime
+// — no separate arrival date field. For an overnight flight (e.g. departs
+// 22:35, lands 07:35) landingTime is numerically earlier than departureTime,
+// which we take as "lands the next calendar day". Doesn't handle a flight
+// spanning more than one midnight, but that covers every real case.
+const flightLandingDate=(f)=>(f.landingTime&&f.departureTime&&f.landingTime<f.departureTime)?nextDateStr(f.date):f.date;
 // Default to today if the trip is already underway, otherwise the first day.
 // Default to today if the trip is underway; otherwise the nearest trip day
 // (first day if the trip hasn't started, last day if it's already over).
@@ -1036,16 +1043,16 @@ async function exportItineraryPDF(trip,expenses,lang="he"){
   const itemsForDay=(d)=>{
     const items=[];
 
-    // Flights starting today
-    expenses.filter(e=>e.category==="flight"&&e.date===d).forEach(e=>{
-      if(e.departureTime){
-        items.push({time:e.departureTime,label:`${L.flightDep}${e.description?` — ${e.description}`:""}`,color:"#3b82f6",
-                    details:e.flightNumber?`✈ ${e.flightNumber}`:""});
-      }
-      if(e.landingTime){
-        items.push({time:e.landingTime,label:`${L.flightLand}${e.description?` — ${e.description}`:""}`,color:"#3b82f6",
-                    details:""});
-      }
+    // Flights departing today
+    expenses.filter(e=>e.category==="flight"&&e.date===d&&e.departureTime).forEach(e=>{
+      items.push({time:e.departureTime,label:`${L.flightDep}${e.description?` — ${e.description}`:""}`,color:"#3b82f6",
+                  details:e.flightNumber?`✈ ${e.flightNumber}`:""});
+    });
+    // Flights landing today — a separate day from departure for an overnight
+    // flight (see flightLandingDate), same day for everything else.
+    expenses.filter(e=>e.category==="flight"&&e.landingTime&&flightLandingDate(e)===d).forEach(e=>{
+      items.push({time:e.landingTime,label:`${L.flightLand}${e.description?` — ${e.description}`:""}`,color:"#3b82f6",
+                  details:""});
     });
 
     // Hotel check-in / out / mid-stay
@@ -2644,11 +2651,16 @@ function CalendarScreen({trip,expenses,onSaveActs}){
   const wxMap={};
   if(wx?.daily){const{time,weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max}=wx.daily;time.forEach((t,i)=>{wxMap[t]={code:weathercode[i],max:temperature_2m_max[i],min:temperature_2m_min[i],rain:precipitation_probability_max[i]};});}
 
-  // Deduplicate by departure time + description for flights, checkIn+checkOut for hotels
+  // Deduplicate by departure time + description for flights, checkIn+checkOut for hotels.
+  // An overnight flight (landingTime earlier than departureTime — see
+  // flightLandingDate) needs to show up on BOTH its departure day and its
+  // actual landing day, tagged so DayView knows which leg it's drawing.
   const flightsOn=d=>{
-    const all=expenses.filter(e=>e.category==="flight"&&e.date===d&&e.departureTime);
+    const departing=expenses.filter(e=>e.category==="flight"&&e.date===d&&e.departureTime).map(e=>({...e,_leg:"departure"}));
+    const arriving=expenses.filter(e=>e.category==="flight"&&e.date!==d&&e.landingTime&&flightLandingDate(e)===d).map(e=>({...e,_leg:"arrival"}));
+    const all=[...departing,...arriving];
     const seen=new Set();
-    return all.filter(e=>{const key=`${e.departureTime}_${e.description||""}`;if(seen.has(key))return false;seen.add(key);return true;});
+    return all.filter(e=>{const key=`${e._leg}_${e.departureTime}_${e.description||""}`;if(seen.has(key))return false;seen.add(key);return true;});
   };
   const hotelsOn=d=>{
     const all=expenses.filter(e=>e.category==="hotel"&&e.checkIn<=d&&e.checkOut>=d);
@@ -2818,9 +2830,20 @@ function CalendarScreen({trip,expenses,onSaveActs}){
 
     const timedEvents=[];
     flights.forEach(f=>{
+      if(f._leg==="arrival"){
+        // Overnight flight, this is the landing day: a block from midnight
+        // up to landing time, no separate reminder (that already fired the
+        // day before, on the departure leg).
+        const hour=parseHour(f.landingTime);
+        timedEvents.push({hour:0,type:"flight",data:f,duration:hour});
+        return;
+      }
       if(f.departureTime){
+        const overnight=flightLandingDate(f)!==f.date;
         const hour=parseHour(f.departureTime);
-        const dur=timeDiff(f.departureTime,f.landingTime)||1.5;
+        // Overnight: cap the block at midnight — the rest is drawn as a
+        // separate "arrival" block on the landing day, above.
+        const dur=overnight?(24-hour):(timeDiff(f.departureTime,f.landingTime)||1.5);
         timedEvents.push({hour,type:"flight",data:f,duration:dur});
         const rem=remTime(f.departureTime,f.reminderHours||5);
         if(rem){timedEvents.push({hour:parseHour(rem),type:"reminder",data:f,duration:0.25});}
@@ -2864,7 +2887,9 @@ function CalendarScreen({trip,expenses,onSaveActs}){
       activity:"#a78bfa",other:"#fbbf24",
     };
     const eventLabel={
-      flight:f=>`✈️${f.flightNumber?` ${f.flightNumber}`:""}  ${f.departureTime}${f.landingTime?` → ${f.landingTime}`:""}`,
+      flight:f=>f._leg==="arrival"
+        ?`🛬 ${t("cal_flight_land",lang)}${f.flightNumber?` ${f.flightNumber}`:""}  ${f.landingTime}`
+        :`✈️${f.flightNumber?` ${f.flightNumber}`:""}  ${f.departureTime}${f.landingTime?` → ${f.landingTime}`:""}`,
       reminder:f=>`${t("cal_arrive_by",lang)} ${remTime(f.departureTime,f.reminderHours||5)}`,
       "hotel-in":h=>`${t("cal_hotel_in",lang)} ${h.description||t("cat_hotel",lang)}`,
       "hotel-out":h=>`${t("cal_hotel_out",lang)} ${h.description||t("cat_hotel",lang)}`,
