@@ -707,9 +707,14 @@ function usePushNotifications(userId){
   useEffect(()=>{
     if(!userId||typeof navigator==="undefined") return;
     if(isCapacitorNative()){
-      // Re-register silently if permission was already granted
+      // Re-register silently if permission was already granted. Also
+      // reflect an existing denial in `permission` right away — otherwise
+      // the bell button's "denied → show settings hint" check only ever
+      // sees a stale default state until the user has already clicked it
+      // once (and re-triggered a request in-session).
       const{PushNotifications}=window.Capacitor.Plugins;
       PushNotifications.checkPermissions().then(p=>{
+        setPermission(p.receive);
         if(p.receive==="granted"){
           PushNotifications.addListener("registration",async(token)=>{
             await saveFcmToken(token.value,userId);
@@ -4626,7 +4631,19 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
                 style={{width:34,height:34,borderRadius:10,border:`0.5px solid ${showConverter?"rgba(100,223,223,0.4)":"rgba(100,223,223,0.2)"}`,background:showConverter?"rgba(100,223,223,0.15)":"rgba(100,223,223,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 <ArrowLeftRight size={15} color={TEAL} strokeWidth={1.5}/>
               </button>
-              <button onClick={subscribe}
+              <button onClick={()=>{
+                  // Once denied, Android/iOS won't show the system permission
+                  // dialog again on request — subscribe() just silently
+                  // no-ops, which reads as "the button doesn't do anything".
+                  // Tell the user where to actually fix it instead.
+                  if(permission==="denied"){
+                    alert(lang==="he"?"ההתראות חסומות עבור טיולון. כדי להפעיל: הגדרות המכשיר ← אפליקציות ← טיולון ← התראות":
+                      lang==="es"?"Las notificaciones están bloqueadas para Tulon. Para activarlas: Ajustes del dispositivo → Apps → Tulon → Notificaciones":
+                      "Notifications are blocked for Tulon. To enable: Device Settings → Apps → Tulon → Notifications");
+                    return;
+                  }
+                  subscribe();
+                }}
                 title={subscribed?t("notif_active",lang):t("notif_enable",lang)}
                 style={{width:34,height:34,borderRadius:10,border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(255,255,255,0.12)"}`,background:subscribed?"rgba(74,222,128,0.1)":"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 {subscribed
