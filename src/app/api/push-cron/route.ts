@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { getAdminMessaging } from "@/lib/firebase-admin";
+import { getAdminDb, getAdminMessaging } from "@/lib/firebase-admin";
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -65,11 +63,19 @@ function nowInZone(tz: string) {
 // reminder even when the timing logic correctly fired: `subscription` was
 // undefined, webpush.sendNotification(undefined, ...) threw, and the bare
 // catch swallowed it silently.
+//
+// Uses the ADMIN SDK, not the client SDK — there is no signed-in user in a
+// cron invocation, and firestore.rules has no rule at all for
+// pushSubscriptions (or an unauthenticated-friendly one for trips below),
+// so every client-SDK read/write this route ever made was silently denied
+// by security rules. That's the real reason reminders never fired: this
+// function never got past its first Firestore call, cron run after cron
+// run, regardless of what the timing logic below says.
 async function sendPush(userId: string, title: string, body: string) {
   try {
-    const subDoc = await getDoc(doc(db, "pushSubscriptions", userId));
-    if (!subDoc.exists()) return;
-    const { subscription, fcmToken } = subDoc.data();
+    const subDoc = await getAdminDb().collection("pushSubscriptions").doc(userId).get();
+    if (!subDoc.exists) return;
+    const { subscription, fcmToken } = subDoc.data() as { subscription?: any; fcmToken?: string };
 
     if (fcmToken) {
       try {
@@ -96,7 +102,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const tripsSnap = await getDocs(collection(db, "trips"));
+    const tripsSnap = await getAdminDb().collection("trips").get();
     const notifications: string[] = [];
 
     for (const tripDoc of tripsSnap.docs) {

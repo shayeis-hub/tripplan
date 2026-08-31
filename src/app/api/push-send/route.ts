@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
-import { getAdminMessaging } from "@/lib/firebase-admin";
+import { getAdminDb, getAdminMessaging } from "@/lib/firebase-admin";
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -17,12 +15,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const subDoc = await getDoc(doc(db, "pushSubscriptions", userId));
-    if (!subDoc.exists()) {
+    const subDoc = await getAdminDb().collection("pushSubscriptions").doc(userId).get();
+    if (!subDoc.exists) {
       return NextResponse.json({ error: "No subscription" }, { status: 404 });
     }
 
-    const { subscription, fcmToken } = subDoc.data();
+    const { subscription, fcmToken } = subDoc.data() as { subscription?: any; fcmToken?: string };
     const results: Record<string, string> = {};
 
     // Native app (FCM) — preferred channel when present
