@@ -129,20 +129,32 @@ export async function GET(req: NextRequest) {
         .filter(e => e.category === "flight" && e.date)
         .reduce((min: string | null, e) => (min === null || e.date < min ? e.date : min), null as string | null);
 
+      // Idempotency: a matching window can be hit by more than one cron
+      // tick (retries, clock jitter, or just this run overlapping the
+      // previous one) — without this, the same reminder fires repeatedly
+      // instead of once. Keyed on the trip doc itself (expenseId+type+date)
+      // rather than the expenses array, so marking "sent" never risks
+      // clobbering a concurrent client edit to the expense list.
+      const alreadySent: Record<string, boolean> = trip.remindersSent || {};
+      const newlySent: Record<string, boolean> = {};
+
       for (const exp of expenses) {
+        if (!exp.id) continue; // can't dedupe without a stable key — skip rather than risk spamming
+
         // ── Flight: reminderHours before departure ──
         if (exp.category === "flight" && exp.departureTime) {
           const tz = exp.date === outboundDate ? ORIGIN_TZ : destTz;
           const { hour: nowHour, min: nowMin, date: today } = nowInZone(tz);
-          if (exp.date === today) {
+          const key = `${exp.id}-flight-${today}`;
+          if (exp.date === today && !alreadySent[key] && !newlySent[key]) {
             const [fh, fm] = exp.departureTime.split(":").map(Number);
             const remHours = exp.reminderHours || 5;
             const remM = fh * 60 + fm - (remHours * 60);
             const curM = nowHour * 60 + nowMin;
             if (remM >= curM && remM < curM + 10) {
-              const remHoursLabel = exp.reminderHours || 5;
-              await sendPush(userId, "✈️ תזכורת טיסה!", `טיסתך ב-${exp.departureTime} – עוד ${remHoursLabel} שעות, הגיע הזמן להתכונן!`);
+              await sendPush(userId, "✈️ תזכורת טיסה!", `טיסתך ב-${exp.departureTime} – עוד ${remHours} שעות, הגיע הזמן להתכונן!`);
               notifications.push(`flight-${userId}`);
+              newlySent[key] = true;
             }
           }
         }
@@ -150,16 +162,30 @@ export async function GET(req: NextRequest) {
         // Hotels are always at the destination.
         if (exp.category === "hotel") {
           const { hour: nowHour, min: nowMin, date: today } = nowInZone(destTz);
+          const keyIn = `${exp.id}-hotelIn-${today}`;
+          const keyOut = `${exp.id}-hotelOut-${today}`;
           // ── Hotel check-in: 8:00-8:09am (fires once per day at the 10-minute cron tick that covers 8am) ──
-          if (exp.checkIn === today && nowHour === 8 && nowMin < 10) {
+          if (exp.checkIn === today && nowHour === 8 && nowMin < 10 && !alreadySent[keyIn] && !newlySent[keyIn]) {
             await sendPush(userId, "🏨 היום צ׳ק אין!", `צ׳ק אין ב${exp.description || "מלון"} – שיהיה נסיעה טובה!`);
             notifications.push(`hotel-in-${userId}`);
+            newlySent[keyIn] = true;
           }
           // ── Hotel check-out: 8:00-8:09am ──
-          if (exp.checkOut === today && nowHour === 8 && nowMin < 10) {
+          if (exp.checkOut === today && nowHour === 8 && nowMin < 10 && !alreadySent[keyOut] && !newlySent[keyOut]) {
             await sendPush(userId, "🏨 היום צ׳ק אאוט!", `אל תשכח לפנות את החדר ב${exp.description || "מלון"}`);
             notifications.push(`hotel-out-${userId}`);
+            newlySent[keyOut] = true;
           }
+        }
+      }
+
+      if (Object.keys(newlySent).length > 0) {
+        try {
+          await tripDoc.ref.update(
+            Object.fromEntries(Object.keys(newlySent).map(k => [`remindersSent.${k}`, true]))
+          );
+        } catch (e) {
+          console.error(`push-cron: failed to record remindersSent for trip ${tripDoc.id}`, e);
         }
       }
     }
