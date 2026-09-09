@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   collection, doc, onSnapshot, setDoc, deleteDoc,
   query, orderBy, or, where
@@ -75,8 +75,20 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
     return obj;
   };
 
-  const saveTrip = async (trip: any) => {
-    if (!userId) return;
+  // Every trip edit (add an expense, tick a packing item, share the trip...)
+  // goes through this — but it used to just log a failed write and return
+  // undefined either way, so the UI (which already applied the change
+  // optimistically to local state before this ran) had no way to tell a
+  // real save from a silently-dropped one. A permission-denied write, an
+  // offline save, or a rejected rules check all looked identical to
+  // success. Now: returns whether it actually succeeded, and remembers the
+  // failed payload so a caller (see retrySync below) can retry the exact
+  // same write without the user having to redo their edit.
+  const [syncFailed, setSyncFailed] = useState(false);
+  const lastFailedTripRef = useRef<any>(null);
+
+  const saveTrip = async (trip: any): Promise<boolean> => {
+    if (!userId) return false;
     try {
       const clean = stripUndefined({
         ...trip,
@@ -85,9 +97,27 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
         updatedAt: Date.now(),
       });
       await setDoc(doc(db, "trips", trip.id), clean);
+      // Only clear the banner if this save resolves the specific failure
+      // it's showing — a successful save of a DIFFERENT trip shouldn't
+      // hide a still-unresolved failure on another one.
+      if (lastFailedTripRef.current?.id === trip.id) {
+        lastFailedTripRef.current = null;
+        setSyncFailed(false);
+      }
+      return true;
     } catch (err) {
       console.error("Firebase saveTrip error:", err);
+      lastFailedTripRef.current = trip;
+      setSyncFailed(true);
+      return false;
     }
+  };
+
+  // Retries the last failed write verbatim. Exposed so a global banner can
+  // offer "try again" instead of the user having to redo whatever edit
+  // triggered the failure (which they may not even know happened).
+  const retrySync = () => {
+    if (lastFailedTripRef.current) saveTrip(lastFailedTripRef.current);
   };
 
   const deleteTrip = async (tripId: string) => {
@@ -121,5 +151,5 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
     await saveTrip({ ...trip, sharedWith, viewOnlyUsers });
   };
 
-  return { trips, loading, saveTrip, deleteTrip, shareTrip, removeShare };
+  return { trips, loading, saveTrip, deleteTrip, shareTrip, removeShare, syncFailed, retrySync };
 }

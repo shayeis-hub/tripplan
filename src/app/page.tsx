@@ -19,6 +19,8 @@ export default function Home() {
     deleteTrip,
     shareTrip,
     removeShare,
+    syncFailed,
+    retrySync,
   } = useTrips(user?.uid, user?.email ?? undefined);
 
   // Preserve invite token / quick-add intent across the sign-in redirect
@@ -63,6 +65,8 @@ export default function Home() {
               onLogout={logout}
               userEmail={user.email || ""}
               userId={user.uid}
+              syncFailed={syncFailed}
+              onRetrySync={retrySync}
             />
             <RatePrompt lang={lang} hasTrips={trips.length > 0} />
           </>

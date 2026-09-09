@@ -42,6 +42,7 @@ import { setDoc, doc } from "firebase/firestore";
 import { loadGoogleMaps } from "@/lib/gmaps";
 import { useOnlineStatus } from "@/lib/useOnlineStatus";
 import OfflineBanner from "@/components/OfflineBanner";
+import SyncFailedBanner from "@/components/SyncFailedBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useLang } from "@/lib/LangContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -4218,7 +4219,7 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
   );
 }
 
-export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId}){
+export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId,syncFailed,onRetrySync}){
   const{lang,setLang}=useLang();
   const{user}=useAuth();
   const[trips,setTrips]=useState(initialTrips);
@@ -4669,6 +4670,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         <style>{GS}</style>
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",fontFamily:RF}}>
           <OfflineBanner/>
+          <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
           {/* user bar */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             {/* App name */}
@@ -4942,6 +4944,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)",fontFamily:RF}}>
           <OfflineBanner/>
+          <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
           {/* Minimal top bar — back link + menu */}
           <div style={{padding:"16px 20px 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <button onClick={()=>setSideMenu(true)} className="tap-btn" style={{background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.6)",width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><Menu size={16} strokeWidth={1.5}/></button>
@@ -4971,6 +4974,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           <OfflineBanner/>
+          <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             <button onClick={handleHome} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><MapPin size={16} strokeWidth={1.5}/></button>
@@ -5016,6 +5020,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         {joinBanner}
         <div style={{maxWidth:480,margin:"0 auto",height:"100dvh",overflow:"hidden",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           <OfflineBanner/>
+          <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
           {/* Header */}
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             <button onClick={handleHome} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><MapPin size={16} strokeWidth={1.5}/></button>
