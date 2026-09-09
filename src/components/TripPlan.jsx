@@ -1283,16 +1283,24 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,r
                   <div style={{width:44,height:44,borderRadius:14,background:`${accent}18`,border:`0.5px solid ${accent}38`,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <MapPin size={20} color={accent} strokeWidth={1.5}/>
                   </div>
-                  {tripEnded(trip)&&(
+                  {/* Archive/delete are owner-only — a shared member (view-only or
+                      edit) used to see and be able to trigger both here. Delete was
+                      already blocked server-side (Firestore rules require
+                      resource.data.owner==request.auth.uid), but archive isn't —
+                      the rules allow any sharedWith member to update the trip doc,
+                      with no distinction for view-only. */}
+                  {(trip.owner===userId||!trip.owner)&&tripEnded(trip)&&(
                     <button title={lang==="he"?"העבר לארכיון":lang==="es"?"Archivar":"Archive"}
                       onClick={ev=>{ev.stopPropagation();onArchive(trip.id,true);}}
                       style={{padding:"7px 8px",borderRadius:8,border:"none",background:"rgba(251,191,36,0.12)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
                       <Package size={13} color="#fbbf24"/>
                     </button>
                   )}
-                  <button onClick={ev=>{ev.stopPropagation();if(window.confirm(t("confirm_delete",lang)))onDelete(trip.id);}} style={{padding:"7px 8px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.12)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    <Trash2 size={13} color="#ff6b6b"/>
-                  </button>
+                  {(trip.owner===userId||!trip.owner)&&(
+                    <button onClick={ev=>{ev.stopPropagation();if(window.confirm(t("confirm_delete",lang)))onDelete(trip.id);}} style={{padding:"7px 8px",borderRadius:8,border:"none",background:"rgba(255,107,107,0.12)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <Trash2 size={13} color="#ff6b6b"/>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1362,11 +1370,11 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,r
                           {trip.startDate?`${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}{nights>0&&` · ${nights} ${t("days",lang)}`}{total>0&&` · ${fmtAmt(total,trip.displayCurrency||"ILS",rates)}`}
                         </div>
                       </div>
-                      <button title={lang==="he"?"שחזר מהארכיון":lang==="es"?"Restaurar":"Restore"}
+                      {(trip.owner===userId||!trip.owner)&&<button title={lang==="he"?"שחזר מהארכיון":lang==="es"?"Restaurar":"Restore"}
                         onClick={ev=>{ev.stopPropagation();onArchive(trip.id,false);}}
                         style={{padding:"7px 10px",borderRadius:8,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(100,223,223,0.07)",cursor:"pointer",fontFamily:RF,fontSize:11,fontWeight:600,color:TEAL,flexShrink:0}}>
                         {lang==="he"?"שחזר":lang==="es"?"Restaurar":"Restore"}
-                      </button>
+                      </button>}
                     </div>
                   );
                 })}
@@ -2964,7 +2972,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
               className="tap-btn"
               style={{width:30,height:30,borderRadius:8,border:"0.5px solid rgba(100,223,223,0.2)",background:W05,color:dates.indexOf(selDate)===dates.length-1?W25:TEAL,fontSize:14,cursor:dates.indexOf(selDate)===dates.length-1?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>‹</button>
           </div>
-          <button onClick={()=>openEdit(selDate)} style={{padding:"7px 12px",borderRadius:9,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,cursor:"pointer"}}>{t("cal_activities",lang)}</button>
+          {onSaveActs&&<button onClick={()=>openEdit(selDate)} style={{padding:"7px 12px",borderRadius:9,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,cursor:"pointer"}}>{t("cal_activities",lang)}</button>}
         </div>
 
         {/* Airport transfer banner – shown on any day that has a flight */}
@@ -3189,7 +3197,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
           )}
           <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",fontFamily:RF,marginBottom:16}}>{fmtDate(date)}</div>
           <div style={{display:"flex",gap:8}}>
-            <button onClick={()=>{setActPopup(null);openEdit(date);}} style={{flex:1,padding:"11px",borderRadius:12,border:"0.5px solid rgba(167,139,250,0.4)",background:"rgba(167,139,250,0.1)",color:"#a78bfa",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>✏️ {lang==="he"?"עריכה":lang==="es"?"Editar":"Edit"}</button>
+            {onSaveActs&&<button onClick={()=>{setActPopup(null);openEdit(date);}} style={{flex:1,padding:"11px",borderRadius:12,border:"0.5px solid rgba(167,139,250,0.4)",background:"rgba(167,139,250,0.1)",color:"#a78bfa",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>✏️ {lang==="he"?"עריכה":lang==="es"?"Editar":"Edit"}</button>}
             <button onClick={()=>setActPopup(null)} style={{flex:1,padding:"11px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{lang==="he"?"סגור":lang==="es"?"Cerrar":"Close"}</button>
           </div>
         </div>
@@ -3758,7 +3766,7 @@ function PackingListScreen({trip,onUpdate}){
   const[addingTo,setAddingTo]=useState(null);
   const[newText,setNewText]=useState("");
 
-  const save=updated=>{setItems(updated);onUpdate({packingList:updated});};
+  const save=updated=>{setItems(updated);onUpdate?.({packingList:updated});};
   const toggle=id=>save(items.map(it=>it.id===id?{...it,checked:!it.checked}:it));
   const del=id=>save(items.filter(it=>it.id!==id));
   const addItem=(catId)=>{
@@ -3825,23 +3833,23 @@ function PackingListScreen({trip,onUpdate}){
                   )}
                   {catItems.map(item=>(
                     <div key={item.id} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderBottom:"0.5px solid rgba(255,255,255,0.04)"}}>
-                      <div onClick={()=>toggle(item.id)}
+                      <div onClick={onUpdate?()=>toggle(item.id):undefined}
                         style={{width:22,height:22,borderRadius:7,border:`2px solid ${item.checked?"#4ade80":W25}`,
                           background:item.checked?"#4ade80":"transparent",
-                          display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,transition:"all 0.15s"}}>
+                          display:"flex",alignItems:"center",justifyContent:"center",cursor:onUpdate?"pointer":"default",flexShrink:0,transition:"all 0.15s"}}>
                         {item.checked&&<Check size={11} color={DARK_BG} strokeWidth={3}/>}
                       </div>
                       <span style={{flex:1,fontSize:14,color:item.checked?W35:"#ffffff",fontFamily:RF,
                         textDecoration:item.checked?"line-through":"none",transition:"all 0.15s"}}>{item.text}</span>
-                      <button onClick={()=>del(item.id)}
+                      {onUpdate&&<button onClick={()=>del(item.id)}
                         style={{background:"none",border:"none",cursor:"pointer",padding:"3px 5px",opacity:0.35,display:"flex",alignItems:"center"}}>
                         <X size={13} color="#ff6b6b"/>
-                      </button>
+                      </button>}
                     </div>
                   ))}
 
                   {/* Add item row */}
-                  {addingTo===cat.id?(
+                  {onUpdate&&(addingTo===cat.id?(
                     <div style={{display:"flex",gap:8,padding:"10px 14px",borderTop:"0.5px solid rgba(100,223,223,0.1)"}}>
                       <input value={newText} onChange={e=>setNewText(e.target.value)}
                         onKeyDown={e=>{if(e.key==="Enter")addItem(cat.id);if(e.key==="Escape"){setAddingTo(null);setNewText("");}}}
@@ -3861,7 +3869,7 @@ function PackingListScreen({trip,onUpdate}){
                       <Plus size={13} color={W35} strokeWidth={2}/>
                       {lang==="he"?"הוסף פריט":lang==="es"?"Añadir artículo":"Add item"}
                     </button>
-                  )}
+                  ))}
                 </div>
               )}
             </div>
@@ -4277,10 +4285,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const generateInviteToken=async(tripId,role)=>{
     setInviteGenerating(true);
     try{
+      const idToken=user?await user.getIdToken():null;
       const res=await fetch("/api/invite",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({tripId,role:role||"edit",userId,userEmail}),
+        headers:{"Content-Type":"application/json",...(idToken?{authorization:`Bearer ${idToken}`}:{})},
+        body:JSON.stringify({tripId,role:role||"edit"}),
       });
       const data=await res.json();
       if(data.token){
@@ -4301,10 +4310,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     try{
       const trip=trips.find(t=>t.id===tripId);
       if(trip?.inviteToken){
+        const idToken=user?await user.getIdToken():null;
         await fetch("/api/invite",{
           method:"DELETE",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({token:trip.inviteToken,userId,userEmail}),
+          headers:{"Content-Type":"application/json",...(idToken?{authorization:`Bearer ${idToken}`}:{})},
+          body:JSON.stringify({token:trip.inviteToken}),
         });
       }
       const{inviteToken:_,inviteTokenRole:__,...rest}=trip||{};
@@ -4528,14 +4538,14 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
               <div style={{padding:"4px 20px 8px",fontFamily:RF,fontSize:10,color:"rgba(100,223,223,0.4)",letterSpacing:"1px",textTransform:"uppercase"}}>
                 {active?.destination||(lang==="he"?"הטיול":lang==="es"?"Viaje":"Trip")}
               </div>
-              <button onClick={()=>navToScreen("budget","destination")}
+              {!isViewOnly&&<button onClick={()=>navToScreen("budget","destination")}
                 style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
                 <Settings size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"הגדרות טיול":lang==="es"?"Ajustes del viaje":"Trip Settings"}
-              </button>
-              <button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");setSideMenu(false);}}
+              </button>}
+              {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");setSideMenu(false);}}
                 style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
                 <Share2 size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"שתף טיול":lang==="es"?"Compartir viaje":"Share Trip"}
-              </button>
+              </button>}
               <div style={{margin:"10px 20px",height:"0.5px",background:"rgba(255,255,255,0.06)"}}/>
               <div style={{padding:"4px 20px 8px",fontFamily:RF,fontSize:10,color:"rgba(100,223,223,0.4)",letterSpacing:"1px",textTransform:"uppercase"}}>
                 {lang==="he"?"מסכים":lang==="es"?"Pantallas":"Screens"}
@@ -4922,7 +4932,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             {/* Trip settings button */}
-            {screen!=="destination"&&(
+            {screen!=="destination"&&!isViewOnly&&(
               <div style={{padding:"12px 14px 0"}}>
                 <button onClick={()=>{setWizardMode(false);pushNav("screen",activeId,"budget","destination");setScreen("destination");}} style={{width:"100%",padding:"12px 16px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(100,223,223,0.06)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
                   <Settings size={15} color={TEAL} strokeWidth={1.5}/> {lang==="he"?"הגדרות טיול":lang==="es"?"Ajustes del viaje":"Trip Settings"}
@@ -4967,9 +4977,9 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:screen==="map"?"hidden":"auto",position:"relative",minHeight:0}}>
             <div key={screen} className="screen-enter" style={screen==="map"?{height:"100%"}:undefined}>
-              {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={acts=>updTrip({activities:acts})}/>}
+              {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={isViewOnly?null:(acts=>updTrip({activities:acts}))}/>}
               {screen==="discover"&&<DiscoverScreen trip={active}/>}
-              {screen==="packing"&&<PackingListScreen trip={active} onUpdate={updTrip}/>}
+              {screen==="packing"&&<PackingListScreen trip={active} onUpdate={isViewOnly?null:updTrip}/>}
               {screen==="map"&&(
                 <ErrorBoundary fallback={(error,retry)=>{
                   const isChunkFail=/ChunkLoadError|Failed to load chunk/i.test(error?.name+" "+error?.message);
