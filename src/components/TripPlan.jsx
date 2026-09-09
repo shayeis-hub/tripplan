@@ -38,7 +38,7 @@ const MapLeaflet = dynamic(_mapLoad, {
   ),
 });
 import { db } from "@/lib/firebase";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, deleteField } from "firebase/firestore";
 import { loadGoogleMaps } from "@/lib/gmaps";
 import { useOnlineStatus } from "@/lib/useOnlineStatus";
 import OfflineBanner from "@/components/OfflineBanner";
@@ -4219,7 +4219,7 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
   );
 }
 
-export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId,syncFailed,onRetrySync}){
+export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFields,onMutateTripField,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId,syncFailed,onRetrySync}){
   const{lang,setLang}=useLang();
   const{user}=useAuth();
   const[trips,setTrips]=useState(initialTrips);
@@ -4349,8 +4349,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       });
       const data=await res.json();
       if(data.token){
-        const trip=trips.find(t=>t.id===tripId);
-        if(trip) onSaveTrip({...trip,inviteToken:data.token,inviteTokenRole:role||"edit",updatedAt:Date.now()});
+        onUpdateTripFields(tripId,{inviteToken:data.token,inviteTokenRole:role||"edit"});
         setTrips(ts=>ts.map(t=>t.id===tripId?{...t,inviteToken:data.token,inviteTokenRole:role||"edit"}:t));
         // Auto-copy to clipboard
         const url=`https://tulon.app?invite=${data.token}`;
@@ -4373,8 +4372,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
           body:JSON.stringify({token:trip.inviteToken}),
         });
       }
-      const{inviteToken:_,inviteTokenRole:__,...rest}=trip||{};
-      onSaveTrip({...rest,id:tripId,updatedAt:Date.now()});
+      // updateTripFields only touches the keys you pass, so simply omitting
+      // inviteToken/inviteTokenRole (as the old rest-spread did) wouldn't
+      // remove them — deleteField() is Firestore's explicit "unset this
+      // field" sentinel.
+      onUpdateTripFields(tripId,{inviteToken:deleteField(),inviteTokenRole:deleteField()});
       setTrips(ts=>ts.map(t=>t.id===tripId?{...t,inviteToken:undefined,inviteTokenRole:undefined}:t));
     }catch(e){console.error(e);}
     setInviteDeleting(false);
@@ -4383,25 +4385,34 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const active=trips.find(t=>t.id===activeId);
   const expenses=active?.expenses||[];
 
+  // updTrip and the expense mutators below used to build a full local copy
+  // of the trip (from this tab's possibly-stale `trips` state) and hand it
+  // to onSaveTrip, which setDoc-overwrote the ENTIRE document — every
+  // field, not just the one that changed. Two people editing different
+  // parts of the same trip at nearly the same moment (one ticks a packing
+  // item, another adds an expense) could silently drop each other's write,
+  // whichever setDoc landed second winning outright. Now: updTrip sends
+  // only the changed top-level field(s) via onUpdateTripFields, and the
+  // expense mutators use onMutateTripField, which reads the `expenses`
+  // array's live server value inside a transaction before applying the
+  // change — so two different expense adds/edits/deletes at once both
+  // survive, instead of one being built from a stale copy that overwrites
+  // the other's.
   const updTrip=useCallback((patch)=>{
     const current=trips.find(t=>t.id===activeId);
     if(current?.archived&&!("archived" in patch))return; // archived trips are read-only
     setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,...patch}:t));
-    const updated=trips.find(t=>t.id===activeId);
-    if(updated) onSaveTrip({...updated,...patch});
-  },[activeId,trips,onSaveTrip]);
+    onUpdateTripFields(activeId,patch);
+  },[activeId,trips,onUpdateTripFields]);
 
   const addExp=useCallback((e)=>{
+    let ok=false;
     setTrips((ts)=>{
       if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
-      const next=ts.map(t=>{
-        if(t.id!==activeId)return t;
-        return{...t,expenses:[...t.expenses,e]};
-      });
-      const updated=next.find(t=>t.id===activeId);
-      if(updated) setTimeout(()=>onSaveTrip(updated),0);
-      return next;
+      ok=true;
+      return ts.map(t=>t.id===activeId?{...t,expenses:[...t.expenses,e]}:t);
     });
+    if(ok) onMutateTripField(activeId,"expenses",arr=>[...(arr||[]),e]);
     // Flight reminders are handled server-side by /api/push-cron now — it's
     // timezone-aware and respects the trip's actual reminderHours, unlike
     // the setTimeout that used to live here (hardcoded 3h, and only fired
@@ -4413,51 +4424,52 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         notifyTripMembers(idToken,active.id,"new_expense",{category:e.category,amountILS:e.amountILS});
       }).catch(()=>{});
     }
-  },[activeId,onSaveTrip,userId,user,trips]);
+  },[activeId,onMutateTripField,userId,user,trips]);
 
   const togglePay=useCallback((id)=>{
+    let ok=false;
     setTrips((ts)=>ts.map(t=>{
       if(t.id!==activeId||t.archived)return t;
-      const updated={...t,expenses:t.expenses.map(e=>e.id===id?{...e,paid:!e.paid}:e)};
-      onSaveTrip(updated);
-      return updated;
+      ok=true;
+      return{...t,expenses:t.expenses.map(e=>e.id===id?{...e,paid:!e.paid}:e)};
     }));
-  },[activeId,onSaveTrip]);
+    if(ok) onMutateTripField(activeId,"expenses",arr=>(arr||[]).map(e=>e.id===id?{...e,paid:!e.paid}:e));
+  },[activeId,onMutateTripField]);
 
   const delExp=useCallback((id)=>{
+    let ok=false;
     setTrips((ts)=>{
       if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
-      const next=ts.map(t=>{
-        if(t.id!==activeId)return t;
-        return{...t,expenses:t.expenses.filter(e=>e.id!==id)};
-      });
-      const updated=next.find(t=>t.id===activeId);
-      if(updated) setTimeout(()=>onSaveTrip(updated),0);
-      return next;
+      ok=true;
+      return ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.filter(e=>e.id!==id)}:t);
     });
-  },[activeId,onSaveTrip]);
+    if(ok) onMutateTripField(activeId,"expenses",arr=>(arr||[]).filter(e=>e.id!==id));
+  },[activeId,onMutateTripField]);
 
   const editExp=useCallback((id,patch)=>{
+    let ok=false;
     setTrips((ts)=>{
       if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
-      const next=ts.map(t=>{
-        if(t.id!==activeId)return t;
-        return{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)};
-      });
-      const updated=next.find(t=>t.id===activeId);
-      if(updated) setTimeout(()=>onSaveTrip(updated),0);
-      return next;
+      ok=true;
+      return ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)}:t);
     });
-  },[activeId,onSaveTrip]);
+    if(ok) onMutateTripField(activeId,"expenses",arr=>(arr||[]).map(e=>e.id===id?{...e,...patch}:e));
+  },[activeId,onMutateTripField]);
 
   const handleShare=async(tripId)=>{
     if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
-    try{
-      await onShareTrip(tripId,shareEmail.trim(),shareViewOnly);
+    // onShareTrip catches its own errors and returns false rather than
+    // throwing (matching every other write in this app now) — this used
+    // to always show the success message regardless, since the try/catch
+    // here never actually caught anything.
+    const ok=await onShareTrip(tripId,shareEmail.trim(),shareViewOnly);
+    if(ok){
       setShareMsg("✅ הטיול שותף בהצלחה!");
       setShareEmail("");
       setShareViewOnly(false);
-    }catch(e){setShareMsg("שגיאה, נסה שוב");}
+    }else{
+      setShareMsg("שגיאה, נסה שוב");
+    }
   };
 
   const createInspireLink=async()=>{
@@ -4528,12 +4540,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   };
   const handleDelete=(id)=>{setTrips((ts)=>ts.filter(t=>t.id!==id));onDeleteTrip(id);};
   const handleArchive=(id,archived)=>{
-    setTrips((ts)=>{
-      const next=ts.map(t=>t.id===id?{...t,archived}:t);
-      const updated=next.find(t=>t.id===id);
-      if(updated) setTimeout(()=>onSaveTrip(updated),0);
-      return next;
-    });
+    setTrips((ts)=>ts.map(t=>t.id===id?{...t,archived}:t));
+    onUpdateTripFields(id,{archived});
   };
 
   const isOwner=active?.owner===userId||!active?.owner;

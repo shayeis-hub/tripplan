@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  collection, doc, onSnapshot, setDoc, deleteDoc,
-  query, orderBy, or, where
+  collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, runTransaction,
+  arrayUnion, arrayRemove, query, orderBy, or, where
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -62,10 +62,16 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
     return () => { unsub1(); unsub2(); };
   }, [userId, userEmail]);
 
-  // Remove undefined values recursively (Firebase doesn't accept undefined)
+  // Remove undefined values recursively (Firebase doesn't accept undefined).
+  // Only recurses into plain object literals — a Firestore sentinel
+  // (deleteField(), arrayUnion(), a Timestamp, etc.) is a class instance,
+  // not a plain object, and rebuilding it via Object.fromEntries(Object.
+  // entries(...)) would silently strip its prototype, turning e.g.
+  // deleteField() into an inert plain object instead of the special value
+  // Firestore recognizes. Passing those through untouched keeps them working.
   const stripUndefined = (obj: any): any => {
     if (Array.isArray(obj)) return obj.map(stripUndefined);
-    if (obj && typeof obj === 'object') {
+    if (obj && typeof obj === 'object' && obj.constructor === Object) {
       return Object.fromEntries(
         Object.entries(obj)
           .filter(([_, v]) => v !== undefined)
@@ -76,17 +82,35 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
   };
 
   // Every trip edit (add an expense, tick a packing item, share the trip...)
-  // goes through this — but it used to just log a failed write and return
-  // undefined either way, so the UI (which already applied the change
-  // optimistically to local state before this ran) had no way to tell a
-  // real save from a silently-dropped one. A permission-denied write, an
-  // offline save, or a rejected rules check all looked identical to
-  // success. Now: returns whether it actually succeeded, and remembers the
-  // failed payload so a caller (see retrySync below) can retry the exact
-  // same write without the user having to redo their edit.
+  // goes through one of the three write functions below — but they used to
+  // just log a failed write and return undefined either way, so the UI
+  // (which already applied the change optimistically to local state before
+  // this ran) had no way to tell a real save from a silently-dropped one.
+  // A permission-denied write, an offline save, or a rejected rules check
+  // all looked identical to success. Now: each returns whether it actually
+  // succeeded, and on failure remembers how to retry itself (see
+  // retrySync below), keyed by trip id so a successful save of a
+  // *different* trip never hides a still-unresolved failure on another one.
   const [syncFailed, setSyncFailed] = useState(false);
-  const lastFailedTripRef = useRef<any>(null);
+  const lastFailedRef = useRef<{ tripId: string; retry: () => void } | null>(null);
 
+  const clearFailureIfMatches = (tripId: string) => {
+    if (lastFailedRef.current?.tripId === tripId) {
+      lastFailedRef.current = null;
+      setSyncFailed(false);
+    }
+  };
+  const markFailure = (tripId: string, retry: () => void) => {
+    lastFailedRef.current = { tripId, retry };
+    setSyncFailed(true);
+  };
+
+  // Full-document overwrite. Only appropriate for creating a brand new trip
+  // (setDoc on a doc that doesn't exist yet) or the rare case that really
+  // does need to replace the whole document — every other edit should use
+  // updateTripFields or mutateTripField below, which only touch the fields
+  // they actually change instead of re-writing (and risking clobbering)
+  // everything else a concurrent editor may have just changed.
   const saveTrip = async (trip: any): Promise<boolean> => {
     if (!userId) return false;
     try {
@@ -97,27 +121,71 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
         updatedAt: Date.now(),
       });
       await setDoc(doc(db, "trips", trip.id), clean);
-      // Only clear the banner if this save resolves the specific failure
-      // it's showing — a successful save of a DIFFERENT trip shouldn't
-      // hide a still-unresolved failure on another one.
-      if (lastFailedTripRef.current?.id === trip.id) {
-        lastFailedTripRef.current = null;
-        setSyncFailed(false);
-      }
+      clearFailureIfMatches(trip.id);
       return true;
     } catch (err) {
       console.error("Firebase saveTrip error:", err);
-      lastFailedTripRef.current = trip;
-      setSyncFailed(true);
+      markFailure(trip.id, () => { saveTrip(trip); });
       return false;
     }
   };
 
-  // Retries the last failed write verbatim. Exposed so a global banner can
-  // offer "try again" instead of the user having to redo whatever edit
-  // triggered the failure (which they may not even know happened).
+  // Field-level update for an EXISTING trip doc — only touches the keys in
+  // `patch`, unlike saveTrip's full-document overwrite. Two people editing
+  // different fields of the same trip at the same moment (one ticks a
+  // packing item, another edits the itinerary) no longer risk one write
+  // silently erasing the other's, since Firestore only touches the field
+  // paths named here. Still not safe for two edits to the SAME field at
+  // the same moment (e.g. two different additions to `expenses`) — that
+  // needs mutateTripField below, which reads the field's live value first.
+  const updateTripFields = async (tripId: string, patch: Record<string, any>): Promise<boolean> => {
+    if (!userId || !tripId) return false;
+    try {
+      await updateDoc(doc(db, "trips", tripId), { ...stripUndefined(patch), updatedAt: Date.now() });
+      clearFailureIfMatches(tripId);
+      return true;
+    } catch (err) {
+      console.error("Firebase updateTripFields error:", err);
+      markFailure(tripId, () => { updateTripFields(tripId, patch); });
+      return false;
+    }
+  };
+
+  // Read-modify-write a single field (an array like `expenses`, or a map
+  // like `activities`) inside a Firestore transaction, so `mutator` always
+  // starts from that field's actual current value on the server — never
+  // from whatever this tab's local state happened to have — and Firestore
+  // automatically retries the transaction if another write lands in
+  // between. Two people adding different expenses (or ticking different
+  // packing items) at the same instant both survive; two edits to the
+  // exact same array element still resolve last-write-wins on that one
+  // element, but never at the cost of dropping the rest of the array.
+  const mutateTripField = async (tripId: string, field: string, mutator: (current: any) => any): Promise<boolean> => {
+    if (!userId || !tripId) return false;
+    try {
+      await runTransaction(db, async (tx) => {
+        const ref = doc(db, "trips", tripId);
+        const snap = await tx.get(ref);
+        if (!snap.exists()) throw new Error("trip_not_found");
+        const current = (snap.data() as any)[field];
+        const next = mutator(current);
+        tx.update(ref, { [field]: stripUndefined(next), updatedAt: Date.now() });
+      });
+      clearFailureIfMatches(tripId);
+      return true;
+    } catch (err) {
+      console.error(`Firebase mutateTripField(${field}) error:`, err);
+      markFailure(tripId, () => { mutateTripField(tripId, field, mutator); });
+      return false;
+    }
+  };
+
+  // Retries whatever the last failed write was, exactly as it was
+  // attempted. Exposed so a global banner can offer "try again" instead of
+  // the user having to redo whatever edit triggered the failure (which
+  // they may not even know happened).
   const retrySync = () => {
-    if (lastFailedTripRef.current) saveTrip(lastFailedTripRef.current);
+    lastFailedRef.current?.retry();
   };
 
   const deleteTrip = async (tripId: string) => {
@@ -125,31 +193,50 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
     await deleteDoc(doc(db, "trips", tripId));
   };
 
-  const shareTrip = async (tripId: string, email: string, viewOnly = false) => {
-    const trip = trips.find(t => t.id === tripId);
-    if (!trip) return;
+  // arrayUnion/arrayRemove are atomic at the Firestore level and need no
+  // read first — unlike the old version, which built the next sharedWith/
+  // viewOnlyUsers arrays from this tab's local `trips` state and then
+  // overwrote the whole array. Two people sharing the same trip with
+  // different emails (or from two devices) at the same moment could
+  // silently drop one addition under that version; they can't here, since
+  // Firestore merges each array op server-side against the live value.
+  const shareTrip = async (tripId: string, email: string, viewOnly = false): Promise<boolean> => {
+    if (!userId) return false;
     const normalizedEmail = email.toLowerCase().trim();
-    const sharedWith = [...(trip.sharedWith || [])];
-    if (!sharedWith.includes(normalizedEmail)) sharedWith.push(normalizedEmail);
-
-    // viewOnlyUsers: add or remove based on flag
-    let viewOnlyUsers: string[] = [...(trip.viewOnlyUsers || [])];
-    if (viewOnly) {
-      if (!viewOnlyUsers.includes(normalizedEmail)) viewOnlyUsers.push(normalizedEmail);
-    } else {
-      viewOnlyUsers = viewOnlyUsers.filter(e => e !== normalizedEmail);
+    try {
+      await updateDoc(doc(db, "trips", tripId), {
+        sharedWith: arrayUnion(normalizedEmail),
+        viewOnlyUsers: viewOnly ? arrayUnion(normalizedEmail) : arrayRemove(normalizedEmail),
+        updatedAt: Date.now(),
+      });
+      clearFailureIfMatches(tripId);
+      return true;
+    } catch (err) {
+      console.error("Firebase shareTrip error:", err);
+      markFailure(tripId, () => { shareTrip(tripId, email, viewOnly); });
+      return false;
     }
-
-    await saveTrip({ ...trip, sharedWith, viewOnlyUsers });
   };
 
-  const removeShare = async (tripId: string, email: string) => {
-    const trip = trips.find(t => t.id === tripId);
-    if (!trip) return;
-    const sharedWith = (trip.sharedWith || []).filter((e: string) => e !== email);
-    const viewOnlyUsers = (trip.viewOnlyUsers || []).filter((e: string) => e !== email);
-    await saveTrip({ ...trip, sharedWith, viewOnlyUsers });
+  const removeShare = async (tripId: string, email: string): Promise<boolean> => {
+    if (!userId) return false;
+    try {
+      await updateDoc(doc(db, "trips", tripId), {
+        sharedWith: arrayRemove(email),
+        viewOnlyUsers: arrayRemove(email),
+        updatedAt: Date.now(),
+      });
+      clearFailureIfMatches(tripId);
+      return true;
+    } catch (err) {
+      console.error("Firebase removeShare error:", err);
+      markFailure(tripId, () => { removeShare(tripId, email); });
+      return false;
+    }
   };
 
-  return { trips, loading, saveTrip, deleteTrip, shareTrip, removeShare, syncFailed, retrySync };
+  return {
+    trips, loading, saveTrip, updateTripFields, mutateTripField, deleteTrip,
+    shareTrip, removeShare, syncFailed, retrySync,
+  };
 }

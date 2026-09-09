@@ -16,6 +16,8 @@ export default function Home() {
     trips,
     loading: tripsLoading,
     saveTrip,
+    updateTripFields,
+    mutateTripField,
     deleteTrip,
     shareTrip,
     removeShare,
@@ -59,6 +61,8 @@ export default function Home() {
             <TripPlan
               trips={trips}
               onSaveTrip={saveTrip}
+              onUpdateTripFields={updateTripFields}
+              onMutateTripField={mutateTripField}
               onDeleteTrip={deleteTrip}
               onShareTrip={shareTrip}
               onRemoveShare={removeShare}
