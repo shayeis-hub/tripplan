@@ -838,6 +838,53 @@ function CurrencyConverter({rates,onClose,tripCurrencies,defaultCurrency,display
 // wrapped in this before being placed in a template string.
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
+// Single source of truth for "who owes whom" — used by both the on-screen
+// BudgetScreen and the PDF export. The PDF export used to have its own,
+// older calculation that only understood the legacy paidBy/splitWith
+// format, so a trip using the newer participants/payers model could show
+// real debts on-screen while its exported PDF said "no debts" — a real
+// financial-accuracy bug in a document people might actually use to
+// settle up. Only shared expenses (isShared!==false) participate, and
+// this always uses the live amountILS (matching BudgetScreen), not the
+// paid-time amountILSLocked snapshot — settlement is about what people
+// currently owe each other, not a frozen historical total.
+function calcSettlement(people,expenses){
+  if(!people||people.length<2)return[];
+  const balances={};
+  people.forEach(p=>balances[p.id]=0);
+  expenses.filter(e=>e.isShared!==false).forEach(exp=>{
+    // New format: participants + payers
+    if(exp.participants?.length>0&&exp.payers?.length>0){
+      const parts=exp.participants.filter(id=>balances[id]!==undefined);
+      if(parts.length===0)return;
+      const share=exp.amountILS/parts.length;
+      parts.forEach(id=>{ balances[id]=(balances[id]||0)-share; });
+      exp.payers.forEach(({id,amount})=>{ if(balances[id]!==undefined) balances[id]=(balances[id]||0)+parseFloat(amount||0); });
+    }
+    // Old format: paidBy + splitWith
+    else if(exp.paidBy){
+      const participants=[exp.paidBy,...(exp.splitWith||[])];
+      if(participants.length<2)return;
+      const share=exp.amountILS/participants.length;
+      balances[exp.paidBy]=(balances[exp.paidBy]||0)+exp.amountILS-share;
+      (exp.splitWith||[]).forEach(id=>{ balances[id]=(balances[id]||0)-share; });
+    }
+  });
+  const debts=[];
+  const pos=people.filter(p=>balances[p.id]>0.01).map(p=>({...p,bal:balances[p.id]}));
+  const neg=people.filter(p=>balances[p.id]<-0.01).map(p=>({...p,bal:balances[p.id]}));
+  pos.sort((a,b)=>b.bal-a.bal); neg.sort((a,b)=>a.bal-b.bal);
+  let i=0,j=0;
+  while(i<pos.length&&j<neg.length){
+    const amt=Math.min(pos[i].bal,-neg[j].bal);
+    if(amt>0.01)debts.push({from:neg[j],to:pos[i],amount:amt});
+    pos[i].bal-=amt; neg[j].bal+=amt;
+    if(Math.abs(pos[i].bal)<0.01)i++;
+    if(Math.abs(neg[j].bal)<0.01)j++;
+  }
+  return debts;
+}
+
 async function openHtmlDocument(html, filename){
   const cap = typeof window!=="undefined" ? window.Capacitor : null;
   if(cap?.isNativePlatform?.()){
@@ -879,31 +926,11 @@ async function exportTripPDF(trip,expenses,lang="he"){
   });
   const sortedDates=Object.keys(byDate).sort();
   const people=trip.people||[];
-  const balances={};
-  sharedExp.forEach(exp=>{
-    if(!exp.paidBy) return;
-    const participants=[exp.paidBy,...(exp.splitWith||[])];
-    if(participants.length<2) return;
-    const share=getAmt(exp)/participants.length;
-    balances[exp.paidBy]=(balances[exp.paidBy]||0)+getAmt(exp)-share;
-    (exp.splitWith||[]).forEach(id=>{balances[id]=(balances[id]||0)-share;});
-  });
-  const creditors=[],debtors=[];
-  Object.entries(balances).forEach(([id,bal])=>{
-    const name=people.find(p=>p.id===id)?.name||id;
-    if(bal>0.5) creditors.push({name,amount:bal});
-    else if(bal<-0.5) debtors.push({name,amount:-bal});
-  });
-  const settlements=[];
-  const creds=[...creditors],depts=[...debtors];
-  while(creds.length&&depts.length){
-    const c=creds[0],d=depts[0];
-    const amt=Math.min(c.amount,d.amount);
-    settlements.push({from:d.name,to:c.name,amount:amt});
-    c.amount-=amt; d.amount-=amt;
-    if(c.amount<0.5) creds.shift();
-    if(d.amount<0.5) depts.shift();
-  }
+  // Was its own legacy-only calculation (paidBy/splitWith) that silently
+  // showed "no debts" for trips using the newer participants/payers
+  // format even when BudgetScreen showed real ones on-screen. Now shares
+  // the exact same logic as BudgetScreen via calcSettlement.
+  const settlements=calcSettlement(people,expenses);
   const budget=trip.budget?parseFloat(trip.budget):null;
   const budgetPct=budget?Math.min((total/budget)*100,100):null;
   const budgetColor=budgetPct?budgetPct<70?"#4ade80":budgetPct<90?"#fbbf24":"#ff6b6b":"#64dfdf";
@@ -1009,8 +1036,8 @@ async function exportTripPDF(trip,expenses,lang="he"){
   <p style="font-size:11px;color:#7a9baa;margin-bottom:10px">${isHe?`מבוסס על הוצאות משותפות בלבד (₪${sharedTotal.toFixed(0)})`:`Based on shared expenses only (₪${sharedTotal.toFixed(0)})`}</p>
   ${settlements.length>0?settlements.map(s=>`
     <div class="settlement-row">
-      <span style="font-size:14px;font-weight:600">${esc(s.from)}</span>
-      <span style="color:#7a9baa;font-size:12px">${isHe?`חייב ל ← ${esc(s.to)}`:`owes → ${esc(s.to)}`}</span>
+      <span style="font-size:14px;font-weight:600">${esc(s.from.name)}</span>
+      <span style="color:#7a9baa;font-size:12px">${isHe?`חייב ל ← ${esc(s.to.name)}`:`owes → ${esc(s.to.name)}`}</span>
       <span class="settle-amount">₪${s.amount.toFixed(0)}</span>
     </div>`).join("")
   :`<div style="text-align:center;color:#4ade80;padding:16px;font-weight:700">${isHe?"✅ אין חובות – כולם שווה!":"✅ No debts – all settled!"}</div>`}
@@ -2521,44 +2548,9 @@ function BudgetScreen({trip,expenses,rates={}}){
   const byCat=CATS.map(cat=>{const ce=expenses.filter(e=>e.category===cat.id);return{...cat,total:ce.reduce((s,e)=>s+e.amountILS,0),count:ce.length};}).filter(c=>c.count>0);
   const pieData=byCat.map(c=>({label:catLabel(c.id,lang),value:c.total,color:c.color,icon:c.icon}));
 
-  // Settlement calculation
-  const settlement=useMemo(()=>{
-    if(people.length<2)return[];
-    const balances={};
-    people.forEach(p=>balances[p.id]=0);
-    // Only shared expenses enter settlement
-    expenses.filter(e=>e.isShared!==false).forEach(exp=>{
-      // New format: participants + payers
-      if(exp.participants?.length>0&&exp.payers?.length>0){
-        const parts=exp.participants.filter(id=>balances[id]!==undefined);
-        if(parts.length===0)return;
-        const share=exp.amountILS/parts.length;
-        parts.forEach(id=>{ balances[id]=(balances[id]||0)-share; });
-        exp.payers.forEach(({id,amount})=>{ if(balances[id]!==undefined) balances[id]=(balances[id]||0)+parseFloat(amount||0); });
-      }
-      // Old format: paidBy + splitWith
-      else if(exp.paidBy){
-        const participants=[exp.paidBy,...(exp.splitWith||[])];
-        if(participants.length<2)return;
-        const share=exp.amountILS/participants.length;
-        balances[exp.paidBy]=(balances[exp.paidBy]||0)+exp.amountILS-share;
-        (exp.splitWith||[]).forEach(id=>{ balances[id]=(balances[id]||0)-share; });
-      }
-    });
-    const debts=[];
-    const pos=people.filter(p=>balances[p.id]>0.01).map(p=>({...p,bal:balances[p.id]}));
-    const neg=people.filter(p=>balances[p.id]<-0.01).map(p=>({...p,bal:balances[p.id]}));
-    pos.sort((a,b)=>b.bal-a.bal); neg.sort((a,b)=>a.bal-b.bal);
-    let i=0,j=0;
-    while(i<pos.length&&j<neg.length){
-      const amt=Math.min(pos[i].bal,-neg[j].bal);
-      if(amt>0.01)debts.push({from:neg[j],to:pos[i],amount:amt});
-      pos[i].bal-=amt; neg[j].bal+=amt;
-      if(Math.abs(pos[i].bal)<0.01)i++;
-      if(Math.abs(neg[j].bal)<0.01)j++;
-    }
-    return debts;
-  },[expenses,people]);
+  // Settlement calculation — shared with the PDF export (calcSettlement)
+  // so the two can never disagree about who owes whom.
+  const settlement=useMemo(()=>calcSettlement(people,expenses),[expenses,people]);
 
   // PDF export
   const handlePDF=()=>exportTripPDF(trip,expenses,lang);
