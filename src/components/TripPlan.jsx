@@ -2093,12 +2093,25 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const removePayer=i=>set({payers:form.payers.filter((_,j)=>j!==i)});
   const updatePayer=(i,field,val)=>set({payers:form.payers.map((p,j)=>j===i?{...p,[field]:val}:p)});
 
+  // Payers must actually sum to the expense total — the form already
+  // shows a "⚠️ diff: ₪X" warning when they don't, but saving proceeded
+  // regardless, so an expense could silently carry payer amounts that
+  // don't add up to what was actually spent, corrupting calcSettlement
+  // for everyone on the trip. Mirrors the warning's own tolerance (<1).
+  const payersUnbalanced=amt=>{
+    if(!(form.payers.length>0))return false;
+    const totalPaid=form.payers.reduce((s,p)=>s+parseFloat(p.amount||0),0);
+    const expAmt=toILS(amt,form.currency);
+    return Math.abs(totalPaid-expAmt)>=1;
+  };
+
   const handleAdd=()=>{
     // min=0 on the input is only a UI hint — parseFloat("-5") sails right
     // through it, and negative amounts then flip every total, budget and
     // debt calculation that reads amountILS.
     const amt=parseFloat(form.amount);
     if(!form.amount||isViewOnly||!(amt>0))return;
+    if(payersUnbalanced(amt)){alert(lang==="he"?"סכומי המשלמים לא תואמים לסכום ההוצאה":lang==="es"?"Los montos de los pagadores no coinciden con el total":"Payer amounts don't add up to the expense total");return;}
     const date=form.category==="hotel"?form.checkIn:form.date;
     onAdd({id:uid(),...form,date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
     setForm(mkForm(dates,trip.defaultCurrency,people));
@@ -2133,6 +2146,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const handleSaveEdit=()=>{
     const amt=parseFloat(form.amount);
     if(!form.amount||isViewOnly||!(amt>0))return;
+    if(payersUnbalanced(amt)){alert(lang==="he"?"סכומי המשלמים לא תואמים לסכום ההוצאה":lang==="es"?"Los montos de los pagadores no coinciden con el total":"Payer amounts don't add up to the expense total");return;}
     const date=form.category==="hotel"?form.checkIn:form.date;
     // amountILSLocked freezes the ILS value at the moment an expense is
     // marked paid, for reports that shouldn't shift with today's exchange
