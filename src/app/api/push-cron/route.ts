@@ -42,6 +42,8 @@ const COUNTRY_TIMEZONE: Record<string, string> = {
 };
 const ORIGIN_TZ = "Asia/Jerusalem";
 
+const prevDateStr = (d: string) => { const dt = new Date(d); dt.setDate(dt.getDate() - 1); return dt.toISOString().slice(0, 10); };
+
 const nowCache = new Map<string, { hour: number; min: number; date: string }>();
 function nowInZone(tz: string) {
   const cached = nowCache.get(tz);
@@ -145,11 +147,19 @@ export async function GET(req: NextRequest) {
         if (exp.category === "flight" && exp.departureTime) {
           const tz = exp.date === outboundDate ? ORIGIN_TZ : destTz;
           const { hour: nowHour, min: nowMin, date: today } = nowInZone(tz);
-          const key = `${exp.id}-flight-${today}`;
-          if (exp.date === today && !alreadySent[key] && !newlySent[key]) {
-            const [fh, fm] = exp.departureTime.split(":").map(Number);
-            const remHours = exp.reminderHours || 5;
-            const remM = fh * 60 + fm - (remHours * 60);
+          const [fh, fm] = exp.departureTime.split(":").map(Number);
+          const remHours = exp.reminderHours || 5;
+          let remM = fh * 60 + fm - (remHours * 60);
+          // A flight early enough (or a long enough reminderHours) pushes
+          // the reminder time before midnight, onto the PREVIOUS calendar
+          // day — this used to only ever compare against exp.date itself,
+          // so remM went negative and the condition below could never be
+          // true on any day at all. A 02:00 flight with the default 5h
+          // reminder (due 21:00 the day before) simply never fired.
+          let targetDate = exp.date;
+          if (remM < 0) { remM += 1440; targetDate = prevDateStr(exp.date); }
+          const key = `${exp.id}-flight-${targetDate}`;
+          if (today === targetDate && !alreadySent[key] && !newlySent[key]) {
             const curM = nowHour * 60 + nowMin;
             if (remM >= curM && remM < curM + 10) {
               await sendPush(userId, "✈️ תזכורת טיסה!", `טיסתך ב-${exp.departureTime} – עוד ${remHours} שעות, הגיע הזמן להתכונן!`);

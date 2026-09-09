@@ -746,12 +746,19 @@ function urlBase64ToUint8Array(base64String){
   return outputArray;
 }
 
-async function sendPushToUser(userId,title,body,url="/"){
+// Notifies the OTHER members of a trip (never the caller) — the server
+// resolves who that is from the trip doc itself, using the caller's own
+// verified identity to check they're actually a member. Used to just take
+// a raw target userId from the client with no auth at all (fixed
+// 2026-09-09), which also meant it was pushing to the person who
+// triggered the action instead of their trip-mates, since the call sites
+// always passed their own userId.
+async function notifyTripMembers(idToken,tripId,title,body,url="/"){
   try{
     await fetch("/api/push-send",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({userId,title,body,url}),
+      headers:{"Content-Type":"application/json",authorization:`Bearer ${idToken}`},
+      body:JSON.stringify({tripId,title,body,url}),
     });
   }catch(e){}
 }
@@ -4329,25 +4336,19 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       if(updated) setTimeout(()=>onSaveTrip(updated),0);
       return next;
     });
-    // Schedule flight reminder notification
-    if(e.category==="flight"&&e.departureTime&&subscribed){
-      const[h,m]=e.departureTime.split(":").map(Number);
-      const flightDate=new Date(e.date);
-      flightDate.setHours(h-3,m,0,0);
-      const msUntil=flightDate.getTime()-Date.now();
-      if(msUntil>0&&msUntil<24*60*60*1000){ // only if within 24h
-        setTimeout(()=>{
-          sendPushToUser(userId,"🔔 הגעה לשדה התעופה!",`טיסתך ב-${e.departureTime} – הגיע הזמן לצאת לשדה`);
-        },msUntil);
-      }
-    }
+    // Flight reminders are handled server-side by /api/push-cron now — it's
+    // timezone-aware and respects the trip's actual reminderHours, unlike
+    // the setTimeout that used to live here (hardcoded 3h, and only fired
+    // at all if the tab happened to stay open for up to 24h straight).
     // Notify shared trip members about new expense
     const active=trips.find(t=>t.id===activeId);
-    if(active?.sharedWith?.length>0&&e.isShared!==false){
+    if(active?.sharedWith?.length>0&&e.isShared!==false&&user){
       const cat=CATS.find(c=>c.id===e.category);
-      sendPushToUser(userId,`${cat?.icon||""} הוצאה חדשה בטיולון`,`${cat?.label}: ₪${e.amountILS?.toFixed(0)||""} נוסף לטיול ${active.destination||""}`);
+      user.getIdToken().then(idToken=>{
+        notifyTripMembers(idToken,active.id,`${cat?.icon||""} הוצאה חדשה בטיולון`,`${cat?.label}: ₪${e.amountILS?.toFixed(0)||""} נוסף לטיול ${active.destination||""}`);
+      }).catch(()=>{});
     }
-  },[activeId,onSaveTrip,subscribed,userId,trips]);
+  },[activeId,onSaveTrip,userId,user,trips]);
 
   const togglePay=useCallback((id)=>{
     setTrips((ts)=>ts.map(t=>{
