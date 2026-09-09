@@ -62,13 +62,20 @@ export async function POST(req: NextRequest) {
       })));
     }
 
-    // 5. Everything else keyed directly by uid.
+    // 5. Public "inspire" shares this user created. Only findable for
+    //    shares created after ownerUid started being stored on them
+    //    (2026-09-09) — a share made before that has no owner reference
+    //    anywhere and can't be traced back to this account.
+    const publicSharesSnap = await db.collection("publicShares").where("ownerUid", "==", uid).get();
+    await Promise.all(publicSharesSnap.docs.map(d => d.ref.delete()));
+
+    // 6. Everything else keyed directly by uid.
     await Promise.all([
       db.collection("travelProfiles").doc(uid).delete(),
       db.collection("pushSubscriptions").doc(uid).delete(),
     ]);
 
-    // 6. The Auth account itself — works regardless of sign-in provider,
+    // 7. The Auth account itself — works regardless of sign-in provider,
     //    since this runs with Admin privileges rather than requiring the
     //    client to reauthenticate with a password that an OAuth-only user
     //    never had in the first place.

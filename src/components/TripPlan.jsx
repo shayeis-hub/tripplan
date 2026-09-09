@@ -1079,13 +1079,13 @@ async function exportItineraryPDF(trip,expenses,lang="he"){
     expenses.filter(e=>e.category==="hotel").forEach(e=>{
       if(e.checkIn===d){
         items.push({time:"14:00",label:`${L.hotelIn}${e.description?` — ${esc(e.description)}`:""}`,color:"#10b981",
-                    details:e.address||""});
+                    details:esc(e.address)||""});
       }else if(e.checkOut===d){
         items.push({time:"11:00",label:`${L.hotelOut}${e.description?` — ${esc(e.description)}`:""}`,color:"#10b981",
-                    details:e.address||""});
+                    details:esc(e.address)||""});
       }else if(e.checkIn<d&&e.checkOut>d){
         items.push({time:"",label:`${L.hotelNight}${e.description?` — ${esc(e.description)}`:""}`,color:"#10b981",
-                    details:e.address||""});
+                    details:esc(e.address)||""});
       }
     });
 
@@ -1930,7 +1930,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
 
 const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:defaultTripDate(dates),checkIn:defaultTripDate(dates),checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",isShared:true,participants:people.map(p=>p.id),payers:[]});
 
-function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo,prefill,onPrefillDone}){
+function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo,prefill,onPrefillDone,isViewOnly}){
   const{lang}=useLang();
   const isOffline=useOnlineStatus();
   const dates=getRange(trip.startDate,trip.endDate);
@@ -2061,9 +2061,13 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const updatePayer=(i,field,val)=>set({payers:form.payers.map((p,j)=>j===i?{...p,[field]:val}:p)});
 
   const handleAdd=()=>{
-    if(!form.amount)return;
+    // min=0 on the input is only a UI hint — parseFloat("-5") sails right
+    // through it, and negative amounts then flip every total, budget and
+    // debt calculation that reads amountILS.
+    const amt=parseFloat(form.amount);
+    if(!form.amount||isViewOnly||!(amt>0))return;
     const date=form.category==="hotel"?form.checkIn:form.date;
-    onAdd({id:uid(),...form,date,amount:parseFloat(form.amount),amountILS:toILS(parseFloat(form.amount),form.currency),amountILSLocked:form.paid?toILS(parseFloat(form.amount),form.currency):undefined});
+    onAdd({id:uid(),...form,date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
     setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
@@ -2094,9 +2098,16 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   };
 
   const handleSaveEdit=()=>{
-    if(!form.amount)return;
+    const amt=parseFloat(form.amount);
+    if(!form.amount||isViewOnly||!(amt>0))return;
     const date=form.category==="hotel"?form.checkIn:form.date;
-    onEdit(editId,{...form,date,amount:parseFloat(form.amount),amountILS:toILS(parseFloat(form.amount),form.currency)});
+    // amountILSLocked freezes the ILS value at the moment an expense is
+    // marked paid, for reports that shouldn't shift with today's exchange
+    // rate. Editing the amount/currency without touching this left the old
+    // (now-wrong) locked value in place — same "paid → recompute at
+    // today's rate, else clear" rule as handleAdd, so a report built off
+    // the locked value can't silently disagree with the on-screen total.
+    onEdit(editId,{...form,date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
     setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
@@ -2123,8 +2134,8 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const ExpenseRow=({exp})=>{
     const cat=CATS.find(c=>c.id===exp.category);
     return(
-      <div onClick={()=>handleEdit(exp)}
-        style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"14px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",transition:"background 0.15s"}}
+      <div onClick={isViewOnly?undefined:()=>handleEdit(exp)}
+        style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"14px",display:"flex",alignItems:"center",gap:12,cursor:isViewOnly?"default":"pointer",transition:"background 0.15s"}}
         onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.07)"}
         onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"}>
         {/* Icon + paid badge — RTL start (physical RIGHT) */}
@@ -2132,8 +2143,8 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           <div style={{width:46,height:46,borderRadius:13,background:cat?.bg||W05,display:"flex",alignItems:"center",justifyContent:"center"}}>
             {cat?.Icon?<cat.Icon size={22} color={cat?.color} strokeWidth={1.5}/>:<Package size={22} color={W35} strokeWidth={1.5}/>}
           </div>
-          <div onClick={e=>{e.stopPropagation();onTogglePaid(exp.id);}}
-            style={{position:"absolute",bottom:-3,right:-3,width:17,height:17,borderRadius:5,background:exp.paid?"#4ade80":"#ff6b6b",border:"2.5px solid #0d2137",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <div onClick={isViewOnly?undefined:e=>{e.stopPropagation();onTogglePaid(exp.id);}}
+            style={{position:"absolute",bottom:-3,right:-3,width:17,height:17,borderRadius:5,background:exp.paid?"#4ade80":"#ff6b6b",border:"2.5px solid #0d2137",display:"flex",alignItems:"center",justifyContent:"center",cursor:isViewOnly?"default":"pointer"}}>
             {exp.paid?<Check size={8} color="#0d2137" strokeWidth={3}/>:<X size={8} color="#0d2137" strokeWidth={3}/>}
           </div>
         </div>
@@ -2154,10 +2165,10 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         {/* Amount + delete — RTL end (physical LEFT) */}
         <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
           <div style={{fontWeight:700,fontSize:17,color:"#ffffff",fontFamily:RF,letterSpacing:"-0.3px"}}>{fmtAmt(exp.amountILS,trip.displayCurrency||"ILS",rates)}</div>
-          <button onClick={e=>{e.stopPropagation();onDelete(exp.id);}}
+          {!isViewOnly&&<button onClick={e=>{e.stopPropagation();onDelete(exp.id);}}
             style={{padding:"3px 7px",borderRadius:6,border:"none",background:"rgba(255,107,107,0.1)",cursor:"pointer",display:"flex",alignItems:"center"}}>
             <Trash2 size={11} color="#ff6b6b"/>
-          </button>
+          </button>}
         </div>
       </div>
     );
@@ -2171,6 +2182,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       <WaveHeader title={t("exp_title",lang)}
         subtitle={trip.destination?`${trip.destination}${nights>0?` · ${nights} ${t("days",lang)}`:""}`:""}
         action={
+          isViewOnly?null:(
           <div style={{display:"flex",gap:8}}>
             <button onClick={()=>{if(isOffline){alert(t("scan_offline",lang));return;}isNativeApp?nativeScan():setShowCamera(true);}} disabled={scanning}
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:scanning?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:scanning?"default":"pointer",opacity:scanning?0.5:1}}>
@@ -2181,6 +2193,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
               <Plus size={18} color={TEAL} strokeWidth={2.5}/>
             </button>
           </div>
+          )
         }
       />
 
@@ -4237,7 +4250,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
 
   // ── Process invite token from URL or localStorage ──
   useEffect(()=>{
-    if(!userEmail) return;
+    if(!userEmail||!user) return;
     const params=new URLSearchParams(window.location.search);
     let token=params.get("invite");
     if(!token){
@@ -4246,11 +4259,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     }
     if(!token) return;
     window.history.replaceState({},"",window.location.pathname);
-    fetch("/api/join-trip",{
+    user.getIdToken().then(idToken=>fetch("/api/join-trip",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({token,userEmail}),
-    }).then(r=>r.json()).then(data=>{
+      headers:{"Content-Type":"application/json",authorization:`Bearer ${idToken}`},
+      body:JSON.stringify({token}),
+    })).then(r=>r.json()).then(data=>{
       if(data.tripId){
         setInviteJoinMsg(data.destination
           ? (lang==="he"?`הצטרפת לטיול ל${data.destination}! 🎉`:lang==="es"?`¡Te has unido al viaje a ${data.destination}! 🎉`:`Joined trip to ${data.destination}! 🎉`)
@@ -4260,7 +4273,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
         setTimeout(()=>setInviteJoinMsg(null),4000);
       }
     }).catch(()=>{});
-  },[userEmail]);
+  },[userEmail,user]);
 
   // ── Quick-add deep link: /?quickadd=<category|scan> ──
   // One tap from a home-screen shortcut (or the Android widget) straight to a
@@ -4414,7 +4427,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   };
 
   const createInspireLink=async()=>{
-    if(!active)return;
+    if(!active||isViewOnly)return;
     setInspireSaving(true);
     try{
       const shareId=uid();
@@ -4422,9 +4435,12 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
       const sanitized=expenses
         .filter(e=>!inspireHidden.has(e.id))
         .map(e=>({id:e.id,category:e.category,description:e.description||"",date:e.date||"",checkIn:e.checkIn||"",checkOut:e.checkOut||"",address:e.address||""}));
+      // ownerUid lets account deletion actually find and remove this
+      // user's public shares — it used to only be findable by knowing the
+      // shareId itself, so deleting an account left these orphaned.
       await setDoc(doc(db,"publicShares",shareId),{
         destination:active.destination,startDate:active.startDate,endDate:active.endDate,
-        expenses:sanitized,createdAt:Date.now(),
+        expenses:sanitized,createdAt:Date.now(),ownerUid:userId,
       });
       setInspireLink(`https://tulon.app/trip/${shareId}`);
     }catch(e){console.error(e);}
@@ -4949,7 +4965,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             )}
             <div key={screen} className="screen-enter">
               {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>{setWizardMode(false);setScreen("expenses");}} allCodes={allCodes} rates={rates} wizard={wizardMode} onShare={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} lastTripPrefs={lastTripPrefs}/>}
-              {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)}/>}
+              {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)} isViewOnly={isViewOnly}/>}
               {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates}/>}
             </div>
           </div>
@@ -4975,7 +4991,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
             </div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><ArrowLeftRight size={16} strokeWidth={1.5}/></button>
-              <button onClick={()=>{setInspireModal(true);setInspireLink(null);setInspireHidden(new Set());}} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})} title={lang==="he"?"שתף השראה":lang==="es"?"Compartir inspiración":"Share inspiration"}><Star size={16} strokeWidth={1.5}/></button>
+              {!isViewOnly&&<button onClick={()=>{setInspireModal(true);setInspireLink(null);setInspireHidden(new Set());}} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})} title={lang==="he"?"שתף השראה":lang==="es"?"Compartir inspiración":"Share inspiration"}><Star size={16} strokeWidth={1.5}/></button>}
               <button onClick={()=>setSideMenu(true)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><Menu size={16} strokeWidth={1.5}/></button>
             </div>
           </div>

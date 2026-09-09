@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
+// Math.random() is not cryptographically secure and the old token had no
+// expiry at all — a capability that grants edit access to a trip forever,
+// guessable-in-principle, until the owner remembers to revoke it manually.
+// randomBytes is actually unguessable; INVITE_TTL_MS bounds how long a
+// link keeps working even if the owner never revokes it. Links stay
+// reusable by design (the UI calls this an "open invite link" for the
+// whole group to join with), so this isn't single-use — just time-bounded.
 function makeToken() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  return randomBytes(16).toString("hex");
 }
+const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // Used to trust userId/userEmail straight from the request body with no
 // token verification at all, and treated ANY sharedWith member (including
@@ -45,11 +54,13 @@ export async function POST(req: NextRequest) {
     const auth = await requireOwner(req, tripId);
     if ("error" in auth) return auth.error;
 
-    const token = makeToken().slice(0, 14);
+    const token = makeToken();
+    const now = Date.now();
     await getAdminDb().collection("invites").doc(token).set({
       tripId,
       role: role || "edit",
-      createdAt: Date.now(),
+      createdAt: now,
+      expiresAt: now + INVITE_TTL_MS,
     });
 
     return NextResponse.json({ token });
