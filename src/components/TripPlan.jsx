@@ -826,6 +826,14 @@ function CurrencyConverter({rates,onClose,tripCurrencies,defaultCurrency,display
 // native, write the HTML to the cache dir instead and hand it to the system
 // Share Sheet — recipients that can render HTML can still print/save it, it's
 // just not the same one-tap auto-print flow the web version gets.
+// Trip/expense/activity free text (destination, description, address,
+// flight number, activity text) used to go straight into these HTML export
+// documents unescaped — a description like `<img src=x onerror=alert(1)>`
+// on a shared trip would execute when ANY member (including the one who
+// didn't write it) opened the exported report. Every such field below is
+// wrapped in this before being placed in a template string.
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
 async function openHtmlDocument(html, filename){
   const cap = typeof window!=="undefined" ? window.Capacitor : null;
   if(cap?.isNativePlatform?.()){
@@ -903,7 +911,7 @@ async function exportTripPDF(trip,expenses,lang="he"){
 <html dir="${dir}" lang="${lang}">
 <head>
 <meta charset="UTF-8">
-<title>${appName} – ${trip.destination||fallbackDest}</title>
+<title>${appName} – ${esc(trip.destination)||fallbackDest}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -953,7 +961,7 @@ async function exportTripPDF(trip,expenses,lang="he"){
 <div class="cover">
   <div class="logo">${appName}</div>
   <div class="logo-sub">${appSub}</div>
-  <div class="dest">🌍 ${trip.destination||fallbackDest}</div>
+  <div class="dest">🌍 ${esc(trip.destination)||fallbackDest}</div>
   <div class="dates">${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}</div>
   <div class="badge">${isHe?"דוח הוצאות":"Expense Report"}</div>
 </div>
@@ -984,7 +992,7 @@ async function exportTripPDF(trip,expenses,lang="he"){
       <tr><th>${isHe?"קטגוריה":"Category"}</th><th>${isHe?"תיאור":"Description"}</th><th>${isHe?"סכום מקורי":"Original amount"}</th><th>₪</th><th>${isHe?"סטטוס":"Status"}</th><th>${isHe?"סוג":"Type"}</th></tr>
       ${byDate[d].map(e=>`<tr>
         <td>${CATS_MAP[e.category]?.icon||""} ${catLbl(e.category)}</td>
-        <td>${e.description||"—"}${e.address?`<br><span style="color:#7a9baa;font-size:10px">📍 ${e.address}</span>`:""}</td>
+        <td>${esc(e.description)||"—"}${e.address?`<br><span style="color:#7a9baa;font-size:10px">📍 ${esc(e.address)}</span>`:""}</td>
         <td style="direction:ltr;text-align:left">${e.amount?.toFixed(2)||""} ${e.currency||""}</td>
         <td style="font-weight:700">₪${getAmt(e).toFixed(0)}</td>
         <td><span class="b ${e.paid?"bp":"bu"}">${e.paid?(isHe?"✓ שולם":"✓ Paid"):(isHe?"⏳ טרם":"⏳ Unpaid")}</span></td>
@@ -997,8 +1005,8 @@ async function exportTripPDF(trip,expenses,lang="he"){
   <p style="font-size:11px;color:#7a9baa;margin-bottom:10px">${isHe?`מבוסס על הוצאות משותפות בלבד (₪${sharedTotal.toFixed(0)})`:`Based on shared expenses only (₪${sharedTotal.toFixed(0)})`}</p>
   ${settlements.length>0?settlements.map(s=>`
     <div class="settlement-row">
-      <span style="font-size:14px;font-weight:600">${s.from}</span>
-      <span style="color:#7a9baa;font-size:12px">${isHe?`חייב ל ← ${s.to}`:`owes → ${s.to}`}</span>
+      <span style="font-size:14px;font-weight:600">${esc(s.from)}</span>
+      <span style="color:#7a9baa;font-size:12px">${isHe?`חייב ל ← ${esc(s.to)}`:`owes → ${esc(s.to)}`}</span>
       <span class="settle-amount">₪${s.amount.toFixed(0)}</span>
     </div>`).join("")
   :`<div style="text-align:center;color:#4ade80;padding:16px;font-weight:700">${isHe?"✅ אין חובות – כולם שווה!":"✅ No debts – all settled!"}</div>`}
@@ -1057,26 +1065,26 @@ async function exportItineraryPDF(trip,expenses,lang="he"){
 
     // Flights departing today
     expenses.filter(e=>e.category==="flight"&&e.date===d&&e.departureTime).forEach(e=>{
-      items.push({time:e.departureTime,label:`${L.flightDep}${e.description?` — ${e.description}`:""}`,color:"#3b82f6",
-                  details:e.flightNumber?`✈ ${e.flightNumber}`:""});
+      items.push({time:e.departureTime,label:`${L.flightDep}${e.description?` — ${esc(e.description)}`:""}`,color:"#3b82f6",
+                  details:e.flightNumber?`✈ ${esc(e.flightNumber)}`:""});
     });
     // Flights landing today — a separate day from departure for an overnight
     // flight (see flightLandingDate), same day for everything else.
     expenses.filter(e=>e.category==="flight"&&e.landingTime&&flightLandingDate(e)===d).forEach(e=>{
-      items.push({time:e.landingTime,label:`${L.flightLand}${e.description?` — ${e.description}`:""}`,color:"#3b82f6",
+      items.push({time:e.landingTime,label:`${L.flightLand}${e.description?` — ${esc(e.description)}`:""}`,color:"#3b82f6",
                   details:""});
     });
 
     // Hotel check-in / out / mid-stay
     expenses.filter(e=>e.category==="hotel").forEach(e=>{
       if(e.checkIn===d){
-        items.push({time:"14:00",label:`${L.hotelIn}${e.description?` — ${e.description}`:""}`,color:"#10b981",
+        items.push({time:"14:00",label:`${L.hotelIn}${e.description?` — ${esc(e.description)}`:""}`,color:"#10b981",
                     details:e.address||""});
       }else if(e.checkOut===d){
-        items.push({time:"11:00",label:`${L.hotelOut}${e.description?` — ${e.description}`:""}`,color:"#10b981",
+        items.push({time:"11:00",label:`${L.hotelOut}${e.description?` — ${esc(e.description)}`:""}`,color:"#10b981",
                     details:e.address||""});
       }else if(e.checkIn<d&&e.checkOut>d){
-        items.push({time:"",label:`${L.hotelNight}${e.description?` — ${e.description}`:""}`,color:"#10b981",
+        items.push({time:"",label:`${L.hotelNight}${e.description?` — ${esc(e.description)}`:""}`,color:"#10b981",
                     details:e.address||""});
       }
     });
@@ -1085,9 +1093,9 @@ async function exportItineraryPDF(trip,expenses,lang="he"){
     expenses.filter(e=>!["flight","hotel"].includes(e.category)&&e.date===d&&e.time).forEach(e=>{
       const cat=CATS.find(c=>c.id===e.category);
       items.push({time:e.time,
-        label:`${cat?.icon||""} ${e.description||t(`cat_${e.category}`,lang)}`,
+        label:`${cat?.icon||""} ${esc(e.description)||t(`cat_${e.category}`,lang)}`,
         color:cat?.color||"#64dfdf",
-        details:[e.timeEnd?`→ ${e.timeEnd}`:"",e.address?`📍 ${e.address}`:""].filter(Boolean).join(" · ")});
+        details:[e.timeEnd?`→ ${e.timeEnd}`:"",e.address?`📍 ${esc(e.address)}`:""].filter(Boolean).join(" · ")});
     });
 
     // Manual activities
@@ -1099,7 +1107,7 @@ async function exportItineraryPDF(trip,expenses,lang="he"){
       const timeEnd=typeof a==="object"?(a.timeEnd||""):"";
       const type=typeof a==="object"?(a.type||"general"):"general";
       const icon=ACT_TYPES.find(x=>x.id===type)?.icon||"📌";
-      items.push({time,label:`${icon} ${text}`,color:"#a78bfa",
+      items.push({time,label:`${icon} ${esc(text)}`,color:"#a78bfa",
                   details:[timeEnd?`→ ${timeEnd}`:"",actLbl(type)].filter(Boolean).join(" · ")});
     });
 
@@ -1146,7 +1154,7 @@ async function exportItineraryPDF(trip,expenses,lang="he"){
 <html dir="${dir}" lang="${lang}">
 <head>
 <meta charset="UTF-8">
-<title>${L.appName} – ${trip.destination||L.fallbackDest} – ${L.title}</title>
+<title>${L.appName} – ${esc(trip.destination)||L.fallbackDest} – ${L.title}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -1193,7 +1201,7 @@ async function exportItineraryPDF(trip,expenses,lang="he"){
 <div class="cover">
   <div class="logo">${L.appName}</div>
   <div class="logo-sub">${L.appSub}</div>
-  <div class="dest">🌍 ${trip.destination||L.fallbackDest}</div>
+  <div class="dest">🌍 ${esc(trip.destination)||L.fallbackDest}</div>
   <div class="dates">${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}</div>
   <div class="badge">📅 ${L.title}</div>
 </div>
