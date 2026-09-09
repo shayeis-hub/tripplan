@@ -753,12 +753,16 @@ function urlBase64ToUint8Array(base64String){
 // 2026-09-09), which also meant it was pushing to the person who
 // triggered the action instead of their trip-mates, since the call sites
 // always passed their own userId.
-async function notifyTripMembers(idToken,tripId,title,body,url="/"){
+// eventType/data instead of free-text title/body — the server builds the
+// actual message now, so a trip member (including a view-only one) can
+// only trigger one of a few known notification kinds, not push arbitrary
+// wording to everyone else.
+async function notifyTripMembers(idToken,tripId,eventType,data){
   try{
     await fetch("/api/push-send",{
       method:"POST",
       headers:{"Content-Type":"application/json",authorization:`Bearer ${idToken}`},
-      body:JSON.stringify({tripId,title,body,url}),
+      body:JSON.stringify({tripId,eventType,data}),
     });
   }catch(e){}
 }
@@ -1932,6 +1936,7 @@ const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"I
 
 function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo,prefill,onPrefillDone,isViewOnly}){
   const{lang}=useLang();
+  const{user}=useAuth();
   const isOffline=useOnlineStatus();
   const dates=getRange(trip.startDate,trip.endDate);
   const people=trip.people||[];
@@ -2012,9 +2017,10 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           const dataUrl=ev.target.result;
           const base64=dataUrl.split(",")[1];
           const mediaType=file.type||"image/jpeg";
+          const idToken=user?await user.getIdToken():null;
           const res=await fetch("/api/scan-receipt",{
             method:"POST",
-            headers:{"Content-Type":"application/json"},
+            headers:{"Content-Type":"application/json",...(idToken?{authorization:`Bearer ${idToken}`}:{})},
             body:JSON.stringify({imageBase64:base64,mediaType,lang,currencies:trip.currencies||["ILS"]}),
           });
           const data=await res.json();
@@ -3363,12 +3369,13 @@ function DiscoverScreen({trip}){
   },[trip.destination]);
 
   const loadRecs=useCallback(async(kosherFlag=false)=>{
-    if(!trip.destination)return;
+    if(!trip.destination||!user)return;
     setRecsLoading(true);setRecsErr(false);setRecs(null);
     try{
+      const idToken=await user.getIdToken();
       const res=await fetch("/api/recommendations",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{"Content-Type":"application/json",authorization:`Bearer ${idToken}`},
         body:JSON.stringify({destination:trip.destination,lang:"en",kosher:kosherFlag}),
       });
       const data=await res.json();
@@ -4374,9 +4381,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
     // Notify shared trip members about new expense
     const active=trips.find(t=>t.id===activeId);
     if(active?.sharedWith?.length>0&&e.isShared!==false&&user){
-      const cat=CATS.find(c=>c.id===e.category);
       user.getIdToken().then(idToken=>{
-        notifyTripMembers(idToken,active.id,`${cat?.icon||""} הוצאה חדשה בטיולון`,`${cat?.label}: ₪${e.amountILS?.toFixed(0)||""} נוסף לטיול ${active.destination||""}`);
+        notifyTripMembers(idToken,active.id,"new_expense",{category:e.category,amountILS:e.amountILS});
       }).catch(()=>{});
     }
   },[activeId,onSaveTrip,userId,user,trips]);

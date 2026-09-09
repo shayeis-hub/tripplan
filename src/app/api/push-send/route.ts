@@ -8,6 +8,35 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!
 );
 
+// Mirrors CATS in TripPlan.jsx (icon + Hebrew label) — kept as a small
+// plain copy here since that array also carries lucide-react components,
+// which have no business in a server route.
+const CAT_LABELS: Record<string, { icon: string; label: string }> = {
+  flight:     { icon: "✈️", label: "טיסה" },
+  hotel:      { icon: "🏨", label: "מלון" },
+  attraction: { icon: "🎡", label: "אטרקציות" },
+  food:       { icon: "🍜", label: "אוכל" },
+  taxi:       { icon: "🚕", label: "מונית" },
+  shopping:   { icon: "🛍️", label: "שופינג" },
+  other:      { icon: "📦", label: "אחר" },
+};
+
+// The only kind of trip-member notification this route builds right now.
+// Adding a new kind means adding a case here, not opening up free-text
+// content again.
+function buildMessage(eventType: string, data: any, destination: string): { title: string; body: string } | null {
+  if (eventType === "new_expense") {
+    const cat = CAT_LABELS[data?.category] || CAT_LABELS.other;
+    const amount = Number(data?.amountILS);
+    if (!Number.isFinite(amount) || amount < 0) return null;
+    return {
+      title: `${cat.icon} הוצאה חדשה בטיולון`,
+      body: `${cat.label}: ₪${amount.toFixed(0)} נוסף לטיול ${destination || ""}`,
+    };
+  }
+  return null;
+}
+
 async function sendToUser(userId: string, title: string, body: string, url: string) {
   const subDoc = await getAdminDb().collection("pushSubscriptions").doc(userId).get();
   if (!subDoc.exists) return "no-subscription";
@@ -58,18 +87,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { tripId, title, body, url } = await req.json();
-    if (!tripId || !title) {
+    // Used to also accept free-text title/body/url straight from the
+    // client — any trip member (including a view-only one) could push
+    // whatever wording and deep-link URL they wanted to every other
+    // member, with no rate limit. Now the client only names a known
+    // event and its data; the actual notification text is built here.
+    const { tripId, eventType, data } = await req.json();
+    if (!tripId || !eventType) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const tripSnap = await getAdminDb().collection("trips").doc(tripId).get();
+    const tripRef = getAdminDb().collection("trips").doc(tripId);
+    const tripSnap = await tripRef.get();
     if (!tripSnap.exists) return NextResponse.json({ error: "Trip not found" }, { status: 404 });
-    const trip = tripSnap.data() as { owner?: string; sharedWith?: string[] };
+    const trip = tripSnap.data() as { owner?: string; sharedWith?: string[]; destination?: string; lastPushSentAt?: Record<string, number> };
 
     const sharedWith = (trip.sharedWith || []).map(e => (e || "").toLowerCase().trim());
     const isMember = trip.owner === callerUid || sharedWith.includes(callerEmail);
     if (!isMember) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    // Light per-(caller,trip) cooldown — not a real rate limiter, but
+    // enough to blunt a tight loop hammering this endpoint. Real human
+    // expense entry is never this fast.
+    const cooldownKey = callerUid;
+    const lastSent = trip.lastPushSentAt?.[cooldownKey];
+    if (lastSent && Date.now() - lastSent < 3000) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
+    const message = buildMessage(eventType, data, trip.destination || "");
+    if (!message) return NextResponse.json({ error: "Invalid event" }, { status: 400 });
 
     // Recipients = every other member of the trip. sharedWith stores
     // emails (that's how trips are shared), so each has to be resolved to
@@ -87,12 +134,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const results: Record<string, string> = {};
+    let sentCount = 0;
     for (const uid of recipientUids) {
-      results[uid] = await sendToUser(uid, title, body || "", url || "/");
+      const result = await sendToUser(uid, message.title, message.body, "/");
+      if (result === "sent") sentCount++;
     }
 
-    return NextResponse.json({ success: true, results });
+    tripRef.update({ [`lastPushSentAt.${cooldownKey}`]: Date.now() }).catch(() => {});
+
+    // Recipient uids used to come back to the caller — not useful to a
+    // legitimate client and not something to hand out either.
+    return NextResponse.json({ success: true, sent: sentCount });
   } catch (err) {
     console.error("push-send: request failed", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

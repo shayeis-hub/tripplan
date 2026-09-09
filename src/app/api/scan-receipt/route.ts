@@ -1,14 +1,36 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { getAdminAuth } from "@/lib/firebase-admin";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+const ALLOWED_MEDIA_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
+const MAX_BASE64_LEN = 8_000_000; // ~6MB decoded — a photographed receipt, generously
+
+// Was reachable with no auth, no size cap, and no real validation of
+// mediaType (just cast, not checked) — anyone who found the endpoint could
+// burn the app's Anthropic quota with arbitrarily large payloads.
 export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get("authorization");
+    const idToken = authHeader?.replace("Bearer ", "");
+    if (!idToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    try {
+      await getAdminAuth().verifyIdToken(idToken);
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { imageBase64, mediaType, lang, currencies } = await req.json();
 
     if (!imageBase64 || !mediaType) {
       return NextResponse.json({ error: "Missing image data" }, { status: 400 });
+    }
+    if (typeof imageBase64 !== "string" || imageBase64.length > MAX_BASE64_LEN) {
+      return NextResponse.json({ error: "Image too large" }, { status: 413 });
+    }
+    if (!ALLOWED_MEDIA_TYPES.includes(mediaType)) {
+      return NextResponse.json({ error: "Unsupported image type" }, { status: 400 });
     }
 
     const currencyHint = currencies?.length

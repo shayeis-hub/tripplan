@@ -1,10 +1,23 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { getAdminAuth } from "@/lib/firebase-admin";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// Was reachable with no auth at all — anyone who found the endpoint could
+// burn the app's Anthropic quota for free. Just requires a signed-in user
+// now (not tied to a specific trip — recommendations aren't trip data).
 export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get("authorization");
+    const idToken = authHeader?.replace("Bearer ", "");
+    if (!idToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    try {
+      await getAdminAuth().verifyIdToken(idToken);
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { destination, lang, kosher } = await req.json();
 
     if (!destination) {
