@@ -1,13 +1,14 @@
 "use client";
 import { useState } from "react";
-import { auth, db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import {
   signInWithEmailAndPassword,
-  deleteUser,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
+  GoogleAuthProvider,
+  OAuthProvider,
+  signInWithPopup,
+  signInWithCredential,
+  type User,
 } from "firebase/auth";
-import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { useLang } from "@/lib/LangContext";
 
 type Step = "info" | "auth" | "confirm" | "done" | "error";
@@ -18,6 +19,7 @@ export default function DeleteAccountPage() {
   const [step, setStep]     = useState<Step>("info");
   const [email, setEmail]   = useState("");
   const [pass, setPass]     = useState("");
+  const [signedInUser, setSignedInUser] = useState<User | null>(null);
   const [busy, setBusy]     = useState(false);
   const [errMsg, setErrMsg] = useState("");
   const [lang, setLang]     = useState<L>(() => appLang as L);
@@ -26,26 +28,16 @@ export default function DeleteAccountPage() {
   const dir  = isHe ? "rtl" : "ltr";
   const tr = (he: string, en: string, es: string) => lang === "he" ? he : lang === "es" ? es : en;
 
-  const doDelete = async () => {
+  // Used to only accept email/password — a Google- or Apple-only account
+  // (no password ever set) could never get past this page at all. Every
+  // provider now lands here the same way: sign in, then move to confirm.
+  const doEmailAuth = async () => {
     if (!email || !pass) return;
-    setBusy(true);
-    setErrMsg("");
+    setBusy(true); setErrMsg("");
     try {
-      // Sign in to verify identity
       const cred = await signInWithEmailAndPassword(auth, email, pass);
-      const user = cred.user;
-
-      // Delete all user's Firestore trips
-      const tripsQ = query(collection(db, "trips"), where("owner", "==", user.uid));
-      const snap = await getDocs(tripsQ);
-      await Promise.all(snap.docs.map(d => deleteDoc(doc(db, "trips", d.id))));
-
-      // Re-authenticate then delete auth account
-      const credential = EmailAuthProvider.credential(email, pass);
-      await reauthenticateWithCredential(user, credential);
-      await deleteUser(user);
-
-      setStep("done");
+      setSignedInUser(cred.user);
+      setStep("confirm");
     } catch (e: any) {
       const code = e?.code || "";
       if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
@@ -55,9 +47,65 @@ export default function DeleteAccountPage() {
       } else {
         setErrMsg(tr(`שגיאה: ${code}`, `Error: ${code}`, `Error: ${code}`));
       }
+    } finally {
       setBusy(false);
     }
   };
+
+  // Same native-vs-web branching as the regular login page (Capacitor has
+  // no OAuth popup support inside its WebView).
+  const doProviderAuth = async (which: "google" | "apple") => {
+    setBusy(true); setErrMsg("");
+    const cap = (window as any).Capacitor;
+    try {
+      if (cap?.isNativePlatform?.()) {
+        const { FirebaseAuthentication } = cap.Plugins;
+        const result = which === "google"
+          ? await FirebaseAuthentication.signInWithGoogle()
+          : await FirebaseAuthentication.signInWithApple();
+        const idToken = result?.credential?.idToken;
+        if (!idToken) throw new Error("no-id-token");
+        const credential = which === "google"
+          ? GoogleAuthProvider.credential(idToken)
+          : new OAuthProvider("apple.com").credential({ idToken, rawNonce: result?.credential?.nonce });
+        const cred = await signInWithCredential(auth, credential);
+        setSignedInUser(cred.user);
+        setStep("confirm");
+      } else {
+        const provider = which === "google" ? new GoogleAuthProvider() : new OAuthProvider("apple.com");
+        const cred = await signInWithPopup(auth, provider);
+        setSignedInUser(cred.user);
+        setStep("confirm");
+      }
+    } catch (e: any) {
+      const code = e?.code || e?.message || String(e);
+      if (!/cancel|canceled|closed/i.test(code)) {
+        setErrMsg(tr(`שגיאה: ${code}`, `Error: ${code}`, `Error: ${code}`));
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doDelete = async () => {
+    if (!signedInUser) return;
+    setBusy(true);
+    setErrMsg("");
+    try {
+      const idToken = await signedInUser.getIdToken();
+      const res = await fetch("/api/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setStep("done");
+    } catch (e: any) {
+      setErrMsg(tr("מחיקת החשבון נכשלה. נסה שוב.", "Account deletion failed. Please try again.", "No se pudo eliminar la cuenta. Inténtalo de nuevo."));
+      setBusy(false);
+    }
+  };
+
+  const identityLabel = signedInUser?.email || signedInUser?.displayName || "";
 
   return (
     <>
@@ -78,6 +126,7 @@ export default function DeleteAccountPage() {
         .inp::placeholder{color:rgba(255,255,255,0.25);}
         .btn-del{width:100%;padding:15px;border-radius:14px;border:none;background:#ff6b6b;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Rubik',sans-serif;margin-bottom:10px;}
         .btn-del:disabled{opacity:0.5;cursor:default;}
+        .btn-provider{width:100%;padding:13px;border-radius:14px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Rubik',sans-serif;margin-bottom:10px;}
         .btn-sec{width:100%;padding:13px;border-radius:14px;border:0.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer;font-family:'Rubik',sans-serif;display:block;text-align:center;text-decoration:none;}
         .err{background:rgba(255,107,107,0.1);border:0.5px solid rgba(255,107,107,0.3);border-radius:12px;padding:10px 14px;margin-bottom:14px;color:#ff6b6b;font-size:13px;}
         .success{text-align:center;padding:20px 0;}
@@ -88,6 +137,8 @@ export default function DeleteAccountPage() {
         .lang-btn{padding:4px 10px;border-radius:20px;border:0.5px solid rgba(100,223,223,0.3);background:transparent;color:rgba(255,255,255,0.5);font-size:12px;cursor:pointer;font-family:'Rubik',sans-serif;}
         .lang-btn.active{background:rgba(100,223,223,0.15);color:#64dfdf;border-color:#64dfdf;}
         .divider{height:0.5px;background:rgba(255,255,255,0.07);margin:16px 0;}
+        .divider-or{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:11px;color:rgba(255,255,255,0.3);}
+        .divider-or::before,.divider-or::after{content:"";flex:1;height:0.5px;background:rgba(255,255,255,0.1);}
         .ident{border-bottom:0.5px solid rgba(255,255,255,0.08);padding-bottom:14px;margin-bottom:4px;direction:ltr;text-align:${isHe?"right":"left"};}
         .ident-name{font-size:13px;font-weight:700;color:rgba(255,255,255,0.75);line-height:1.5;}
         .ident-row{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;}
@@ -136,15 +187,16 @@ export default function DeleteAccountPage() {
                 <ul style={{paddingRight: isHe?"18px":undefined, paddingLeft: isHe?undefined:"18px", marginTop:6}}>
                   <li>{tr("כל הטיולים שלך", "All your trips", "Todos tus viajes")}</li>
                   <li>{tr("כל ההוצאות והפעילויות", "All expenses and activities", "Todos los gastos y actividades")}</li>
-                  <li>{tr("פרטי החשבון (אימייל וסיסמה)", "Account credentials (email & password)", "Datos de la cuenta (correo y contraseña)")}</li>
+                  <li>{tr("פרופיל המטייל ומנוי ההתראות שלך", "Your traveler profile and notification subscription", "Tu perfil de viajero y suscripción de notificaciones")}</li>
+                  <li>{tr("פרטי החשבון (בכל שיטת התחברות)", "Account credentials (any sign-in method)", "Datos de la cuenta (cualquier método de acceso)")}</li>
                 </ul>
               </div>
               <div className="retain">
                 <strong>{tr("שמירת נתונים:", "Data retention:", "Retención de datos:")}</strong>{" "}
                 {tr(
-                  "המחיקה מתבצעת מיד ולצמיתות. לא נשמרים אצלנו נתונים נוספים לאחר המחיקה, למעט רשומות שאנו מחויבים לשמור על פי חוק. טיולים ששותפו איתך על ידי משתמשים אחרים נשארים בבעלותם.",
-                  "Deletion is immediate and permanent. No further data is retained after deletion, except records we are legally required to keep. Trips that other users shared with you remain owned by them.",
-                  "La eliminación es inmediata y permanente. No conservamos más datos tras la eliminación, salvo los registros que estemos legalmente obligados a mantener. Los viajes que otros usuarios compartieron contigo siguen siendo de su propiedad."
+                  "המחיקה מתבצעת מיד ולצמיתות. לא נשמרים אצלנו נתונים נוספים לאחר המחיקה, למעט רשומות שאנו מחויבים לשמור על פי חוק. טיולים ששותפו איתך על ידי משתמשים אחרים נשארים בבעלותם, אך כבר לא יהיו משותפים עם החשבון שנמחק.",
+                  "Deletion is immediate and permanent. No further data is retained after deletion, except records we are legally required to keep. Trips that other users shared with you remain owned by them, but are no longer shared with the deleted account.",
+                  "La eliminación es inmediata y permanente. No conservamos más datos tras la eliminación, salvo los registros que estemos legalmente obligados a mantener. Los viajes que otros usuarios compartieron contigo siguen siendo de su propiedad, pero dejarán de estar compartidos con la cuenta eliminada."
                 )}
               </div>
               <button className="btn-del" onClick={()=>setStep("auth")}>
@@ -163,13 +215,22 @@ export default function DeleteAccountPage() {
               </div>
               <div className="desc">
                 {tr(
-                  "הכנס את פרטי הכניסה שלך כדי לאמת את זהותך לפני המחיקה.",
-                  "Enter your login credentials to verify your identity before deletion.",
-                  "Introduce tus credenciales de inicio de sesión para verificar tu identidad antes de eliminar la cuenta."
+                  "התחבר עם שיטת ההתחברות שבה נרשמת, כדי לאמת את זהותך לפני המחיקה.",
+                  "Sign in with whichever method you originally used, to verify your identity before deletion.",
+                  "Inicia sesión con el método que usaste originalmente, para verificar tu identidad antes de eliminar la cuenta."
                 )}
               </div>
 
               {errMsg && <div className="err">{errMsg}</div>}
+
+              <button className="btn-provider" disabled={busy} onClick={()=>doProviderAuth("google")}>
+                {tr("המשך עם Google", "Continue with Google", "Continuar con Google")}
+              </button>
+              <button className="btn-provider" disabled={busy} onClick={()=>doProviderAuth("apple")}>
+                {tr("המשך עם Apple", "Continue with Apple", "Continuar con Apple")}
+              </button>
+
+              <div className="divider-or">{tr("או עם אימייל וסיסמה", "or with email & password", "o con correo y contraseña")}</div>
 
               <input className="inp" type="email" dir="ltr"
                 placeholder={tr("אימייל", "Email", "Correo electrónico")}
@@ -178,14 +239,14 @@ export default function DeleteAccountPage() {
               <input className="inp" type="password" dir="ltr"
                 placeholder={tr("סיסמה", "Password", "Contraseña")}
                 value={pass} onChange={e=>setPass(e.target.value)}
-                onKeyDown={e=>{ if(e.key==="Enter") setStep("confirm"); }}
+                onKeyDown={e=>{ if(e.key==="Enter") doEmailAuth(); }}
                 autoComplete="current-password"/>
 
-              <button className="btn-del" onClick={()=>{ if(email&&pass) setStep("confirm"); }} disabled={!email||!pass}>
+              <button className="btn-del" onClick={doEmailAuth} disabled={!email||!pass||busy}>
                 {tr("המשך", "Continue", "Continuar")}
               </button>
               <div className="divider"/>
-              <button className="btn-sec" onClick={()=>setStep("info")}>
+              <button className="btn-sec" onClick={()=>{ setStep("info"); setErrMsg(""); }}>
                 {tr("חזור", "Back", "Atrás")}
               </button>
             </>
@@ -198,9 +259,9 @@ export default function DeleteAccountPage() {
               </div>
               <div className="desc">
                 {tr(
-                  `האם אתה בטוח שברצונך למחוק לצמיתות את החשבון של ${email}? לא ניתן לשחזר פעולה זו.`,
-                  `Are you sure you want to permanently delete the account for ${email}? This cannot be undone.`,
-                  `¿Estás seguro de que deseas eliminar permanentemente la cuenta de ${email}? Esta acción no se puede deshacer.`
+                  `האם אתה בטוח שברצונך למחוק לצמיתות את החשבון של ${identityLabel}? לא ניתן לשחזר פעולה זו.`,
+                  `Are you sure you want to permanently delete the account for ${identityLabel}? This cannot be undone.`,
+                  `¿Estás seguro de que deseas eliminar permanentemente la cuenta de ${identityLabel}? Esta acción no se puede deshacer.`
                 )}
               </div>
 
@@ -210,7 +271,7 @@ export default function DeleteAccountPage() {
                 {busy ? tr("מוחק...", "Deleting...", "Eliminando...") : tr("כן, מחק את החשבון שלי לצמיתות", "Yes, permanently delete my account", "Sí, eliminar mi cuenta permanentemente")}
               </button>
               <div className="divider"/>
-              <button className="btn-sec" onClick={()=>{ setStep("info"); setErrMsg(""); }}>
+              <button className="btn-sec" onClick={()=>{ setStep("info"); setErrMsg(""); setSignedInUser(null); }}>
                 {tr("ביטול", "Cancel", "Cancelar")}
               </button>
             </>
