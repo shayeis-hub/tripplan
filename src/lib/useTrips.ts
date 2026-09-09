@@ -44,6 +44,17 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
 
     const unsub2 = onSnapshot(sharedTripsQ, snap => {
       snap.docs.forEach(d => { allTrips[d.id] = { id: d.id, ...d.data() }; });
+      // Remove trips no longer shared with me (owner removed my email from
+      // sharedWith, or deleted the trip). Previously only unsub1 (owned
+      // trips) pruned docs that dropped out of its query results, so a
+      // trip the owner un-shared stayed in this user's list until a full
+      // page reload instead of disappearing live.
+      const ids = snap.docs.map(d => d.id);
+      Object.keys(allTrips).forEach(id => {
+        if (allTrips[id].owner !== userId && !ids.includes(id)) {
+          delete allTrips[id];
+        }
+      });
       setTrips(Object.values(allTrips).sort((a: any, b: any) => b.updatedAt - a.updatedAt));
       setLoading(false);
     });
