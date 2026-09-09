@@ -642,22 +642,36 @@ function PieChart({data}){
 // the PushNotifications plugin — both stored through /api/push-subscribe.
 const isCapacitorNative=()=>typeof window!=="undefined"&&window.Capacitor?.isNativePlatform?.();
 
-function usePushNotifications(userId){
+function usePushNotifications(userId,user){
   const[permission,setPermission]=useState(typeof Notification!=="undefined"?Notification.permission:"default");
   const[subscribed,setSubscribed]=useState(false);
 
-  // Best-effort: these run from fire-and-forget listeners on app start, so a
-  // network failure here must never surface as an unhandled rejection (it was
-  // reaching Sentry as "TypeError: Failed to fetch"). The token is re-sent on
-  // the next launch with a working connection, so swallowing is safe.
+  // Was firing without an Authorization header at all — the server route
+  // requires a verified ID token (fixed 2026-09-09, to stop anyone who
+  // knew/guessed a uid from overwriting someone else's subscription), so
+  // every call here was silently getting a 401. fetch() doesn't throw on a
+  // non-2xx status, so the try/catch below never caught it, and the caller
+  // still called setSubscribed(true) right after — the UI showed the user
+  // as subscribed while nothing was ever actually saved. Now: fetch a
+  // fresh ID token first, send it, and return whether the save actually
+  // succeeded so callers only mark the user subscribed when it did.
+  //
+  // Best-effort otherwise: these run from fire-and-forget listeners on app
+  // start, so a network failure here must never surface as an unhandled
+  // rejection (it was reaching Sentry as "TypeError: Failed to fetch").
+  // The token is re-sent on the next launch with a working connection, so
+  // swallowing a network error (not an auth/server error) is still safe.
   const saveFcmToken=async(token,uid)=>{
+    if(!user) return false;
     try{
-      await fetch("/api/push-subscribe",{
+      const idToken=await user.getIdToken();
+      const res=await fetch("/api/push-subscribe",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{"Content-Type":"application/json",authorization:`Bearer ${idToken}`},
         body:JSON.stringify({fcmToken:token,userId:uid}),
       });
-    }catch(e){console.warn("push: FCM token save failed (will retry next launch)",e);}
+      return res.ok;
+    }catch(e){console.warn("push: FCM token save failed (will retry next launch)",e);return false;}
   };
 
   const subscribeNative=async()=>{
@@ -666,8 +680,8 @@ function usePushNotifications(userId){
     if(perm.receive!=="granted"){setPermission("denied");return;}
     setPermission("granted");
     await PushNotifications.addListener("registration",async(token)=>{
-      await saveFcmToken(token.value,userId);
-      setSubscribed(true);
+      const ok=await saveFcmToken(token.value,userId);
+      if(ok) setSubscribed(true);
     });
     await PushNotifications.register();
   };
@@ -683,29 +697,32 @@ function usePushNotifications(userId){
 
       const reg=await navigator.serviceWorker.ready;
       const existing=await reg.pushManager.getSubscription();
-      if(existing){await saveSubscription(existing,userId);setSubscribed(true);return;}
+      if(existing){const ok=await saveSubscription(existing,userId);if(ok)setSubscribed(true);return;}
 
       const sub=await reg.pushManager.subscribe({
         userVisibleOnly:true,
         applicationServerKey:urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY||""),
       });
-      await saveSubscription(sub,userId);
-      setSubscribed(true);
+      const ok=await saveSubscription(sub,userId);
+      if(ok) setSubscribed(true);
     }catch(e){console.error("Push subscribe error:",e);}
   };
 
   const saveSubscription=async(sub,uid)=>{
+    if(!user) return false;
     try{
-      await fetch("/api/push-subscribe",{
+      const idToken=await user.getIdToken();
+      const res=await fetch("/api/push-subscribe",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{"Content-Type":"application/json",authorization:`Bearer ${idToken}`},
         body:JSON.stringify({subscription:sub.toJSON(),userId:uid}),
       });
-    }catch(e){console.warn("push: subscription save failed (will retry next load)",e);}
+      return res.ok;
+    }catch(e){console.warn("push: subscription save failed (will retry next load)",e);return false;}
   };
 
   useEffect(()=>{
-    if(!userId||typeof navigator==="undefined") return;
+    if(!userId||!user||typeof navigator==="undefined") return;
     if(isCapacitorNative()){
       // Re-register silently if permission was already granted. Also
       // reflect an existing denial in `permission` right away — otherwise
@@ -717,8 +734,8 @@ function usePushNotifications(userId){
         setPermission(p.receive);
         if(p.receive==="granted"){
           PushNotifications.addListener("registration",async(token)=>{
-            await saveFcmToken(token.value,userId);
-            setSubscribed(true);
+            const ok=await saveFcmToken(token.value,userId);
+            if(ok) setSubscribed(true);
           });
           PushNotifications.register().catch(()=>{});
         }
@@ -729,10 +746,14 @@ function usePushNotifications(userId){
     navigator.serviceWorker.register("/sw.js").catch(()=>{});
     navigator.serviceWorker.ready.then(reg=>{
       reg.pushManager.getSubscription().then(sub=>{
-        if(sub){saveSubscription(sub,userId);setSubscribed(true);}
+        if(sub) saveSubscription(sub,userId).then(ok=>{if(ok)setSubscribed(true);});
       }).catch(()=>{});
     }).catch(()=>{});
-  },[userId]);
+    // saveFcmToken/saveSubscription are recreated every render (not
+    // memoized) — including them here would re-run this effect on every
+    // render instead of only when the signed-in user changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[userId,user]);
 
   return{permission,subscribed,subscribe};
 }
@@ -4229,7 +4250,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onDeleteTrip,onS
   const[inviteJoinMsg,setInviteJoinMsg]=useState(null);
   const[sideMenu,setSideMenu]=useState(false);
   const{rates,allCodes,info,toILS}=useRates();
-  const{permission,subscribed,subscribe}=usePushNotifications(userId);
+  const{permission,subscribed,subscribe}=usePushNotifications(userId,user);
 
   // sync incoming trips from Firestore
   useEffect(()=>{
