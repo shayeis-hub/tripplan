@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /monitoring
+
+Sitemap: https://www.tulon.app/sitemap.xml

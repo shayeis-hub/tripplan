@@ -5,10 +5,20 @@ import { LangProvider } from "@/lib/LangContext";
 import RegisterSW from "@/components/RegisterSW";
 import DirSetter from "@/components/DirSetter";
 import { Analytics } from "@vercel/analytics/next";
+import { pageMeta, SITE_URL } from "@/lib/seo";
 
+// The homepage is a client component (the app itself mounts there), so its
+// SEO metadata is set here on the root layout. Every other route sets its
+// own via its own layout.tsx, so this only ever describes "/".
 export const metadata: Metadata = {
-  title: "טיולון – מתכנן הטיולים שלי",
-  description: "תכנן טיולים, עקוב אחר הוצאות ותאם עם חברי הטיול",
+  metadataBase: new URL(SITE_URL),
+  applicationName: "טיולון",
+  ...pageMeta({
+    title: "טיולון – אפליקציה לתכנון טיולים וניהול הוצאות | Tulon",
+    description:
+      "טיולון היא אפליקציה לתכנון טיולים: בונים מסלול יומי, מנהלים תקציב והוצאות, מחלקים תשלומים בין חברי הטיול ומגלים מה לעשות ביעד – כל הטיול במקום אחד.",
+    path: "/",
+  }),
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

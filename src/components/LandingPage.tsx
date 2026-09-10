@@ -4,14 +4,26 @@ import { Wallet, Users, Calendar, Building2, Backpack, Share2 } from "lucide-rea
 import { useLang } from "@/lib/LangContext";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
+import { GOOGLE_PLAY_URL, APP_STORE_URL } from "@/lib/stores";
 
 const T = {
-  tag: { he: "מתכנן הטיולים שלי", en: "My Trip Planner", es: "Mi planificador de viajes" },
-  desc: {
-    he: "תכנן טיולים, עקוב אחרי הוצאות, ונהל התחשבנות עם חברי הטיול — הכל במקום אחד",
-    en: "Plan trips, track expenses, and settle up with your travel buddies — all in one place",
-    es: "Planifica viajes, registra gastos y ajusta cuentas con tus compañeros de viaje — todo en un solo lugar",
+  h1: {
+    he: "כל הטיול. באפליקציה אחת.",
+    en: "Your whole trip. One app.",
+    es: "Todo tu viaje. Una app.",
   },
+  h1sub: {
+    he: "מתכננים מסלול, מנהלים הוצאות ונוסעים יחד עם טיולון.",
+    en: "Plan your itinerary, manage expenses and travel together with Tulon.",
+    es: "Planifica tu itinerario, gestiona gastos y viaja en grupo con Tulon.",
+  },
+  whatIs: {
+    he: "טיולון היא אפליקציה לתכנון טיולים שמרכזת את כל הטיול במקום אחד: בונים מסלול יומי עם פעילויות והזמנות, מנהלים תקציב ומעקב הוצאות, מחלקים תשלומים בין חברי הקבוצה, ומגלים אטרקציות ומסעדות ביעד. מתאים לטיול משפחתי, לטיול עם חברים או לנסיעת עבודה — וחינמי לחלוטין.",
+    en: "Tulon is a trip planner that keeps your whole trip in one place: build a day-by-day itinerary with activities and reservations, manage your budget and track expenses, split payments between everyone in the group, and discover attractions and restaurants at your destination. Great for family trips, trips with friends, or business travel — and completely free.",
+    es: "Tulon es un planificador de viajes que reúne todo tu viaje en un solo lugar: crea un itinerario día a día con actividades y reservas, gestiona tu presupuesto y controla los gastos, reparte los pagos entre todo el grupo y descubre atracciones y restaurantes en tu destino. Ideal para viajes en familia, con amigos o de trabajo — y totalmente gratis.",
+  },
+  storeGoogleEyebrow: { he: "זמין ב־", en: "GET IT ON", es: "DISPONIBLE EN" },
+  storeAppleEyebrow: { he: "הורידו מ־", en: "Download on the", es: "Descárgalo en" },
   ctaStart: { he: "התחל בחינם", en: "Start free", es: "Empezar gratis" },
   ctaLogin: { he: "כניסה למשתמשים קיימים", en: "Existing user? Sign in", es: "¿Ya tienes cuenta? Inicia sesión" },
   featTitle: {
@@ -124,6 +136,25 @@ const T = {
   },
 } as const;
 
+// Brand glyphs for the store badges (lucide has no trademarked brand marks).
+function GooglePlayGlyph() {
+  return (
+    <svg width="18" height="20" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <path fill="#00D2FF" d="M3.9 1.8c-.3.3-.4.8-.4 1.4v17.6c0 .6.1 1.1.4 1.4l.1.1L14.2 12v-.1L4 1.7l-.1.1z" />
+      <path fill="#00E676" d="M17.6 15.6l-3.4-3.5v-.2l3.4-3.5.1.1 4.1 2.3c1.2.7 1.2 1.8 0 2.5l-4.1 2.3-.1.1z" />
+      <path fill="#FF3D00" d="M17.7 15.5 14.2 12 3.9 22.2c.4.4 1.1.5 1.8.1l12-6.8" />
+      <path fill="#FFC400" d="M17.7 8.5 5.7 1.7c-.7-.4-1.4-.4-1.8.1L14.2 12l3.5-3.5z" />
+    </svg>
+  );
+}
+function AppleGlyph() {
+  return (
+    <svg width="17" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="#fff" style={{ flexShrink: 0 }}>
+      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+    </svg>
+  );
+}
+
 export default function LandingPage() {
   const router = useRouter();
   const { lang, setLang } = useLang();
@@ -159,7 +190,6 @@ export default function LandingPage() {
         .hero-inner { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; }
         .hero-logo { font-size: 56px; font-weight: 900; color: #fff; letter-spacing: -2px; line-height: 1; margin-bottom: 8px; }
         .hero-logo span { color: #64dfdf; }
-        .hero-tag { font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; margin-bottom: 20px; }
         .hero-desc { font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.85); line-height: 1.6; margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; }
         .btn-cta {
           display: inline-block;
@@ -193,6 +223,23 @@ export default function LandingPage() {
         }
         .btn-login:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.3); }
         .hero-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .hero-h1 { font-size: 30px; font-weight: 900; color: #fff; line-height: 1.2; letter-spacing: -0.5px; margin-bottom: 12px; }
+        @media (max-width: 520px) { .hero-h1 { font-size: 25px; } }
+
+        /* Store badges */
+        .hero-stores { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+        .store-badge {
+          display: inline-flex; align-items: center; gap: 9px;
+          background: #000; border: 0.5px solid rgba(255,255,255,0.2);
+          border-radius: 11px; padding: 8px 15px; text-decoration: none;
+          transition: border-color 0.15s, transform 0.15s;
+        }
+        .store-badge:hover { border-color: rgba(255,255,255,0.45); transform: translateY(-1px); }
+        .store-badge-eyebrow { display: block; font-size: 9px; color: rgba(255,255,255,0.7); line-height: 1.1; text-transform: uppercase; letter-spacing: 0.3px; }
+        .store-badge-name { display: block; font-size: 15px; font-weight: 600; color: #fff; line-height: 1.2; }
+
+        /* "What is Tulon" prose */
+        .what-is { font-size: 15.5px; line-height: 1.85; color: rgba(255,255,255,0.62); text-align: center; max-width: 640px; margin: 0 auto; }
 
         /* Features */
         .section { max-width: 700px; margin: 0 auto; padding: 56px 24px; }
@@ -262,18 +309,41 @@ export default function LandingPage() {
         <div className="hero">
           <div className="hero-inner">
             <div className="hero-logo">TU<span>lon</span></div>
-            <div className="hero-tag">{T.tag[lang]}</div>
-            <div className="hero-desc">{T.desc[lang]}</div>
+            <h1 className="hero-h1">{T.h1[lang]}</h1>
+            <p className="hero-desc">{T.h1sub[lang]}</p>
             <div className="hero-btns">
               <button className="btn-cta" onClick={() => router.push("/login")}>{T.ctaStart[lang]}</button>
               <button className="btn-login" onClick={() => router.push("/login")}>{T.ctaLogin[lang]}</button>
             </div>
+            <div className="hero-stores">
+              <a className="store-badge" href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
+                <GooglePlayGlyph />
+                <span>
+                  <span className="store-badge-eyebrow">{T.storeGoogleEyebrow[lang]}</span>
+                  <span className="store-badge-name">Google Play</span>
+                </span>
+              </a>
+              {APP_STORE_URL && (
+                <a className="store-badge" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+                  <AppleGlyph />
+                  <span>
+                    <span className="store-badge-eyebrow">{T.storeAppleEyebrow[lang]}</span>
+                    <span className="store-badge-name">App Store</span>
+                  </span>
+                </a>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* What is Tulon — semantic intro paragraph */}
+        <div className="section" style={{ paddingTop: 46, paddingBottom: 10 }}>
+          <p className="what-is">{T.whatIs[lang]}</p>
         </div>
 
         {/* Features */}
         <div className="section">
-          <div className="section-title">{T.featTitle[lang]}</div>
+          <h2 className="section-title">{T.featTitle[lang]}</h2>
           <div className="section-sub">{T.featSub[lang]}</div>
           <div className="features">
             <div className="feat">
@@ -319,7 +389,7 @@ export default function LandingPage() {
 
         {/* How it works */}
         <div className="section">
-          <div className="section-title">{T.howTitle[lang]}</div>
+          <h2 className="section-title">{T.howTitle[lang]}</h2>
           <div className="section-sub">{T.howSub[lang]}</div>
           <div className="steps">
             <div className="step">
@@ -350,7 +420,7 @@ export default function LandingPage() {
 
         {/* CTA bottom */}
         <div className="section" style={{textAlign:"center", paddingTop:40, paddingBottom:56}}>
-          <div style={{fontSize:22, fontWeight:800, color:"#fff", marginBottom:10}}>{T.ctaReadyTitle[lang]}</div>
+          <h2 style={{fontSize:22, fontWeight:800, color:"#fff", marginBottom:10}}>{T.ctaReadyTitle[lang]}</h2>
           <div style={{fontSize:14, color:"rgba(255,255,255,0.35)", marginBottom:28}}>{T.ctaReadySub[lang]}</div>
           <button className="btn-cta" onClick={() => router.push("/login")}>{T.ctaReadyBtn[lang]}</button>
         </div>
@@ -378,9 +448,9 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <div style={{fontSize:24,fontWeight:900,color:"#fff",lineHeight:1.3,marginBottom:12,letterSpacing:-0.5}}>
+            <h2 style={{fontSize:24,fontWeight:900,color:"#fff",lineHeight:1.3,marginBottom:12,letterSpacing:-0.5}}>
               {T.planTitle[lang]}
-            </div>
+            </h2>
             <div style={{fontSize:15,color:"rgba(255,255,255,0.5)",lineHeight:1.7,marginBottom:28,maxWidth:460,margin:"0 auto 28px"}}>
               {T.planSub[lang]}
             </div>
@@ -403,7 +473,7 @@ export default function LandingPage() {
         {/* Blog teaser */}
         <div className="divider"/>
         <div className="section" style={{paddingTop:40,paddingBottom:52}}>
-          <div className="section-title">{T.blogTitle[lang]}</div>
+          <h2 className="section-title">{T.blogTitle[lang]}</h2>
           <div className="section-sub" style={{marginBottom:22}}>{T.blogSub[lang]}</div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:22}}>
             {[

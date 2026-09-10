@@ -1,7 +1,9 @@
 "use client";
 import { useLang } from "@/lib/LangContext";
+import { GOOGLE_PLAY_URL, APP_STORE_URL } from "@/lib/stores";
 
 const T = {
+  getApp:   { he: "הורידו את האפליקציה", en: "Get the app",       es: "Descarga la app"      },
   plan:     { he: "תכנן טיול",          en: "Plan a Trip",       es: "Planifica un viaje"   },
   features: { he: "פיצ'רים",             en: "Features",          es: "Funciones"            },
   blog:     { he: "בלוג",                en: "Blog",              es: "Blog"                 },
@@ -43,8 +45,25 @@ export default function SiteFooter() {
         }
         .sitefooter-brand { color: #64dfdf; font-weight: 700; }
         .sitefooter-copy { font-size: 11px; color: rgba(255,255,255,0.16); }
+        .sitefooter-stores {
+          display: flex; flex-wrap: wrap; gap: 8px;
+          justify-content: center; align-items: center; margin-bottom: 16px;
+        }
+        .sitefooter-store {
+          font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.55);
+          text-decoration: none; padding: 5px 12px; border-radius: 8px;
+          border: 0.5px solid rgba(255,255,255,0.12); transition: all 0.15s;
+        }
+        .sitefooter-store:hover { color: #64dfdf; border-color: rgba(100,223,223,0.4); }
       `}</style>
       <footer className="sitefooter" dir={isHe ? "rtl" : "ltr"}>
+        <div className="sitefooter-stores">
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.28)" }}>{T.getApp[lang]}:</span>
+          <a className="sitefooter-store" href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">Google Play</a>
+          {APP_STORE_URL && (
+            <a className="sitefooter-store" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">App Store</a>
+          )}
+        </div>
         <div className="sitefooter-links">
           <a className="sitefooter-link" href="/plan">{T.plan[lang]}</a>
           <span className="sitefooter-sep">·</span>
