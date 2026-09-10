@@ -4798,18 +4798,24 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             )}
           </div>
         )}
-        <div onClick={()=>setShareViewOnly(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:12,border:`0.5px solid ${shareViewOnly?"rgba(251,191,36,0.4)":"rgba(255,255,255,0.1)"}`,background:shareViewOnly?"rgba(251,191,36,0.07)":W05,cursor:"pointer",marginBottom:12,userSelect:"none"}}>
-          <div>
-            <div style={{fontSize:13,fontWeight:600,color:shareViewOnly?"rgba(251,191,36,0.9)":"rgba(255,255,255,0.7)",fontFamily:RF}}>{lang==="he"?"👁️ לצפייה בלבד":lang==="es"?"👁️ Solo lectura":"👁️ View only"}</div>
-            <div style={{fontSize:11,color:W35,fontFamily:RF,marginTop:2}}>{lang==="he"?"לא יראה הוצאות ותקציב":lang==="es"?"No verá gastos ni presupuesto":"Won't see expenses & budget"}</div>
+        {/* Email-invite group: the view-only toggle here applies ONLY to the
+            person being invited by email above — kept visually boxed with
+            the Share button so it doesn't get confused with the identical-
+            looking toggle in the open-invite-link section further down. */}
+        <div style={{background:"rgba(255,255,255,0.03)",border:"0.5px solid rgba(255,255,255,0.07)",borderRadius:14,padding:12,marginBottom:8}}>
+          <div onClick={()=>setShareViewOnly(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"10px 14px",borderRadius:12,border:`0.5px solid ${shareViewOnly?"rgba(251,191,36,0.4)":"rgba(255,255,255,0.1)"}`,background:shareViewOnly?"rgba(251,191,36,0.07)":W05,cursor:"pointer",marginBottom:10,userSelect:"none"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:600,color:shareViewOnly?"rgba(251,191,36,0.9)":"rgba(255,255,255,0.7)",fontFamily:RF}}>{lang==="he"?"👁️ הזמנה לצפייה בלבד":lang==="es"?"👁️ Invitar como solo lectura":"👁️ Invite as view-only"}</div>
+              <div style={{fontSize:11,color:W35,fontFamily:RF,marginTop:2,lineHeight:1.4}}>{lang==="he"?"האדם שתזמינו במייל יראה מסלול ולוח זמנים — לא הוצאות ותקציב":lang==="es"?"La persona que invites por correo ve el itinerario y el calendario, no los gastos ni el presupuesto":"The person you invite by email sees the itinerary and schedule — not expenses & budget"}</div>
+            </div>
+            <div style={{width:36,height:20,borderRadius:999,background:shareViewOnly?"rgba(251,191,36,0.7)":"rgba(255,255,255,0.15)",position:"relative",transition:"background 0.2s",flexShrink:0}}>
+              <div style={{position:"absolute",top:3,right:shareViewOnly?3:"auto",left:shareViewOnly?"auto":3,width:14,height:14,borderRadius:"50%",background:"#fff",transition:"all 0.2s"}}/>
+            </div>
           </div>
-          <div style={{width:36,height:20,borderRadius:999,background:shareViewOnly?"rgba(251,191,36,0.7)":"rgba(255,255,255,0.15)",position:"relative",transition:"background 0.2s",flexShrink:0}}>
-            <div style={{position:"absolute",top:3,right:shareViewOnly?3:"auto",left:shareViewOnly?"auto":3,width:14,height:14,borderRadius:"50%",background:"#fff",transition:"all 0.2s"}}/>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{t("share",lang)} ✓</button>
+            <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");setShareViewOnly(false);}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{t("close",lang)}</button>
           </div>
-        </div>
-        <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>handleShare(shareModal)} style={{flex:2,padding:"12px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{t("share",lang)} ✓</button>
-          <button onClick={()=>{setShareModal(null);setShareEmail("");setShareMsg("");setShareViewOnly(false);}} style={{flex:1,padding:"12px",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.15)",background:W05,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",color:W50}}>{t("close",lang)}</button>
         </div>
 
         {/* ── Invite link section ── */}
@@ -4825,12 +4831,16 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
                 🔗 {lang==="he"?"קישור הזמנה פתוח":lang==="es"?"Enlace de invitación abierto":"Open Invite Link"}
               </div>
               {!existingToken?(
-                <>
+                // Open-link group: this view-only toggle applies to whoever
+                // opens the generated link — a different audience from the
+                // email-invite toggle above. Boxed with the Generate button
+                // so the two toggles read as belonging to separate actions.
+                <div style={{background:"rgba(255,255,255,0.03)",border:"0.5px solid rgba(255,255,255,0.07)",borderRadius:14,padding:12}}>
                   <div onClick={()=>setInviteViewOnly(v=>!v)}
-                    style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:12,border:`0.5px solid ${inviteViewOnly?"rgba(251,191,36,0.4)":"rgba(255,255,255,0.1)"}`,background:inviteViewOnly?"rgba(251,191,36,0.07)":W05,cursor:"pointer",marginBottom:10,userSelect:"none"}}>
-                    <div>
-                      <div style={{fontSize:13,fontWeight:600,color:inviteViewOnly?"rgba(251,191,36,0.9)":"rgba(255,255,255,0.7)",fontFamily:RF}}>👁️ {lang==="he"?"לצפייה בלבד":lang==="es"?"Solo lectura":"View only"}</div>
-                      <div style={{fontSize:11,color:W35,fontFamily:RF,marginTop:2}}>{lang==="he"?"לא יראו הוצאות ותקציב":lang==="es"?"No verán gastos ni presupuesto":"Won't see expenses & budget"}</div>
+                    style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"10px 14px",borderRadius:12,border:`0.5px solid ${inviteViewOnly?"rgba(251,191,36,0.4)":"rgba(255,255,255,0.1)"}`,background:inviteViewOnly?"rgba(251,191,36,0.07)":W05,cursor:"pointer",marginBottom:10,userSelect:"none"}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:inviteViewOnly?"rgba(251,191,36,0.9)":"rgba(255,255,255,0.7)",fontFamily:RF}}>👁️ {lang==="he"?"קישור לצפייה בלבד":lang==="es"?"Enlace de solo lectura":"View-only link"}</div>
+                      <div style={{fontSize:11,color:W35,fontFamily:RF,marginTop:2,lineHeight:1.4}}>{lang==="he"?"כל מי שייכנס דרך הקישור יראה מסלול ולוח זמנים — לא הוצאות ותקציב":lang==="es"?"Cualquiera que entre por el enlace ve el itinerario y el calendario, no los gastos ni el presupuesto":"Anyone who joins through the link sees the itinerary and schedule — not expenses & budget"}</div>
                     </div>
                     <div style={{width:36,height:20,borderRadius:999,background:inviteViewOnly?"rgba(251,191,36,0.7)":"rgba(255,255,255,0.15)",position:"relative",flexShrink:0}}>
                       <div style={{position:"absolute",top:3,right:inviteViewOnly?3:"auto",left:inviteViewOnly?"auto":3,width:14,height:14,borderRadius:"50%",background:"#fff"}}/>
@@ -4841,7 +4851,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
                     style={{width:"100%",padding:"11px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.35)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",opacity:inviteGenerating?0.6:1}}>
                     {inviteGenerating?(lang==="he"?"יוצר...":lang==="es"?"Creando...":"Creating..."):`🔗 ${lang==="he"?"צור קישור הזמנה":lang==="es"?"Crear enlace de invitación":"Generate Invite Link"}`}
                   </button>
-                </>
+                </div>
               ):(
                 <div style={{background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:14,padding:"14px"}}>
                   <div style={{fontSize:11,color:W35,fontFamily:RF,marginBottom:6}}>{lang==="he"?"כל מי שיש לו את הקישור יכול להצטרף":lang==="es"?"Cualquiera con este enlace puede unirse":"Anyone with this link can join"} · {shareTripObj?.inviteTokenRole==="view"?(lang==="he"?"צפייה בלבד":lang==="es"?"Solo lectura":"View only"):(lang==="he"?"עריכה":lang==="es"?"Editar":"Edit")}</div>
