@@ -11,6 +11,196 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "best-group-trip-planner-apps-2026",
+    emoji: "🏆",
+    category: { he: "השוואות", en: "Comparisons", es: "Comparativas" },
+    date: "2026-09-14",
+    readMin: 7,
+    title: {
+      he: "5 האפליקציות הכי טובות לתכנון טיול קבוצתי ב-2026",
+      en: "Best Trip Planner Apps for Group Travel in 2026 (Compared)",
+      es: "Las Mejores Apps para Planificar Viajes en Grupo en 2026",
+    },
+    excerpt: {
+      he: "בדקנו חמש אפליקציות לתכנון טיול קבוצתי בהשוואה כנה — מה כל אחת עושה טוב, איפה היא נופלת, ואיזו אחת באמת עושה גם מסלול וגם חלוקת הוצאות באותו מקום.",
+      en: "We compared five group trip planning apps — what each does well, where each falls short, and which one actually handles both the itinerary and splitting expenses in the same place.",
+      es: "Comparamos cinco apps para planificar viajes en grupo — qué hace bien cada una, dónde falla y cuál realmente maneja el itinerario y la división de gastos en el mismo lugar.",
+    },
+    body: {
+      he: `מי שתכנן טיול קבוצתי יודע: השאלה היא לא רק לאן נוסעים, אלא איך שומרים על כולם מתואמים — מה קורה מחר, מי שילם על מה, וכמה כל אחד באמת הוציא. בדקנו חמש אפליקציות שאנשים בפועל משתמשים בהן לתכנון טיול קבוצתי, בלי הגזמות ובלי להתעלם מהחסרונות.
+
+**מה הופך אפליקציה לתכנון טיול לשווה שימוש**
+לפני ההשוואה עצמה, שווה להגדיר מה בודקים. אפליקציה טובה לטיול קבוצתי צריכה לתכנן מסלול יומי אמיתי (לא רק רשימת מקומות), לנהל תקציב והוצאות ולחשב מי חייב למי, לעדכן את כל הקבוצה בזמן אמת, ולעבוד גם בלי חיבור לאינטרנט. רוב האפליקציות עושות חלק מזה. מעטות עושות את הכל.
+
+**1. טיולון — הכי שלמה: גם מסלול, גם הוצאות, בחינם**
+טיולון היא היחידה מבין החמש שעושה גם תכנון מסלול יומי וגם ניהול הוצאות מלא, באותה אפליקציה. בונים לוח זמנים לכל יום — עם תחזית מזג אוויר ומסלול הליכה מומלץ בין המקומות — ומנהלים תקציב שבו כל הוצאה, בכל מטבע, מומרת אוטומטית לפי שער חי. אפשר גם לצלם קבלה והאפליקציה תזהה סכום, מטבע ותאריך לבד.
+
+בסוף הטיול טיולון מחשבת לבד מי חייב למי וכמה, במספר המינימלי של העברות. כל חברי הקבוצה מצטרפים בקישור אחד ורואים את אותו הטיול בזמן אמת, כולל מצב "צפייה בלבד" למי שרק רוצה לעקוב בלי לערוך.
+
+- מה חסר: זו אפליקציה צעירה יחסית, בלי מאגר ההמלצות הענק של Wanderlog ובלי חיבור אוטומטי למיילים של הזמנות כמו TripIt.
+- למי מתאימה: לכל קבוצה — משפחה, חברים, נסיעת עבודה — שרוצה גם מסלול וגם הוצאות באותו מקום, בלי לשלם.
+
+**2. Wanderlog — הכי טובה למפה ולתכנון חזותי**
+Wanderlog בנויה סביב מפה: מסמנים מקומות, מארגנים לפי ימים, וגוררים את הסדר. לעבודה קבוצתית על מסלול זה מצוין — כולם עורכים יחד ורואים את המסלול על המפה בזמן אמת.
+
+- מה חסר: אין ב-Wanderlog ניהול תקציב מובנה ואין חלוקת הוצאות בכלל. אחרי שהמסלול מוכן, השימוש באפליקציה יורד משמעותית.
+- למי מתאימה: לקבוצה שכבר יודעת לאן היא נוסעת וצריכה בעיקר לתאם ויזואלית מי הולך לאן.
+
+**3. TripIt — הכי טובה לארגון הזמנות קיימות**
+TripIt לוקחת את כל אישורי ההזמנה שקיבלתם במייל — טיסות, מלונות, השכרת רכב — ומרכזת אותם במסלול אחד אוטומטית. מצוינת אם כבר הזמנתם הכל וצריכים רק סדר.
+
+- מה חסר: אין תכנון פעילויות יומי אמיתי (רק מה שכבר הוזמן), ואין שום ניהול תקציב או הוצאות.
+- למי מתאימה: מי שנוסע הרבה לעבודה ורוצה שכל האישורים יהיו במקום אחד — לא לתכנון טיול מאפס.
+
+**4. Splitwise — הכי טובה לחלוקת הוצאות (ורק לזה)**
+Splitwise היא שם דבר בחלוקת הוצאות — לא רק לטיולים, גם לשותפים לדירה ולכל הוצאה משותפת. הממשק פשוט והחישוב מדויק.
+
+- מה חסר: אין שום רכיב תכנון טיול — לא מסלול, לא יומן, לא מפה. זו אפליקציית הוצאות בלבד, שצריך להפעיל לצד כלי אחר לגמרי לתכנון עצמו.
+- למי מתאימה: קבוצה ששולטת בתכנון בעצמה (או לא צריכה תכנון בכלל) ורוצה רק לסגור חשבון בסוף.
+
+**5. Google Sheets / קבוצת וואטסאפ — מה שרוב האנשים עושים בפועל**
+בלי אפליקציה ייעודית, זה מה שקורה: טבלת אקסל משותפת, וקבוצת וואטסאפ עם צילומי מסך של קבלות. זה חינמי וכולם כבר יודעים להשתמש בזה.
+
+- מה חסר: אין חישוב אוטומטי, קל מאוד לטעות או לשכוח הוצאה, והמידע מפוזר בין שני מקומות שונים במקום להיות מרוכז.
+- למי מתאימה: טיולים קצרים וקטנים שבהם אף אחד לא רוצה להתקין עוד אפליקציה.
+
+**מי צריך מה**
+נוסעים כקבוצה גדולה וצריכים גם מסלול וגם חלוקת הוצאות? טיולון היא האפליקציה היחידה מהחמש שעושה את שתיהן. כבר יודעים לאן נוסעים וצריכים רק לתאם מפה עם חברים? Wanderlog. נוסעים בעיקר לעבודה עם המון הזמנות קיימות? TripIt. רק צריכים לסגור חשבון בלי שום תכנון? Splitwise. טיול של סוף שבוע בלי חשק להתקין כלום? תישארו עם וואטסאפ — אבל דעו שברגע שהטיול מתארך, זה בדיוק המקום שבו הדברים מתחילים להישכח.
+
+**לסיכום**
+רוב האפליקציות בהשוואה הזו עושות דבר אחד טוב: מפה, או הזמנות, או הוצאות. טיולון היא היוצאת מהכלל — היא לוקחת את המסלול ואת ההוצאות ומחזיקה אותם באותו מקום, בזמן אמת, בחינם. וזה בדיוק ההבדל בין כלי שפותחים פעם אחת בשלב התכנון, לכלי שפתוח אצלכם לאורך כל הטיול.
+
+**האם יש אפליקציה אחת שעושה גם מסלול טיול וגם חלוקת הוצאות?**
+כן — טיולון היא היחידה מבין החמש שבדקנו שמשלבת תכנון מסלול יומי מלא עם ניהול תקציב וחלוקת הוצאות אוטומטית, באותה אפליקציה ובחינם.
+
+**מה ההבדל בין Wanderlog לטיולון?**
+Wanderlog מתמקדת בתכנון מסלול על מפה ובשיתוף פעולה ויזואלי, בלי ניהול תקציב. טיולון עושה גם מסלול יומי וגם הוצאות וחלוקת תשלומים, כך שלא צריך שתי אפליקציות נפרדות.
+
+**האם Splitwise מספיקה לטיול קבוצתי?**
+לחלוקת הוצאות בלבד — כן. אבל היא לא כוללת שום כלי תכנון מסלול, לוח זמנים או שיתוף פעילויות, אז רוב הקבוצות עדיין צריכות כלי נוסף לצד Splitwise.
+
+**כמה עולה טיולון?**
+טיולון חינמית לחלוטין, בלי גרסת פרימיום ובלי פרסומות.
+
+**האם אפשר להשתמש בטיולון בלי חיבור לאינטרנט?**
+כן, האפליקציה עובדת גם במצב לא מקוון, ומסתנכרנת ברגע שיש חיבור.`,
+      en: `Anyone who's planned a group trip knows the real challenge isn't picking a destination — it's keeping everyone on the same page: what's happening tomorrow, who paid for what, and how much everyone has actually spent. We compared five apps people actually use for group trip planning — no exaggeration, and no skipping the downsides.
+
+**What Makes a Group Trip App Worth Using**
+Before comparing, it's worth agreeing on the bar. A good group trip app should plan a real day-by-day itinerary (not just a list of places), manage a shared budget and work out who owes whom, keep the whole group updated in real time, and work offline. Most apps do part of this. Few do all of it.
+
+**1. Tulon — The Only One That Does Both: Itinerary and Expenses, Free**
+Tulon is the only one of the five that handles full day-by-day itinerary planning and full expense management in the same app. Build a schedule for each day — with a weather forecast and a suggested walking route between that day's places — and track a budget where every expense, in any currency, converts automatically at a live rate. Photograph a receipt and the app reads the amount, currency, and date on its own.
+
+At the end of the trip, Tulon works out who owes whom and how much, in the minimum number of transfers. Everyone joins with one link and sees the same trip update in real time, including a "view-only" mode for someone who just wants to follow along.
+
+- What's missing: it's a younger app, without Wanderlog's huge place-recommendation database or TripIt's automatic email-confirmation import.
+- Best for: any group — family, friends, work trip — that wants itinerary and expenses in the same place, for free.
+
+**2. Wanderlog — Best for Map-Based, Visual Planning**
+Wanderlog is built around a map: pin places, group them by day, drag the order around. For collaborative itinerary work it's excellent — everyone edits together and sees the route on the map in real time.
+
+- What's missing: no built-in budget tracker and no expense splitting at all. Once the itinerary is set, the app's usefulness drops off sharply.
+- Best for: a group that already knows where it's going and mainly needs to coordinate visually.
+
+**3. TripIt — Best for Organizing Bookings You Already Made**
+TripIt pulls every confirmation email you've got — flights, hotels, car rentals — into one automatic itinerary. Great if everything is already booked and you just need it organized.
+
+- What's missing: no real day-by-day activity planning (only what's already booked), and no budget or expense features at all.
+- Best for: frequent travelers who want every confirmation in one place, not trip planning from scratch.
+
+**4. Splitwise — Best for Splitting Expenses (And Only That)**
+Splitwise is the go-to for splitting shared costs — not just on trips, also roommates and any shared expense. Simple interface, accurate math.
+
+- What's missing: zero trip-planning features — no itinerary, no calendar, no map. It's an expense app you'd have to run alongside a completely separate planning tool.
+- Best for: a group that already has planning handled and just needs to settle up at the end.
+
+**5. A Shared Spreadsheet / WhatsApp Group — What Most Groups Actually Use**
+Without a dedicated app, this is the default: a shared spreadsheet, plus a WhatsApp thread full of receipt screenshots. Free, and everyone already knows how to use it.
+
+- What's missing: no automatic calculation, easy to make a mistake or forget an expense, and the information is split across two different places instead of living in one.
+- Best for: short, small trips where nobody wants to install another app.
+
+**Which One Should You Use?**
+Traveling as a larger group and need both an itinerary and expense splitting? Tulon is the only one of the five that does both. Already know where you're going and just need to coordinate on a map? Wanderlog. Mostly traveling for work with a lot of existing bookings? TripIt. Just need to settle up with no planning involved? Splitwise. A weekend trip and nobody wants to install anything? Stick with WhatsApp — but know that's exactly where things start getting forgotten once the trip runs longer than a couple of days.
+
+**The Bottom Line**
+Most of the apps in this comparison do one thing well: the map, or the bookings, or the expenses. Tulon is the exception — it keeps the itinerary and the expenses in the same place, in real time, for free. That's the difference between a tool you open once while planning and one that stays open for the whole trip.
+
+**Is there one app that does both trip itinerary planning and expense splitting?**
+Yes — Tulon is the only one of the five apps we compared that combines full day-by-day itinerary planning with automatic budget tracking and expense splitting, in the same free app.
+
+**What's the difference between Wanderlog and Tulon?**
+Wanderlog focuses on map-based itinerary planning and visual collaboration, with no budget tools. Tulon handles both the day-by-day itinerary and expense splitting, so you don't need two separate apps.
+
+**Is Splitwise enough for a group trip?**
+For splitting expenses alone, yes. But it has no trip-planning tools at all — no itinerary, no schedule, no activity sharing — so most groups still need a second app alongside it.
+
+**How much does Tulon cost?**
+Tulon is completely free, with no premium tier and no ads.
+
+**Can you use Tulon offline?**
+Yes, the app works offline and syncs automatically once you're back online.`,
+      es: `Quien haya planificado un viaje en grupo lo sabe: el verdadero desafío no es elegir el destino, sino mantener a todos coordinados — qué pasa mañana, quién pagó qué y cuánto gastó realmente cada uno. Comparamos cinco apps que la gente realmente usa para planificar viajes en grupo, sin exagerar y sin ocultar los defectos.
+
+**Qué Hace que una App de Viajes en Grupo Valga la Pena**
+Antes de comparar, conviene definir el criterio. Una buena app de viaje en grupo debería planificar un itinerario real día a día (no solo una lista de lugares), gestionar un presupuesto compartido y calcular quién le debe a quién, mantener a todo el grupo actualizado en tiempo real, y funcionar sin conexión. La mayoría de las apps hacen parte de esto. Pocas lo hacen todo.
+
+**1. Tulon — La Única que Hace Ambas Cosas: Itinerario y Gastos, Gratis**
+Tulon es la única de las cinco que ofrece planificación completa de itinerario día a día y gestión completa de gastos en la misma app. Arma un horario para cada día — con pronóstico del tiempo y una ruta a pie sugerida entre los lugares de ese día — y controla un presupuesto donde cada gasto, en cualquier moneda, se convierte automáticamente al tipo de cambio en vivo. Fotografía un recibo y la app reconoce el monto, la moneda y la fecha por sí sola.
+
+Al final del viaje, Tulon calcula sola quién le debe a quién y cuánto, con el número mínimo de transferencias. Todos se unen con un solo enlace y ven el mismo viaje actualizado en tiempo real, incluido un modo "solo lectura" para quien solo quiere seguir el plan sin editarlo.
+
+- Lo que falta: es una app más joven, sin la enorme base de recomendaciones de lugares de Wanderlog ni la importación automática de emails de confirmación de TripIt.
+- Ideal para: cualquier grupo — familia, amigos, viaje de trabajo — que quiera itinerario y gastos en el mismo lugar, gratis.
+
+**2. Wanderlog — La Mejor para Planificación Visual con Mapa**
+Wanderlog está construida alrededor de un mapa: marcas lugares, los agrupas por día y arrastras el orden. Para trabajar el itinerario en grupo es excelente — todos editan juntos y ven la ruta en el mapa en tiempo real.
+
+- Lo que falta: no tiene control de presupuesto integrado ni división de gastos. Una vez armado el itinerario, la utilidad de la app baja mucho.
+- Ideal para: un grupo que ya sabe a dónde va y necesita sobre todo coordinar visualmente.
+
+**3. TripIt — La Mejor para Organizar Reservas Ya Hechas**
+TripIt toma todos los emails de confirmación que recibiste — vuelos, hoteles, autos — y los reúne en un itinerario automático. Excelente si ya reservaste todo y solo necesitas orden.
+
+- Lo que falta: no hay planificación real de actividades día a día (solo lo ya reservado), y ningún manejo de presupuesto o gastos.
+- Ideal para: quien viaja mucho por trabajo y quiere todas las confirmaciones en un solo lugar, no para planificar un viaje desde cero.
+
+**4. Splitwise — La Mejor para Dividir Gastos (Y Solo Eso)**
+Splitwise es la referencia para dividir gastos compartidos — no solo en viajes, también entre compañeros de piso y cualquier gasto en común. Interfaz simple y cálculo preciso.
+
+- Lo que falta: cero herramientas de planificación de viaje — sin itinerario, sin calendario, sin mapa. Es una app de gastos que habría que usar junto a otra herramienta completamente distinta para planificar.
+- Ideal para: un grupo que ya tiene la planificación resuelta y solo necesita ajustar cuentas al final.
+
+**5. Planilla Compartida / Grupo de WhatsApp — Lo que la Mayoría Hace en la Práctica**
+Sin una app dedicada, esto es lo que pasa: una planilla compartida, más un grupo de WhatsApp lleno de capturas de recibos. Es gratis y todos ya saben usarlo.
+
+- Lo que falta: no hay cálculo automático, es muy fácil equivocarse u olvidar un gasto, y la información queda repartida entre dos lugares distintos en vez de estar centralizada.
+- Ideal para: viajes cortos y pequeños donde nadie quiere instalar otra app.
+
+**¿Quién Necesita Qué?**
+¿Viajan en un grupo grande y necesitan itinerario y división de gastos? Tulon es la única de las cinco que hace ambas cosas. ¿Ya saben a dónde van y solo necesitan coordinar en un mapa? Wanderlog. ¿Viajan sobre todo por trabajo con muchas reservas ya hechas? TripIt. ¿Solo necesitan ajustar cuentas sin ninguna planificación? Splitwise. ¿Un viaje de fin de semana sin ganas de instalar nada? Sigan con WhatsApp — pero sepan que ahí es exactamente donde las cosas empiezan a olvidarse en cuanto el viaje se alarga.
+
+**En Resumen**
+La mayoría de las apps de esta comparación hacen bien una sola cosa: el mapa, o las reservas, o los gastos. Tulon es la excepción — mantiene el itinerario y los gastos en el mismo lugar, en tiempo real, gratis. Esa es la diferencia entre una herramienta que abres una vez durante la planificación y una que queda abierta durante todo el viaje.
+
+**¿Existe una app que haga tanto la planificación del itinerario como la división de gastos?**
+Sí — Tulon es la única de las cinco apps que comparamos que combina planificación completa de itinerario día a día con control de presupuesto y división de gastos automática, en la misma app gratuita.
+
+**¿Cuál es la diferencia entre Wanderlog y Tulon?**
+Wanderlog se enfoca en la planificación de itinerario con mapa y la colaboración visual, sin herramientas de presupuesto. Tulon maneja tanto el itinerario día a día como la división de gastos, así que no necesitas dos apps distintas.
+
+**¿Alcanza con Splitwise para un viaje en grupo?**
+Para dividir gastos solamente, sí. Pero no tiene ninguna herramienta de planificación de viaje — ni itinerario, ni horario, ni compartir actividades — así que la mayoría de los grupos igual necesita una segunda app.
+
+**¿Cuánto cuesta Tulon?**
+Tulon es completamente gratis, sin nivel premium y sin publicidad.
+
+**¿Se puede usar Tulon sin conexión?**
+Sí, la app funciona sin conexión y se sincroniza automáticamente en cuanto vuelve la conexión.`,
+    },
+  },
+  {
     slug: "tishrei-family-destinations",
     emoji: "✈️",
     category: { he: "יעדים", en: "Destinations", es: "Destinos" },
