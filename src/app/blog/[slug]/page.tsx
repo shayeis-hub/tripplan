@@ -4,6 +4,8 @@ import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
 import { blogPosts } from "@/lib/blog-posts";
 import { useParams } from "next/navigation";
+import { SITE_URL } from "@/lib/seo";
+import ShareButtons from "@/components/ShareButtons";
 
 const T = {
   notFound: { he: "מאמר לא נמצא", en: "Post not found", es: "Artículo no encontrado" },
@@ -137,17 +139,24 @@ export default function BlogPostPage() {
           {/* Meta */}
           <div style={{
             fontSize:12,color:"rgba(255,255,255,0.25)",
-            marginBottom:32,display:"flex",gap:16,flexWrap:"wrap",
+            marginBottom:20,display:"flex",gap:16,flexWrap:"wrap",
           }}>
             <span>{formatDate(post.date, lang)}</span>
             <span>{post.readMin} {T.min[lang]}</span>
           </div>
 
+          <ShareButtons url={`${SITE_URL}/blog/${post.slug}`} title={post.title[lang]}/>
+
           {/* Divider */}
-          <div style={{height:0.5,background:"rgba(255,255,255,0.08)",marginBottom:32}}/>
+          <div style={{height:0.5,background:"rgba(255,255,255,0.08)",marginTop:24,marginBottom:32}}/>
 
           {/* Body */}
           <div>{renderBody(post.body[lang])}</div>
+
+          {/* Share again — a natural moment once someone's actually read it */}
+          <div style={{marginTop:44,paddingTop:28,borderTop:"0.5px solid rgba(255,255,255,0.08)"}}>
+            <ShareButtons url={`${SITE_URL}/blog/${post.slug}`} title={post.title[lang]}/>
+          </div>
 
           {/* CTA */}
           <div style={{
