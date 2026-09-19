@@ -49,6 +49,7 @@ const T = {
     es: "Esta comparación es honesta — cada herramienta es buena en algo. Desglose completo en nuestro blog.",
   },
   compareLink: { he: "השוואה מלאה בין 5 אפליקציות ←", en: "Full 5-app comparison →", es: "Comparación completa de 5 apps →" },
+  compareLink2: { he: "Wanderlog מול Splitwise מול טיולון ←", en: "Wanderlog vs Splitwise vs Tulon →", es: "Wanderlog vs Splitwise vs Tulon →" },
   featCol: { he: "יכולת", en: "Feature", es: "Función" },
   rowItin: { he: "מסלול יום אחר יום", en: "Day-by-day itinerary", es: "Itinerario día a día" },
   rowSplit: { he: "חלוקת הוצאות קבוצתית", en: "Group expense splitting", es: "División de gastos en grupo" },
@@ -60,7 +61,8 @@ const T = {
   storeAppleEyebrow: { he: "הורידו מ־", en: "Download on the", es: "Descárgalo en" },
 } as const;
 
-const FAQ = [
+type Localized = { he: string; en: string; es: string };
+const FAQ: { q: Localized; a: Localized; link?: { href: string; label: Localized } }[] = [
   {
     q: { he: "האם טיולון היא אפליקציה לתכנון טיול קבוצתי?", en: "Is Tulon a group travel planner?", es: "¿Tulon es un planificador de viajes en grupo?" },
     a: {
@@ -76,6 +78,10 @@ const FAQ = [
       en: "Yes. Every expense is logged in any currency and converted automatically at a live exchange rate. At the end of the trip, Tulon calculates who owes whom and how much, in the minimum number of transfers.",
       es: "Sí. Cada gasto se registra en cualquier moneda y se convierte automáticamente al tipo de cambio en vivo. Al final del viaje, Tulon calcula quién le debe a quién y cuánto, con el número mínimo de transferencias.",
     },
+    link: {
+      href: "/blog/manage-expenses-during-group-trip",
+      label: { he: "איך לנהל הוצאות בזמן אמת →", en: "How to manage expenses in real time →", es: "Cómo gestionar los gastos en tiempo real →" },
+    },
   },
   {
     q: { he: "האם כמה מטיילים יכולים לערוך את אותו הטיול?", en: "Can multiple travelers edit the same trip?", es: "¿Pueden varios viajeros editar el mismo viaje?" },
@@ -83,6 +89,10 @@ const FAQ = [
       he: "כן. כל מי שמוזמן לטיול (למשל דרך קישור בוואטסאפ) יכול לצפות ולערוך את אותו המסלול וההוצאות בזמן אמת, או לקבל גישת צפייה בלבד.",
       en: "Yes. Anyone invited to a trip (via a link shared over WhatsApp, for example) can view and edit the same itinerary and expenses in real time, or be given view-only access.",
       es: "Sí. Cualquiera invitado a un viaje (por ejemplo, mediante un enlace compartido por WhatsApp) puede ver y editar el mismo itinerario y gastos en tiempo real, o recibir acceso de solo lectura.",
+    },
+    link: {
+      href: "/blog/plan-group-trip-without-spreadsheets",
+      label: { he: "למה זה עדיף על גיליון משותף →", en: "Why this beats a shared spreadsheet →", es: "Por qué esto es mejor que una planilla →" },
     },
   },
   {
@@ -100,6 +110,10 @@ const FAQ = [
       en: "Yes, and more. Like Splitwise, Tulon calculates who owes whom with the minimum number of transfers. Unlike Splitwise, Tulon also includes a full day-by-day itinerary, so you don't need a separate app for trip planning.",
       es: "Sí, y más. Como Splitwise, Tulon calcula quién le debe a quién con el número mínimo de transferencias. A diferencia de Splitwise, Tulon también incluye un itinerario completo día a día, así que no necesitas una app separada para planificar el viaje.",
     },
+    link: {
+      href: "/blog/best-splitwise-alternatives-group-travel",
+      label: { he: "עוד חלופות ל-Splitwise →", en: "More Splitwise alternatives →", es: "Más alternativas a Splitwise →" },
+    },
   },
   {
     q: { he: "האם טיולון חינמית?", en: "Is Tulon free?", es: "¿Tulon es gratis?" },
@@ -109,7 +123,7 @@ const FAQ = [
       es: "Sí. Tulon es completamente gratis, sin nivel premium, sin necesidad de tarjeta de crédito y sin publicidad.",
     },
   },
-] as const;
+];
 
 // ✓ / partial / ✗ per row: [Tulon, Wanderlog, TripIt, Splitwise]. Kept to
 // well-established, verifiable public facts — no competitor pricing claims.
@@ -196,6 +210,7 @@ export default function GroupTravelPlannerPage() {
         .faq-item { border-bottom: 0.5px solid rgba(255,255,255,0.08); padding: 18px 0; }
         .faq-q { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
         .faq-a { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.7; }
+        .faq-link { display: inline-block; margin-top: 8px; font-size: 13px; color: #64dfdf; text-decoration: none; font-weight: 600; }
       `}</style>
 
       <div className="gtp" style={{ direction: dir }}>
@@ -270,6 +285,7 @@ export default function GroupTravelPlannerPage() {
             </table>
           </div>
           <a className="cmp-link" href="/blog/best-group-trip-planner-apps-2026">{T.compareLink[lang]}</a>
+          <a className="cmp-link" href="/blog/wanderlog-vs-splitwise-vs-tulon">{T.compareLink2[lang]}</a>
         </div>
 
         <div className="section">
@@ -278,6 +294,7 @@ export default function GroupTravelPlannerPage() {
             <div className="faq-item" key={i}>
               <div className="faq-q">{item.q[lang]}</div>
               <div className="faq-a">{item.a[lang]}</div>
+              {item.link && <a className="faq-link" href={item.link.href}>{item.link.label[lang]}</a>}
             </div>
           ))}
         </div>

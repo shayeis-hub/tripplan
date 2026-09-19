@@ -12,9 +12,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: number;
     changeFrequency: "weekly" | "monthly" | "yearly";
   }[] = [
-    { path: "/",         priority: 1.0, changeFrequency: "weekly"  },
-    { path: "/features", priority: 0.8, changeFrequency: "monthly" },
-    { path: "/plan",     priority: 0.8, changeFrequency: "monthly" },
+    { path: "/",                     priority: 1.0, changeFrequency: "weekly"  },
+    { path: "/features",             priority: 0.8, changeFrequency: "monthly" },
+    { path: "/plan",                 priority: 0.8, changeFrequency: "monthly" },
+    { path: "/group-travel-planner", priority: 0.8, changeFrequency: "monthly" },
     { path: "/blog",     priority: 0.7, changeFrequency: "weekly"  },
     { path: "/about",    priority: 0.5, changeFrequency: "yearly"  },
     { path: "/contact",  priority: 0.3, changeFrequency: "yearly"  },
