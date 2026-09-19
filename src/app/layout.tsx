@@ -6,6 +6,7 @@ import RegisterSW from "@/components/RegisterSW";
 import DirSetter from "@/components/DirSetter";
 import { Analytics } from "@vercel/analytics/next";
 import { pageMeta, SITE_URL } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
 
 // The homepage is a client component (the app itself mounts there), so its
 // SEO metadata is set here on the root layout. Every other route sets its
@@ -49,6 +50,28 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+// Site-wide identity schema — was entirely absent before (verified: zero
+// application/ld+json anywhere on the site). This is the sitewide baseline;
+// SoftwareApplication (homepage) and FAQPage (specific pages) schema live
+// next to the content they describe instead of here.
+const orgSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Tulon",
+  alternateName: "טיולון",
+  url: SITE_URL,
+  logo: `${SITE_URL}/icon-512.png`,
+  sameAs: ["https://www.instagram.com/tulonapp"],
+};
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Tulon",
+  alternateName: "טיולון",
+  url: SITE_URL,
+  inLanguage: ["he", "en", "es"],
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -66,6 +89,8 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <JsonLd data={orgSchema} />
+        <JsonLd data={websiteSchema} />
       </head>
       <body><LangProvider><DirSetter /><AuthProvider><RegisterSW />{children}<Analytics /></AuthProvider></LangProvider></body>
     </html>

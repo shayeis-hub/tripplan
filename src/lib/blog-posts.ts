@@ -70,6 +70,8 @@ Splitwise היא שם דבר בחלוקת הוצאות — לא רק לטיול�
 **לסיכום**
 רוב האפליקציות בהשוואה הזו עושות דבר אחד טוב: מפה, או הזמנות, או הוצאות. טיולון היא היוצאת מהכלל — היא לוקחת את המסלול ואת ההוצאות ומחזיקה אותם באותו מקום, בזמן אמת, בחינם. וזה בדיוק ההבדל בין כלי שפותחים פעם אחת בשלב התכנון, לכלי שפתוח אצלכם לאורך כל הטיול.
 
+לפירוט מלא של כל התכונות לתכנון טיול קבוצתי בטיולון — מסלול, תקציב, חלוקת הוצאות והכל — ראו את [עמוד תכנון הטיול הקבוצתי](/group-travel-planner) שלנו.
+
 **האם יש אפליקציה אחת שעושה גם מסלול טיול וגם חלוקת הוצאות?**
 כן — טיולון היא היחידה מבין החמש שבדקנו שמשלבת תכנון מסלול יומי מלא עם ניהול תקציב וחלוקת הוצאות אוטומטית, באותה אפליקציה ובחינם.
 
@@ -127,6 +129,8 @@ Traveling as a larger group and need both an itinerary and expense splitting? Tu
 **The Bottom Line**
 Most of the apps in this comparison do one thing well: the map, or the bookings, or the expenses. Tulon is the exception — it keeps the itinerary and the expenses in the same place, in real time, for free. That's the difference between a tool you open once while planning and one that stays open for the whole trip.
 
+For the full rundown of Tulon's group trip planning features — itinerary, budget, expense splitting, all of it — see our [group travel planner page](/group-travel-planner).
+
 **Is there one app that does both trip itinerary planning and expense splitting?**
 Yes — Tulon is the only one of the five apps we compared that combines full day-by-day itinerary planning with automatic budget tracking and expense splitting, in the same free app.
 
@@ -183,6 +187,8 @@ Sin una app dedicada, esto es lo que pasa: una planilla compartida, más un grup
 
 **En Resumen**
 La mayoría de las apps de esta comparación hacen bien una sola cosa: el mapa, o las reservas, o los gastos. Tulon es la excepción — mantiene el itinerario y los gastos en el mismo lugar, en tiempo real, gratis. Esa es la diferencia entre una herramienta que abres una vez durante la planificación y una que queda abierta durante todo el viaje.
+
+Para ver el desglose completo de las funciones de Tulon para viajes en grupo — itinerario, presupuesto, división de gastos, todo — visita nuestra [página de planificador de viajes en grupo](/group-travel-planner).
 
 **¿Existe una app que haga tanto la planificación del itinerario como la división de gastos?**
 Sí — Tulon es la única de las cinco apps que comparamos que combina planificación completa de itinerario día a día con control de presupuesto y división de gastos automática, en la misma app gratuita.

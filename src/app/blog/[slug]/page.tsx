@@ -53,10 +53,18 @@ function renderBody(text: string) {
       }
       const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(p);
       if (link) {
-        // rel="sponsored" because these are affiliate links — Google expects the
-        // disclosure, and an undisclosed paid link is an SEO liability.
+        // Every markdown link used to get nofollow+sponsored unconditionally
+        // — correct for the affiliate links this was written for (Google
+        // expects that disclosure), but wrong for a link to another page on
+        // this same site: nofollow tells Google not to pass any authority
+        // through it, which defeats the point of linking a blog post to a
+        // related page on tulon.app. Internal links (relative, or an
+        // absolute tulon.app URL) get plain rel="noopener noreferrer";
+        // everything else keeps the original affiliate-safe treatment.
+        const isInternal = link[2].startsWith("/") || /^https?:\/\/(www\.)?tulon\.app/i.test(link[2]);
         return (
-          <a key={i} href={link[2]} target="_blank" rel="noopener noreferrer nofollow sponsored"
+          <a key={i} href={link[2]} target={isInternal ? undefined : "_blank"}
+             rel={isInternal ? "noopener noreferrer" : "noopener noreferrer nofollow sponsored"}
              style={{color:"#64dfdf",textDecoration:"underline",fontWeight:600}}>
             {link[1]}
           </a>

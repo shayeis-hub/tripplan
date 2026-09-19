@@ -5,6 +5,47 @@ import { useLang } from "@/lib/LangContext";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
 import { GOOGLE_PLAY_URL, APP_STORE_URL } from "@/lib/stores";
+import { SITE_URL } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+
+// SoftwareApplication schema — the single highest-leverage structured-data
+// block for "is this a trip planning app that does X" queries. Names the
+// concrete capabilities and alternateName covers how people actually
+// phrase the search (Splitwise/TripIt/Wanderlog alternative), matching the
+// pattern competitors in this space already use.
+const appSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Tulon",
+  alternateName: [
+    "טיולון",
+    "Tulon Trip Planner",
+    "Tulon Travel App",
+    "Splitwise Alternative for Travel",
+    "TripIt Alternative",
+    "Wanderlog Alternative",
+    "Group Trip Planner App",
+  ],
+  applicationCategory: "TravelApplication",
+  operatingSystem: "Web, Android, iOS",
+  url: SITE_URL,
+  description:
+    "Tulon is a free group trip planner that combines a shared day-by-day itinerary, multi-currency expense tracking, automatic group settlement, real-time collaboration, packing lists and maps in one app.",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  inLanguage: ["he", "en", "es"],
+  featureList: [
+    "Day-by-day itinerary planning with weather forecast",
+    "Multi-currency expense tracking with live exchange rates",
+    "Automatic group expense settlement (minimum transfers)",
+    "AI receipt scanning",
+    "Real-time group trip sharing via invite link",
+    "View-only sharing mode",
+    "Shared packing list",
+    "All trip places on one map",
+    "Offline support",
+  ],
+};
 
 const T = {
   h1: {
@@ -303,6 +344,7 @@ export default function LandingPage() {
 
       <div className="lp" style={{ direction: dir }}>
 
+        <JsonLd data={appSchema} />
         <SiteNav />
 
         {/* Hero */}
