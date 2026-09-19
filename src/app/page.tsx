@@ -51,10 +51,23 @@ export default function Home() {
     </div>
   );
 
+  // `loading` starts `true` on every render, including the server-rendered
+  // pass and the very first client render before onAuthStateChanged has had
+  // a chance to fire (Firebase can't resolve a session during SSR at all).
+  // This used to gate LandingPage behind `loading`, so the HTML any
+  // non-JS-executing fetcher (a plain fetch, a lot of what AI answer
+  // engines actually retrieve) ever saw at "/" was just this loading
+  // screen — "TUlon / טוען..." — never the actual marketing content. Now:
+  // anything short of a *confirmed* signed-in user renders LandingPage
+  // (real content, crawlable) instead of a blank loading state; the
+  // loading spinner is reserved for the moment right after we already know
+  // someone is logged in and are just waiting on their trips to load — a
+  // state no crawler or first-time visitor is ever in.
+  const showApp = !loading && !!user;
+
   return (
     <ErrorBoundary>
-      {loading ? loadingScreen
-        : !user ? <LandingPage />
+      {!showApp ? <LandingPage />
         : tripsLoading ? loadingScreen
         : (
           <>
