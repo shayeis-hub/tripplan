@@ -907,18 +907,42 @@ function calcSettlement(people,expenses){
   return debts;
 }
 
-async function openHtmlDocument(html, filename){
+async function openHtmlDocument(html, filename, lang="he"){
   const cap = typeof window!=="undefined" ? window.Capacitor : null;
   if(cap?.isNativePlatform?.()){
     try{
       const{Filesystem,Share}=cap.Plugins;
       const {uri}=await Filesystem.writeFile({path:filename,data:html,directory:"CACHE",encoding:"utf8"});
       await Share.share({title:filename,url:uri});
-    }catch{/* user dismissed the share sheet — nothing to do */}
+    }catch(err){
+      // Was swallowed unconditionally under a comment assuming the only
+      // possible failure was the user backing out of the share sheet — the
+      // exact same wrong assumption already found and fixed for
+      // nativeScan() elsewhere in this file. Any OTHER failure here
+      // (Filesystem.writeFile hitting a permission/storage issue,
+      // Share.share rejecting for a real reason — e.g. a misconfigured or
+      // out-of-date FileProvider on the installed build) looked identical
+      // to "the export button does nothing," with zero way to diagnose it
+      // — exactly what was reported for both the budget and itinerary
+      // export buttons on the Play Store build.
+      const msg=String(err?.message||err||"");
+      if(!/cancel/i.test(msg)){
+        alert(`${lang==="he"?"הייצוא נכשל":lang==="es"?"La exportación falló":"Export failed"}: ${msg}`);
+      }
+    }
     return;
   }
   const w=window.open("","_blank");
-  if(!w)return;
+  if(!w){
+    // Silently returning here made a blocked pop-up indistinguishable from
+    // any other silent failure — this is almost always just the browser's
+    // pop-up blocker, and telling the user that is a one-line fix on their
+    // end instead of a dead end.
+    alert(lang==="he"?"הדפדפן חסם את החלון החדש — אפשרו חלונות קופצים לאתר הזה ונסו שוב"
+      :lang==="es"?"El navegador bloqueó la nueva ventana — permite ventanas emergentes para este sitio e inténtalo de nuevo"
+      :"Your browser blocked the new window — please allow pop-ups for this site and try again");
+    return;
+  }
   w.document.write(html);
   w.document.close();
   w.focus();
@@ -1070,7 +1094,7 @@ async function exportTripPDF(trip,expenses,lang="he"){
 
   const cap=typeof window!=="undefined"?window.Capacitor:null;
   if(cap?.isNativePlatform?.()){
-    await openHtmlDocument(html,"trip.html");
+    await openHtmlDocument(html,"trip.html",lang);
     return;
   }
   const w=window.open("","_blank");
@@ -1264,7 +1288,7 @@ async function exportItineraryPDF(trip,expenses,lang="he"){
 
   const cap=typeof window!=="undefined"?window.Capacitor:null;
   if(cap?.isNativePlatform?.()){
-    await openHtmlDocument(html,"itinerary.html");
+    await openHtmlDocument(html,"itinerary.html",lang);
     return;
   }
   const w=window.open("","_blank");
