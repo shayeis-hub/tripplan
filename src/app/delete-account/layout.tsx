@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Delete Account | Tulon – Smart Trip Planner (טיולון – מתכנן טיולים)",
   description:
-    "Request deletion of your Tulon – Smart Trip Planner account (טיולון – מתכנן טיולים, il.co.tulon.www.twa) and all associated data.",
+    "Request deletion of your Tulon – Smart Trip Planner account (טיולון – מתכנן טיולים, il.co.tulon.www.twa, developer: Shay Eisenberg) and all associated data.",
 };
 
 export default function DeleteAccountLayout({ children }: { children: React.ReactNode }) {

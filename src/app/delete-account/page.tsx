@@ -174,6 +174,7 @@ export default function DeleteAccountPage() {
             <div className="ident-name">Tulon – Smart Trip Planner</div>
             <div className="ident-name">טיולון – מתכנן טיולים</div>
             <div className="ident-row">(formerly: טיולון – מתכנן הטיולים שלי / Tulon – My Trip Planner)</div>
+            <div className="ident-row">Developer: Shay Eisenberg</div>
             <div className="ident-row">Google Play package: il.co.tulon.www.twa</div>
             <div className="ident-row">www.tulon.app · contact@tulon.app</div>
           </div>
