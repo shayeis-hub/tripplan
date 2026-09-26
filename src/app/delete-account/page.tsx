@@ -165,7 +165,15 @@ export default function DeleteAccountPage() {
             <span>TU</span>lon
           </div>
           <div className="ident">
-            <div className="ident-name">טיולון – מתכנן הטיולים שלי (Tulon – My Trip Planner)</div>
+            {/* Must match the app name(s) in the Google Play listing exactly —
+                the listing was renamed (Tulon – Smart Trip Planner /
+                טיולון – מתכנן טיולים), and this page still carrying only the
+                old name is what Play's review flagged as "no reference to the
+                app". Older name kept too, since it may still appear in cached
+                listings. */}
+            <div className="ident-name">Tulon – Smart Trip Planner</div>
+            <div className="ident-name">טיולון – מתכנן טיולים</div>
+            <div className="ident-row">(formerly: טיולון – מתכנן הטיולים שלי / Tulon – My Trip Planner)</div>
             <div className="ident-row">Google Play package: il.co.tulon.www.twa</div>
             <div className="ident-row">www.tulon.app · contact@tulon.app</div>
           </div>
