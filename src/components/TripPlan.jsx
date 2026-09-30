@@ -2324,7 +2324,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       <div style={{position:"relative",padding:"10px 16px 4px"}}>
         <style>{`.exp-filter::-webkit-scrollbar{display:none}`}</style>
         <div className="exp-filter" style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
-          {[{id:"all",label:lang==="he"?"הכל":lang==="es"?"Todo":"All",Icon:null,color:TEAL,bg:"rgba(100,223,223,0.12)"},...CATS].map(cat=>{
+          {[{id:"all",Icon:null,color:TEAL,bg:"rgba(100,223,223,0.12)"},...CATS].map(cat=>{
             const isActive=filterCat===cat.id;
             const color=cat.color||TEAL;
             const bg=cat.bg||"rgba(100,223,223,0.12)";
@@ -2337,7 +2337,13 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                   boxShadow:isActive?`0 0 10px ${color}30`:"none",
                   transition:"all 0.15s"}}>
                 {cat.Icon?<cat.Icon size={16} color={isActive?color:W35} strokeWidth={1.5}/>:<Receipt size={16} color={isActive?TEAL:W35} strokeWidth={1.5}/>}
-                <span style={{fontFamily:RF,fontSize:9,fontWeight:700,color:isActive?color:W35,whiteSpace:"nowrap"}}>{cat.label||(lang==="he"?"הכל":lang==="es"?"Todo":"All")}</span>
+                {/* Was cat.label — the raw, always-Hebrew string hardcoded on
+                    each CATS entry (used elsewhere only as a fallback id),
+                    not the per-language translation. Every other category
+                    label in the app goes through catLabel(); this row was
+                    the one spot that didn't, so it stayed Hebrew no matter
+                    the selected language. */}
+                <span style={{fontFamily:RF,fontSize:9,fontWeight:700,color:isActive?color:W35,whiteSpace:"nowrap"}}>{catLabel(cat.id,lang)}</span>
               </button>
             );
           })}
