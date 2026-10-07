@@ -9,6 +9,7 @@ export default function NotificationPrompt({ lang, onYes, onLater }: { lang: Lan
   const RF = "'Rubik',sans-serif";
   return (
     <div
+      className="fx-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="notifprompt-title"
@@ -16,6 +17,7 @@ export default function NotificationPrompt({ lang, onYes, onLater }: { lang: Lan
       onClick={onLater}
     >
       <div
+        className="fx-card"
         onClick={e => e.stopPropagation()}
         style={{ background: "#0d2f4a", border: "0.5px solid rgba(100,223,223,0.25)", borderRadius: 20, padding: 24, width: "100%", maxWidth: 380, boxShadow: "0 20px 60px rgba(0,0,0,0.6)", fontFamily: RF, textAlign: "center" }}
       >

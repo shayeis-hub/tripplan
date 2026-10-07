@@ -106,3 +106,42 @@ body {
     background: rgba(255, 255, 255, 0.08);
   }
 }
+
+/* ── Modal / drawer / sheet enter + exit ─────────────────────────────
+   Used by the <Fx> wrapper in TripPlan.jsx, which keeps a closing modal mounted
+   for ~180ms so it can leave along the path it arrived on (spatial consistency)
+   instead of vanishing. Entering uses a critically damped spring (damping 1.0,
+   response 0.3s, no overshoot) via linear(); browsers without linear() get a
+   close cubic-bezier. Exits are short and ease-in, and the closing layer ignores
+   taps so it can't be hit mid-exit. */
+@keyframes fxFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fxFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes fxPopIn   { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes fxPopOut  { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(10px) scale(0.97); } }
+@keyframes fxDrawerIn  { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes fxDrawerOut { from { transform: none; } to { transform: translateX(100%); } }
+@keyframes fxSheetIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+.fx-overlay { animation: fxFadeIn 0.18s ease-out both; }
+.fx-card    { animation: fxPopIn 0.34s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+.fx-drawer  { animation: fxDrawerIn 0.34s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+.fx-sheet   { animation: fxSheetIn 0.34s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+@supports (animation-timing-function: linear(0, 1)) {
+  .fx-card, .fx-drawer, .fx-sheet {
+    animation-timing-function: linear(0, 0.042, 0.138, 0.254, 0.371, 0.481, 0.578, 0.661, 0.731, 0.787, 0.834, 0.87, 0.9, 0.923, 0.94, 0.954, 0.965, 0.973, 0.98, 0.985, 0.988, 0.991, 1);
+  }
+}
+
+[data-fx="closing"] { pointer-events: none; }
+[data-fx="closing"] .fx-overlay { animation: fxFadeOut 0.15s ease-in both; }
+[data-fx="closing"] .fx-card    { animation: fxPopOut 0.15s ease-in both; }
+[data-fx="closing"] .fx-drawer  { animation: fxDrawerOut 0.18s ease-in both; }
+[data-fx="closing"] .fx-sheet   { animation: fxFadeOut 0.15s ease-in both; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* No movement at all: a plain fade in and out. */
+  .fx-card, .fx-drawer, .fx-sheet { animation-name: fxFadeIn; animation-duration: 0.15s; animation-timing-function: ease-out; }
+  [data-fx="closing"] .fx-card,
+  [data-fx="closing"] .fx-drawer,
+  [data-fx="closing"] .fx-sheet { animation-name: fxFadeOut; animation-duration: 0.12s; animation-timing-function: ease-in; }
+}

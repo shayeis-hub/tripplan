@@ -414,6 +414,24 @@ const GS=`
   }
 `;
 
+// Keeps a modal/drawer mounted briefly after it is closed so it can play its exit
+// animation (see .fx-* in globals.css) instead of vanishing. `children` is whatever the
+// caller renders while open (null when closed); the last open version is replayed during
+// the exit. display:contents means the wrapper adds no box and fixed overlays are unaffected.
+const FX_EXIT_MS=180;
+function Fx({show,children}){
+  const[mounted,setMounted]=useState(!!show);
+  const last=useRef(children);
+  if(show) last.current=children;
+  useEffect(()=>{
+    if(show){setMounted(true);return;}
+    const id=setTimeout(()=>setMounted(false),FX_EXIT_MS);
+    return()=>clearTimeout(id);
+  },[show]);
+  if(!show&&!mounted) return null;
+  return <div data-fx={show?"open":"closing"} style={{display:"contents"}}>{show?children:last.current}</div>;
+}
+
 function WaveHeader({title,subtitle,action}){
   return(
     <div style={{background:"linear-gradient(160deg,#0d2137 0%,#0a3050 100%)",padding:"22px 20px 18px",borderBottom:"0.5px solid rgba(100,223,223,0.12)"}}>
@@ -3315,8 +3333,8 @@ function CalendarScreen({trip,expenses,onSaveActs}){
 
   // ── EDIT MODAL JSX (inline – NOT a sub-component, prevents keyboard dismiss on rerender) ──
   const editModalJsx = editD ? (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:22,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"80vh",overflowY:"auto"}}>
+    <div className="fx-overlay" style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div className="fx-card" style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:22,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"80vh",overflowY:"auto"}}>
         <h3 style={{fontFamily:RF,fontSize:17,fontWeight:700,color:"#ffffff",marginBottom:14}}>✏️ {t("cal_edit_acts",lang)}{fmtDate(editD)}</h3>
         {editActs.map((act,i)=>(
           <div key={i} style={{marginBottom:10}}>
@@ -3358,8 +3376,8 @@ function CalendarScreen({trip,expenses,onSaveActs}){
     const{act,date}=actPopup;
     const tp=ACT_TYPES.find(x=>x.id===(act.type||"general"))||ACT_TYPES[0];
     return(
-      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:250,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setActPopup(null)}>
-        <div onClick={e=>e.stopPropagation()} style={{background:"#0d2f4a",border:"0.5px solid rgba(167,139,250,0.35)",borderRadius:20,padding:24,width:"100%",maxWidth:380,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+      <div className="fx-overlay" style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:250,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setActPopup(null)}>
+        <div className="fx-card" onClick={e=>e.stopPropagation()} style={{background:"#0d2f4a",border:"0.5px solid rgba(167,139,250,0.35)",borderRadius:20,padding:24,width:"100%",maxWidth:380,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
             <div style={{width:52,height:52,borderRadius:14,background:"rgba(167,139,250,0.12)",border:"0.5px solid rgba(167,139,250,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><tp.Icon size={24} color="#a78bfa" strokeWidth={1.5}/></div>
             <div>
@@ -3428,8 +3446,8 @@ function CalendarScreen({trip,expenses,onSaveActs}){
         )}
       </div>
 
-      {editModalJsx}
-      {actPopupJsx}
+      <Fx show={!!editD}>{editModalJsx}</Fx>
+      <Fx show={!!actPopup}>{actPopupJsx}</Fx>
 
       <div style={{overflowY:"auto"}}>
         {view==="month"?<MonthView/>:<DayView/>}
@@ -4741,7 +4759,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   const guideUrl=lang==="he"?"/guide-he.html":lang==="es"?"/guide-es.html":"/guide-en.html";
   // In-app guide viewer — keeps the user inside the app instead of a new tab
   const renderGuideModal=()=>(
-    <div style={{position:"fixed",inset:0,zIndex:600,background:DARK_BG,display:"flex",flexDirection:"column"}} dir={lang==="he"?"rtl":"ltr"}>
+    <div className="fx-sheet" style={{position:"fixed",inset:0,zIndex:600,background:DARK_BG,display:"flex",flexDirection:"column"}} dir={lang==="he"?"rtl":"ltr"}>
       <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.15)",flexShrink:0}}>
         <button onClick={()=>setShowGuide(false)} className="tap-btn" style={{background:"rgba(255,255,255,0.08)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:9,color:"#fff",width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
           <X size={17} strokeWidth={2}/>
@@ -4767,10 +4785,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   const renderSideMenu=()=>(
     <>
       {/* Backdrop */}
-      <div onClick={()=>setSideMenu(false)}
+      <div className="fx-overlay" onClick={()=>setSideMenu(false)}
         style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:400,backdropFilter:"blur(2px)"}}/>
       {/* Drawer */}
-      <div style={{position:"fixed",top:0,right:0,bottom:0,width:280,background:"#0a2035",borderLeft:"0.5px solid rgba(100,223,223,0.15)",zIndex:401,display:"flex",flexDirection:"column",boxShadow:"-8px 0 40px rgba(0,0,0,0.5)",overflowY:"auto"}}>
+      <div className="fx-drawer" style={{position:"fixed",top:0,right:0,bottom:0,width:280,background:"#0a2035",borderLeft:"0.5px solid rgba(100,223,223,0.15)",zIndex:401,display:"flex",flexDirection:"column",boxShadow:"-8px 0 40px rgba(0,0,0,0.5)",overflowY:"auto"}}>
         {/* Header */}
         <div style={{padding:"20px 20px 16px",borderBottom:"0.5px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
           <div>
@@ -4920,7 +4938,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           </div>
           {/* Currency Converter */}
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]} defaultCurrency={trips[0]?.defaultCurrency} displayCurrency={trips[0]?.displayCurrency}/>}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates}/>
         </div>
       </>
@@ -4932,8 +4950,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
 
   // ── Share modal renderer ──
   const renderShareModal=()=>shareModal&&(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:24,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"88vh",overflowY:"auto"}}>
+    <div className="fx-overlay" style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div className="fx-card" style={{background:"#0d2f4a",border:"0.5px solid rgba(100,223,223,0.25)",borderRadius:20,padding:24,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"88vh",overflowY:"auto"}}>
         <h3 style={{fontFamily:RF,fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>{t("share_title",lang)}</h3>
         <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>{t("share_email_sub",lang)}</p>
         {trips.find(tr=>tr.id===shareModal)?.sharedWith?.length>0&&(
@@ -5075,8 +5093,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
 
   // ── Inspire modal renderer ──
   const renderInspireModal=()=>inspireModal&&(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{background:"#0d2f4a",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:20,padding:24,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"85vh",overflowY:"auto"}}>
+    <div className="fx-overlay" style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div className="fx-card" style={{background:"#0d2f4a",border:"0.5px solid rgba(251,191,36,0.3)",borderRadius:20,padding:24,width:"100%",maxWidth:420,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"85vh",overflowY:"auto"}}>
         <h3 style={{fontFamily:RF,fontSize:18,fontWeight:700,color:"#ffffff",marginBottom:4}}>{t("inspire_title",lang)}</h3>
         <p style={{fontSize:12,color:W40,marginBottom:16,fontFamily:RF}}>{t("inspire_sub",lang)}</p>
         <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
@@ -5153,9 +5171,9 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
               {t("home_trips",lang)||"הטיולים שלי"} <ChevronRight size={14} color="rgba(100,223,223,0.7)" strokeWidth={2}/>
             </button>
           </div>
-          {shareModal&&renderShareModal()}{renderNotifPrompt()}
-          {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
+          <Fx show={!!inspireModal}>{inspireModal&&renderInspireModal()}</Fx>
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             <TripSplashScreen trip={active} expenses={active.expenses||[]}
               onBudget={()=>{pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}
@@ -5189,9 +5207,9 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             </div>
           </div>
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
-          {shareModal&&renderShareModal()}{renderNotifPrompt()}
-          {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
+          <Fx show={!!inspireModal}>{inspireModal&&renderInspireModal()}</Fx>
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             {/* Trip settings button */}
             {screen!=="destination"&&!isViewOnly&&(
@@ -5235,9 +5253,9 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             </div>
           </div>
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
-          {shareModal&&renderShareModal()}{renderNotifPrompt()}
-          {inspireModal&&renderInspireModal()}
-          {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
+          <Fx show={!!inspireModal}>{inspireModal&&renderInspireModal()}</Fx>
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:screen==="map"?"hidden":"auto",position:"relative",minHeight:0}}>
             <div key={screen} className="screen-enter" style={screen==="map"?{height:"100%"}:undefined}>
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={isViewOnly?null:(acts=>updTrip({activities:acts}))}/>}
