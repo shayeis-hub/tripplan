@@ -14,8 +14,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }[] = [
     { path: "/",                     priority: 1.0, changeFrequency: "weekly"  },
     { path: "/features",             priority: 0.8, changeFrequency: "monthly" },
-    { path: "/plan",                 priority: 0.8, changeFrequency: "monthly" },
-    { path: "/group-travel-planner", priority: 0.8, changeFrequency: "monthly" },
+    { path: "/plan",                 priority: 0.8, changeFrequency: "monthly" },
+    { path: "/group-trip-planner",              priority: 0.8, changeFrequency: "monthly" },
+    { path: "/splitwise-alternative-for-travel", priority: 0.8, changeFrequency: "monthly" },
+    { path: "/group-travel-expense-tracker",    priority: 0.8, changeFrequency: "monthly" },
     { path: "/blog",     priority: 0.7, changeFrequency: "weekly"  },
     { path: "/about",    priority: 0.5, changeFrequency: "yearly"  },
     { path: "/contact",  priority: 0.3, changeFrequency: "yearly"  },

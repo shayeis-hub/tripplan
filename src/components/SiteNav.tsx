@@ -10,7 +10,7 @@ const T = {
   cta:      { he: "התחל בחינם", en: "Start free",   es: "Empezar"   },
 } as const;
 
-export default function SiteNav() {
+export default function SiteNav({ hideLang = false }: { hideLang?: boolean } = {}) {
   const { lang, setLang } = useLang();
   const router = useRouter();
   const pathname = usePathname();
@@ -103,11 +103,13 @@ export default function SiteNav() {
         </div>
 
         <div className="sitenav-right">
-          <div className="sitenav-lang">
-            <button className={`sitenav-lang-btn${lang==="he"?" active":""}`} onClick={()=>setLang("he")}>עב</button>
-            <button className={`sitenav-lang-btn${lang==="en"?" active":""}`} onClick={()=>setLang("en")}>EN</button>
-            <button className={`sitenav-lang-btn${lang==="es"?" active":""}`} onClick={()=>setLang("es")}>ES</button>
-          </div>
+          {!hideLang && (
+            <div className="sitenav-lang">
+              <button className={`sitenav-lang-btn${lang==="he"?" active":""}`} onClick={()=>setLang("he")}>עב</button>
+              <button className={`sitenav-lang-btn${lang==="en"?" active":""}`} onClick={()=>setLang("en")}>EN</button>
+              <button className={`sitenav-lang-btn${lang==="es"?" active":""}`} onClick={()=>setLang("es")}>ES</button>
+            </div>
+          )}
           <button className="sitenav-cta" onClick={()=>router.push("/login")}>{T.cta[lang]}</button>
         </div>
       </nav>

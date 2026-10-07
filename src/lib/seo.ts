@@ -11,20 +11,28 @@ import type { Metadata } from "next";
 // terms live naturally in the page copy instead.
 
 export const SITE_URL = "https://www.tulon.app";
-const SITE_NAME = "טיולון – Tulon";
+
+const SITE_NAME = "טיולון – TUlon";
 
 export function pageMeta({
   title,
   description,
   path = "/",
   noindex = false,
+  locale,
+  image,
 }: {
   title: string;
   description: string;
   path?: string;
   noindex?: boolean;
+  // Defaults keep every existing caller unchanged (Hebrew-first site). The
+  // English-only landing pages pass locale "en_US" and an explicit image.
+  locale?: "en_US";
+  image?: { url: string; width: number; height: number; alt: string };
 }): Metadata {
   const url = `${SITE_URL}${path}`;
+  const isEn = locale === "en_US";
   return {
     title,
     description,
@@ -36,13 +44,17 @@ export function pageMeta({
       title,
       description,
       url,
-      locale: "he_IL",
-      alternateLocale: ["en_US", "es_ES"],
+      locale: isEn ? "en_US" : "he_IL",
+      alternateLocale: isEn ? ["he_IL", "es_ES"] : ["en_US", "es_ES"],
+      ...(image ? { images: [image] } : {}),
     },
     twitter: {
-      card: "summary_large_image",
+      // A square app icon reads badly in a large-image card, so pages that
+      // pass an image use the compact "summary" card.
+      card: image ? "summary" : "summary_large_image",
       title,
       description,
+      ...(image ? { images: [image.url] } : {}),
     },
   };
 }

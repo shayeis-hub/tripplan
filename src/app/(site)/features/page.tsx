@@ -21,7 +21,7 @@ const T = {
     es: "Completamente Gratis — Sin Premium, Sin Límites",
   },
   ctaTitle: { he: "מוכן לנסות?", en: "Ready to Try?", es: "¿Listo para Probar?" },
-  ctaBtn: { he: "פתח את טיולון — בחינם", en: "Open Tulon — Free", es: "Abrir Tulon — Gratis" },
+  ctaBtn: { he: "פתח את טיולון — בחינם", en: "Open TUlon — Free", es: "Abrir TUlon — Gratis" },
 
   feat1Title: { he: "ניהול הוצאות מתקדם", en: "Advanced Expense Tracking", es: "Seguimiento de Gastos Avanzado" },
   feat1Body: {
@@ -68,8 +68,8 @@ const T = {
   feat8Title: { he: "PWA — ללא הורדה", en: "PWA — No Download Needed", es: "PWA — Sin Descarga" },
   feat8Body: {
     he: "טיולון היא אפליקציית PWA — עובדת ישירות בדפדפן, גם ללא חיבור לאינטרנט. ניתן להוסיף לסמל הבית בלחיצה אחת.",
-    en: "Tulon is a PWA — works directly in the browser, even offline. Add to home screen with one tap.",
-    es: "Tulon es una PWA — funciona directamente en el navegador, incluso sin conexión. Añade a la pantalla de inicio con un toque.",
+    en: "TUlon is a PWA — works directly in the browser, even offline. Add to home screen with one tap.",
+    es: "TUlon es una PWA — funciona directamente en el navegador, incluso sin conexión. Añade a la pantalla de inicio con un toque.",
   },
 } as const;
 

@@ -7,43 +7,36 @@ import SiteFooter from "@/components/SiteFooter";
 import { GOOGLE_PLAY_URL, APP_STORE_URL } from "@/lib/stores";
 import { SITE_URL } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
+import GuideLinks from "@/components/GuideLinks";
 
-// SoftwareApplication schema — the single highest-leverage structured-data
-// block for "is this a trip planning app that does X" queries. Names the
-// concrete capabilities and alternateName covers how people actually
-// phrase the search (Splitwise/TripIt/Wanderlog alternative), matching the
-// pattern competitors in this space already use.
+// SoftwareApplication schema for the product itself. Kept strictly factual:
+// the real product name(s), what it is, where it runs, and capabilities that
+// exist in the current app. No price/free claim, no rating, no comparison
+// terms ("alternative to ..." is a search concept, not a product name).
 const appSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Tulon",
-  alternateName: [
-    "טיולון",
-    "Tulon Trip Planner",
-    "Tulon Travel App",
-    "Splitwise Alternative for Travel",
-    "TripIt Alternative",
-    "Wanderlog Alternative",
-    "Group Trip Planner App",
-  ],
+  // Stable id so other pages' schema (the English SEO landing pages) can
+  // reference this one entity instead of declaring a duplicate app.
+  "@id": `${SITE_URL}/#software`,
+  name: "TUlon",
+  alternateName: ["טיולון"],
   applicationCategory: "TravelApplication",
   operatingSystem: "Web, Android, iOS",
   url: SITE_URL,
   description:
-    "Tulon is a free group trip planner that combines a shared day-by-day itinerary, multi-currency expense tracking, automatic group settlement, real-time collaboration, packing lists and maps in one app.",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-  isAccessibleForFree: true,
+    "TUlon is a group trip planner that combines a shared day-by-day itinerary, a trip budget, multi-currency expense tracking, group settlement, real-time sharing, packing lists and a map in one app.",
   inLanguage: ["he", "en", "es"],
   featureList: [
-    "Day-by-day itinerary planning with weather forecast",
-    "Multi-currency expense tracking with live exchange rates",
-    "Automatic group expense settlement (minimum transfers)",
-    "AI receipt scanning",
-    "Real-time group trip sharing via invite link",
-    "View-only sharing mode",
+    "Day-by-day itinerary planning",
+    "Trip budget with spending by category",
+    "Multi-currency expense tracking",
+    "Group expense settlement",
+    "Receipt scanning from a photo",
+    "Real-time trip sharing by invite link",
+    "View-only sharing",
     "Shared packing list",
-    "All trip places on one map",
-    "Offline support",
+    "Map of the trip's places",
   ],
 };
 
@@ -55,13 +48,13 @@ const T = {
   },
   h1sub: {
     he: "מתכננים מסלול, מנהלים הוצאות ונוסעים יחד עם טיולון.",
-    en: "Plan your itinerary, manage expenses and travel together with Tulon.",
-    es: "Planifica tu itinerario, gestiona gastos y viaja en grupo con Tulon.",
+    en: "Plan your itinerary, manage expenses and travel together with TUlon.",
+    es: "Planifica tu itinerario, gestiona gastos y viaja en grupo con TUlon.",
   },
   whatIs: {
     he: "טיולון היא אפליקציה לתכנון טיולים שמרכזת את כל הטיול במקום אחד: בונים מסלול יומי עם פעילויות והזמנות, מנהלים תקציב ומעקב הוצאות, מחלקים תשלומים בין חברי הקבוצה, ומגלים אטרקציות ומסעדות ביעד. מתאים לטיול משפחתי, לטיול עם חברים או לנסיעת עבודה — וחינמי לחלוטין.",
-    en: "Tulon is a trip planner that keeps your whole trip in one place: build a day-by-day itinerary with activities and reservations, manage your budget and track expenses, split payments between everyone in the group, and discover attractions and restaurants at your destination. Great for family trips, trips with friends, or business travel — and completely free.",
-    es: "Tulon es un planificador de viajes que reúne todo tu viaje en un solo lugar: crea un itinerario día a día con actividades y reservas, gestiona tu presupuesto y controla los gastos, reparte los pagos entre todo el grupo y descubre atracciones y restaurantes en tu destino. Ideal para viajes en familia, con amigos o de trabajo — y totalmente gratis.",
+    en: "TUlon is a trip planner that keeps your whole trip in one place: build a day-by-day itinerary with activities and reservations, manage your budget and track expenses, split payments between everyone in the group, and discover attractions and restaurants at your destination. Great for family trips, trips with friends, or business travel — and completely free.",
+    es: "TUlon es un planificador de viajes que reúne todo tu viaje en un solo lugar: crea un itinerario día a día con actividades y reservas, gestiona tu presupuesto y controla los gastos, reparte los pagos entre todo el grupo y descubre atracciones y restaurantes en tu destino. Ideal para viajes en familia, con amigos o de trabajo — y totalmente gratis.",
   },
   storeGoogleEyebrow: { he: "זמין ב־", en: "GET IT ON", es: "DISPONIBLE EN" },
   storeAppleEyebrow: { he: "הורידו מ־", en: "Download on the", es: "Descárgalo en" },
@@ -279,7 +272,7 @@ export default function LandingPage() {
         .store-badge-eyebrow { display: block; font-size: 9px; color: rgba(255,255,255,0.7); line-height: 1.1; text-transform: uppercase; letter-spacing: 0.3px; }
         .store-badge-name { display: block; font-size: 15px; font-weight: 600; color: #fff; line-height: 1.2; }
 
-        /* "What is Tulon" prose */
+        /* "What is TUlon" prose */
         .what-is { font-size: 15.5px; line-height: 1.85; color: rgba(255,255,255,0.62); text-align: center; max-width: 640px; margin: 0 auto; }
 
         /* Features */
@@ -378,7 +371,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* What is Tulon — semantic intro paragraph */}
+        {/* What is TUlon — semantic intro paragraph */}
         <div className="section" style={{ paddingTop: 46, paddingBottom: 10 }}>
           <p className="what-is">{T.whatIs[lang]}</p>
         </div>
@@ -555,6 +548,8 @@ export default function LandingPage() {
                  style={{width:171,height:58}} />
           </a>
         </div>
+
+        <GuideLinks />
 
         <SiteFooter />
 

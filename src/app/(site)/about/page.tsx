@@ -6,8 +6,8 @@ import SiteFooter from "@/components/SiteFooter";
 const T = {
   heroTitle: {
     he: "אודות טיולון",
-    en: "About Tulon",
-    es: "Sobre Tulon",
+    en: "About TUlon",
+    es: "Sobre TUlon",
   },
   heroSub: {
     he: "המסע שמאחורי האפליקציה",
@@ -18,8 +18,8 @@ const T = {
   whyTitle: { he: "למה בנינו את זה?", en: "Why Did We Build This?", es: "¿Por Qué Lo Construimos?" },
   whyBody: {
     he: "כל מי שטייל עם קבוצה מכיר את הכאב: ה'שיחת הוואטסאפ עם הצילומי מסך של ה-Excel', מי שילם מה, מי חייב כמה, ואיך לא שוכחים אף פעילות. טיולון נולדה מהרצון לפתור בדיוק את הכאבים האלה — ולעשות את תכנון הטיול כיפי, ולא מעיק.",
-    en: "Anyone who has traveled with a group knows the pain: the 'WhatsApp chat with Excel screenshots,' who paid what, who owes how much, and how not to forget any activity. Tulon was born from the desire to solve exactly these pain points — and make trip planning fun, not stressful.",
-    es: "Cualquiera que haya viajado con un grupo conoce el dolor: el 'chat de WhatsApp con capturas de pantalla de Excel', quién pagó qué, quién debe cuánto, y cómo no olvidar ninguna actividad. Tulon nació del deseo de resolver exactamente estos puntos de dolor — y hacer que planificar viajes sea divertido, no estresante.",
+    en: "Anyone who has traveled with a group knows the pain: the 'WhatsApp chat with Excel screenshots,' who paid what, who owes how much, and how not to forget any activity. TUlon was born from the desire to solve exactly these pain points — and make trip planning fun, not stressful.",
+    es: "Cualquiera que haya viajado con un grupo conoce el dolor: el 'chat de WhatsApp con capturas de pantalla de Excel', quién pagó qué, quién debe cuánto, y cómo no olvidar ninguna actividad. TUlon nació del deseo de resolver exactamente estos puntos de dolor — y hacer que planificar viajes sea divertido, no estresante.",
   },
 
   missionTitle: { he: "המשימה שלנו", en: "Our Mission", es: "Nuestra Misión" },
@@ -38,8 +38,8 @@ const T = {
   techTitle: { he: "הטכנולוגיה", en: "The Technology", es: "La Tecnología" },
   techBody: {
     he: "טיולון בנויה כ-Progressive Web App (PWA) — אפליקציה שעובדת ישירות בדפדפן, גם ללא חיבור לאינטרנט, בכל מכשיר. אנחנו משתמשים ב-Firebase לסנכרון נתונים בזמן אמת בין כל חברי הטיול.",
-    en: "Tulon is built as a Progressive Web App (PWA) — an app that works directly in the browser, even offline, on any device. We use Firebase for real-time data synchronization between all trip members.",
-    es: "Tulon está construida como Progressive Web App (PWA) — una app que funciona directamente en el navegador, incluso sin conexión, en cualquier dispositivo. Usamos Firebase para la sincronización de datos en tiempo real entre todos los miembros del viaje.",
+    en: "TUlon is built as a Progressive Web App (PWA) — an app that works directly in the browser, even offline, on any device. We use Firebase for real-time data synchronization between all trip members.",
+    es: "TUlon está construida como Progressive Web App (PWA) — una app que funciona directamente en el navegador, incluso sin conexión, en cualquier dispositivo. Usamos Firebase para la sincronización de datos en tiempo real entre todos los miembros del viaje.",
   },
 
   contactTitle: { he: "צור קשר", en: "Contact Us", es: "Contáctanos" },

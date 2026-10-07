@@ -7,8 +7,8 @@ import { blogPosts } from "@/lib/blog-posts";
 const T = {
   heroTitle: {
     he: "בלוג הטיולים של טיולון",
-    en: "The Tulon Travel Blog",
-    es: "El Blog de Viajes de Tulon",
+    en: "The TUlon Travel Blog",
+    es: "El Blog de Viajes de TUlon",
   },
   heroSub: {
     he: "טיפים, מסלולים ומדריכים לטיולים מושלמים",

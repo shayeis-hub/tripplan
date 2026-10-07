@@ -2,6 +2,10 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import pkg from "./package.json";
 
+// Redirect[] pinned explicitly: without it TypeScript widens the mixed
+// {permanent} / {statusCode} literals and rejects the statusCode entry.
+type Redirects = Awaited<ReturnType<NonNullable<NextConfig["redirects"]>>>;
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.128"],
   env: {
@@ -9,8 +13,18 @@ const nextConfig: NextConfig = {
     // Bump with `npm version x.y.z --no-git-tag-version` before deploying.
     NEXT_PUBLIC_APP_VERSION: pkg.version,
   },
-  async redirects() {
+  async redirects(): Promise<Redirects> {
     return [
+      // /group-travel-planner and /group-trip-planner targeted essentially
+      // the same search intent, so the older URL now permanently points at
+      // the primary page instead of leaving two indexable duplicates.
+      // statusCode (not `permanent: true`) because `permanent` would emit a
+      // 308 in Next.js, and a plain 301 was asked for.
+      {
+        source: "/group-travel-planner",
+        destination: "/group-trip-planner",
+        statusCode: 301,
+      },
       // The legacy tulon.co.il domain used to serve the full app in parallel
       // with tulon.app, which caused Google Play to flag our account-deletion
       // URL as not matching the listed app. Consolidate on one canonical

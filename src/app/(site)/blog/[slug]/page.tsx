@@ -13,10 +13,10 @@ const T = {
   min:      { he: "דק׳ קריאה",    en: "min read",       es: "min de lectura"    },
   cta: {
     he: "רוצים לתכנן טיול? נסו את טיולון — חינמי לחלוטין",
-    en: "Ready to plan a trip? Try Tulon — completely free",
-    es: "¿Listo para planificar un viaje? Prueba Tulon — completamente gratis",
+    en: "Ready to plan a trip? Try TUlon — completely free",
+    es: "¿Listo para planificar un viaje? Prueba TUlon — completamente gratis",
   },
-  ctaBtn: { he: "פתח את טיולון", en: "Open Tulon", es: "Abrir Tulon" },
+  ctaBtn: { he: "פתח את טיולון", en: "Open TUlon", es: "Abrir TUlon" },
 } as const;
 
 function formatDate(dateStr: string, lang: "he"|"en"|"es") {

@@ -33,6 +33,14 @@ export function LangProvider({ children }: { children: ReactNode }) {
   return <LangContext.Provider value={{ lang, setLang }}>{children}</LangContext.Provider>;
 }
 
+// Pins everything beneath it to one language, ignoring the visitor's saved or
+// device language. For single-language pages (the English SEO landing pages)
+// that still reuse SiteNav/SiteFooter, so those render in English in the
+// server-rendered HTML instead of defaulting to Hebrew.
+export function ForcedLang({ lang, children }: { lang: Lang; children: ReactNode }) {
+  return <LangContext.Provider value={{ lang, setLang: () => {} }}>{children}</LangContext.Provider>;
+}
+
 export function useLang() {
   return useContext(LangContext);
 }

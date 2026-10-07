@@ -2,6 +2,7 @@
 import { useLang } from "@/lib/LangContext";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
+import GuideLinks from "@/components/GuideLinks";
 import { buildAgodaUrl, buildViatorUrl, buildGygUrl, buildAiraloUrl, buildKiwiUrl } from "@/lib/affiliate";
 
 const UTM = "utm_source=tulon&utm_medium=web&utm_campaign=plan-page";
@@ -64,10 +65,10 @@ const T = {
   },
   appSub: {
     he: "עם טיולון, לוח השנה, ההוצאות, ורשימת האריזה — הכל מסונכרן עם כל חברי הטיול",
-    en: "With Tulon, the calendar, expenses, and packing list — all synced with every trip member",
-    es: "Con Tulon, el calendario, los gastos y la lista de equipaje — todo sincronizado con cada miembro del viaje",
+    en: "With TUlon, the calendar, expenses, and packing list — all synced with every trip member",
+    es: "Con TUlon, el calendario, los gastos y la lista de equipaje — todo sincronizado con cada miembro del viaje",
   },
-  appBtn: { he: "פתח את טיולון — בחינם", en: "Open Tulon — Free", es: "Abrir Tulon — Gratis" },
+  appBtn: { he: "פתח את טיולון — בחינם", en: "Open TUlon — Free", es: "Abrir TUlon — Gratis" },
   visit: { he: "כנסו", en: "Visit", es: "Visitar" },
   agodaDesc: {
     he: "מיליוני מלונות ברחבי העולם עם תמחור תחרותי וביקורות אמיתיות",
@@ -251,6 +252,8 @@ export default function PlanPage() {
             </a>
           </div>
         </div>
+
+        <GuideLinks />
 
         <SiteFooter />
       </div>
