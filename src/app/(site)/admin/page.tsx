@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { TripDrilldown, SoonSection, type SoonTrip } from "@/components/AdminTripPanels";
+import type { TripRow } from "@/lib/tripDrilldown";
 
 const ADMIN_EMAIL = "shayeis@gmail.com";
 const RF = "'Rubik',sans-serif";
@@ -48,7 +50,9 @@ interface Stats {
       upcoming: { withContent: number; total: number; pct: number | null };
       noContent: { total: number; byPhase: { key: string; count: number }[] };
     };
+    tripRows: TripRow[];
   };
+  soon?: SoonTrip[];
   acquisition?: { total: number; groups: { key: string; count: number; creators: number }[]; campaigns: { name: string; count: number }[] };
   trips: { total: number; expenses: number; totalILS: number; activatedUsers: number; activationRate: number };
   signupsByDay: DayPoint[];
@@ -136,6 +140,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr]         = useState("");
   const [idToken, setIdToken] = useState("");
+  const [openGroup, setOpenGroup] = useState<string | null>(null); // lifecycle row whose trips are expanded
 
   const login = async () => {
     try {
@@ -304,8 +309,15 @@ export default function AdminPage() {
                   {(() => {
                     const lc = p.lifecycle;
                     const up = lc.upcoming;
+                    // Rows behind each lifecycle number (the same created-trip set, no extra reads).
+                    const rowsFor = (key: string): TripRow[] =>
+                      p.tripRows.filter(r => (key === "future" ? ["future30", "future90", "future91"].includes(r.phase) : r.phase === key));
                     const row = (key: string, label: React.ReactNode, trips: number, withContent: number, pct: number | null, indent = false, bold = false) => (
-                      <div key={key} style={{ padding: "10px 0", borderBottom: "0.5px solid rgba(255,255,255,0.05)", paddingInlineStart: indent ? 16 : 0 }}>
+                      <div key={key} style={{ borderBottom: "0.5px solid rgba(255,255,255,0.05)", paddingInlineStart: indent ? 16 : 0 }}>
+                       <div role="button" tabIndex={0} aria-expanded={openGroup === key}
+                        onClick={() => setOpenGroup(openGroup === key ? null : key)}
+                        onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenGroup(openGroup === key ? null : key); } }}
+                        style={{ padding: "10px 0", cursor: "pointer", background: openGroup === key ? "rgba(100,223,223,0.05)" : "transparent" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1.5fr 0.7fr", gap: 8, alignItems: "baseline", fontSize: 12 }}>
                           <div style={{ fontSize: 13, fontWeight: bold ? 700 : 500, color: indent ? "rgba(255,255,255,0.75)" : "#fff" }}>{label}</div>
                           <div style={{ color: "rgba(255,255,255,0.55)" }}><b style={{ color: "#fff", fontSize: 14 }}>{trips}</b> טיולים</div>
@@ -315,6 +327,12 @@ export default function AdminPage() {
                         <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)", overflow: "hidden", marginTop: 6 }}>
                           <div style={{ width: `${pct ?? 0}%`, height: "100%", background: TEAL, opacity: indent ? 0.6 : 1 }} />
                         </div>
+                       </div>
+                       {openGroup === key && (
+                         <div style={{ paddingBottom: 10 }}>
+                           <TripDrilldown key={key} rows={rowsFor(key)} group={key as "past" | "now" | "future" | "future30" | "future90" | "future91" | "unknown"} />
+                         </div>
+                       )}
                       </div>
                     );
                     const g = Object.fromEntries(lc.groups.map(x => [x.key, x]));
@@ -337,7 +355,7 @@ export default function AdminPage() {
                           {["future30", "future90", "future91"].map(k => row(k, PHASE_LABELS[k], g[k].trips, g[k].withContent, g[k].pct, true))}
                           {row("unknown", PHASE_LABELS.unknown, g.unknown.trips, g.unknown.withContent, g.unknown.pct)}
                           <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-                            {lc.total} טיולים שנוצרו, מסווגים לפי תאריך {lc.today} (שעון ישראל). תאריך הסיום נכלל, ויציאה היום נספרת תחת מתרחשים עכשיו. <bdi dir="ltr">0–30</bdi> ימים = יציאה בעוד 1 עד 30 ימים. תאריכים לא ברורים = חסרים, לא תקינים, או סיום לפני התחלה. תוכן משמעותי = פריט במסלול, טיסה או מלון.
+                            לחיצה על שורה פותחת את הטיולים שמאחורי המספר. {lc.total} טיולים שנוצרו, מסווגים לפי תאריך {lc.today} (שעון ישראל). תאריך הסיום נכלל, ויציאה היום נספרת תחת מתרחשים עכשיו. <bdi dir="ltr">0–30</bdi> ימים = יציאה בעוד 1 עד 30 ימים. תאריכים לא ברורים = חסרים, לא תקינים, או סיום לפני התחלה. תוכן משמעותי = פריט במסלול, טיסה או מלון.
                           </div>
                         </div>
                       </>
@@ -346,6 +364,9 @@ export default function AdminPage() {
                 </>
               );
             })()}
+
+            {/* Operational view: trips departing in the next 7 days + reminder PREVIEW (nothing is sent) */}
+            {stats.soon && <SoonSection trips={stats.soon} />}
 
             {/* Charts */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 28 }}>

@@ -61,6 +61,30 @@ export function classifyTripPhase(startDate: unknown, endDate: unknown, today: s
   return "future91";
 }
 
+export type DateIssue =
+  | "missing_both"
+  | "missing_start"
+  | "missing_end"
+  | "invalid_start"
+  | "invalid_end"
+  | "end_before_start";
+
+// Why a trip's dates cannot be placed on the timeline (null when they can).
+export function dateIssue(startDate: unknown, endDate: unknown): DateIssue | null {
+  const blank = (v: unknown) => v == null || (typeof v === "string" && v.trim() === "");
+  const sBlank = blank(startDate);
+  const eBlank = blank(endDate);
+  if (sBlank && eBlank) return "missing_both";
+  if (sBlank) return "missing_start";
+  if (eBlank) return "missing_end";
+  const s = dayNumber(startDate);
+  const e = dayNumber(endDate);
+  if (s == null) return "invalid_start";
+  if (e == null) return "invalid_end";
+  if (e < s) return "end_before_start";
+  return null;
+}
+
 export interface LifecycleTrip {
   startDate: string | null;
   endDate: string | null;

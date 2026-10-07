@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { computeProductMetrics, toTripLite } from "@/lib/adminMetrics";
 import { classifySource, SOURCE_ORDER } from "@/lib/acquisition";
+import { buildReminderPreview, notificationEventId, type PushChannel } from "@/lib/preTripReminder";
 
 export const dynamic = "force-dynamic";
 
@@ -147,12 +148,48 @@ export async function GET(req: Request) {
         };
       });
 
+    // "Departing soon" list (next 7 days) with a PREVIEW of the 7-day reminder.
+    // Read-only: looks up, for just these few trips, whether the owner has a
+    // push token (booleans only, never the token) and whether an event doc
+    // already exists. Nothing is sent or written here.
+    const soonRows = product.tripRows.filter(
+      r => r.phase !== "past" && r.daysToStart != null && r.daysToStart >= 0 && r.daysToStart <= 7,
+    );
+    const channelByOwner = new Map<string, PushChannel>();
+    const sentByTrip = new Map<string, boolean>();
+    if (soonRows.length > 0) {
+      const owners = [...new Set(soonRows.map(r => r.owner))];
+      const subSnaps = await adminDb.getAll(...owners.map(o => adminDb.collection("pushSubscriptions").doc(o)));
+      subSnaps.forEach((s, i) => {
+        const d = s.exists ? (s.data() as { fcmToken?: string; subscription?: unknown }) : null;
+        const fcm = !!d?.fcmToken;
+        const web = !!d?.subscription;
+        channelByOwner.set(owners[i], fcm && web ? "both" : fcm ? "fcm" : web ? "web" : "none");
+      });
+      const evSnaps = await adminDb.getAll(...soonRows.map(r => adminDb.collection("notificationEvents").doc(notificationEventId(r.id))));
+      evSnaps.forEach((s, i) => sentByTrip.set(soonRows[i].id, s.exists));
+    }
+    const soon = soonRows.map(({ owner, ...row }) => ({
+      ...row,
+      preview: buildReminderPreview(
+        { id: row.id, startDate: row.startDate, endDate: row.endDate, isCreated: true, hasContent: row.hasContent, activityCount: row.activities, destination: row.destination, city: row.city },
+        product.lifecycle.today,
+        { channel: channelByOwner.get(owner) ?? "none", alreadySent: sentByTrip.get(row.id) ?? false },
+      ),
+    }));
+
     const payload = {
       users: { total: userCount, today: newUsersToday, week: newUsersWeek, month: newUsersMonth, activeWeek: activeWeekUnified, recent: recentUsers },
       trips: { total: tripCount, expenses: expenseCount, totalILS: Math.round(totalILS), activatedUsers, activationRate },
       signupsByDay,
       activeByDay,
-      product: { ...product, perUser: undefined, creatorUids: undefined },
+      product: {
+        ...product,
+        perUser: undefined,
+        creatorUids: undefined,
+        tripRows: product.tripRows.map(({ owner: _owner, ...row }) => row), // owner uid never leaves the server
+      },
+      soon,
       acquisition,
     };
     cache = { at: Date.now(), data: payload };

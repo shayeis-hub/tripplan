@@ -21,6 +21,7 @@
 //    credited for content/expenses and why 7-day activation is not computed.
 
 import { computeLifecycle, homeToday, type Lifecycle } from "./tripLifecycle";
+import { buildTripRow, type TripRow } from "./tripDrilldown";
 
 export interface UserLite {
   uid: string;
@@ -41,6 +42,15 @@ export interface TripLite {
   expenseCount: number;
   flightHotelCount: number;
   activityCount: number;
+  // Detail used by the admin drill-down / pre-trip preview (no personal data).
+  destination: string;
+  city: string;
+  createdAt: number | null; // only trips made after createdAt shipped have it
+  updatedAt: number | null; // last write by a member, join, archive...
+  flightCount: number;
+  hotelCount: number;
+  packingItems: number; // packingList only exists once a user edited it
+  packingChecked: number;
 }
 
 export interface Pct {
@@ -70,6 +80,9 @@ export interface ProductMetrics {
   expenseUsers: Pct;
   funnel: FunnelStage[];
   lifecycle: Lifecycle; // timing of created trips vs today (see tripLifecycle.ts)
+  // One row per created trip (the same set the lifecycle numbers count). `owner`
+  // is internal only and must be stripped before anything leaves the server.
+  tripRows: (TripRow & { owner: string })[];
   perUser: Record<string, RecentUserUsage>;
   creatorUids: string[]; // for acquisition-by-source breakdowns
 }
@@ -80,6 +93,7 @@ export function computeProductMetrics(
   users: UserLite[],
   trips: TripLite[],
   today: string = homeToday(),
+  nowMs: number = Date.now(),
 ): ProductMetrics {
   const N = users.length;
   const uidSet = new Set(users.map(u => u.uid));
@@ -175,6 +189,7 @@ export function computeProductMetrics(
       real.map(t => ({ startDate: t.startDate, endDate: t.endDate, hasContent: hasContent(t) })),
       today,
     ),
+    tripRows: real.map(t => ({ ...buildTripRow(t, today, nowMs), owner: t.owner! })),
     perUser,
     creatorUids: creators.map(u => u.uid),
   };
@@ -205,5 +220,15 @@ export function toTripLite(id: string, data: Record<string, unknown>): TripLite 
     expenseCount: expenses.length,
     flightHotelCount: expenses.filter(e => e && (e.category === "flight" || e.category === "hotel")).length,
     activityCount,
+    destination: typeof data.destination === "string" ? data.destination.trim().slice(0, 80) : "",
+    city: typeof data.city === "string" ? data.city.trim().slice(0, 80) : "",
+    createdAt: typeof data.createdAt === "number" ? data.createdAt : null,
+    updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : null,
+    flightCount: expenses.filter(e => e && e.category === "flight").length,
+    hotelCount: expenses.filter(e => e && e.category === "hotel").length,
+    packingItems: Array.isArray(data.packingList) ? data.packingList.length : 0,
+    packingChecked: Array.isArray(data.packingList)
+      ? (data.packingList as { checked?: boolean }[]).filter(i => i && i.checked).length
+      : 0,
   };
 }
