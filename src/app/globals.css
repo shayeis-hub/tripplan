@@ -83,3 +83,26 @@ body {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
+
+/* ── Reduced motion ──────────────────────────────────────────────────
+   For people who ask the OS for less motion: replace movement with a plain fade
+   and drop continuous motion, but keep feedback that isn't vestibular (opacity,
+   colour) and the small loading spinners. */
+@keyframes screenFadeInReduced {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen-enter {
+    animation-name: screenFadeInReduced;
+    animation-duration: 0.15s;
+  }
+  .tap-btn:active,
+  .nav-btn:active {
+    transform: none;
+  }
+  .skeleton {
+    animation: none;
+    background: rgba(255, 255, 255, 0.08);
+  }
+}

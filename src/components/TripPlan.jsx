@@ -404,6 +404,14 @@ const GS=`
   ::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}
   ::-webkit-scrollbar-thumb{background:rgba(100,223,223,0.3);border-radius:4px}
   input,select,textarea,button{font-family:'Rubik',sans-serif}
+  /* Instant press feedback on every button in the app: respond on touch-down, not on
+     release. :where() keeps specificity at zero, so .tap-btn / .nav-btn and any inline
+     style (e.g. a button that sets its own transform or transition) still win. */
+  :where(button){transition:transform 110ms cubic-bezier(0.25,0.46,0.45,0.94)}
+  :where(button:not(:disabled,.tap-btn,.nav-btn)):active{transform:scale(0.97)}
+  @media (prefers-reduced-motion: reduce){
+    :where(button:not(:disabled,.tap-btn,.nav-btn)):active{transform:none;opacity:0.8}
+  }
 `;
 
 function WaveHeader({title,subtitle,action}){
@@ -543,7 +551,8 @@ function TripDatePicker({dates,value,onChange,label,lang}){
     const idx=dates.indexOf(value);
     if(idx<0)return;
     const el=scrollRef.current.children[idx];
-    el?.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+    const reduceMotion=typeof window!=="undefined"&&window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    el?.scrollIntoView({behavior:reduceMotion?"auto":"smooth",block:"nearest",inline:"center"});
   },[value]);
   const DAY_HE=["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"];
   const DAY_EN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -4336,6 +4345,13 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
 export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFields,onMutateTripField,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId,syncFailed,onRetrySync}){
   const{lang,setLang}=useLang();
   const{user}=useAuth();
+  // iOS only applies :active styles (the press feedback in GS) once some touch
+  // listener exists on the page; a passive no-op one is enough and costs nothing.
+  useEffect(()=>{
+    const noop=()=>{};
+    document.addEventListener("touchstart",noop,{passive:true});
+    return()=>document.removeEventListener("touchstart",noop);
+  },[]);
   const[trips,setTrips]=useState(initialTrips);
   const[activeId,setActiveId]=useState(null);
   const[section,setSection]=useState(null); // null=splash | "budget" | "trip"

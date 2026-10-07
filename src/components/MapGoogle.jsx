@@ -234,7 +234,9 @@ export default function MapGoogle({ destination, places, lang, dayFilter = "all"
     const pos = { lat: searchPin.lat, lng: searchPin.lng };
     searchMarkerRef.current = new maps.Marker({
       position: pos, map, title: searchPin.name, zIndex: 1500,
-      icon: pinIcon(maps, "#ef4444"), animation: maps.Animation.DROP,
+      icon: pinIcon(maps, "#ef4444"),
+      // The drop-in bounce is a movement animation: skip it when the user asked for reduced motion.
+      animation: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? null : maps.Animation.DROP,
     });
     // Name label so it's clear what the new pin is
     searchInfoRef.current = new maps.InfoWindow({
