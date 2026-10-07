@@ -141,6 +141,27 @@ export default function AdminPage() {
   const [err, setErr]         = useState("");
   const [idToken, setIdToken] = useState("");
   const [openGroup, setOpenGroup] = useState<string | null>(null); // lifecycle row whose trips are expanded
+  // TEMPORARY deep-link test: sends one notification to this admin's own device
+  const [testTripId, setTestTripId] = useState("");
+  const [testBusy, setTestBusy] = useState(false);
+  const [testMsg, setTestMsg] = useState("");
+  const sendDeepLinkTest = async () => {
+    if (!auth.currentUser) return;
+    setTestBusy(true); setTestMsg("");
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch("/api/admin/push-test", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ tripId: testTripId.trim() }),
+      });
+      const data = await res.json();
+      setTestMsg(res.ok ? `נשלח. Android: ${data.fcm} · Web: ${data.web}` : `נכשל: ${data.error || res.status}`);
+    } catch (e) {
+      setTestMsg(`נכשל: ${e instanceof Error ? e.message : "שגיאה"}`);
+    } finally { setTestBusy(false); }
+  };
+
   const login = async () => {
     try {
       const cred = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pass);
@@ -440,6 +461,23 @@ export default function AdminPage() {
               <span>✈️ טיולים: <b style={{ color: "rgba(255,255,255,0.7)" }}>{stats.trips.total}</b></span>
               <span>🧾 הוצאות: <b style={{ color: "rgba(255,255,255,0.7)" }}>{stats.trips.expenses}</b></span>
               <span>💰 מחזור מנוהל: <b style={{ color: "rgba(255,255,255,0.7)" }}>₪{stats.trips.totalILS.toLocaleString()}</b></span>
+            </div>
+
+            {/* TEMPORARY: deep-link test, sends a single notification to YOUR OWN device only */}
+            <div style={{ marginTop: 28, background: "rgba(251,191,36,0.06)", border: "0.5px solid rgba(251,191,36,0.3)", borderRadius: 16, padding: "18px 24px" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fbbf24" }}>בדיקת קישור עמוק (זמני)</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 4, lineHeight: 1.6 }}>
+                שולח הודעת בדיקה אחת למכשיר שלך בלבד, עם הקישור /?trip=&lt;מזהה&gt;. הטיול חייב להיות שלך או משותף איתך. לא נוצר אירוע ולא נשלח לאף משתמש אחר.
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                <input value={testTripId} onChange={e => setTestTripId(e.target.value)} placeholder="מזהה טיול מלא (מסמך ב-trips)" dir="ltr"
+                  style={{ flex: 1, minWidth: 220, padding: "10px 12px", borderRadius: 10, border: "0.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontSize: 13, fontFamily: RF, outline: "none" }} />
+                <button onClick={sendDeepLinkTest} disabled={testBusy || !testTripId.trim()}
+                  style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: testBusy || !testTripId.trim() ? "rgba(251,191,36,0.3)" : "#fbbf24", color: BG, fontWeight: 700, fontSize: 13, cursor: testBusy || !testTripId.trim() ? "default" : "pointer", fontFamily: RF }}>
+                  {testBusy ? "שולח..." : "שלח לעצמי"}
+                </button>
+              </div>
+              {testMsg && <div style={{ marginTop: 10, fontSize: 12, color: testMsg.startsWith("נשלח") ? "#4ade80" : "#ff6b6b" }}>{testMsg}</div>}
             </div>
 
             {/* Sentry link */}
