@@ -646,6 +646,15 @@ function PieChart({data}){
 // Web: service-worker + VAPID web-push. Native app (Capacitor): FCM token via
 // the PushNotifications plugin — both stored through /api/push-subscribe.
 const isCapacitorNative=()=>typeof window!=="undefined"&&window.Capacitor?.isNativePlatform?.();
+// iOS builds that ship @capacitor-firebase/messaging expose it here (the iOS app
+// swaps @capacitor/push-notifications out for it and gets an FCM token). Android,
+// the web and OLDER iOS builds (no such plugin) get null, so every iOS-specific
+// branch below stays inert for them and their existing behaviour is untouched.
+const iosMessaging=()=>{
+  try{
+    return isCapacitorNative()&&window.Capacitor?.getPlatform?.()==="ios"?(window.Capacitor?.Plugins?.FirebaseMessaging||null):null;
+  }catch{return null;}
+};
 
 function usePushNotifications(userId,user){
   const[permission,setPermission]=useState(typeof Notification!=="undefined"?Notification.permission:"default");
@@ -680,6 +689,16 @@ function usePushNotifications(userId,user){
   };
 
   const subscribeNative=async()=>{
+    const FM=iosMessaging();
+    if(FM){
+      // iOS app: ask the OS, then register the FCM token the plugin returns.
+      const perm=await FM.requestPermissions();
+      if(perm?.receive!=="granted"){setPermission("denied");return;}
+      setPermission("granted");
+      const res=await FM.getToken();
+      if(res?.token){const ok=await saveFcmToken(res.token,userId);if(ok) setSubscribed(true);}
+      return;
+    }
     const{PushNotifications}=window.Capacitor.Plugins;
     const perm=await PushNotifications.requestPermissions();
     if(perm.receive!=="granted"){setPermission("denied");return;}
@@ -732,7 +751,14 @@ function usePushNotifications(userId,user){
   const{lang:uiLang}=useLang();
   useEffect(()=>{
     if(!subscribed||!userId||!user) return;
-    if(isCapacitorNative()){try{Promise.resolve(window.Capacitor.Plugins.PushNotifications.register()).catch(()=>{});}catch{}return;}
+    if(isCapacitorNative()){
+      try{
+        const FM=iosMessaging();
+        if(FM) Promise.resolve(FM.getToken()).then(r=>{if(r?.token) saveFcmToken(r.token,userId);}).catch(()=>{});
+        else Promise.resolve(window.Capacitor.Plugins.PushNotifications.register()).catch(()=>{});
+      }catch{}
+      return;
+    }
     navigator.serviceWorker?.ready.then(reg=>reg.pushManager.getSubscription()).then(sub=>{if(sub)saveSubscription(sub,userId);}).catch(()=>{});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[uiLang,subscribed]);
@@ -742,7 +768,12 @@ function usePushNotifications(userId,user){
   // deep-link handler, which only selects a trip the user can already read.
   useEffect(()=>{
     if(!userId||!user||!isCapacitorNative()) return;
-    const{PushNotifications}=window.Capacitor.Plugins;
+    // Android uses @capacitor/push-notifications; the iOS app uses the Firebase
+    // Messaging plugin (different event name, same payload shape).
+    const FM=iosMessaging();
+    const PushNotifications=FM||window.Capacitor.Plugins.PushNotifications;
+    const eventName=FM?"notificationActionPerformed":"pushNotificationActionPerformed";
+    if(!PushNotifications) return;
     // Through window.Capacitor.Plugins, addListener does not always return a
     // Promise (the existing code awaits it, which works either way), so never
     // call .then on it directly. Awaited inside try/catch: this must never throw
@@ -750,7 +781,7 @@ function usePushNotifications(userId,user){
     let handle=null,gone=false;
     (async()=>{
       try{
-        const h=await PushNotifications.addListener("pushNotificationActionPerformed",(action)=>{
+        const h=await PushNotifications.addListener(eventName,(action)=>{
           const link=parseTripUrl(action?.notification?.data?.url,window.location.origin);
           if(link) window.dispatchEvent(new CustomEvent("tulon-open-trip",{detail:link}));
         });
@@ -763,6 +794,21 @@ function usePushNotifications(userId,user){
   useEffect(()=>{
     if(!userId||!user||typeof navigator==="undefined") return;
     if(isCapacitorNative()){
+      const FM=iosMessaging();
+      if(FM){
+        // iOS app: reflect the OS permission and, if granted, re-send the current FCM token.
+        (async()=>{
+          try{
+            const p=await FM.checkPermissions();
+            setPermission(p?.receive||"default");
+            if(p?.receive==="granted"){
+              const r=await FM.getToken();
+              if(r?.token){const ok=await saveFcmToken(r.token,userId);if(ok) setSubscribed(true);}
+            }
+          }catch(e){console.warn("push: iOS registration skipped",e);}
+        })();
+        return;
+      }
       // Re-register silently if permission was already granted. Also
       // reflect an existing denial in `permission` right away — otherwise
       // the bell button's "denied → show settings hint" check only ever
@@ -4328,7 +4374,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   const askAboutNotifications=(trip)=>{
     if(!trip) return;
     const env=detectPromptEnvironment();
-    if(shouldAskForNotifications({permission,subscribed,platform:env.platform,webPushSupported:env.webPushSupported,startDate:trip.startDate||null,today:localDateStr(new Date()),dismissedAt:readPromptAnsweredAt(),now:Date.now()})) setShowNotifPrompt(true);
+    if(shouldAskForNotifications({permission,subscribed,pushReady:env.pushReady,startDate:trip.startDate||null,today:localDateStr(new Date()),dismissedAt:readPromptAnsweredAt(),now:Date.now()})) setShowNotifPrompt(true);
   };
   const renderNotifPrompt=()=>showNotifPrompt&&(
     <NotificationPrompt lang={lang}

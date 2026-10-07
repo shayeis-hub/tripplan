@@ -69,6 +69,8 @@ export function createPre7Senders(messaging: Messaging, webpush: { sendNotificat
         notification: { title: msg.title, body: msg.body },
         data: { url: msg.url },
         android: { notification: { icon: "ic_launcher", color: "#0d2137" }, priority: "high" },
+        // iOS (once the app registers FCM tokens): play the default sound
+        apns: { payload: { aps: { sound: "default" } } },
       });
     },
     async web(subscription: unknown, msg: SendMessage) {
