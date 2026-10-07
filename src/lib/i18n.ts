@@ -228,6 +228,11 @@ export const translations = {
   notif_off:        { he: "🔕",                      en: "🔕",                   es: "🔕" },
   notif_active:     { he: "התראות פעילות",           en: "Notifications enabled", es: "Notificaciones activas" },
   notif_enable:     { he: "הפעל התראות",             en: "Enable notifications", es: "Activar notificaciones" },
+  // Soft ask shown once, right after a new trip with a departure date is created.
+  notifprompt_title: { he: "רוצים תזכורת לפני הנסיעה?", en: "Want a reminder before your trip?", es: "¿Quieres un recordatorio antes del viaje?" },
+  notifprompt_body:  { he: "נזכיר לכם שבוע לפני היציאה, ונשלח תזכורות לטיסות ולצ'ק-אין במלון שתוסיפו.", en: "We'll remind you a week before you leave, and send reminders for flights and hotel check-ins you add.", es: "Te avisaremos una semana antes de salir y te enviaremos recordatorios de los vuelos y check-ins de hotel que añadas." },
+  notifprompt_yes:   { he: "כן, תזכירו לי", en: "Yes, remind me", es: "Sí, avísame" },
+  notifprompt_later: { he: "אולי אחר כך", en: "Maybe later", es: "Quizás más tarde" },
 
   // ── Receipt scan ──────────────────────────────────────
   scan_btn:         { he: "📷 סרוק קבלה",             en: "📷 Scan receipt",      es: "📷 Escanear recibo" },

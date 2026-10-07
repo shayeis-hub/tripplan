@@ -48,6 +48,8 @@ import { useLang } from "@/lib/LangContext";
 import { useAuth } from "@/lib/AuthContext";
 import { t } from "@/lib/i18n";
 import { currentLang } from "@/lib/currentLang";
+import NotificationPrompt from "@/components/NotificationPrompt";
+import { shouldAskForNotifications, markPromptAnswered, readPromptAnsweredAt, detectPromptEnvironment } from "@/lib/notifPrompt";
 import { parseTripLink, parseTripUrl, takePendingTripLink, stripTripParams } from "@/lib/tripDeepLink";
 import { buildAgodaUrl, buildGygUrl, buildAiraloUrl, buildGetTransferUrl, buildKiwiUrl } from "@/lib/affiliate";
 import ReceiptCamera from "@/components/ReceiptCamera";
@@ -4319,6 +4321,21 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   const{rates,allCodes,info,toILS}=useRates();
   const{permission,subscribed,subscribe}=usePushNotifications(userId,user);
 
+  // One-time soft ask for trip reminders, right after a NEW trip with a departure
+  // date at least a week away is created (rules and platform checks live in
+  // lib/notifPrompt.ts). "Yes" is what opens the system permission dialog.
+  const[showNotifPrompt,setShowNotifPrompt]=useState(false);
+  const askAboutNotifications=(trip)=>{
+    if(!trip) return;
+    const env=detectPromptEnvironment();
+    if(shouldAskForNotifications({permission,subscribed,platform:env.platform,webPushSupported:env.webPushSupported,startDate:trip.startDate||null,today:localDateStr(new Date()),dismissedAt:readPromptAnsweredAt(),now:Date.now()})) setShowNotifPrompt(true);
+  };
+  const renderNotifPrompt=()=>showNotifPrompt&&(
+    <NotificationPrompt lang={lang}
+      onYes={()=>{markPromptAnswered();setShowNotifPrompt(false);subscribe();}}
+      onLater={()=>{markPromptAnswered();setShowNotifPrompt(false);}}/>
+  );
+
   // sync incoming trips from Firestore
   useEffect(()=>{
     setTrips(initialTrips);
@@ -5074,7 +5091,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
               {t("home_trips",lang)||"הטיולים שלי"} <ChevronRight size={14} color="rgba(100,223,223,0.7)" strokeWidth={2}/>
             </button>
           </div>
-          {shareModal&&renderShareModal()}
+          {shareModal&&renderShareModal()}{renderNotifPrompt()}
           {inspireModal&&renderInspireModal()}
           {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
@@ -5110,7 +5127,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             </div>
           </div>
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
-          {shareModal&&renderShareModal()}
+          {shareModal&&renderShareModal()}{renderNotifPrompt()}
           {inspireModal&&renderInspireModal()}
           {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
@@ -5123,7 +5140,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
               </div>
             )}
             <div key={screen} className="screen-enter">
-              {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>{setWizardMode(false);setScreen("expenses");}} allCodes={allCodes} rates={rates} wizard={wizardMode} onShare={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} lastTripPrefs={lastTripPrefs}/>}
+              {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>{const wasWizard=wizardMode;setWizardMode(false);setScreen("expenses");if(wasWizard)askAboutNotifications(active);}} allCodes={allCodes} rates={rates} wizard={wizardMode} onShare={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} lastTripPrefs={lastTripPrefs}/>}
               {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)} isViewOnly={isViewOnly}/>}
               {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates}/>}
             </div>
@@ -5156,7 +5173,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             </div>
           </div>
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
-          {shareModal&&renderShareModal()}
+          {shareModal&&renderShareModal()}{renderNotifPrompt()}
           {inspireModal&&renderInspireModal()}
           {sideMenu&&renderSideMenu()}{showGuide&&renderGuideModal()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:screen==="map"?"hidden":"auto",position:"relative",minHeight:0}}>
