@@ -97,16 +97,27 @@ self.addEventListener("notificationclick", (e) => {
   e.notification.close();
   const url = e.notification.data?.url || "/";
   e.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((wins) => {
-        const existing = wins.find((w) => w.url.includes(self.location.origin));
-        if (existing) {
-          existing.focus();
-          existing.navigate(url);
-        } else {
-          clients.openWindow(url);
+    (async () => {
+      const wins = await clients.matchAll({ type: "window", includeUncontrolled: true });
+      const existing = wins.find((w) => w.url.includes(self.location.origin));
+      if (existing) {
+        // WindowClient.navigate() rejects for a window this worker does not
+        // control (and some browsers lack it), which used to leave the tap doing
+        // nothing. Fall back to opening the target in a new window instead, so a
+        // reminder's deep link opens its trip on every browser/PWA.
+        try {
+          await existing.focus();
+          await existing.navigate(url);
+          return;
+        } catch (err) {
+          /* fall through to openWindow */
         }
-      })
+      }
+      try {
+        await clients.openWindow(url);
+      } catch (err) {
+        /* nothing more a worker can do */
+      }
+    })()
   );
 });

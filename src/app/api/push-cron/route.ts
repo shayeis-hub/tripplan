@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 import { getAdminDb, getAdminMessaging } from "@/lib/firebase-admin";
+import { runPre7Reminders } from "@/lib/pre7Reminder";
+import { createFirestorePre7Db, createPre7Senders } from "@/lib/pre7Adapters";
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -200,7 +202,31 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, sent: notifications.length, notifications });
+    // 7-day pre-trip reminder, kept separate from the flight/hotel logic above and
+    // switched by one env var so it can be rolled out in stages:
+    //   unset (default) -> does nothing
+    //   "dry"           -> evaluates and logs what it WOULD send; sends/writes nothing
+    //   "true"          -> sends for real (idempotent; see lib/pre7Reminder.ts)
+    // It only queries trips whose startDate is today+7 and only acts inside the
+    // 10:00-20:00 Israel-time window, so the 10-minute tick costs nothing outside it.
+    // Any failure here is logged and must never affect the reminders above.
+    let pre7: unknown = undefined;
+    const pre7Mode = process.env.PRE7_REMINDERS;
+    if (pre7Mode === "true" || pre7Mode === "dry") {
+      try {
+        const summary = await runPre7Reminders(
+          { db: createFirestorePre7Db(getAdminDb()), senders: createPre7Senders(getAdminMessaging(), webpush), now: () => Date.now() },
+          { dryRun: pre7Mode === "dry" },
+        );
+        if (summary.ran && summary.candidates > 0) console.log("pre7 reminders:", JSON.stringify({ mode: pre7Mode, ...summary }));
+        pre7 = { mode: pre7Mode, ran: summary.ran, candidates: summary.candidates, results: summary.results.map(r => r.outcome) };
+      } catch (e) {
+        console.error("push-cron: pre7 reminders failed", e);
+        pre7 = { mode: pre7Mode, error: true };
+      }
+    }
+
+    return NextResponse.json({ success: true, sent: notifications.length, notifications, ...(pre7 ? { pre7 } : {}) });
   } catch (err) {
     console.error("push-cron: run failed", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

@@ -215,10 +215,19 @@ const MAX_PLACE_CHARS = 40;
 // City if known, otherwise the first segment of the destination
 // ("Paris, France" -> "Paris"). No names, e-mails, amounts or booking details
 // are ever used, only the place.
+// The destination is free text typed by the user, so it can carry emoji or
+// other pictographs ("ירח דבש 🌙"). Notifications never contain emoji, so they
+// are stripped here (including flags, skin tones, joiners and variation
+// selectors); if nothing is left the generic "your trip" wording is used.
+const PICTOGRAPHS = /[\p{Extended_Pictographic}\p{Emoji_Modifier}\u{1F1E6}-\u{1F1FF}\u200D\uFE0E\uFE0F\u20E3]/gu;
+const stripPictographs = (s: string) => s.replace(PICTOGRAPHS, "").replace(/\s+/g, " ").trim();
+
 export function destinationLabel(trip: Pick<ReminderTrip, "city" | "destination">): string {
-  const raw = (trip.city || trip.destination || "").trim();
-  const first = (raw.split(",")[0] || "").trim();
-  return first.length > MAX_PLACE_CHARS ? first.slice(0, MAX_PLACE_CHARS).trim() : first;
+  for (const raw of [trip.city, trip.destination]) {
+    const first = stripPictographs(((raw || "").split(",")[0] || "").trim());
+    if (first) return first.length > MAX_PLACE_CHARS ? first.slice(0, MAX_PLACE_CHARS).trim() : first;
+  }
+  return "";
 }
 
 export type Pre7Variant = "A" | "B" | "C";
