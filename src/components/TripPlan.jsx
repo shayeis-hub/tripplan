@@ -730,7 +730,7 @@ function usePushNotifications(userId,user){
   const{lang:uiLang}=useLang();
   useEffect(()=>{
     if(!subscribed||!userId||!user) return;
-    if(isCapacitorNative()){window.Capacitor.Plugins.PushNotifications.register().catch(()=>{});return;}
+    if(isCapacitorNative()){try{Promise.resolve(window.Capacitor.Plugins.PushNotifications.register()).catch(()=>{});}catch{}return;}
     navigator.serviceWorker?.ready.then(reg=>reg.pushManager.getSubscription()).then(sub=>{if(sub)saveSubscription(sub,userId);}).catch(()=>{});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[uiLang,subscribed]);
@@ -741,12 +741,21 @@ function usePushNotifications(userId,user){
   useEffect(()=>{
     if(!userId||!user||!isCapacitorNative()) return;
     const{PushNotifications}=window.Capacitor.Plugins;
+    // Through window.Capacitor.Plugins, addListener does not always return a
+    // Promise (the existing code awaits it, which works either way), so never
+    // call .then on it directly. Awaited inside try/catch: this must never throw
+    // out of an effect and take the whole screen down.
     let handle=null,gone=false;
-    PushNotifications.addListener("pushNotificationActionPerformed",(action)=>{
-      const link=parseTripUrl(action?.notification?.data?.url,window.location.origin);
-      if(link) window.dispatchEvent(new CustomEvent("tulon-open-trip",{detail:link}));
-    }).then(h=>{if(gone)h.remove();else handle=h;}).catch(()=>{});
-    return()=>{gone=true;if(handle)handle.remove();};
+    (async()=>{
+      try{
+        const h=await PushNotifications.addListener("pushNotificationActionPerformed",(action)=>{
+          const link=parseTripUrl(action?.notification?.data?.url,window.location.origin);
+          if(link) window.dispatchEvent(new CustomEvent("tulon-open-trip",{detail:link}));
+        });
+        if(gone)h?.remove?.();else handle=h;
+      }catch(e){console.warn("push: action listener not registered",e);}
+    })();
+    return()=>{gone=true;try{handle?.remove?.();}catch{}};
   },[userId,user]);
 
   useEffect(()=>{
