@@ -4,6 +4,7 @@ import {
   arrayUnion, arrayRemove, query, orderBy, or, where
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { hasMeaningfulContent } from "./tripContent";
 
 export function useTrips(userId: string | undefined, userEmail: string | undefined) {
   const [trips,   setTrips]   = useState<any[]>([]);
@@ -130,6 +131,34 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
     }
   };
 
+  // Records WHEN a trip first got meaningful content (an itinerary item, or a
+  // flight/hotel entry — see lib/tripContent). Write-once: it runs in a
+  // transaction against the server copy and does nothing if firstContentAt is
+  // already there, so edits on any device never move it. Only trips that carry
+  // createdAt (made after this shipped) are ever stamped; older trips are left
+  // alone because their real first-content time is unknown. firstContentBy is
+  // the uid that performed that first save, so a later activation metric can
+  // tell the owner's own action from a collaborator's.
+  const stampFirstContent = async (tripId: string) => {
+    if (!userId || !tripId) return;
+    const local = trips.find(t => t.id === tripId);
+    if (!local || !local.createdAt || local.firstContentAt) return; // cheap guard: no read for old/already-stamped trips
+    try {
+      await runTransaction(db, async (tx) => {
+        const ref = doc(db, "trips", tripId);
+        const snap = await tx.get(ref);
+        if (!snap.exists()) return;
+        const d = snap.data() as Record<string, unknown>;
+        if (!d.createdAt || d.firstContentAt || !hasMeaningfulContent(d)) return;
+        tx.update(ref, { firstContentAt: Date.now(), firstContentBy: userId });
+      });
+    } catch (err) {
+      // Analytics only: never surface this as a sync failure. The next content
+      // save simply tries again while firstContentAt is still missing.
+      console.warn("stampFirstContent skipped:", err);
+    }
+  };
+
   // Field-level update for an EXISTING trip doc — only touches the keys in
   // `patch`, unlike saveTrip's full-document overwrite. Two people editing
   // different fields of the same trip at the same moment (one ticks a
@@ -143,6 +172,7 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
     try {
       await updateDoc(doc(db, "trips", tripId), { ...stripUndefined(patch), updatedAt: Date.now() });
       clearFailureIfMatches(tripId);
+      if ("activities" in patch) stampFirstContent(tripId);
       return true;
     } catch (err) {
       console.error("Firebase updateTripFields error:", err);
@@ -172,6 +202,7 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
         tx.update(ref, { [field]: stripUndefined(next), updatedAt: Date.now() });
       });
       clearFailureIfMatches(tripId);
+      if (field === "expenses") stampFirstContent(tripId);
       return true;
     } catch (err) {
       console.error(`Firebase mutateTripField(${field}) error:`, err);

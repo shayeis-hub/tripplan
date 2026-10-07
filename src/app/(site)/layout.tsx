@@ -3,6 +3,7 @@ import "../globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
 import { LangProvider } from "@/lib/LangContext";
 import RegisterSW from "@/components/RegisterSW";
+import AcquisitionCapture from "@/components/AcquisitionCapture";
 import DirSetter from "@/components/DirSetter";
 import RootHead from "@/components/RootHead";
 import { Analytics } from "@vercel/analytics/next";
@@ -36,7 +37,7 @@ export default function RootLayout({
       <head>
         <RootHead />
       </head>
-      <body><LangProvider><DirSetter /><AuthProvider><RegisterSW />{children}<Analytics /></AuthProvider></LangProvider></body>
+      <body><LangProvider><DirSetter /><AuthProvider><AcquisitionCapture /><RegisterSW />{children}<Analytics /></AuthProvider></LangProvider></body>
     </html>
   );
 }

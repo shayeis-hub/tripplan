@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import RegisterSW from "@/components/RegisterSW";
+import AcquisitionCapture from "@/components/AcquisitionCapture";
 import RootHead from "@/components/RootHead";
 import { Analytics } from "@vercel/analytics/next";
 import { rootBaseMetadata, rootViewport } from "@/lib/rootMeta";
@@ -23,7 +24,7 @@ export default function EnglishRootLayout({
       <head>
         <RootHead />
       </head>
-      <body><RegisterSW />{children}<Analytics /></body>
+      <body><AcquisitionCapture /><RegisterSW />{children}<Analytics /></body>
     </html>
   );
 }

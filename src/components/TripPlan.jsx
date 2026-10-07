@@ -3718,7 +3718,7 @@ const newTrip=(ownerId)=>{
   let dc="USD", currencies=["USD","EUR","GBP"];
   if(loc.startsWith("he")){dc="ILS";currencies=["ILS","USD","EUR"];}
   else if(loc.startsWith("es")){dc="EUR";currencies=["EUR","USD","GBP"];}
-  return {id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:dc,displayCurrency:dc,currencies,people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[]};
+  return {id:uid(),destination:"",startDate:"",endDate:"",defaultCurrency:dc,displayCurrency:dc,currencies,people:[],expenses:[],activities:{},owner:ownerId,sharedWith:[],createdAt:Date.now()};
 };
 
 // ── TRIP SPLASH SCREEN ────────────────────────────────────────────────────────

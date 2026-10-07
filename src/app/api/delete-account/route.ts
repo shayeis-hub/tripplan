@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
     await Promise.all([
       db.collection("travelProfiles").doc(uid).delete(),
       db.collection("pushSubscriptions").doc(uid).delete(),
+      db.collection("userAcquisition").doc(uid).delete(),
     ]);
 
     // 7. The Auth account itself — works regardless of sign-in provider,

@@ -7,10 +7,32 @@ const ADMIN_EMAIL = "shayeis@gmail.com";
 const RF = "'Rubik',sans-serif";
 const TEAL = "#64dfdf";
 const BG = "#0d2137";
+const SOURCE_LABELS: Record<string, string> = {
+  google_organic: "Google / Organic",
+  product_hunt: "Product Hunt",
+  alternativeto: "AlternativeTo",
+  direct: "Direct",
+  other: "Other / Referral",
+};
+const FUNNEL_LABELS: Record<string, string> = {
+  registered: "נרשמו",
+  trip: "יצרו או הצטרפו לטיול",
+  content: "הוסיפו תוכן משמעותי לטיול",
+  participant: "הוסיפו משתתף נוסף",
+  expense: "הוסיפו הוצאה",
+};
 
 interface DayPoint { date: string; count: number }
+interface Pct { count: number; pct: number }
+interface Usage { ownedTrips: number; joinedTrips: number; itineraryItems: number; expenses: number }
 interface Stats {
-  users: { total: number; today: number; week: number; month: number; activeWeek: number; recent: { email: string; created: string; lastSignIn: string }[] };
+  users: { total: number; today: number; week: number; month: number; activeWeek: number; recent: { email: string; created: string; lastSignIn: string; lastActive?: string | null; usage?: Usage }[] };
+  product?: {
+    registered: number; tripsCreated: number; emptyDrafts: number;
+    tripCreators: Pct; joinedTravelers: Pct; groupTrips: Pct; expenseUsers: Pct;
+    funnel: { key: string; count: number; pct: number; fromPrev: number | null }[];
+  };
+  acquisition?: { total: number; groups: { key: string; count: number; creators: number }[]; campaigns: { name: string; count: number }[] };
   trips: { total: number; expenses: number; totalILS: number; activatedUsers: number; activationRate: number };
   signupsByDay: DayPoint[];
   activeByDay: DayPoint[];
@@ -80,9 +102,9 @@ function LineChart({ data, color = TEAL, label }: { data: DayPoint[]; color?: st
   );
 }
 
-function KPI({ label, value, sub, color = TEAL }: { label: string; value: string | number; sub?: string; color?: string }) {
+function KPI({ label, value, sub, color = TEAL, hint }: { label: string; value: string | number; sub?: string; color?: string; hint?: string }) {
   return (
-    <div style={{ background: "rgba(255,255,255,0.05)", border: `0.5px solid ${color}40`, borderRadius: 16, padding: "20px 24px", borderTop: `3px solid ${color}` }}>
+    <div title={hint} style={{ background: "rgba(255,255,255,0.05)", border: `0.5px solid ${color}40`, borderRadius: 16, padding: "20px 24px", borderTop: `3px solid ${color}` }}>
       <div style={{ fontSize: 32, fontWeight: 900, color, fontFamily: RF }}>{value}</div>
       <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginTop: 4, fontFamily: RF }}>{label}</div>
       {sub && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2, fontFamily: RF }}>{sub}</div>}
@@ -118,10 +140,12 @@ export default function AdminPage() {
     }
   };
 
-  const fetchStats = async (token: string) => {
+  // fresh=true skips the server-side cache (Refresh button); the first load
+  // after login may be served from a few-minutes-old cache to save reads.
+  const fetchStats = async (token: string, fresh = false) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/stats", { headers: { authorization: `Bearer ${token}` } });
+      const res = await fetch(`/api/admin/stats${fresh ? "?fresh=1" : ""}`, { headers: { authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setStats(data);
@@ -133,7 +157,7 @@ export default function AdminPage() {
   const refresh = async () => {
     if (!auth.currentUser) return;
     const token = await auth.currentUser.getIdToken(true);
-    fetchStats(token);
+    fetchStats(token, true);
   };
 
   useEffect(() => {
@@ -197,11 +221,93 @@ export default function AdminPage() {
               <KPI label="הפעילו טיול" value={`${stats.trips.activationRate ?? 0}%`} color="#a78bfa" sub={`${stats.trips.activatedUsers ?? 0} משתמשים`} />
             </div>
 
+            {/* Product usage KPIs + activation funnel */}
+            {stats.product && (() => {
+              const p = stats.product;
+              return (
+                <>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>שימוש במוצר</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginBottom: 20 }}>
+                    <KPI label="טיולים שנוצרו" value={p.tripsCreated} color="#64dfdf"
+                      sub={p.emptyDrafts > 0 ? `ללא ${p.emptyDrafts} טיוטות ריקות` : "טיולים אמיתיים"}
+                      hint="טיולים של משתמשים רשומים עם יעד ותאריכים תקינים, או עם פריט מסלול או הוצאה. יעד בלבד לא נספר, כי הוא נשמר כבר בהקלדת האות הראשונה באשף." />
+                    <KPI label="יוצרי טיולים" value={p.tripCreators.count} color="#a78bfa"
+                      sub={`${p.tripCreators.pct}% מהרשומים`}
+                      hint="משתמשים שהם הבעלים של לפחות טיול אמיתי אחד." />
+                    <KPI label="מצטרפים לטיול" value={p.joinedTravelers.count} color="#4ade80"
+                      sub={`${p.joinedTravelers.pct}% מהרשומים`}
+                      hint="משתמשים שהמייל שלהם ברשימת השיתוף של טיול אמיתי שבבעלות משתמש אחר. כולל הוספה במייל וצפייה בלבד, כי הנתונים לא מבדילים." />
+                    <KPI label="טיולים קבוצתיים" value={p.groupTrips.count} color="#fbbf24"
+                      sub={`${p.groupTrips.pct}% מהטיולים`}
+                      hint="טיול אמיתי עם לפחות 2 נוסעים ברשימת הנוסעים, או לפחות חשבון נוסף אחד עם גישה." />
+                    <KPI label="משתמשי הוצאות" value={p.expenseUsers.count} color="#f472b6"
+                      sub={`${p.expenseUsers.pct}% מהרשומים`}
+                      hint="בעלי טיול אמיתי עם לפחות הוצאה אחת (כולל טיסות ומלונות, שנשמרים כהוצאות). הוצאות של חברים בטיול של אחר לא נספרות, כי להוצאה אין מזהה כותב." />
+                  </div>
+
+                  <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>משפך הפעלה</div>
+                  <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "18px 20px", marginBottom: 28 }}>
+                    {p.funnel.map((s, i) => (
+                      <div key={s.key} style={{ marginBottom: i < p.funnel.length - 1 ? 14 : 0 }}>
+                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6, gap: 12 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{FUNNEL_LABELS[s.key]}</div>
+                          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", whiteSpace: "nowrap" }}>
+                            <b style={{ color: "#fff", fontSize: 14 }}>{s.count}</b> · {s.pct}% מהרשומים
+                            {s.fromPrev != null && <span style={{ color: TEAL }}> · {s.fromPrev}% מהשלב הקודם</span>}
+                          </div>
+                        </div>
+                        <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                          <div style={{ width: `${Math.max(s.pct, s.count > 0 ? 1.5 : 0)}%`, height: "100%", borderRadius: 4, background: TEAL, opacity: 1 - i * 0.14 }} />
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 14, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
+                      כל שלב הוא תת-קבוצה של הקודם. תוכן משמעותי = פריט במסלול, טיסה או מלון. משתתף נוסף = נוסע נוסף ברשימה או חשבון נוסף בטיול. הוסיפו הוצאה = הוצאה בטיול שבבעלותם. מצטרפים לטיול נספרים בשלב 2 בלבד, כי לתוכן ולהוצאות אין מזהה כותב.
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+
             {/* Charts */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 28 }}>
               {stats.signupsByDay && <LineChart data={stats.signupsByDay} color="#64dfdf" label="📈 הרשמות חדשות ליום" />}
               {stats.activeByDay && <LineChart data={stats.activeByDay} color="#4ade80" label="🟢 משתמשים פעילים ליום (כניסה אחרונה)" />}
             </div>
+
+            {/* Acquisition: appears only once real source data exists */}
+            {stats.acquisition && stats.acquisition.total > 0 && (
+              <>
+                <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>מקורות הרשמה</div>
+                <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "18px 20px", marginBottom: 28 }}>
+                  {stats.acquisition.groups.map((g, i, arr) => {
+                    const share = Math.round((g.count / stats.acquisition!.total) * 1000) / 10;
+                    return (
+                      <div key={g.key} style={{ marginBottom: i < arr.length - 1 ? 12 : 0 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5, gap: 12 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{SOURCE_LABELS[g.key]}</div>
+                          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", whiteSpace: "nowrap" }}>
+                            <b style={{ color: "#fff", fontSize: 14 }}>{g.count}</b> · {share}%
+                            <span style={{ color: "#a78bfa" }}> · {g.creators} פתחו טיול</span>
+                          </div>
+                        </div>
+                        <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                          <div style={{ width: `${share}%`, height: "100%", background: TEAL, borderRadius: 3 }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {stats.acquisition.campaigns.length > 0 && (
+                    <div style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+                      קמפיינים: {stats.acquisition.campaigns.map(c => `${c.name} (${c.count})`).join(" · ")}
+                    </div>
+                  )}
+                  <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
+                    {stats.acquisition.total} נרשמים חדשים מאז הפעלת המעקב. מקור ההרשמה הראשון בלבד, ללא נתונים רטרואקטיביים.
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Recent users */}
             <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>🆕 משתמשים אחרונים</div>
@@ -211,9 +317,21 @@ export default function AdminPage() {
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{u.email}</div>
                     <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>נרשם: {new Date(u.created).toLocaleDateString("he-IL")}</div>
+                    {u.usage && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+                        {[
+                          u.usage.ownedTrips > 0 ? "יצר טיול" : u.usage.joinedTrips > 0 ? "הצטרף לטיול" : "ללא טיול",
+                          `טיולים: ${u.usage.ownedTrips + u.usage.joinedTrips}`,
+                          `פריטי מסלול: ${u.usage.itineraryItems}`,
+                          `הוצאות: ${u.usage.expenses}`,
+                        ].map((c, k) => (
+                          <span key={k} style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: k === 0 ? "rgba(100,223,223,0.12)" : "rgba(255,255,255,0.06)", color: k === 0 ? TEAL : "rgba(255,255,255,0.5)" }}>{c}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-                    התחבר לאחרונה: {u.lastSignIn ? new Date(u.lastSignIn).toLocaleDateString("he-IL") : "—"}
+                    פעיל לאחרונה: {(u.lastActive || u.lastSignIn) ? new Date((u.lastActive || u.lastSignIn) as string).toLocaleDateString("he-IL") : "—"}
                   </div>
                 </div>
               ))}

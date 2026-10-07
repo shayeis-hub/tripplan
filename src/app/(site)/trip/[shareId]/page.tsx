@@ -70,6 +70,10 @@ export default function SharePage() {
       const chosenExpenses = tripData.expenses
         .filter((e: any) => selected.has(e.id))
         .map((e: any) => ({ ...e, id: Math.random().toString(36).slice(2), amountILS: 0, amount: 0, currency: "ILS", paid: false }));
+      // A flight/hotel the user chose to import is itinerary content added now,
+      // so it counts as the trip's first meaningful content (see lib/tripContent).
+      const importedContent = chosenExpenses.some((e: any) => e.category === "flight" || e.category === "hotel");
+      const now = Date.now();
       await setDoc(firestoreDoc(db, "trips", tripId), {
         id: tripId,
         destination: tripData.destination,
@@ -82,7 +86,9 @@ export default function SharePage() {
         activities: {},
         owner: user.uid,
         sharedWith: [],
-        updatedAt: Date.now(),
+        createdAt: now,
+        ...(importedContent ? { firstContentAt: now, firstContentBy: user.uid } : {}),
+        updatedAt: now,
       });
       setImported(true);
       setTimeout(() => router.push("/"), 1800);
