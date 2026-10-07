@@ -14,6 +14,16 @@ const SOURCE_LABELS: Record<string, string> = {
   direct: "Direct",
   other: "Other / Referral",
 };
+// Number ranges are isolated left-to-right so "0–30" and "91+" don't get
+// visually reversed inside the RTL page.
+const PHASE_LABELS: Record<string, React.ReactNode> = {
+  past: "עברו",
+  now: "מתרחשים עכשיו",
+  future30: <><bdi dir="ltr">0–30</bdi> ימים</>,
+  future90: <><bdi dir="ltr">31–90</bdi> ימים</>,
+  future91: <><bdi dir="ltr">91+</bdi> ימים</>,
+  unknown: "תאריכים לא ברורים",
+};
 const FUNNEL_LABELS: Record<string, string> = {
   registered: "נרשמו",
   trip: "יצרו או הצטרפו לטיול",
@@ -31,6 +41,13 @@ interface Stats {
     registered: number; tripsCreated: number; emptyDrafts: number;
     tripCreators: Pct; joinedTravelers: Pct; groupTrips: Pct; expenseUsers: Pct;
     funnel: { key: string; count: number; pct: number; fromPrev: number | null }[];
+    lifecycle: {
+      today: string; total: number;
+      groups: { key: string; trips: number; withContent: number; withoutContent: number; pct: number | null }[];
+      futureTotal: { trips: number; withContent: number; pct: number | null };
+      upcoming: { withContent: number; total: number; pct: number | null };
+      noContent: { total: number; byPhase: { key: string; count: number }[] };
+    };
   };
   acquisition?: { total: number; groups: { key: string; count: number; creators: number }[]; campaigns: { name: string; count: number }[] };
   trips: { total: number; expenses: number; totalILS: number; activatedUsers: number; activationRate: number };
@@ -261,10 +278,71 @@ export default function AdminPage() {
                         </div>
                       </div>
                     ))}
+                    {/* Context only: the funnel stages above are unchanged */}
+                    <div style={{ marginTop: 16, paddingTop: 14, borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", marginBottom: 8 }}>
+                        טיולים ללא תוכן משמעותי, לפי מועד יציאה <span style={{ color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>· סה״כ {p.lifecycle.noContent.total}</span>
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {["future30", "future90", "future91", "now", "past", "unknown"]
+                          .map(k => p.lifecycle.noContent.byPhase.find(x => x.key === k)!)
+                          .filter(x => x && (x.count > 0 || x.key !== "unknown"))
+                          .map(x => (
+                          <span key={x.key} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 10, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }}>
+                            {PHASE_LABELS[x.key]}: <b style={{ color: "#fff" }}>{x.count}</b>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                     <div style={{ marginTop: 14, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
                       כל שלב הוא תת-קבוצה של הקודם. תוכן משמעותי = פריט במסלול, טיסה או מלון. משתתף נוסף = נוסע נוסף ברשימה או חשבון נוסף בטיול. הוסיפו הוצאה = הוצאה בטיול שבבעלותם. מצטרפים לטיול נספרים בשלב 2 בלבד, כי לתוכן ולהוצאות אין מזהה כותב.
                     </div>
                   </div>
+
+                  {/* Trip lifecycle: timing of created trips relative to today */}
+                  <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>מחזור חיי הטיולים</div>
+                  {(() => {
+                    const lc = p.lifecycle;
+                    const up = lc.upcoming;
+                    const row = (key: string, label: React.ReactNode, trips: number, withContent: number, pct: number | null, indent = false, bold = false) => (
+                      <div key={key} style={{ padding: "10px 0", borderBottom: "0.5px solid rgba(255,255,255,0.05)", paddingInlineStart: indent ? 16 : 0 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1.5fr 0.7fr", gap: 8, alignItems: "baseline", fontSize: 12 }}>
+                          <div style={{ fontSize: 13, fontWeight: bold ? 700 : 500, color: indent ? "rgba(255,255,255,0.75)" : "#fff" }}>{label}</div>
+                          <div style={{ color: "rgba(255,255,255,0.55)" }}><b style={{ color: "#fff", fontSize: 14 }}>{trips}</b> טיולים</div>
+                          <div style={{ color: "rgba(255,255,255,0.55)" }}><b style={{ color: "#fff", fontSize: 14 }}>{withContent}</b> עם תוכן משמעותי</div>
+                          <div style={{ color: TEAL, fontWeight: 700, textAlign: "end" }}>{pct == null ? "—" : `${pct}%`}</div>
+                        </div>
+                        <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)", overflow: "hidden", marginTop: 6 }}>
+                          <div style={{ width: `${pct ?? 0}%`, height: "100%", background: TEAL, opacity: indent ? 0.6 : 1 }} />
+                        </div>
+                      </div>
+                    );
+                    const g = Object.fromEntries(lc.groups.map(x => [x.key, x]));
+                    return (
+                      <>
+                        <div style={{ display: "grid", gridTemplateColumns: "minmax(150px,230px) 1fr", gap: 12, marginBottom: 12, alignItems: "stretch" }}>
+                          <KPI label="טיולים קרובים עם תוכן"
+                            value={up.total > 0 ? `${up.withContent} מתוך ${up.total}` : "—"}
+                            sub={up.total > 0 ? `${up.pct}%` : "אין טיולים שיוצאים ב-30 הימים הקרובים"}
+                            color="#4ade80"
+                            hint="מבין הטיולים שנוצרו ויוצאים בעוד 1 עד 30 ימים, כמה כבר כוללים תוכן משמעותי (פריט במסלול, טיסה או מלון)." />
+                          <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "16px 20px", fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, display: "flex", alignItems: "center" }}>
+                            טיולים שנוצרו ויוצאים ב-30 הימים הקרובים, והאחוז מהם שכבר כולל פריט במסלול, טיסה או מלון. המספרים מתארים את המצב כרגע, ולא מסווגים טיולים כנטושים או כלא מוכנים.
+                          </div>
+                        </div>
+                        <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "6px 20px 16px", marginBottom: 28 }}>
+                          {row("past", PHASE_LABELS.past, g.past.trips, g.past.withContent, g.past.pct)}
+                          {row("now", PHASE_LABELS.now, g.now.trips, g.now.withContent, g.now.pct)}
+                          {row("future", "עתידיים", lc.futureTotal.trips, lc.futureTotal.withContent, lc.futureTotal.pct, false, true)}
+                          {["future30", "future90", "future91"].map(k => row(k, PHASE_LABELS[k], g[k].trips, g[k].withContent, g[k].pct, true))}
+                          {row("unknown", PHASE_LABELS.unknown, g.unknown.trips, g.unknown.withContent, g.unknown.pct)}
+                          <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
+                            {lc.total} טיולים שנוצרו, מסווגים לפי תאריך {lc.today} (שעון ישראל). תאריך הסיום נכלל, ויציאה היום נספרת תחת מתרחשים עכשיו. <bdi dir="ltr">0–30</bdi> ימים = יציאה בעוד 1 עד 30 ימים. תאריכים לא ברורים = חסרים, לא תקינים, או סיום לפני התחלה. תוכן משמעותי = פריט במסלול, טיסה או מלון.
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </>
               );
             })()}

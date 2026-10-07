@@ -20,6 +20,8 @@
 //    no createdAt (only updatedAt = last write). That is why joiners are not
 //    credited for content/expenses and why 7-day activation is not computed.
 
+import { computeLifecycle, homeToday, type Lifecycle } from "./tripLifecycle";
+
 export interface UserLite {
   uid: string;
   email: string | null;
@@ -33,6 +35,8 @@ export interface TripLite {
   sharedWith: string[]; // lower-cased e-mails
   hasDestination: boolean;
   hasValidDates: boolean; // startDate and endDate set, end >= start
+  startDate: string | null; // raw date-only strings, used for lifecycle timing
+  endDate: string | null;
   peopleCount: number;
   expenseCount: number;
   flightHotelCount: number;
@@ -65,13 +69,18 @@ export interface ProductMetrics {
   groupTrips: { count: number; pct: number }; // pct of real trips
   expenseUsers: Pct;
   funnel: FunnelStage[];
+  lifecycle: Lifecycle; // timing of created trips vs today (see tripLifecycle.ts)
   perUser: Record<string, RecentUserUsage>;
   creatorUids: string[]; // for acquisition-by-source breakdowns
 }
 
 const pct1 = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
 
-export function computeProductMetrics(users: UserLite[], trips: TripLite[]): ProductMetrics {
+export function computeProductMetrics(
+  users: UserLite[],
+  trips: TripLite[],
+  today: string = homeToday(),
+): ProductMetrics {
   const N = users.length;
   const uidSet = new Set(users.map(u => u.uid));
   const uidByEmail = new Map<string, string>();
@@ -160,6 +169,12 @@ export function computeProductMetrics(users: UserLite[], trips: TripLite[]): Pro
     groupTrips: { count: groupCount, pct: pct1(groupCount, real.length) },
     expenseUsers: { count: expenseUsers.length, pct: pct1(expenseUsers.length, N) },
     funnel,
+    // Same created-trip set and same meaningful-content test as the rest of the
+    // dashboard; no additional data is read for this.
+    lifecycle: computeLifecycle(
+      real.map(t => ({ startDate: t.startDate, endDate: t.endDate, hasContent: hasContent(t) })),
+      today,
+    ),
     perUser,
     creatorUids: creators.map(u => u.uid),
   };
@@ -184,6 +199,8 @@ export function toTripLite(id: string, data: Record<string, unknown>): TripLite 
     hasValidDates:
       typeof data.startDate === "string" && typeof data.endDate === "string" &&
       data.startDate !== "" && data.endDate !== "" && data.endDate >= data.startDate,
+    startDate: typeof data.startDate === "string" ? data.startDate : null,
+    endDate: typeof data.endDate === "string" ? data.endDate : null,
     peopleCount: Array.isArray(data.people) ? data.people.length : 0,
     expenseCount: expenses.length,
     flightHotelCount: expenses.filter(e => e && (e.category === "flight" || e.category === "hotel")).length,
