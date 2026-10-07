@@ -51,6 +51,7 @@ export interface TripLite {
   hotelCount: number;
   packingItems: number; // packingList only exists once a user edited it
   packingChecked: number;
+  archived: boolean;
 }
 
 export interface Pct {
@@ -87,6 +88,11 @@ export interface ProductMetrics {
   creatorUids: string[]; // for acquisition-by-source breakdowns
 }
 
+// The dashboard's "created trip" test, shared with the reminder sender so both
+// agree: destination AND valid dates, or any itinerary item / expense.
+export const isCreatedTrip = (t: TripLite): boolean =>
+  (t.hasDestination && t.hasValidDates) || t.expenseCount > 0 || t.activityCount > 0;
+
 const pct1 = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
 
 export function computeProductMetrics(
@@ -106,8 +112,7 @@ export function computeProductMetrics(
   // setup: destination AND valid dates (the gate for leaving wizard step 1), or
   // any itinerary item / expense. A destination alone is NOT enough, since it
   // exists as soon as someone types one character in the wizard.
-  const isDraft = (t: TripLite) =>
-    !(t.hasDestination && t.hasValidDates) && t.expenseCount === 0 && t.activityCount === 0;
+  const isDraft = (t: TripLite) => !isCreatedTrip(t);
   const owned = trips.filter(t => t.owner && uidSet.has(t.owner));
   const real = owned.filter(t => !isDraft(t));
   const emptyDrafts = owned.length - real.length;
@@ -226,6 +231,7 @@ export function toTripLite(id: string, data: Record<string, unknown>): TripLite 
     updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : null,
     flightCount: expenses.filter(e => e && e.category === "flight").length,
     hotelCount: expenses.filter(e => e && e.category === "hotel").length,
+    archived: data.archived === true,
     packingItems: Array.isArray(data.packingList) ? data.packingList.length : 0,
     packingChecked: Array.isArray(data.packingList)
       ? (data.packingList as { checked?: boolean }[]).filter(i => i && i.checked).length

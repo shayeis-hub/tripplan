@@ -4,7 +4,7 @@
 // already returns: no fetching here, and no send action of any kind.
 import { useState } from "react";
 import { diagnosticText, heCount, sortRows, summarizeSignals, type SortKey, type TripRow } from "@/lib/tripDrilldown";
-import type { EligibilityReason, ReminderPreview } from "@/lib/preTripReminder";
+import type { EligibilityReason, EventSummary, ReminderPreview } from "@/lib/preTripReminder";
 import type { DateIssue, Phase } from "@/lib/tripLifecycle";
 
 const TEAL = "#64dfdf";
@@ -143,6 +143,7 @@ export interface SoonTrip extends TripRow {
 
 const REASON_TEXT: Record<EligibilityReason, (d: number | null) => string> = {
   eligible: () => "זכאי: היציאה בעוד 7 ימים בדיוק",
+  archived: () => "לא זכאי: הטיול בארכיון",
   not_created: () => "לא זכאי: לא טיול שנוצר",
   invalid_dates: () => "לא זכאי: תאריכים לא תקינים",
   past: () => "לא זכאי: הטיול כבר עבר",
@@ -150,10 +151,19 @@ const REASON_TEXT: Record<EligibilityReason, (d: number | null) => string> = {
   too_early: d => `לא זכאי: היציאה בעוד ${d} ימים, התזכורת מיועדת ל-7 ימים לפני`,
   too_late: d => `לא זכאי: נותרו ${d} ימים, רגע ה-7 ימים כבר עבר`,
   already_sent: () => "לא זכאי: התזכורת כבר נשלחה",
-  no_token: () => "לא זכאי: אין token לשליחה",
+  in_flight: () => "לא זכאי כרגע: שליחה בעיצומה",
+  stale_reserved: () => "לא זכאי: שמורה זמן רב בלי תוצאה, התוצאה לא ידועה ולא תישלח שוב אוטומטית",
+  failed_retry_wait: () => "לא זכאי כרגע: ניסיון קודם נכשל, ממתין לניסיון חוזר",
+  failed_final: () => "לא זכאי: השליחה נכשלה ולא יהיו ניסיונות נוספים",
+  no_supported_channel: () => "לא זכאי: אין ערוץ push נתמך (Android או Web)",
+  language_not_synced: () => "לא זכאי: השפה לא סונכרנה (המשתמש טרם פתח את הגרסה החדשה)",
 };
 
-const CHANNEL_TEXT = { fcm: "Android (FCM)", web: "Web push", both: "Android + Web push", none: "אין token" } as const;
+const EVENT_TEXT: Record<EventSummary["status"], string> = { reserved: "שמורה (בשליחה)", sent: "נשלחה", failed: "נכשלה" };
+const fmtMs = (ms: number | null) =>
+  ms == null ? "—" : new Date(ms).toLocaleString("he-IL", { timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+const CHANNEL_TEXT = { fcm: "Android (FCM)", web: "Web push", both: "Android + Web push", none: "אין ערוץ נתמך" } as const;
 
 export function SoonSection({ trips }: { trips: SoonTrip[] }) {
   const sorted = [...trips].sort((a, b) => (a.daysToStart as number) - (b.daysToStart as number) || a.id.localeCompare(b.id));
@@ -191,17 +201,35 @@ export function SoonSection({ trips }: { trips: SoonTrip[] }) {
                 </div>
                 <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 10, background: "rgba(0,0,0,0.2)", border: `0.5px solid ${p.eligible ? "rgba(74,222,128,0.35)" : "rgba(255,255,255,0.1)"}` }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: p.eligible ? "#4ade80" : MUTED, marginBottom: 6 }}>{REASON_TEXT[p.reason](p.daysToStart)}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: p.eligible ? "#fff" : "rgba(255,255,255,0.6)" }}>{p.title}</div>
-                  <div style={{ fontSize: 12, color: p.eligible ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.45)", marginTop: 2, lineHeight: 1.6 }}>{p.body}</div>
-                  <div style={{ fontSize: 11, color: FAINT, marginTop: 6, lineHeight: 1.6 }} dir="ltr">
-                    EN: {p.titleEn} / {p.bodyEn}
-                  </div>
+                  {p.lang != null ? (
+                    <>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: p.eligible ? "#fff" : "rgba(255,255,255,0.6)" }}>{p.title}</div>
+                      <div style={{ fontSize: 12, color: p.eligible ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.45)", marginTop: 2, lineHeight: 1.6 }}>{p.body}</div>
+                      <div style={{ fontSize: 11, color: FAINT, marginTop: 6, lineHeight: 1.6 }} dir={p.lang === "he" ? "ltr" : "rtl"}>
+                        {p.lang === "he" ? `EN: ${p.titleEn} / ${p.bodyEn}` : `HE: ${p.titleHe} / ${p.bodyHe}`}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* No language stored: nothing would be sent. Both texts shown for review only. */}
+                      <div style={{ fontSize: 12, color: FAINT, lineHeight: 1.6 }}>HE: {p.titleHe} / {p.bodyHe}</div>
+                      <div style={{ fontSize: 12, color: FAINT, lineHeight: 1.6 }} dir="ltr">EN: {p.titleEn} / {p.bodyEn}</div>
+                    </>
+                  )}
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                    <Chip>שפה: {p.lang === "he" ? "עברית" : "אנגלית"}{p.langStored ? "" : " (ברירת מחדל, השפה לא נשמרת בשרת)"}</Chip>
-                    <Chip strong={p.channel !== "none"}>token: {CHANNEL_TEXT[p.channel]}</Chip>
-                    <Chip>{p.alreadySent ? "תזכורת 7 ימים כבר נשלחה" : "תזכורת 7 ימים טרם נשלחה"}</Chip>
-                    {p.sendDate && <Chip>מועד מתוכנן: {fmtDate(p.sendDate)}</Chip>}
+                    <Chip strong={p.lang != null}>{p.lang == null ? "שפה: לא סונכרנה" : `שפה: ${p.lang === "he" ? "עברית" : "אנגלית"}`}</Chip>
+                    <Chip strong={p.channel !== "none"}>ערוץ: {CHANNEL_TEXT[p.channel]}</Chip>
+                    {p.sendDate && <Chip>מועד שליחה מתוכנן: {fmtDate(p.sendDate)}, {p.sendWindow} שעון ישראל</Chip>}
+                    <Chip strong={!!p.event}>{p.event ? `אירוע: ${EVENT_TEXT[p.event.status]}` : "אירוע: אין"}</Chip>
                   </div>
+                  {p.event && (
+                    <div style={{ fontSize: 11, color: MUTED, marginTop: 6, lineHeight: 1.7 }}>
+                      ניסיון {p.event.attemptCount} · נשמר {fmtMs(p.event.reservedAt)}
+                      {p.event.sentAt != null && <> · נשלח {fmtMs(p.event.sentAt)}</>}
+                      {p.event.failedAt != null && <> · נכשל {fmtMs(p.event.failedAt)}{p.event.lastError ? ` (${p.event.lastError})` : ""}</>}
+                      {p.event.openedAt != null && <> · נפתח {fmtMs(p.event.openedAt)}</>}
+                    </div>
+                  )}
                 </div>
               </div>
             );

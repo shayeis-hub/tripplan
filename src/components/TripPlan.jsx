@@ -47,6 +47,8 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { useLang } from "@/lib/LangContext";
 import { useAuth } from "@/lib/AuthContext";
 import { t } from "@/lib/i18n";
+import { currentLang } from "@/lib/currentLang";
+import { parseTripLink, parseTripUrl, takePendingTripLink, stripTripParams } from "@/lib/tripDeepLink";
 import { buildAgodaUrl, buildGygUrl, buildAiraloUrl, buildGetTransferUrl, buildKiwiUrl } from "@/lib/affiliate";
 import ReceiptCamera from "@/components/ReceiptCamera";
 import TravelProfile from "@/components/TravelProfile";
@@ -669,7 +671,7 @@ function usePushNotifications(userId,user){
       const res=await fetch("/api/push-subscribe",{
         method:"POST",
         headers:{"Content-Type":"application/json",authorization:`Bearer ${idToken}`},
-        body:JSON.stringify({fcmToken:token,userId:uid}),
+        body:JSON.stringify({fcmToken:token,userId:uid,lang:currentLang()}),
       });
       return res.ok;
     }catch(e){console.warn("push: FCM token save failed (will retry next launch)",e);return false;}
@@ -716,11 +718,36 @@ function usePushNotifications(userId,user){
       const res=await fetch("/api/push-subscribe",{
         method:"POST",
         headers:{"Content-Type":"application/json",authorization:`Bearer ${idToken}`},
-        body:JSON.stringify({subscription:sub.toJSON(),userId:uid}),
+        body:JSON.stringify({subscription:sub.toJSON(),userId:uid,lang:currentLang()}),
       });
       return res.ok;
     }catch(e){console.warn("push: subscription save failed (will retry next load)",e);return false;}
   };
+
+  // Keep the saved notification language in step with the app's language: when
+  // the user switches language, re-send the existing subscription/token (the
+  // save helpers read the current language themselves). No-op until subscribed.
+  const{lang:uiLang}=useLang();
+  useEffect(()=>{
+    if(!subscribed||!userId||!user) return;
+    if(isCapacitorNative()){window.Capacitor.Plugins.PushNotifications.register().catch(()=>{});return;}
+    navigator.serviceWorker?.ready.then(reg=>reg.pushManager.getSubscription()).then(sub=>{if(sub)saveSubscription(sub,userId);}).catch(()=>{});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[uiLang,subscribed]);
+
+  // Android: tapping a notification delivers its data payload here. The target
+  // is validated (own origin, path "/", valid trip id) and handed to TripPlan's
+  // deep-link handler, which only selects a trip the user can already read.
+  useEffect(()=>{
+    if(!userId||!user||!isCapacitorNative()) return;
+    const{PushNotifications}=window.Capacitor.Plugins;
+    let handle=null,gone=false;
+    PushNotifications.addListener("pushNotificationActionPerformed",(action)=>{
+      const link=parseTripUrl(action?.notification?.data?.url,window.location.origin);
+      if(link) window.dispatchEvent(new CustomEvent("tulon-open-trip",{detail:link}));
+    }).then(h=>{if(gone)h.remove();else handle=h;}).catch(()=>{});
+    return()=>{gone=true;if(handle)handle.remove();};
+  },[userId,user]);
 
   useEffect(()=>{
     if(!userId||!user||typeof navigator==="undefined") return;
@@ -4560,6 +4587,44 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     pushNav("splash",id,null,null);
     setActiveId(id);setSection(null);setScreen("expenses");
   };
+
+  // ── Reminder deep link: /?trip=<tripId>&rn=<notificationEventId> ──
+  // The target comes from the URL, from a link kept across sign-in, or from an
+  // Android notification tap (custom event). It is only ever matched against
+  // the user's own trip list (Firestore rules decide what is in it), so knowing
+  // a trip id is not authorization; if the trip isn't there, nothing happens.
+  // `rn` is then reported once to /api/notification-open, which checks the
+  // event belongs to this user and records the first open only.
+  const tripLinkRef=useRef(null);
+  const[tripLinkTick,setTripLinkTick]=useState(0);
+  useEffect(()=>{
+    const accept=(l)=>{if(!l)return;tripLinkRef.current={...l,at:Date.now()};setTripLinkTick(x=>x+1);};
+    const fromUrl=parseTripLink(window.location.search);
+    if(fromUrl){stripTripParams();accept(fromUrl);}
+    else accept(takePendingTripLink());
+    const onEvent=e=>accept(e.detail);
+    window.addEventListener("tulon-open-trip",onEvent);
+    return()=>window.removeEventListener("tulon-open-trip",onEvent);
+  },[]);
+  useEffect(()=>{
+    const link=tripLinkRef.current;
+    if(!link||!userEmail||!user) return;
+    const target=trips.find(x=>x.id===link.trip);
+    if(target){
+      tripLinkRef.current=null;
+      handleSelect(target.id);
+      if(link.rn){
+        user.getIdToken().then(idToken=>fetch("/api/notification-open",{
+          method:"POST",
+          headers:{"Content-Type":"application/json",authorization:`Bearer ${idToken}`},
+          body:JSON.stringify({eventId:link.rn}),
+        })).catch(()=>{});
+      }
+    }else if(Date.now()-link.at>15000){
+      tripLinkRef.current=null; // trips never included it (no access / deleted): give up quietly
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[trips,userEmail,user,tripLinkTick]);
   const handleBack=()=>{
     pushNav("home",null,null,null);
     setActiveId(null);setSection(null);setScreen("expenses");

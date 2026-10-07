@@ -32,6 +32,7 @@ export interface TripRow {
   packingChecked: number;
   shared: boolean; // another account has access
   hasContent: boolean; // itinerary item, flight or hotel (existing definition)
+  archived: boolean;
   recentlyUpdated: boolean; // updatedAt within the last RECENT_UPDATE_DAYS
 }
 
@@ -63,6 +64,7 @@ export function buildTripRow(t: TripLite, today: string, nowMs: number): TripRow
     packingChecked: t.packingChecked,
     shared: t.sharedWith.length > 0,
     hasContent: t.activityCount > 0 || t.flightHotelCount > 0,
+    archived: t.archived,
     recentlyUpdated: t.updatedAt != null && nowMs - t.updatedAt <= RECENT_UPDATE_DAYS * 86400000,
   };
 }

@@ -8,6 +8,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import RatePrompt from "@/components/RatePrompt";
 import { useLang } from "@/lib/LangContext";
+import { parseTripLink, stashPendingTripLink } from "@/lib/tripDeepLink";
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
@@ -31,6 +32,9 @@ export default function Home() {
       const params = new URLSearchParams(window.location.search);
       const token = params.get("invite");
       if (token) localStorage.setItem("pendingInvite", token);
+      // Reminder deep link: remember the target across sign-in (validated, 24h)
+      const tripLink = parseTripLink(window.location.search);
+      if (tripLink) stashPendingTripLink(tripLink);
       const quickadd = params.get("quickadd");
       if (quickadd) {
         try { sessionStorage.setItem("pendingQuickAdd", quickadd); } catch {}

@@ -69,6 +69,11 @@ export async function POST(req: NextRequest) {
     const publicSharesSnap = await db.collection("publicShares").where("ownerUid", "==", uid).get();
     await Promise.all(publicSharesSnap.docs.map(d => d.ref.delete()));
 
+    // 5b. Notification events (pre-trip reminder state) for this owner. Keyed by
+    //     trip, so they are found through the userId field.
+    const eventsSnap = await db.collection("notificationEvents").where("userId", "==", uid).get();
+    await Promise.all(eventsSnap.docs.map(d => d.ref.delete()));
+
     // 6. Everything else keyed directly by uid.
     await Promise.all([
       db.collection("travelProfiles").doc(uid).delete(),

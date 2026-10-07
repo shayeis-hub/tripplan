@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { isStoredLang } from "@/lib/preTripReminder";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { subscription, fcmToken } = await req.json();
+    const { subscription, fcmToken, lang } = await req.json();
     if (!subscription && !fcmToken) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
@@ -32,6 +33,10 @@ export async function POST(req: NextRequest) {
     await getAdminDb().collection("pushSubscriptions").doc(userId).set({
       ...(subscription ? { subscription } : {}),
       ...(fcmToken ? { fcmToken } : {}),
+      // The app's own `tulon_lang` choice, so server-sent notifications can use
+      // the user's language. Only a known value is stored; anything else leaves
+      // the previously saved language untouched (merge:true never clears it).
+      ...(isStoredLang(lang) ? { lang } : {}),
       userId,
       updatedAt: Date.now(),
     }, { merge: true });

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { computeProductMetrics, toTripLite } from "@/lib/adminMetrics";
 import { classifySource, SOURCE_ORDER } from "@/lib/acquisition";
-import { buildReminderPreview, notificationEventId, type PushChannel } from "@/lib/preTripReminder";
+import { buildReminderPreview, notificationEventId, type EventSummary, type PushChannel } from "@/lib/preTripReminder";
 
 export const dynamic = "force-dynamic";
 
@@ -155,26 +155,32 @@ export async function GET(req: Request) {
     const soonRows = product.tripRows.filter(
       r => r.phase !== "past" && r.daysToStart != null && r.daysToStart >= 0 && r.daysToStart <= 7,
     );
-    const channelByOwner = new Map<string, PushChannel>();
-    const sentByTrip = new Map<string, boolean>();
+    const subByOwner = new Map<string, { channel: PushChannel; lang: unknown }>();
+    const eventByTrip = new Map<string, EventSummary | null>();
     if (soonRows.length > 0) {
       const owners = [...new Set(soonRows.map(r => r.owner))];
       const subSnaps = await adminDb.getAll(...owners.map(o => adminDb.collection("pushSubscriptions").doc(o)));
       subSnaps.forEach((s, i) => {
-        const d = s.exists ? (s.data() as { fcmToken?: string; subscription?: unknown }) : null;
+        const d = s.exists ? (s.data() as { fcmToken?: string; subscription?: unknown; lang?: unknown }) : null;
         const fcm = !!d?.fcmToken;
         const web = !!d?.subscription;
-        channelByOwner.set(owners[i], fcm && web ? "both" : fcm ? "fcm" : web ? "web" : "none");
+        subByOwner.set(owners[i], { channel: fcm && web ? "both" : fcm ? "fcm" : web ? "web" : "none", lang: d?.lang });
       });
       const evSnaps = await adminDb.getAll(...soonRows.map(r => adminDb.collection("notificationEvents").doc(notificationEventId(r.id))));
-      evSnaps.forEach((s, i) => sentByTrip.set(soonRows[i].id, s.exists));
+      evSnaps.forEach((s, i) => {
+        const e = s.exists ? (s.data() as EventSummary) : null;
+        eventByTrip.set(soonRows[i].id, e && {
+          status: e.status, attemptCount: e.attemptCount, reservedAt: e.reservedAt, sentAt: e.sentAt ?? null,
+          failedAt: e.failedAt ?? null, openedAt: e.openedAt ?? null, permanent: !!e.permanent, lastError: e.lastError ?? null,
+        });
+      });
     }
     const soon = soonRows.map(({ owner, ...row }) => ({
       ...row,
       preview: buildReminderPreview(
-        { id: row.id, startDate: row.startDate, endDate: row.endDate, isCreated: true, hasContent: row.hasContent, activityCount: row.activities, destination: row.destination, city: row.city },
+        { id: row.id, startDate: row.startDate, endDate: row.endDate, isCreated: true, archived: row.archived, hasContent: row.hasContent, activityCount: row.activities, destination: row.destination, city: row.city },
         product.lifecycle.today,
-        { channel: channelByOwner.get(owner) ?? "none", alreadySent: sentByTrip.get(row.id) ?? false },
+        { channel: subByOwner.get(owner)?.channel ?? "none", storedLang: subByOwner.get(owner)?.lang, event: eventByTrip.get(row.id) ?? null, nowMs: Date.now() },
       ),
     }));
 
