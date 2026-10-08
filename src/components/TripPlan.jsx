@@ -58,7 +58,7 @@ import { isIosApp, openLegal } from "@/lib/nativeApp";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
   Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send,
-  Users, User, ChevronRight, Shirt, FileText, Zap, Heart, Package,
+  Users, User, ChevronRight, ChevronLeft, Shirt, FileText, Zap, Heart, Package,
   AlertCircle, Loader, Link as LinkIcon, Ticket, Utensils, Car,
   Building2, Search, Clock, Menu, ArrowLeftRight, FileDown, BarChart2,
   Moon, Copy, Lock, Bug, Lightbulb, Bell, BellOff, Globe, Settings,
@@ -423,6 +423,9 @@ const GS=`
     :where(button:not(:disabled,.tap-btn,.nav-btn)):active{transform:none;opacity:0.8}
   }
 `;
+// The app was laid out right-to-left for every language; English and Spanish read
+// left-to-right, so only Hebrew keeps the RTL body direction.
+const gsFor=l=>l==="he"?GS:`${GS}\n  body{direction:ltr}`;
 
 // Keeps a modal/drawer mounted briefly after it is closed so it can play its exit
 // animation (see .fx-* in globals.css) instead of vanishing. `children` is whatever the
@@ -587,7 +590,7 @@ function SI({label,value,onChange,type="text",placeholder,min,max,style}){
     <div style={{marginBottom:14,...style}}>
       {label&&<FL>{label}</FL>}
       <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} min={min} max={max}
-        style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`2px solid ${C.sandDark}`,fontFamily:RF,fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.04)",outline:"none",direction:(type==="date"||type==="time")?"ltr":"rtl",transition:"border 0.2s"}}
+        style={{width:"100%",padding:"11px 14px",borderRadius:12,border:`2px solid ${C.sandDark}`,fontFamily:RF,fontSize:15,color:"#ffffff",background:"rgba(255,255,255,0.04)",outline:"none",direction:(type==="date"||type==="time")?"ltr":"inherit",transition:"border 0.2s"}}
         onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
     </div>
   );
@@ -598,7 +601,7 @@ function SS({label,value,onChange,children,style}){
     <div style={{marginBottom:14,...style}}>
       {label&&<FL>{label}</FL>}
       <select value={value} onChange={e=>onChange(e.target.value)}
-        style={{width:"100%",padding:"11px 12px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,background:W07,color:"#ffffff",direction:"rtl",outline:"none"}}>
+        style={{width:"100%",padding:"11px 12px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,background:W07,color:"#ffffff",direction:"inherit",outline:"none"}}>
         {children}
       </select>
     </div>
@@ -1924,7 +1927,7 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
             {nights>0&&(
               <div style={{padding:"12px 16px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:12,textAlign:"center"}}>
                 <span style={{fontFamily:RF,fontSize:24,fontWeight:800,color:TEAL,letterSpacing:"-0.5px",fontVariantNumeric:"tabular-nums"}}>{nights}</span>
-                <span style={{fontSize:14,fontWeight:600,color:W70,marginRight:6}}>{t("days",lang)}</span>
+                <span style={{fontSize:14,fontWeight:600,color:W70,marginInlineStart:6}}>{t("days",lang)}</span>
               </div>
             )}
             {autoCur&&(
@@ -2091,7 +2094,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
           {valid&&(
             <div style={{padding:"12px 16px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:12,textAlign:"center"}}>
               <span style={{fontFamily:RF,fontSize:26,fontWeight:800,color:TEAL,letterSpacing:"-0.5px",fontVariantNumeric:"tabular-nums"}}>{Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1}</span>
-              <span style={{fontSize:14,fontWeight:600,color:W70,marginRight:6}}>{t("days",lang)}</span>
+              <span style={{fontSize:14,fontWeight:600,color:W70,marginInlineStart:6}}>{t("days",lang)}</span>
               <div style={{fontSize:12,color:W35,marginTop:2,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Calendar size={11} color={W35}/>{fmtDate(trip.startDate)} – {fmtDate(trip.endDate)}</div>
             </div>
           )}
@@ -2105,7 +2108,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
           <p style={{fontSize:13,color:W35,marginBottom:14}}>{t("dest_people_sub",lang)}</p>
           <div style={{display:"flex",gap:8,marginBottom:12}}>
             <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder={t("dest_people_ph",lang)} onKeyDown={e=>e.key==="Enter"&&addPerson()}
-              style={{flex:1,padding:"10px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,direction:"rtl",background:W07,color:"#ffffff",outline:"none"}}
+              style={{flex:1,padding:"10px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:14,direction:"inherit",background:W07,color:"#ffffff",outline:"none"}}
               onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
             <button onClick={addPerson} style={{padding:"10px 16px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,cursor:"pointer",display:"flex",alignItems:"center"}}><Plus size={16} color={DARK_BG} strokeWidth={2.5}/></button>
           </div>
@@ -2119,7 +2122,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
                     <span style={{fontSize:14,fontWeight:800,color:p.color}}>{p.name[0]}</span>
                   </div>
                   <span style={{fontSize:13,fontWeight:700,color:"#ffffff"}}>{p.name}</span>
-                  <button onClick={()=>removePerson(p.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"2px",display:"flex",alignItems:"center",marginRight:"auto"}}><X size={13} color={W35}/></button>
+                  <button onClick={()=>removePerson(p.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"2px",display:"flex",alignItems:"center",marginInlineStart:"auto"}}><X size={13} color={W35}/></button>
                 </div>
               ))}
             </div>
@@ -2531,9 +2534,9 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         </div>
 
             {show&&typeof document!=="undefined"&&createPortal(
-              <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.72)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",direction:"rtl"}}
+              <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.72)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",direction:"inherit"}}
                 onClick={e=>{if(e.target===e.currentTarget){setShow(false);setEditId(null);}}}>
-                <div style={{background:"#0d2137",borderRadius:20,width:"100%",maxWidth:460,maxHeight:"88vh",overflowY:"auto",direction:"rtl",fontFamily:RF,border:"0.5px solid rgba(100,223,223,0.15)",boxShadow:"0 24px 64px rgba(0,0,0,0.6)"}}>
+                <div style={{background:"#0d2137",borderRadius:20,width:"100%",maxWidth:460,maxHeight:"88vh",overflowY:"auto",direction:"inherit",fontFamily:RF,border:"0.5px solid rgba(100,223,223,0.15)",boxShadow:"0 24px 64px rgba(0,0,0,0.6)"}}>
                   {/* Modal header */}
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 20px 14px",borderBottom:"0.5px solid rgba(255,255,255,0.06)",position:"sticky",top:0,background:"#0d2137",zIndex:1,borderRadius:"20px 20px 0 0"}}>
                     <button onClick={()=>{setShow(false);setEditId(null);}}
@@ -2800,13 +2803,16 @@ function BudgetScreen({trip,expenses,rates={}}){
 
         {/* KPI 2x2 (one row of four when wide) */}
         <div style={{display:"grid",gridTemplateColumns:twoCol?"repeat(4,1fr)":"1fr 1fr",gap:10,gridColumn:"1 / -1"}}>
-          <KpiCard label={t("budget_paid",lang)}    value={fmtN(paid)}   color="#4ade80" Icon={Check}   sym={sym}/>
-          <KpiCard label={t("budget_total",lang)}   value={fmtN(total)}  color={TEAL}    Icon={Receipt} sym={sym}/>
-          {budgetRemaining!==null
-            ?<KpiCard label={t("budget_remaining",lang)} value={fmtN(Math.abs(budgetRemaining))} color="#818cf8" Icon={Wallet} sym={sym}/>
-            :<KpiCard label={t("budget_count",lang)} value={expenses.length} color="#818cf8" Icon={Wallet} noFmt/>
-          }
-          <KpiCard label={t("budget_unpaid",lang)}  value={fmtN(unpaid)} color="#fbbf24" Icon={Clock}   sym={sym}/>
+          {/* Written for the right-to-left layout (first card on the right). Left-to-right readers get each pair swapped, so Total expenses comes first. */}
+          {(()=>{
+            const kPaid=<KpiCard key="paid" label={t("budget_paid",lang)}    value={fmtN(paid)}   color="#4ade80" Icon={Check}   sym={sym}/>;
+            const kTotal=<KpiCard key="total" label={t("budget_total",lang)}   value={fmtN(total)}  color={TEAL}    Icon={Receipt} sym={sym}/>;
+            const kRest=budgetRemaining!==null
+              ?<KpiCard key="rest" label={t("budget_remaining",lang)} value={fmtN(Math.abs(budgetRemaining))} color="#818cf8" Icon={Wallet} sym={sym}/>
+              :<KpiCard key="rest" label={t("budget_count",lang)} value={expenses.length} color="#818cf8" Icon={Wallet} noFmt/>;
+            const kUnpaid=<KpiCard key="unpaid" label={t("budget_unpaid",lang)}  value={fmtN(unpaid)} color="#fbbf24" Icon={Clock}   sym={sym}/>;
+            return lang==="he"?[kPaid,kTotal,kRest,kUnpaid]:[kTotal,kPaid,kUnpaid,kRest];
+          })()}
         </div>
 
         {/* Budget progress */}
@@ -3020,9 +3026,9 @@ function CalendarScreen({trip,expenses,onSaveActs}){
       <div style={{padding:"14px 14px 20px"}}>
         {/* Month header with navigation */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-          <button onClick={prevMonth} disabled={!canPrev} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canPrev?"rgba(100,223,223,0.08)":"transparent",color:canPrev?TEAL:W15,fontSize:16,cursor:canPrev?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>→</button>
+          <button onClick={prevMonth} disabled={!canPrev} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canPrev?"rgba(100,223,223,0.08)":"transparent",color:canPrev?TEAL:W15,fontSize:16,cursor:canPrev?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>{lang==="he"?"→":"←"}</button>
           <div style={{fontFamily:RF,fontSize:16,fontWeight:700,color:"#ffffff",letterSpacing:"-0.3px"}}>{monthName}</div>
-          <button onClick={nextMonth} disabled={!canNext} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canNext?"rgba(100,223,223,0.08)":"transparent",color:canNext?TEAL:W15,fontSize:16,cursor:canNext?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
+          <button onClick={nextMonth} disabled={!canNext} style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",background:canNext?"rgba(100,223,223,0.08)":"transparent",color:canNext?TEAL:W15,fontSize:16,cursor:canNext?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>{lang==="he"?"←":"→"}</button>
         </div>
         {/* Day labels */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:6}}>
@@ -3190,7 +3196,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
             {/* Prev day arrow */}
             <button onClick={()=>{const i=dates.indexOf(selDate);if(i>0)setSelDate(dates[i-1]);}} disabled={dates.indexOf(selDate)===0}
               className="tap-btn"
-              style={{width:30,height:30,borderRadius:8,border:"0.5px solid rgba(100,223,223,0.2)",background:W05,color:dates.indexOf(selDate)===0?W25:TEAL,fontSize:14,cursor:dates.indexOf(selDate)===0?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>›</button>
+              style={{width:30,height:30,borderRadius:8,border:"0.5px solid rgba(100,223,223,0.2)",background:W05,color:dates.indexOf(selDate)===0?W25:TEAL,fontSize:14,cursor:dates.indexOf(selDate)===0?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{lang==="he"?"›":"‹"}</button>
             <div style={{width:44,height:44,borderRadius:12,background:TBL,border:"0.5px solid rgba(100,223,223,0.3)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
               <div style={{color:"#ffffff",fontSize:18,fontWeight:800,fontFamily:RF,lineHeight:1}}>{dayNum}</div>
               <div style={{color:W35,fontSize:9}}>{monthName}</div>
@@ -3221,7 +3227,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
             {/* Next day arrow */}
             <button onClick={()=>{const i=dates.indexOf(selDate);if(i<dates.length-1)setSelDate(dates[i+1]);}} disabled={dates.indexOf(selDate)===dates.length-1}
               className="tap-btn"
-              style={{width:30,height:30,borderRadius:8,border:"0.5px solid rgba(100,223,223,0.2)",background:W05,color:dates.indexOf(selDate)===dates.length-1?W25:TEAL,fontSize:14,cursor:dates.indexOf(selDate)===dates.length-1?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>‹</button>
+              style={{width:30,height:30,borderRadius:8,border:"0.5px solid rgba(100,223,223,0.2)",background:W05,color:dates.indexOf(selDate)===dates.length-1?W25:TEAL,fontSize:14,cursor:dates.indexOf(selDate)===dates.length-1?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{lang==="he"?"‹":"›"}</button>
           </div>
           {onSaveActs&&<button onClick={()=>openEdit(selDate)} style={{padding:"7px 12px",borderRadius:9,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:600,fontSize:11,cursor:"pointer"}}>{t("cal_activities",lang)}</button>}
         </div>
@@ -3242,8 +3248,8 @@ function CalendarScreen({trip,expenses,onSaveActs}){
         {stayHotels.map(h=>(
           <div key={h.id} style={{marginBottom:10,padding:"8px 14px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
             <span style={{fontSize:16}}>🏨</span>
-            <span style={{fontFamily:RF,fontSize:13,fontWeight:600,color:"rgba(100,223,223,0.9)"}}>{t("hotel_stay",lang)}{h.description||t("cat_hotel",lang)}</span>
-            <span style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginRight:"auto"}}>{fmtDate(h.checkIn)} – {fmtDate(h.checkOut)}</span>
+            <span style={{fontFamily:RF,fontSize:13,fontWeight:600,color:"rgba(100,223,223,0.9)"}}>{t("hotel_stay",lang)}{lang==="he"?"":" "}{h.description||t("cat_hotel",lang)}</span>
+            <span style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginInlineStart:"auto"}}>{fmtDate(h.checkIn)} – {fmtDate(h.checkOut)}</span>
           </div>
         ))}
 
@@ -3272,13 +3278,13 @@ function CalendarScreen({trip,expenses,onSaveActs}){
           {/* Hour labels */}
           <div style={{width:36,flexShrink:0,position:"relative",height:totalH}}>
             {hours.map(h=>(
-              <div key={h} style={{position:"absolute",top:hourToY(h)-8,right:0,fontSize:10,color:W25,fontFamily:RF,textAlign:"right",width:"100%"}}>
+              <div key={h} style={{position:"absolute",top:hourToY(h)-8,right:0,fontSize:10,color:W25,fontFamily:RF,textAlign:"start",width:"100%"}}>
                 {String(h).padStart(2,"0")}:00
               </div>
             ))}
           </div>
           {/* Grid + events */}
-          <div style={{flex:1,position:"relative",height:totalH,marginRight:8}}>
+          <div style={{flex:1,position:"relative",height:totalH,marginInlineStart:8}}>
             {/* Hour lines */}
             {hours.map(h=>(
               <div key={h} style={{position:"absolute",top:hourToY(h),left:0,right:0,height:0.5,background:W07}}/>
@@ -3299,7 +3305,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
                   style={{
                     position:"absolute",top,right:0,left:0,minHeight:height,
                     background:`${col}18`,border:`0.5px solid ${col}50`,
-                    borderRight:`3px solid ${col}`,borderRadius:8,
+                    borderInlineStart:`3px solid ${col}`,borderRadius:8,
                     padding:"4px 8px",display:"flex",alignItems:"flex-start",justifyContent:"space-between",
                     zIndex:2,cursor:isAct||ev.data?.address?"pointer":"default",
                     boxSizing:"border-box",
@@ -3401,7 +3407,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
                 ))}
               </select>
               <input value={act.text} onChange={e=>updateAct(i,"text",e.target.value)} placeholder={t("cal_act_ph",lang)}
-                style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none",direction:"rtl"}}/>
+                style={{flex:1,padding:"9px 12px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none",direction:"inherit"}}/>
               <button onClick={()=>removeAct(i)} style={{background:"rgba(255,107,107,0.12)",border:"none",color:"#ff6b6b",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:14,flexShrink:0}}>✕</button>
             </div>
             <div style={{display:"flex",gap:6,alignItems:"center",direction:"ltr"}}>
@@ -3817,7 +3823,7 @@ function DiscoverScreen({trip}){
                 <img src={`https://www.google.com/s2/favicons?domain=${gygTile.domain}&sz=64`} alt={gygTile.name}
                   style={{width:40,height:40,borderRadius:10,objectFit:"contain",background:"#fff",padding:4,flexShrink:0}}
                   onError={e=>{e.currentTarget.style.display="none";}}/>
-                <div style={{textAlign:"right",flex:1}}>
+                <div style={{textAlign:"start",flex:1}}>
                   <div style={{fontFamily:RF,fontSize:15,fontWeight:800,color:"#ffffff"}}>{gygTile.name}</div>
                   <div style={{fontSize:12,color:"#ffffff",fontWeight:600,marginTop:2,lineHeight:1.4,opacity:0.9}}>{gygTile.label}</div>
                 </div>
@@ -3832,7 +3838,7 @@ function DiscoverScreen({trip}){
                 <img src={`https://www.google.com/s2/favicons?domain=${agodaTile.domain}&sz=64`} alt="Agoda"
                   style={{width:40,height:40,borderRadius:10,objectFit:"contain",background:"#fff",padding:4,flexShrink:0}}
                   onError={e=>{e.currentTarget.style.display="none";}}/>
-                <div style={{textAlign:"right",flex:1}}>
+                <div style={{textAlign:"start",flex:1}}>
                   <div style={{fontFamily:RF,fontSize:15,fontWeight:800,color:"#ffffff"}}>{agodaTile.name}</div>
                   <div style={{fontSize:12,color:"#ffffff",fontWeight:600,marginTop:2,lineHeight:1.4,opacity:0.9}}>{agodaTile.label}</div>
                 </div>
@@ -3843,7 +3849,7 @@ function DiscoverScreen({trip}){
             <button onClick={()=>open(airaloUrl)}
               style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"18px 20px",borderRadius:18,border:"0.5px solid rgba(100,223,223,0.35)",background:"linear-gradient(135deg,rgba(100,223,223,0.12),rgba(100,223,223,0.05))",cursor:"pointer"}}>
               <div style={{width:48,height:48,borderRadius:12,background:"rgba(100,223,223,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:26}}>📶</div>
-              <div style={{textAlign:"right",flex:1}}>
+              <div style={{textAlign:"start",flex:1}}>
                 <div style={{fontFamily:RF,fontSize:16,fontWeight:800,color:"#ffffff"}}>Airalo eSIM</div>
                 <div style={{fontSize:13,color:"#ffffff",fontWeight:600,marginTop:3,lineHeight:1.4,opacity:0.85}}>
                   {lang==="he"?"גלישה בחו\"ל בלי להחליף כרטיס":lang==="es"?"Internet en el extranjero sin cambiar SIM":"Browse abroad without swapping your SIM"}
@@ -3970,7 +3976,7 @@ function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
 
       <div style={twoCol?{display:"grid",gridTemplateColumns:isViewOnly?"1fr":"1fr 1fr",gap:16}:{display:"contents"}}>
       {!isViewOnly&&(
-        <button onClick={onBudget} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(74,222,128,0.35)",background:"linear-gradient(135deg,rgba(74,222,128,0.12),rgba(74,222,128,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"right"}}>
+        <button onClick={onBudget} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(74,222,128,0.35)",background:"linear-gradient(135deg,rgba(74,222,128,0.12),rgba(74,222,128,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"start"}}>
           <div style={{width:56,height:56,borderRadius:16,background:"rgba(74,222,128,0.15)",border:"0.5px solid rgba(74,222,128,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Wallet size={26} color="#4ade80" strokeWidth={1.5}/></div>
           <div>
             <div style={{fontSize:18,fontWeight:800,color:"#ffffff",fontFamily:RF}}>{lang==="he"?"ניהול תקציב":lang==="es"?"Gestión del presupuesto":"Budget Management"}</div>
@@ -3979,7 +3985,7 @@ function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
         </button>
       )}
 
-      <button onClick={onTrip} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(100,223,223,0.35)",background:"linear-gradient(135deg,rgba(100,223,223,0.12),rgba(100,223,223,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"right"}}>
+      <button onClick={onTrip} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(100,223,223,0.35)",background:"linear-gradient(135deg,rgba(100,223,223,0.12),rgba(100,223,223,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"start"}}>
         <div style={{width:56,height:56,borderRadius:16,background:"rgba(100,223,223,0.15)",border:"0.5px solid rgba(100,223,223,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Map size={26} color="#64dfdf" strokeWidth={1.5}/></div>
         <div>
           <div style={{fontSize:18,fontWeight:800,color:"#ffffff",fontFamily:RF}}>{lang==="he"?"ניהול טיול":lang==="es"?"Gestión del viaje":"Trip Management"}</div>
@@ -4084,7 +4090,7 @@ function PackingListScreen({trip,onUpdate}){
                 </div>
                 <div style={{flex:1}}/>
                 <div style={{fontSize:15,fontWeight:700,color:"#ffffff"}}>{lang==="he"?cat.he:lang==="es"?cat.es:cat.en}</div>
-                <div style={{width:36,height:36,borderRadius:10,background:cat.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginRight:2}}>
+                <div style={{width:36,height:36,borderRadius:10,background:cat.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginInlineStart:2}}>
                   <cat.Icon size={18} color={cat.color} strokeWidth={1.5}/>
                 </div>
               </div>
@@ -4860,7 +4866,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         {/* Header */}
         <div style={{padding:"20px 20px 16px",paddingTop:"calc(20px + env(safe-area-inset-top))",borderBottom:"0.5px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
           <div>
-            <div style={{fontFamily:RF,fontSize:22,fontWeight:900,color:"#fff",letterSpacing:"-0.5px"}}>טיולון</div>
+            <div style={{fontFamily:RF,fontSize:22,fontWeight:900,color:"#fff",letterSpacing:"-0.5px"}}>{lang==="he"?"טיולון":"TUlon"}</div>
             <div style={{fontFamily:RF,fontSize:11,color:W35,marginTop:2,direction:"ltr",textAlign:"right"}}>{userEmail}</div>
           </div>
           <button onClick={()=>setSideMenu(false)}
@@ -4874,11 +4880,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
                 {active?.destination||(lang==="he"?"הטיול":lang==="es"?"Viaje":"Trip")}
               </div>
               {!isViewOnly&&<button onClick={()=>navToScreen("budget","destination")}
-                style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
+                style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"start"}}>
                 <Settings size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"הגדרות טיול":lang==="es"?"Ajustes del viaje":"Trip Settings"}
               </button>}
               {isOwner&&<button onClick={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");setSideMenu(false);}}
-                style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
+                style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"start"}}>
                 <Share2 size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"שתף טיול":lang==="es"?"Compartir viaje":"Share Trip"}
               </button>}
               <div style={{margin:"10px 20px",height:"0.5px",background:"rgba(255,255,255,0.06)"}}/>
@@ -4889,7 +4895,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
                 const isCur=section===sec&&screen===scr;
                 return(
                   <button key={scr} onClick={()=>navToScreen(sec,scr)}
-                    style={{width:"100%",padding:"10px 20px",background:isCur?"rgba(100,223,223,0.08)":"none",border:"none",borderRight:isCur?`3px solid ${TEAL}`:"3px solid transparent",color:isCur?TEAL:"rgba(255,255,255,0.7)",fontFamily:RF,fontSize:14,fontWeight:isCur?700:400,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right",transition:"all 0.15s"}}>
+                    style={{width:"100%",padding:"10px 20px",background:isCur?"rgba(100,223,223,0.08)":"none",border:"none",borderInlineStart:isCur?`3px solid ${TEAL}`:"3px solid transparent",color:isCur?TEAL:"rgba(255,255,255,0.7)",fontFamily:RF,fontSize:14,fontWeight:isCur?700:400,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"start",transition:"all 0.15s"}}>
                     {MIcon&&<MIcon size={17} strokeWidth={1.5} color={isCur?TEAL:"rgba(255,255,255,0.7)"}/>}{label}
                   </button>
                 );
@@ -4898,11 +4904,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             </>
           )}
           <button onClick={()=>{setShowTravelProfile(true);setSideMenu(false);}}
-            style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
+            style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"start"}}>
             <Sparkles size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"פרופיל הטיולים שלי":lang==="es"?"Mi perfil de viaje":"My Travel Profile"}
           </button>
           <button onClick={()=>{setShowGuide(true);setSideMenu(false);}}
-            style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"right"}}>
+            style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"start"}}>
             <BookOpen size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"חוברת הסבר":lang==="es"?"Guía de usuario":"User Guide"}
           </button>
           <div style={{padding:"8px 20px 10px"}}>
@@ -4924,15 +4930,15 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         {/* Footer */}
         <div style={{padding:"12px 0",paddingBottom:"calc(12px + env(safe-area-inset-bottom))",borderTop:"0.5px solid rgba(255,255,255,0.06)",flexShrink:0}}>
           <button onClick={()=>{openLegal("/privacy");setSideMenu(false);}}
-            style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
+            style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"start"}}>
             <Lock size={15} color={W35} strokeWidth={1.5}/>{lang==="he"?"מדיניות פרטיות":lang==="es"?"Política de privacidad":"Privacy Policy"}
           </button>
           <button onClick={()=>{openLegal("/contact");setSideMenu(false);}}
-            style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
+            style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"start"}}>
             <Mail size={15} color={W35} strokeWidth={1.5}/>{lang==="he"?"צור קשר":lang==="es"?"Contacto":"Contact"}
           </button>
           <button onClick={()=>{onLogout();setSideMenu(false);}}
-            style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:"rgba(255,107,107,0.7)",fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
+            style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:"rgba(255,107,107,0.7)",fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"start"}}>
             <LogOut size={15} color="rgba(255,107,107,0.7)" strokeWidth={1.5}/>{lang==="he"?"התנתקות":lang==="es"?"Cerrar sesión":"Sign out"}
           </button>
           <VersionFooter/>
@@ -5016,7 +5022,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   // phone, in portrait or landscape. Narrow layouts are unchanged.
   const wideShell=(detail)=>(
     <>
-      <style>{GS}</style>
+      <style>{gsFor(lang)}</style>
       <div style={{display:"flex",minHeight:"100vh",background:DARK_BG,fontFamily:RF}}>
         <aside style={{width:"clamp(320px, 28vw, 440px)",flexShrink:0,position:"sticky",top:0,height:"100vh",overflowY:"auto",borderInlineEnd:"0.5px solid rgba(100,223,223,0.12)",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)"}}>
           {renderHomeBar()}
@@ -5039,7 +5045,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     );
     return(
       <>
-        <style>{GS}</style>
+        <style>{gsFor(lang)}</style>
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",fontFamily:RF}}>
           <OfflineBanner/>
           <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
@@ -5256,7 +5262,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     return(
       <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:DARK_BG,fontFamily:RF}}>
         <div style={{textAlign:"center",color:"white"}}>
-          <div style={{fontSize:42,fontWeight:900,letterSpacing:"-1px",marginBottom:10}}>טיולון</div>
+          <div style={{fontSize:42,fontWeight:900,letterSpacing:"-1px",marginBottom:10}}>{lang==="he"?"טיולון":"TUlon"}</div>
           <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",fontWeight:300}}>טוען...</div>
         </div>
       </div>
@@ -5267,16 +5273,16 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   if(activeId&&!section){
     const view=(
       <>
-        <style>{GS}</style>
+        <style>{gsFor(lang)}</style>
         {joinBanner}
         <div style={{maxWidth:wide?1400:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)",fontFamily:RF}}>
           <OfflineBanner/>
           <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
           {/* Minimal top bar — back link + menu */}
-          <div style={{padding:"16px 20px 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{padding:"16px 20px 0",display:"flex",flexDirection:lang==="he"?"row":"row-reverse",alignItems:"center",justifyContent:"space-between"}}>
             <button onClick={()=>setSideMenu(true)} className="tap-btn" style={{background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:8,color:"rgba(255,255,255,0.6)",width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><Menu size={16} strokeWidth={1.5}/></button>
             <button onClick={handleBack} style={{background:"none",border:"none",color:"rgba(100,223,223,0.7)",fontFamily:RF,fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
-              {t("home_trips",lang)||"הטיולים שלי"} <ChevronRight size={14} color="rgba(100,223,223,0.7)" strokeWidth={2}/>
+              {lang==="he"?<>{t("home_trips",lang)||"הטיולים שלי"} <ChevronRight size={14} color="rgba(100,223,223,0.7)" strokeWidth={2}/></>:<><ChevronLeft size={14} color="rgba(100,223,223,0.7)" strokeWidth={2}/> {t("home_trips",lang)}</>}
             </button>
           </div>
           <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
@@ -5298,7 +5304,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   if(activeId&&section==="budget"){
     const view=(
       <>
-        <style>{GS}</style>
+        <style>{gsFor(lang)}</style>
         {joinBanner}
         <div style={{maxWidth:wide?1400:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           <OfflineBanner/>
@@ -5307,7 +5313,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             <button onClick={handleHome} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><MapPin size={16} strokeWidth={1.5}/></button>
             <div style={{flex:1,textAlign:"center"}}>
-              <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
+              <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||(lang==="he"?"טיולון":"TUlon")}</span>
             </div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><ArrowLeftRight size={16} strokeWidth={1.5}/></button>
@@ -5345,7 +5351,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   if(activeId&&section==="trip"){
     const view=(
       <>
-        <style>{GS}</style>
+        <style>{gsFor(lang)}</style>
         {joinBanner}
         <div style={{maxWidth:wide?1400:480,margin:"0 auto",height:"100dvh",overflow:"hidden",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           <OfflineBanner/>
@@ -5354,7 +5360,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
             <button onClick={handleHome} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><MapPin size={16} strokeWidth={1.5}/></button>
             <div style={{flex:1,textAlign:"center"}}>
-              <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||"טיולון"}</span>
+              <span style={{fontFamily:RF,color:"#ffffff",fontSize:15,fontWeight:700,letterSpacing:"-0.2px"}}>{active?.destination||(lang==="he"?"טיולון":"TUlon")}</span>
             </div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>setShowConverter(c=>!c)} className="tap-btn" style={hBtn({display:"flex",alignItems:"center",justifyContent:"center",padding:"6px 9px"})}><ArrowLeftRight size={16} strokeWidth={1.5}/></button>
