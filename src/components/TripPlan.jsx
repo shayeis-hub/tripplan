@@ -422,6 +422,23 @@ const FX_EXIT_MS=180;
 // True on a window big enough for a side pane next to the open trip: wide AND tall, so
 // iPad landscape and desktops qualify while phones (even in landscape) do not.
 const WIDE_QUERY="(min-width: 900px) and (min-height: 600px)";
+// Two-column screens decide by the width of their own container (the detail pane is narrower
+// than the window when the side pane is showing), measured with a ResizeObserver.
+function useTwoCol(minWidth){
+  const ref=useRef(null);
+  const[two,setTwo]=useState(false);
+  useEffect(()=>{
+    const el=ref.current;
+    if(!el||typeof ResizeObserver==="undefined") return;
+    const check=()=>setTwo(el.getBoundingClientRect().width>=minWidth);
+    check();
+    const ro=new ResizeObserver(check);
+    ro.observe(el);
+    return()=>ro.disconnect();
+  },[minWidth]);
+  return[ref,two];
+}
+
 function useWideLayout(){
   const[wide,setWide]=useState(false);
   useEffect(()=>{
@@ -2138,6 +2155,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const{lang}=useLang();
   const{user}=useAuth();
   const isOffline=useOnlineStatus();
+  const[rootRef,twoCol]=useTwoCol(720); // summary + filters beside the list when there is room
   const dates=getRange(trip.startDate,trip.endDate);
   const people=trip.people||[];
   const[sel,setSel]=useState(dates[0]||"");
@@ -2398,7 +2416,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const totalILS=expenses.reduce((s,e)=>s+e.amountILS,0);
 
   return(
-    <div>
+    <div ref={rootRef}>
       <WaveHeader title={t("exp_title",lang)}
         subtitle={trip.destination?`${trip.destination}${nights>0?` · ${nights} ${t("days",lang)}`:""}`:""}
         action={
@@ -2441,16 +2459,18 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         style={{display:"none"}}
         onChange={e=>{const f=e.target.files?.[0];e.target.value="";if(f)handleScan(f);}}/>
 
+      <div style={twoCol?{display:"grid",gridTemplateColumns:"minmax(260px,320px) 1fr",columnGap:16,padding:"14px 16px",alignItems:"start"}:{display:"contents"}}>
+        <div style={twoCol?{position:"sticky",top:12,display:"flex",flexDirection:"column",gap:12}:{display:"contents"}}>
       {/* Total card */}
-      <div style={{margin:"14px 16px 0",padding:"16px 18px",background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div style={{margin:twoCol?0:"14px 16px 0",padding:"16px 18px",background:"rgba(100,223,223,0.06)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{fontSize:12,color:W40,fontFamily:RF}}>{lang==="he"?"סה\"כ הוצאות":lang==="es"?"Total de gastos":"Total expenses"}</div>
         <div style={{fontSize:22,fontWeight:800,color:TEAL,letterSpacing:"-0.5px",fontFamily:RF}}>{fmtAmt(totalILS,trip.displayCurrency||"ILS",rates)}</div>
       </div>
 
       {/* Category filter tabs — single scrollable row */}
-      <div style={{position:"relative",padding:"10px 16px 4px"}}>
+      <div style={{position:"relative",padding:twoCol?0:"10px 16px 4px"}}>
         <style>{`.exp-filter::-webkit-scrollbar{display:none}`}</style>
-        <div className="exp-filter" style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
+        <div className="exp-filter" style={{display:"flex",flexWrap:twoCol?"wrap":"nowrap",gap:5,overflowX:twoCol?"visible":"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
           {[{id:"all",Icon:null,color:TEAL,bg:"rgba(100,223,223,0.12)"},...CATS].map(cat=>{
             const isActive=filterCat===cat.id;
             const color=cat.color||TEAL;
@@ -2476,11 +2496,11 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           })}
         </div>
         {/* fade hint — indicates more content to the left (RTL) */}
-        <div style={{position:"absolute",top:0,left:16,bottom:4,width:24,background:"linear-gradient(to left,transparent,#0d2137)",pointerEvents:"none"}}/>
+        {!twoCol&&<div style={{position:"absolute",top:0,left:16,bottom:4,width:24,background:"linear-gradient(to left,transparent,#0d2137)",pointerEvents:"none"}}/>}
       </div>
 
       {scanMsg&&(
-        <div style={{margin:"8px 16px 0",borderRadius:10,padding:"8px 14px",fontSize:12,fontFamily:RF,
+        <div style={{margin:twoCol?0:"8px 16px 0",borderRadius:10,padding:"8px 14px",fontSize:12,fontFamily:RF,
           background:scanMsg.type==="ok"?"rgba(74,222,128,0.1)":"rgba(255,107,107,0.1)",
           border:`0.5px solid ${scanMsg.type==="ok"?"rgba(74,222,128,0.4)":"rgba(255,107,107,0.4)"}`,
           color:scanMsg.type==="ok"?"#4ade80":"#ff6b6b"}}>
@@ -2488,7 +2508,8 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         </div>
       )}
 
-      <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}>
+        </div>
+      <div style={twoCol?{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:10,alignContent:"start"}:{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}>
         {/* hidden date selector kept for form */}
         <div style={{display:"none"}}>
           <select value={sel} onChange={e=>setSel(e.target.value)}>{dates.map(d=><option key={d} value={d}>{d}</option>)}</select>
@@ -2695,7 +2716,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
             ,document.body)}
 
             {allFiltered.length===0
-              ?(<div style={{textAlign:"center",color:W25,padding:"28px 0",fontSize:14,fontFamily:RF}}>
+              ?(<div style={{textAlign:"center",color:W25,padding:"28px 0",fontSize:14,fontFamily:RF,gridColumn:"1 / -1"}}>
                   <Wallet size={36} color="rgba(255,255,255,0.1)" strokeWidth={1} style={{margin:"0 auto 10px",display:"block"}}/>
                   {t("exp_none",lang)}
                 </div>)
@@ -2704,7 +2725,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
             {/* Hotel booking nudge — shown at bottom when no hotel expense exists */}
             {!expenses.some(e=>e.category==="hotel")&&trip.destination&&(
-              <div style={{marginTop:8,padding:"14px 16px",borderRadius:14,border:"0.5px solid rgba(129,140,248,0.3)",background:"linear-gradient(135deg,rgba(129,140,248,0.08),rgba(129,140,248,0.02))"}}>
+              <div style={{marginTop:8,gridColumn:"1 / -1",padding:"14px 16px",borderRadius:14,border:"0.5px solid rgba(129,140,248,0.3)",background:"linear-gradient(135deg,rgba(129,140,248,0.08),rgba(129,140,248,0.02))"}}>
                 <div style={{fontFamily:RF,fontSize:12,fontWeight:700,color:"#a5b4fc",marginBottom:6}}>
                   🏨 {lang==="he"?"עדיין לא הזמנתם מלון?":lang==="es"?"¿Aún sin hotel reservado?":"Haven't booked your hotel yet?"}
                 </div>
@@ -2720,6 +2741,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
               </div>
             )}
           </div>
+      </div>
     </div>
   );
 }
@@ -2870,6 +2892,7 @@ const actIcon=type=>ACT_TYPES.find(t=>t.id===type)?.icon||"📌";
 
 function CalendarScreen({trip,expenses,onSaveActs}){
   const{lang}=useLang();
+  const[calRef,twoCol]=useTwoCol(720); // month grid beside the selected day when there is room
   const dates=getRange(trip.startDate,trip.endDate);
   const[acts,setActs]=useState(trip.activities||{});       // {date: [{text, time}]}
   const[editD,setEditD]=useState(null);
@@ -3002,7 +3025,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
             const hasEv=hasEvents(ds);
             const wxd=wxMap[ds];
             return(
-              <div key={ds} onClick={()=>{if(inTrip){setSelDate(ds);setView("day");}}}
+              <div key={ds} onClick={()=>{if(inTrip){setSelDate(ds);if(!twoCol)setView("day");}}}
                 style={{
                   minHeight:52,padding:"5px 4px 4px",borderRadius:10,
                   background:isSel?TBB:inTrip?W05:"transparent",
@@ -3419,7 +3442,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
 
   // ── RENDER ──────────────────────────────────────────────────────────────────
   return(
-    <div>
+    <div ref={calRef}>
       <div style={{background:"linear-gradient(160deg,#0d2137 0%,#0a3050 100%)",padding:"18px 18px 14px",borderBottom:"0.5px solid rgba(100,223,223,0.12)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
           <div>
@@ -3440,13 +3463,13 @@ function CalendarScreen({trip,expenses,onSaveActs}){
             )}
           </div>
         </div>
-        {/* View toggle */}
-        <div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.06)",borderRadius:10,padding:3}}>
+        {/* View toggle (not needed when month and day are shown together) */}
+        {!twoCol&&<div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.06)",borderRadius:10,padding:3}}>
           <button onClick={()=>setView("month")} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="month"?"rgba(100,223,223,0.18)":"transparent",color:view==="month"?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>{t("cal_month",lang)}</button>
           <button onClick={()=>{setView("day");if(!selDate)setSelDate(defaultTripDate(dates));}} style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:view==="day"?"rgba(100,223,223,0.18)":"transparent",color:view==="day"?TEAL:W35,fontFamily:RF,fontWeight:600,fontSize:13,cursor:"pointer",transition:"all 0.2s"}}>{t("cal_day",lang)}</button>
-        </div>
+        </div>}
         {/* Day nav (only in day view) */}
-        {view==="day"&&dates.length>0&&(
+        {!twoCol&&view==="day"&&dates.length>0&&(
           <div style={{display:"flex",gap:6,overflowX:"auto",marginTop:10,paddingBottom:2}}>
             {dates.map(d=>{
               const hasEv=hasEvents(d);
@@ -3465,9 +3488,16 @@ function CalendarScreen({trip,expenses,onSaveActs}){
       <Fx show={!!editD}>{editModalJsx}</Fx>
       <Fx show={!!actPopup}>{actPopupJsx}</Fx>
 
-      <div style={{overflowY:"auto"}}>
-        {view==="month"?<MonthView/>:<DayView/>}
-      </div>
+      {twoCol?(
+        <div style={{display:"grid",gridTemplateColumns:"minmax(340px,430px) 1fr",alignItems:"start"}}>
+          <div style={{position:"sticky",top:0}}><MonthView/></div>
+          <div style={{borderInlineStart:"0.5px solid rgba(255,255,255,0.07)"}}><DayView/></div>
+        </div>
+      ):(
+        <div style={{overflowY:"auto"}}>
+          {view==="month"?<MonthView/>:<DayView/>}
+        </div>
+      )}
     </div>
   );
 }
