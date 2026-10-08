@@ -145,3 +145,25 @@ body {
   [data-fx="closing"] .fx-drawer,
   [data-fx="closing"] .fx-sheet { animation-name: fxFadeOut; animation-duration: 0.12s; animation-timing-function: ease-in; }
 }
+
+/* ── Glass bar (bottom tab bar) ──────────────────────────────────────
+   A translucent material: the page scrolls underneath and shows through,
+   blurred and saturated, instead of an opaque strip. The bright hairline on top
+   reads as light catching the edge. Weight comes from blur + a slightly dark
+   tint; text on it is set at higher contrast than on a solid bar (vibrancy). */
+.glass-bar {
+  background: rgba(8, 22, 38, 0.72);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-top: 0.5px solid rgba(100, 223, 223, 0.22);
+}
+/* No backdrop-filter support: translucency would hurt legibility, so go near-solid. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-bar { background: rgba(5, 16, 30, 0.97); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass-bar { background: rgb(5, 16, 30); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  .glass-bar { background: rgb(5, 16, 30); -webkit-backdrop-filter: none; backdrop-filter: none; border-top-color: rgba(255, 255, 255, 0.5); }
+}

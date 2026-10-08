@@ -459,14 +459,14 @@ const NAV_CFG={
 function NavBar({screens,current,onNav}){
   const{lang}=useLang();
   return(
-    <div style={{display:"flex",background:"rgba(5,16,30,0.97)",borderTop:"0.5px solid rgba(100,223,223,0.1)",position:"sticky",bottom:0,zIndex:100,backdropFilter:"blur(12px)",paddingBottom:6}}>
+    <div className="glass-bar" style={{display:"flex",position:"sticky",bottom:0,zIndex:100,paddingBottom:6}}>
       {screens.map(s=>{
         const cfg=NAV_CFG[s]||{Icon:MapPin,he:s,en:s};
         const on=current===s;
         return(
           <button key={s} onClick={()=>{haptic();onNav(s);}} className="nav-btn" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"0 2px 3px",paddingTop:8,border:"none",background:"transparent",cursor:"pointer",borderTop:on?"2px solid #64dfdf":"2px solid transparent",transition:"border-color 0.18s"}}>
-            {cfg.Icon&&<cfg.Icon size={on?19:17} color={on?"#64dfdf":"rgba(255,255,255,0.27)"} strokeWidth={on?2:1.5} style={{transition:"all 0.18s"}}/>}
-            <span style={{fontSize:9,fontWeight:on?700:400,color:on?"#64dfdf":"rgba(255,255,255,0.22)",fontFamily:RF}}>{lang==="he"?cfg.he:lang==="es"?cfg.es:cfg.en}</span>
+            {cfg.Icon&&<cfg.Icon size={on?19:17} color={on?"#64dfdf":"rgba(255,255,255,0.5)"} strokeWidth={on?2:1.5} style={{transition:"all 0.18s"}}/>}
+            <span style={{fontSize:10,fontWeight:on?700:500,letterSpacing:"0.2px",color:on?"#64dfdf":"rgba(255,255,255,0.55)",fontFamily:RF}}>{lang==="he"?cfg.he:lang==="es"?cfg.es:cfg.en}</span>
           </button>
         );
       })}
@@ -600,7 +600,7 @@ function TripDatePicker({dates,value,onChange,label,lang}){
               <span style={{fontSize:9,fontWeight:700,fontFamily:RF,color:sel?TEAL:W35,letterSpacing:"0.3px"}}>
                 {dayName(dt.getDay())}
               </span>
-              <span style={{fontSize:20,fontWeight:900,fontFamily:RF,lineHeight:1.1,color:sel?"#ffffff":"rgba(255,255,255,0.75)"}}>
+              <span style={{fontSize:20,fontWeight:900,fontFamily:RF,letterSpacing:"-0.3px",lineHeight:1.1,color:sel?"#ffffff":"rgba(255,255,255,0.75)"}}>
                 {dt.getDate()}
               </span>
               <span style={{fontSize:9,fontWeight:600,fontFamily:RF,color:sel?TEAL:W35}}>
@@ -944,7 +944,7 @@ function CurrencyConverter({rates,onClose,tripCurrencies,defaultCurrency,display
         </div>
         {converted&&(
           <div style={{marginTop:10,padding:"10px 14px",background:"rgba(100,223,223,0.1)",borderRadius:10,textAlign:"center"}}>
-            <span style={{fontFamily:RF,fontSize:22,fontWeight:800,color:TEAL}}>{converted} {to}</span>
+            <span style={{fontFamily:RF,fontSize:22,fontWeight:800,color:TEAL,letterSpacing:"-0.5px",fontVariantNumeric:"tabular-nums"}}>{converted} {to}</span>
             <div style={{fontSize:11,color:W35,marginTop:3,fontFamily:RF}}>
               {CURR_FLAG[from]||""} 1 {from} = {rates[from]&&rates[to]?(rates[from]/rates[to]).toFixed(4):""} {to} {CURR_FLAG[to]||""}
             </div>
@@ -1668,7 +1668,7 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
 
   return(
     <Card>
-      <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,marginBottom:4,color:"#0a3050"}}>{t("dest_currencies",lang)}</h2>
+      <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:4,color:"#0a3050"}}>{t("dest_currencies",lang)}</h2>
       <p style={{fontSize:12,color:W35,marginBottom:12}}>{t("dest_curr_sub",lang)}</p>
 
       {/* Active currencies */}
@@ -1848,7 +1848,7 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
         {/* ── STEP 1: Where ── */}
         {step===1&&(
           <>
-            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",marginBottom:4}}>{t("wiz_where",lang)}</h2>
+            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",letterSpacing:"-0.5px",lineHeight:1.15,marginBottom:4}}>{t("wiz_where",lang)}</h2>
             <p style={{fontSize:13,color:W35,marginBottom:22}}>{t("wiz_where_sub",lang)}</p>
             <div style={{position:"relative",marginBottom:16}}>
               <label style={lbl}>{t("wiz_city",lang)}</label>
@@ -1876,7 +1876,7 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
             </div>
             {nights>0&&(
               <div style={{padding:"12px 16px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:12,textAlign:"center"}}>
-                <span style={{fontFamily:RF,fontSize:24,fontWeight:800,color:TEAL}}>{nights}</span>
+                <span style={{fontFamily:RF,fontSize:24,fontWeight:800,color:TEAL,letterSpacing:"-0.5px",fontVariantNumeric:"tabular-nums"}}>{nights}</span>
                 <span style={{fontSize:14,fontWeight:600,color:W70,marginRight:6}}>{t("days",lang)}</span>
               </div>
             )}
@@ -1892,7 +1892,7 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
         {/* ── STEP 2: Money ── */}
         {step===2&&(
           <>
-            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",marginBottom:4}}>{t("wiz_money",lang)}</h2>
+            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",letterSpacing:"-0.5px",lineHeight:1.15,marginBottom:4}}>{t("wiz_money",lang)}</h2>
             <p style={{fontSize:13,color:W35,marginBottom:20}}>{t("wiz_money_sub",lang)}</p>
             <div style={{marginBottom:14}}>
               <label style={lbl}>{lang==="he"?"מטבע תצוגה":lang==="es"?"Moneda de visualización":"Display currency"}</label>
@@ -1917,7 +1917,7 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
         {/* ── STEP 3: Who ── */}
         {step===3&&(
           <>
-            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",marginBottom:4}}>{t("wiz_who",lang)}</h2>
+            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",letterSpacing:"-0.5px",lineHeight:1.15,marginBottom:4}}>{t("wiz_who",lang)}</h2>
             <p style={{fontSize:13,color:W35,marginBottom:20}}>{t("wiz_who_sub",lang)}</p>
             <div style={{display:"flex",gap:8,marginBottom:12}}>
               <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder={t("dest_people_ph",lang)} onKeyDown={e=>e.key==="Enter"&&addPerson()} style={inp}/>
@@ -1949,7 +1949,7 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
         {/* ── STEP 4: Trip Preferences ── */}
         {step===4&&(
           <>
-            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",marginBottom:4}}>{t("wiz_prefs",lang)}</h2>
+            <h2 style={{fontFamily:RF,fontSize:24,fontWeight:800,color:"#fff",letterSpacing:"-0.5px",lineHeight:1.15,marginBottom:4}}>{t("wiz_prefs",lang)}</h2>
             <p style={{fontSize:13,color:W35,marginBottom:20}}>{t("wiz_prefs_sub",lang)}</p>
             <div style={{marginBottom:20}}>
               <div style={{fontFamily:RF,fontSize:13,fontWeight:600,color:"#fff",marginBottom:9}}>
@@ -2036,13 +2036,13 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
       <WaveHeader title={t("dest_title",lang)} subtitle={t("dest_subtitle",lang)}/>
       <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:16}}>
         <Card>
-          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,marginBottom:16,color:"#0a3050"}}>{t("dest_details",lang)}</h2>
+          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:16,color:"#0a3050"}}>{t("dest_details",lang)}</h2>
           <SI label={t("dest_field",lang)} value={trip.destination} onChange={v=>onUpdate({destination:v})} placeholder={t("dest_placeholder",lang)}/>
           <SI label={t("dest_depart",lang)} value={trip.startDate} onChange={v=>onUpdate({startDate:v})} type="date"/>
           <SI label={t("dest_return",lang)}  value={trip.endDate}   onChange={v=>onUpdate({endDate:v})}   type="date" min={trip.startDate}/>
           {valid&&(
             <div style={{padding:"12px 16px",background:"rgba(100,223,223,0.08)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:12,textAlign:"center"}}>
-              <span style={{fontFamily:RF,fontSize:26,fontWeight:800,color:TEAL}}>{Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1}</span>
+              <span style={{fontFamily:RF,fontSize:26,fontWeight:800,color:TEAL,letterSpacing:"-0.5px",fontVariantNumeric:"tabular-nums"}}>{Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1}</span>
               <span style={{fontSize:14,fontWeight:600,color:W70,marginRight:6}}>{t("days",lang)}</span>
               <div style={{fontSize:12,color:W35,marginTop:2,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Calendar size={11} color={W35}/>{fmtDate(trip.startDate)} – {fmtDate(trip.endDate)}</div>
             </div>
@@ -2053,7 +2053,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
 
         {/* People */}
         <Card>
-          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,marginBottom:4,color:"#0a3050"}}>{t("dest_people",lang)}</h2>
+          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:4,color:"#0a3050"}}>{t("dest_people",lang)}</h2>
           <p style={{fontSize:13,color:W35,marginBottom:14}}>{t("dest_people_sub",lang)}</p>
           <div style={{display:"flex",gap:8,marginBottom:12}}>
             <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder={t("dest_people_ph",lang)} onKeyDown={e=>e.key==="Enter"&&addPerson()}
