@@ -4967,7 +4967,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     <>
       <style>{GS}</style>
       <div style={{display:"flex",minHeight:"100vh",background:DARK_BG,fontFamily:RF}}>
-        <aside style={{width:340,flexShrink:0,position:"sticky",top:0,height:"100vh",overflowY:"auto",borderInlineEnd:"0.5px solid rgba(100,223,223,0.12)",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)"}}>
+        <aside style={{width:"clamp(320px, 28vw, 440px)",flexShrink:0,position:"sticky",top:0,height:"100vh",overflowY:"auto",borderInlineEnd:"0.5px solid rgba(100,223,223,0.12)",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)"}}>
           {renderHomeBar()}
           {renderHomeConverter()}
           {renderTripList(activeId)}
@@ -5218,7 +5218,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       <>
         <style>{GS}</style>
         {joinBanner}
-        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)",fontFamily:RF}}>
+        <div style={{maxWidth:wide?1400:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)",fontFamily:RF}}>
           <OfflineBanner/>
           <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
           {/* Minimal top bar — back link + menu */}
@@ -5249,7 +5249,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       <>
         <style>{GS}</style>
         {joinBanner}
-        <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
+        <div style={{maxWidth:wide?1400:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           <OfflineBanner/>
           <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
           {/* Header */}
@@ -5296,7 +5296,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       <>
         <style>{GS}</style>
         {joinBanner}
-        <div style={{maxWidth:480,margin:"0 auto",height:"100dvh",overflow:"hidden",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
+        <div style={{maxWidth:wide?1400:480,margin:"0 auto",height:"100dvh",overflow:"hidden",display:"flex",flexDirection:"column",background:DARK_BG,fontFamily:RF}}>
           <OfflineBanner/>
           <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
           {/* Header */}
