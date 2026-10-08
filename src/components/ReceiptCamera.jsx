@@ -106,11 +106,11 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
 
       {/* Receipt frame hint — large, floating over the live video (no dimming = no "gap" look) */}
       {!shot && ready && (
-        <div style={{ position: "absolute", top: 132, bottom: 124, left: "6%", right: "6%", border: `2.5px dashed ${TEAL}`, borderRadius: 16, pointerEvents: "none", animation: "camfade 0.3s" }} />
+        <div style={{ position: "absolute", top: "calc(132px + env(safe-area-inset-top))", bottom: "calc(124px + env(safe-area-inset-bottom))", left: "6%", right: "6%", border: `2.5px dashed ${TEAL}`, borderRadius: 16, pointerEvents: "none", animation: "camfade 0.3s" }} />
       )}
 
       {/* Top overlay: close + title + tips */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "12px 16px 20px", background: "linear-gradient(180deg,rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.5) 60%,transparent 100%)" }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "12px 16px 20px", paddingTop: "calc(12px + env(safe-area-inset-top))", background: "linear-gradient(180deg,rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.5) 60%,transparent 100%)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={() => { stopStream(); onClose(); }}
             style={{ width: 36, height: 36, borderRadius: 10, border: "none", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
@@ -138,7 +138,7 @@ export default function ReceiptCamera({ lang, onCapture, onClose }) {
       </div>
 
       {/* Bottom overlay: controls */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "28px 24px 22px", background: "linear-gradient(0deg,rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.5) 60%,transparent 100%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 36 }}>
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "28px 24px 22px", paddingBottom: "calc(22px + env(safe-area-inset-bottom))", background: "linear-gradient(0deg,rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.5) 60%,transparent 100%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 36 }}>
         {shot ? (
           <>
             <button onClick={retake}

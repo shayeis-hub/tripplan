@@ -2456,7 +2456,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
       {/* Processing overlay — shown while the receipt is being read */}
       {scanning&&(
-        <div style={{position:"fixed",inset:0,zIndex:3100,background:"rgba(13,33,55,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",gap:16,padding:"90px 24px 24px"}}>
+        <div style={{position:"fixed",inset:0,zIndex:3100,background:"rgba(13,33,55,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",gap:16,padding:"calc(90px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom))"}}>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           <Loader size={44} color={TEAL} strokeWidth={1.8} style={{animation:"spin 1s linear infinite"}}/>
           <div style={{color:"#fff",fontFamily:RF,fontWeight:700,fontSize:17,textAlign:"center"}}>{t("scan_loading",lang)}</div>
@@ -4824,8 +4824,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   const guideUrl=lang==="he"?"/guide-he.html":lang==="es"?"/guide-es.html":"/guide-en.html";
   // In-app guide viewer — keeps the user inside the app instead of a new tab
   const renderGuideModal=()=>(
-    <div className="fx-sheet" style={{position:"fixed",inset:0,zIndex:600,background:DARK_BG,display:"flex",flexDirection:"column"}} dir={lang==="he"?"rtl":"ltr"}>
-      <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.15)",flexShrink:0}}>
+    <div className="fx-sheet" style={{position:"fixed",inset:0,zIndex:600,background:DARK_BG,display:"flex",flexDirection:"column",paddingBottom:"env(safe-area-inset-bottom)"}} dir={lang==="he"?"rtl":"ltr"}>
+      <div style={{background:"rgba(0,0,0,0.4)",padding:"12px 16px",paddingTop:"calc(12px + env(safe-area-inset-top))",display:"flex",alignItems:"center",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.15)",flexShrink:0}}>
         <button onClick={()=>setShowGuide(false)} className="tap-btn" style={{background:"rgba(255,255,255,0.08)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:9,color:"#fff",width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
           <X size={17} strokeWidth={2}/>
         </button>
@@ -4855,7 +4855,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       {/* Drawer */}
       <div className="fx-drawer" style={{position:"fixed",top:0,right:0,bottom:0,width:280,background:"#0a2035",borderLeft:"0.5px solid rgba(100,223,223,0.15)",zIndex:401,display:"flex",flexDirection:"column",boxShadow:"-8px 0 40px rgba(0,0,0,0.5)",overflowY:"auto"}}>
         {/* Header */}
-        <div style={{padding:"20px 20px 16px",borderBottom:"0.5px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+        <div style={{padding:"20px 20px 16px",paddingTop:"calc(20px + env(safe-area-inset-top))",borderBottom:"0.5px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
           <div>
             <div style={{fontFamily:RF,fontSize:22,fontWeight:900,color:"#fff",letterSpacing:"-0.5px"}}>טיולון</div>
             <div style={{fontFamily:RF,fontSize:11,color:W35,marginTop:2,direction:"ltr",textAlign:"right"}}>{userEmail}</div>
@@ -4919,7 +4919,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           </div>
         </div>
         {/* Footer */}
-        <div style={{padding:"12px 0",borderTop:"0.5px solid rgba(255,255,255,0.06)",flexShrink:0}}>
+        <div style={{padding:"12px 0",paddingBottom:"calc(12px + env(safe-area-inset-bottom))",borderTop:"0.5px solid rgba(255,255,255,0.06)",flexShrink:0}}>
           <button onClick={()=>{openLegal("/privacy");setSideMenu(false);}}
             style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"right"}}>
             <Lock size={15} color={W35} strokeWidth={1.5}/>{lang==="he"?"מדיניות פרטיות":lang==="es"?"Política de privacidad":"Privacy Policy"}
@@ -5243,7 +5243,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   );
 
   const joinBanner=inviteJoinMsg?(
-    <div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",zIndex:999,background:"rgba(74,222,128,0.92)",backdropFilter:"blur(10px)",color:"#0d2137",fontFamily:RF,fontWeight:700,fontSize:14,padding:"12px 24px",borderRadius:14,boxShadow:"0 8px 32px rgba(0,0,0,0.3)",whiteSpace:"nowrap",textAlign:"center",pointerEvents:"none"}}>
+    <div style={{position:"fixed",top:"calc(16px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:999,background:"rgba(74,222,128,0.92)",backdropFilter:"blur(10px)",color:"#0d2137",fontFamily:RF,fontWeight:700,fontSize:14,padding:"12px 24px",borderRadius:14,boxShadow:"0 8px 32px rgba(0,0,0,0.3)",whiteSpace:"nowrap",textAlign:"center",pointerEvents:"none"}}>
       {inviteJoinMsg}
     </div>
   ):null;
