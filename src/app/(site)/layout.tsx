@@ -5,6 +5,7 @@ import { LangProvider } from "@/lib/LangContext";
 import RegisterSW from "@/components/RegisterSW";
 import AcquisitionCapture from "@/components/AcquisitionCapture";
 import DirSetter from "@/components/DirSetter";
+import LegalViewer from "@/components/LegalViewer";
 import RootHead from "@/components/RootHead";
 import { Analytics } from "@vercel/analytics/next";
 import { pageMeta } from "@/lib/seo";
@@ -37,7 +38,7 @@ export default function RootLayout({
       <head>
         <RootHead />
       </head>
-      <body><LangProvider><DirSetter /><AuthProvider><AcquisitionCapture /><RegisterSW />{children}<Analytics /></AuthProvider></LangProvider></body>
+      <body><LangProvider><DirSetter /><AuthProvider><AcquisitionCapture /><RegisterSW />{children}<LegalViewer /><Analytics /></AuthProvider></LangProvider></body>
     </html>
   );
 }

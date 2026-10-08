@@ -134,14 +134,16 @@ export default function TravelProfile({ onClose, onboarding, onSaved }: { onClos
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setSaved(true);
       onSaved?.();
-      if (onboarding) setTimeout(onClose, 700); // brief "saved" confirmation, then continue automatically
+      // Brief "saved" confirmation, then close: back to the previous screen when
+      // opened from the menu, or on to the next step in onboarding.
+      setTimeout(onClose, 700);
     } catch { setError(true); }
     finally { setSaving(false); }
   };
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 700, background: DARK_BG, display: "flex", flexDirection: "column" }} dir={lang === "he" ? "rtl" : "ltr"}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "0.5px solid rgba(255,255,255,0.08)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", paddingTop: "calc(16px + env(safe-area-inset-top))", borderBottom: "0.5px solid rgba(255,255,255,0.08)" }}>
         <button onClick={onClose} style={{ background: "none", border: "none", color: W40, fontFamily: RF, fontSize: 14, cursor: "pointer" }}>
           {(onboarding ? SKIP : CLOSE)[lang]}
         </button>
