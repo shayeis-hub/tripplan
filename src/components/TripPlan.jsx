@@ -357,9 +357,17 @@ function useWeather(destination,startDate,endDate){
     // silently accepted as "no weather data" further down.
     if(diff>15){setWxError("תחזית זמינה רק עד 15 יום קדימה");return;}
     setLoading(true);setWxError(null);setWx(null);
-    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(translateDest(destination))}&count=1&language=en`)
-      .then(r=>r.json()).then(geo=>{
-        if(!geo.results?.length)throw new Error("יעד לא נמצא");
+    // Destinations are often stored as "<city in Hebrew>, <Country in English>"
+    // (e.g. "תל אביב, Israel"), which the geocoder does not match as a whole.
+    // Try the whole string, then just the city; Hebrew names are looked up with
+    // language=he, which the geocoder resolves without our dictionary.
+    const geocode=q=>fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=${/[֐-׿]/.test(q)?"he":"en"}`)
+      .then(r=>r.json()).then(g=>g.results?.[0]||null);
+    const candidates=[...new Set([translateDest(destination),translateDest(destination.split(",")[0].trim())].filter(Boolean))];
+    candidates.reduce((p,q)=>p.then(found=>found||geocode(q)),Promise.resolve(null))
+      .then(place=>{
+        if(!place)throw new Error("יעד לא נמצא");
+        const geo={results:[place]};
         const{latitude:lat,longitude:lon,name,country}=geo.results[0];
         const maxDate=localDateStr(new Date(today.getTime()+15*86400000));
         const end2=endDate>maxDate?maxDate:endDate;
