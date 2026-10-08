@@ -419,6 +419,22 @@ const GS=`
 // caller renders while open (null when closed); the last open version is replayed during
 // the exit. display:contents means the wrapper adds no box and fixed overlays are unaffected.
 const FX_EXIT_MS=180;
+// True on a window big enough for a side pane next to the open trip: wide AND tall, so
+// iPad landscape and desktops qualify while phones (even in landscape) do not.
+const WIDE_QUERY="(min-width: 900px) and (min-height: 600px)";
+function useWideLayout(){
+  const[wide,setWide]=useState(false);
+  useEffect(()=>{
+    if(typeof window==='undefined'||!window.matchMedia) return;
+    const mq=window.matchMedia(WIDE_QUERY);
+    const on=()=>setWide(mq.matches);
+    on();
+    mq.addEventListener?.('change',on);
+    return()=>mq.removeEventListener?.('change',on);
+  },[]);
+  return wide;
+}
+
 function Fx({show,children}){
   const[mounted,setMounted]=useState(!!show);
   const last=useRef(children);
@@ -1410,7 +1426,7 @@ async function exportItineraryPDF(trip,expenses,lang="he"){
   setTimeout(()=>w.print(),800);
 }
 
-function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,rates={}}){
+function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,rates={},selectedId=null}){
   const{lang}=useLang();
   const[showJoin,setShowJoin]=useState(false);
   const[joinLink,setJoinLink]=useState("");
@@ -1456,7 +1472,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,r
           const dc=trip.displayCurrency||"ILS";
           const total=trip.expenses?.reduce((s,e)=>s+e.amountILS,0)||0;
           return(
-            <div key={trip.id} style={{borderRadius:18,overflow:"hidden",border:"0.5px solid rgba(255,255,255,0.07)",cursor:"pointer",display:"flex"}}
+            <div key={trip.id} style={{borderRadius:18,overflow:"hidden",border:trip.id===selectedId?"1px solid rgba(100,223,223,0.6)":"0.5px solid rgba(255,255,255,0.07)",background:trip.id===selectedId?"rgba(100,223,223,0.06)":"transparent",cursor:"pointer",display:"flex"}}
               onClick={()=>onSelect(trip.id)}>
               {/* Vertical accent bar on left */}
               <div style={{width:4,flexShrink:0,background:`linear-gradient(180deg,${accent}ee,${accent}44)`}}/>
@@ -4363,6 +4379,7 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
 export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFields,onMutateTripField,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId,syncFailed,onRetrySync}){
   const{lang,setLang}=useLang();
   const{user}=useAuth();
+  const wide=useWideLayout();
   // iOS only applies :active styles (the press feedback in GS) once some touch
   // listener exists on the page; a passive no-op one is enough and costs nothing.
   useEffect(()=>{
@@ -4873,73 +4890,113 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     </>
   );
 
+  // ── Pieces of the home screen, lifted out so the wide (iPad / desktop) layout can
+  // reuse them in a side pane without duplicating any markup or state. The narrow
+  // home branch below calls the very same functions in the very same order. ──
+  const renderHomeBar=()=>(
+      <div style={{background:"rgba(0,0,0,0.4)",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
+        {/* App name */}
+        <div style={{display:"flex",flexDirection:"column",flexShrink:0}}>
+          <span style={{fontFamily:RF,color:"#ffffff",fontSize:20,fontWeight:800,letterSpacing:"-0.5px",lineHeight:1}}>{t("app_name",lang)}</span>
+          <span style={{fontFamily:RF,color:W35,fontSize:10,fontWeight:300,letterSpacing:"0.5px",marginTop:3}}>{t("app_subtitle",lang)}</span>
+        </div>
+
+        {/* Language pill — same style as login */}
+        <div style={{display:"flex",background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:24,padding:3,flexShrink:0}}>
+          {["en","he","es"].map(l=>(
+            <button key={l} onClick={()=>setLang(l)}
+              style={{padding:"5px 10px",borderRadius:20,border:"none",
+                background:lang===l?"rgba(100,223,223,0.18)":"transparent",
+                color:lang===l?TEAL:"rgba(255,255,255,0.4)",
+                fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:RF,
+                display:"flex",alignItems:"center",gap:3,transition:"all 0.15s",whiteSpace:"nowrap"}}>
+              <Globe size={11} color={lang===l?TEAL:"rgba(255,255,255,0.4)"} strokeWidth={1.5}/>
+              {l==="en"?"EN":l==="he"?"עב":"ES"}
+            </button>
+          ))}
+        </div>
+
+        {/* Action buttons */}
+        <div style={{display:"flex",gap:7,alignItems:"center",flexShrink:0}}>
+          <button onClick={()=>setShowConverter(c=>!c)}
+            title={lang==="he"?"המרת מטבע":lang==="es"?"Conversor de monedas":"Currency converter"}
+            style={{width:34,height:34,borderRadius:10,border:`0.5px solid ${showConverter?"rgba(100,223,223,0.4)":"rgba(100,223,223,0.2)"}`,background:showConverter?"rgba(100,223,223,0.15)":"rgba(100,223,223,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            <ArrowLeftRight size={15} color={TEAL} strokeWidth={1.5}/>
+          </button>
+          <button onClick={()=>{
+              // Once denied, Android/iOS won't show the system permission
+              // dialog again on request — subscribe() just silently
+              // no-ops, which reads as "the button doesn't do anything".
+              // Tell the user where to actually fix it instead.
+              if(permission==="denied"){
+                alert(lang==="he"?"ההתראות חסומות עבור טיולון. כדי להפעיל: הגדרות המכשיר ← אפליקציות ← טיולון ← התראות":
+                  lang==="es"?"Las notificaciones están bloqueadas para Tulon. Para activarlas: Ajustes del dispositivo → Apps → Tulon → Notificaciones":
+                  "Notifications are blocked for Tulon. To enable: Device Settings → Apps → Tulon → Notifications");
+                return;
+              }
+              subscribe();
+            }}
+            title={subscribed?t("notif_active",lang):t("notif_enable",lang)}
+            style={{width:34,height:34,borderRadius:10,border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(255,255,255,0.12)"}`,background:subscribed?"rgba(74,222,128,0.1)":"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            {subscribed
+              ?<Bell size={15} color="#4ade80" strokeWidth={1.5}/>
+              :<BellOff size={15} color={W35} strokeWidth={1.5}/>}
+          </button>
+          <button onClick={()=>setSideMenu(true)}
+            title={lang==="he"?"תפריט":lang==="es"?"Menú":"Menu"}
+            style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            <Menu size={15} color={W40} strokeWidth={1.5}/>
+          </button>
+        </div>
+      </div>
+  );
+  const renderHomeConverter=()=>(
+    <>{showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]} defaultCurrency={trips[0]?.defaultCurrency} displayCurrency={trips[0]?.displayCurrency}/>}</>
+  );
+  const renderHomeCluster=()=>(
+    <><Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}</>
+  );
+  const renderTripList=(selectedId)=>(
+    <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates} selectedId={selectedId}/>
+  );
+
+  // Wide layout: trip list in a side pane, the open trip beside it. Chosen by window
+  // size (not device), so it applies to iPad landscape and desktop but never to a
+  // phone, in portrait or landscape. Narrow layouts are unchanged.
+  const wideShell=(detail)=>(
+    <>
+      <style>{GS}</style>
+      <div style={{display:"flex",minHeight:"100vh",background:DARK_BG,fontFamily:RF}}>
+        <aside style={{width:340,flexShrink:0,position:"sticky",top:0,height:"100vh",overflowY:"auto",borderInlineEnd:"0.5px solid rgba(100,223,223,0.12)",background:"linear-gradient(160deg,#091928 0%,#0d2137 60%,#0a2a40 100%)"}}>
+          {renderHomeBar()}
+          {renderHomeConverter()}
+          {renderTripList(activeId)}
+        </aside>
+        <main style={{flex:1,minWidth:0}}>{detail}</main>
+      </div>
+    </>
+  );
+
   if(!activeId){
+    if(wide) return wideShell(
+      <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,fontFamily:RF}}>
+        <OfflineBanner/><SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
+        <MapPin size={42} color="rgba(100,223,223,0.25)" strokeWidth={1.2}/>
+        <span style={{fontSize:13,color:"rgba(255,255,255,0.3)",fontWeight:300}}>{t("app_subtitle",lang)}</span>
+        {renderHomeCluster()}
+      </div>
+    );
     return(
       <>
         <style>{GS}</style>
         <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",fontFamily:RF}}>
           <OfflineBanner/>
           <SyncFailedBanner failed={syncFailed} onRetry={onRetrySync}/>
-          {/* user bar */}
-          <div style={{background:"rgba(0,0,0,0.4)",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,borderBottom:"0.5px solid rgba(100,223,223,0.1)"}}>
-            {/* App name */}
-            <div style={{display:"flex",flexDirection:"column",flexShrink:0}}>
-              <span style={{fontFamily:RF,color:"#ffffff",fontSize:20,fontWeight:800,letterSpacing:"-0.5px",lineHeight:1}}>{t("app_name",lang)}</span>
-              <span style={{fontFamily:RF,color:W35,fontSize:10,fontWeight:300,letterSpacing:"0.5px",marginTop:3}}>{t("app_subtitle",lang)}</span>
-            </div>
-
-            {/* Language pill — same style as login */}
-            <div style={{display:"flex",background:"rgba(255,255,255,0.06)",border:"0.5px solid rgba(255,255,255,0.12)",borderRadius:24,padding:3,flexShrink:0}}>
-              {["en","he","es"].map(l=>(
-                <button key={l} onClick={()=>setLang(l)}
-                  style={{padding:"5px 10px",borderRadius:20,border:"none",
-                    background:lang===l?"rgba(100,223,223,0.18)":"transparent",
-                    color:lang===l?TEAL:"rgba(255,255,255,0.4)",
-                    fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:RF,
-                    display:"flex",alignItems:"center",gap:3,transition:"all 0.15s",whiteSpace:"nowrap"}}>
-                  <Globe size={11} color={lang===l?TEAL:"rgba(255,255,255,0.4)"} strokeWidth={1.5}/>
-                  {l==="en"?"EN":l==="he"?"עב":"ES"}
-                </button>
-              ))}
-            </div>
-
-            {/* Action buttons */}
-            <div style={{display:"flex",gap:7,alignItems:"center",flexShrink:0}}>
-              <button onClick={()=>setShowConverter(c=>!c)}
-                title={lang==="he"?"המרת מטבע":lang==="es"?"Conversor de monedas":"Currency converter"}
-                style={{width:34,height:34,borderRadius:10,border:`0.5px solid ${showConverter?"rgba(100,223,223,0.4)":"rgba(100,223,223,0.2)"}`,background:showConverter?"rgba(100,223,223,0.15)":"rgba(100,223,223,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-                <ArrowLeftRight size={15} color={TEAL} strokeWidth={1.5}/>
-              </button>
-              <button onClick={()=>{
-                  // Once denied, Android/iOS won't show the system permission
-                  // dialog again on request — subscribe() just silently
-                  // no-ops, which reads as "the button doesn't do anything".
-                  // Tell the user where to actually fix it instead.
-                  if(permission==="denied"){
-                    alert(lang==="he"?"ההתראות חסומות עבור טיולון. כדי להפעיל: הגדרות המכשיר ← אפליקציות ← טיולון ← התראות":
-                      lang==="es"?"Las notificaciones están bloqueadas para Tulon. Para activarlas: Ajustes del dispositivo → Apps → Tulon → Notificaciones":
-                      "Notifications are blocked for Tulon. To enable: Device Settings → Apps → Tulon → Notifications");
-                    return;
-                  }
-                  subscribe();
-                }}
-                title={subscribed?t("notif_active",lang):t("notif_enable",lang)}
-                style={{width:34,height:34,borderRadius:10,border:`0.5px solid ${subscribed?"rgba(74,222,128,0.3)":"rgba(255,255,255,0.12)"}`,background:subscribed?"rgba(74,222,128,0.1)":"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-                {subscribed
-                  ?<Bell size={15} color="#4ade80" strokeWidth={1.5}/>
-                  :<BellOff size={15} color={W35} strokeWidth={1.5}/>}
-              </button>
-              <button onClick={()=>setSideMenu(true)}
-                title={lang==="he"?"תפריט":lang==="es"?"Menú":"Menu"}
-                style={{width:34,height:34,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-                <Menu size={15} color={W40} strokeWidth={1.5}/>
-              </button>
-            </div>
-          </div>
+          {renderHomeBar()}
           {/* Currency Converter */}
-          {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]} defaultCurrency={trips[0]?.defaultCurrency} displayCurrency={trips[0]?.displayCurrency}/>}
-          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
-          <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates}/>
+          {renderHomeConverter()}
+          {renderHomeCluster()}
+          {renderTripList()}
         </div>
       </>
     );
@@ -5157,7 +5214,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
 
   // ── SPLASH SCREEN (section === null) ──
   if(activeId&&!section){
-    return(
+    const view=(
       <>
         <style>{GS}</style>
         {joinBanner}
@@ -5183,11 +5240,12 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         </div>
       </>
     );
+    return wide?wideShell(view):view;
   }
 
   // ── BUDGET SECTION ──
   if(activeId&&section==="budget"){
-    return(
+    const view=(
       <>
         <style>{GS}</style>
         {joinBanner}
@@ -5229,11 +5287,12 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         </div>
       </>
     );
+    return wide?wideShell(view):view;
   }
 
   // ── TRIP SECTION ──
   if(activeId&&section==="trip"){
-    return(
+    const view=(
       <>
         <style>{GS}</style>
         {joinBanner}
@@ -5289,6 +5348,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         </div>
       </>
     );
+    return wide?wideShell(view):view;
   }
 
   // fallback
