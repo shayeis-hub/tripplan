@@ -2049,6 +2049,7 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
 
 function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,lastTripPrefs}){
   const{lang}=useLang();
+  const[destRef,twoCol]=useTwoCol(720); // use the extra width when this screen has it
   const valid=trip.destination&&trip.startDate&&trip.endDate&&new Date(trip.endDate)>=new Date(trip.startDate);
   const people=trip.people||[];
   const[newName,setNewName]=useState("");
@@ -2065,9 +2066,9 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
     people={people} newName={newName} setNewName={setNewName} addPerson={addPerson} removePerson={removePerson} valid={valid} lang={lang} lastTripPrefs={lastTripPrefs}/>;
 
   return(
-    <div>
+    <div ref={destRef}>
       <WaveHeader title={t("dest_title",lang)} subtitle={t("dest_subtitle",lang)}/>
-      <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:16}}>
+      <div style={twoCol?{padding:"20px",display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:16,alignItems:"start"}:{padding:"20px",display:"flex",flexDirection:"column",gap:16}}>
         <Card>
           <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:16,color:"#0a3050"}}>{t("dest_details",lang)}</h2>
           <SI label={t("dest_field",lang)} value={trip.destination} onChange={v=>onUpdate({destination:v})} placeholder={t("dest_placeholder",lang)}/>
@@ -2748,6 +2749,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
 function BudgetScreen({trip,expenses,rates={}}){
   const{lang}=useLang();
+  const[budRef,twoCol]=useTwoCol(720); // use the extra width when this screen has it
   const dc=trip.displayCurrency||"ILS";
   const sym=symFor(dc);
   const fmt=(amt,dec=0)=>`${sym}${fromILS(amt,dc,rates).toFixed(dec)}`;
@@ -2775,15 +2777,15 @@ function BudgetScreen({trip,expenses,rates={}}){
   const barColor=budgetPct<70?"#4ade80":budgetPct<90?"#fbbf24":"#ff6b6b";
 
   return(
-    <div>
+    <div ref={budRef}>
       <WaveHeader title={t("budget_title",lang)}
         subtitle={trip.destination?`${trip.destination}${trip.startDate&&trip.endDate?` · ${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}`:""}
         action={<button onClick={handlePDF} style={{padding:"7px 14px",borderRadius:10,border:"0.5px solid rgba(255,255,255,0.2)",background:"rgba(255,255,255,0.07)",color:"rgba(255,255,255,0.7)",fontFamily:RF,fontWeight:600,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><FileDown size={13}/>{t("budget_export",lang)}</button>}/>
 
-      <div style={{padding:"16px",display:"flex",flexDirection:"column",gap:12}}>
+      <div style={twoCol?{padding:"16px",display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:12,alignItems:"start"}:{padding:"16px",display:"flex",flexDirection:"column",gap:12}}>
 
-        {/* KPI 2x2 */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {/* KPI 2x2 (one row of four when wide) */}
+        <div style={{display:"grid",gridTemplateColumns:twoCol?"repeat(4,1fr)":"1fr 1fr",gap:10,gridColumn:"1 / -1"}}>
           <KpiCard label={t("budget_paid",lang)}    value={fmtN(paid)}   color="#4ade80" Icon={Check}   sym={sym}/>
           <KpiCard label={t("budget_total",lang)}   value={fmtN(total)}  color={TEAL}    Icon={Receipt} sym={sym}/>
           {budgetRemaining!==null
@@ -2795,7 +2797,7 @@ function BudgetScreen({trip,expenses,rates={}}){
 
         {/* Budget progress */}
         {trip.budget>0&&(
-          <div style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px"}}>
+          <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
                 <div style={{width:32,height:32,borderRadius:9,background:"rgba(100,223,223,0.12)",border:"0.5px solid rgba(100,223,223,0.25)",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -2872,7 +2874,7 @@ function BudgetScreen({trip,expenses,rates={}}){
         )}
 
         {expenses.length===0&&(
-          <div style={{textAlign:"center",color:W35,padding:"32px 0"}}>
+          <div style={{gridColumn:"1 / -1",textAlign:"center",color:W35,padding:"32px 0"}}>
             <BarChart2 size={40} color="rgba(255,255,255,0.1)" strokeWidth={1} style={{margin:"0 auto 10px",display:"block"}}/>
             <div style={{fontSize:15}}>{t("budget_no_exp",lang)}</div>
           </div>
@@ -3547,6 +3549,7 @@ function DiscSection({title,Icon,iconColor,iconBg,isOpen,onToggle,headerExtra,ch
 
 function DiscoverScreen({trip}){
   const{lang}=useLang();
+  const[discRef,twoCol]=useTwoCol(720); // use the extra width when this screen has it
   const{user}=useAuth();
   const dest=translateDest(trip.destination||"");
   const checkIn=trip.startDate||"";
@@ -3685,20 +3688,20 @@ function DiscoverScreen({trip}){
   const airaloUrl=buildAiraloUrl({source:"discover"});
 
   return(
-    <div>
+    <div ref={discRef}>
       <WaveHeader
         title={trip.destination?(lang==="he"?`מה לעשות ב${trip.destination}`:lang==="es"?`Qué hacer en ${trip.destination}`:`What to do in ${trip.destination}`):t("disc_title",lang)}
         subtitle={trip.destination?(lang==="he"?`מלון, פעילויות ועוד ל${trip.destination}`:lang==="es"?`Hoteles, actividades y más para ${trip.destination}`:`Hotels, activities & more for ${trip.destination}`):t("disc_subtitle",lang)}/>
-      <div style={{padding:"20px",display:"flex",flexDirection:"column",gap:14}}>
+      <div style={twoCol?{padding:"20px",display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:14,alignItems:"start"}:{padding:"20px",display:"flex",flexDirection:"column",gap:14}}>
         {!trip.destination?(
-          <div style={{textAlign:"center",padding:"48px 0",color:W35}}>
+          <div style={{gridColumn:"1 / -1",textAlign:"center",padding:"48px 0",color:W35}}>
             <div style={{width:90,height:90,borderRadius:24,background:"rgba(100,223,223,0.07)",border:"0.5px solid rgba(100,223,223,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px"}}><MapPin size={40} color="rgba(100,223,223,0.4)" strokeWidth={1}/></div>
             <div style={{fontSize:15,fontWeight:600}}>{t("disc_no_dest",lang)}</div>
           </div>
         ):(
           <>
             {/* Destination pill */}
-            <div style={{fontSize:12,color:W40,fontFamily:RF,textAlign:"center",background:W05,borderRadius:10,padding:"10px"}}>
+            <div style={{gridColumn:"1 / -1",fontSize:12,color:W40,fontFamily:RF,textAlign:"center",background:W05,borderRadius:10,padding:"10px"}}>
               {t("disc_results_for",lang)} <strong style={{color:TEAL}}>{trip.destination}</strong>
               {checkIn&&checkOut?` · ${fmtDate(checkIn)} – ${fmtDate(checkOut)}`:""}
             </div>
@@ -3880,6 +3883,7 @@ const newTrip=(ownerId)=>{
 
 // ── TRIP SPLASH SCREEN ────────────────────────────────────────────────────────
 function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
+  const[splashRef,twoCol]=useTwoCol(720); // the two big cards side by side when there is room
   // Dismissable per-trip — remembered in localStorage
   const dismissKey=`tulon_disc_dismiss_${trip.id}`;
   const[dismissed,setDismissed]=useState(()=>{
@@ -3898,7 +3902,7 @@ function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
   };
 
   return(
-    <div style={{padding:"32px 20px",display:"flex",flexDirection:"column",gap:16,minHeight:"55vh",justifyContent:"center"}}>
+    <div ref={splashRef} style={{padding:"32px 20px",display:"flex",flexDirection:"column",gap:16,minHeight:"55vh",justifyContent:"center"}}>
       {trip.archived&&(
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"9px 14px",borderRadius:12,background:"rgba(251,191,36,0.08)",border:"0.5px solid rgba(251,191,36,0.3)"}}>
           <Package size={14} color="#fbbf24"/>
@@ -3950,6 +3954,7 @@ function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
         </div>
       )}
 
+      <div style={twoCol?{display:"grid",gridTemplateColumns:isViewOnly?"1fr":"1fr 1fr",gap:16}:{display:"contents"}}>
       {!isViewOnly&&(
         <button onClick={onBudget} style={{width:"100%",padding:"22px 20px",borderRadius:20,border:"0.5px solid rgba(74,222,128,0.35)",background:"linear-gradient(135deg,rgba(74,222,128,0.12),rgba(74,222,128,0.05))",cursor:"pointer",display:"flex",alignItems:"center",gap:16,textAlign:"right"}}>
           <div style={{width:56,height:56,borderRadius:16,background:"rgba(74,222,128,0.15)",border:"0.5px solid rgba(74,222,128,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Wallet size={26} color="#4ade80" strokeWidth={1.5}/></div>
@@ -3967,6 +3972,7 @@ function TripSplashScreen({trip,expenses=[],onBudget,onTrip,isViewOnly,lang}){
           <div style={{fontSize:13,color:W40,marginTop:3,fontFamily:RF}}>{lang==="he"?"יומן, המלצות, מפה ואריזה":lang==="es"?"Calendario, consejos, mapa y equipaje":"Calendar, tips, map & packing"}</div>
         </div>
       </button>
+      </div>
     </div>
   );
 }
@@ -4000,6 +4006,7 @@ const DEFAULT_PACK=(lang)=>[
 
 function PackingListScreen({trip,onUpdate}){
   const{lang}=useLang();
+  const[packRef,twoCol]=useTwoCol(720); // use the extra width when this screen has it
   const[items,setItems]=useState(()=>trip.packingList||DEFAULT_PACK(lang));
   const[expanded,setExpanded]=useState(()=>{
     const obj={};
@@ -4026,7 +4033,7 @@ function PackingListScreen({trip,onUpdate}){
   const nights=trip.startDate&&trip.endDate?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
 
   return(
-    <div style={{minHeight:"100vh",background:DARK_BG,fontFamily:RF}}>
+    <div ref={packRef} style={{minHeight:"100vh",background:DARK_BG,fontFamily:RF}}>
       {/* Header */}
       <div style={{background:"linear-gradient(160deg,#091928 0%,#0d2137 100%)",padding:"20px 20px 18px",borderBottom:"0.5px solid rgba(100,223,223,0.08)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
@@ -4045,7 +4052,7 @@ function PackingListScreen({trip,onUpdate}){
       </div>
 
       {/* Category accordions */}
-      <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:8}}>
+      <div style={twoCol?{padding:"14px 16px",display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:10,alignItems:"start"}:{padding:"14px 16px",display:"flex",flexDirection:"column",gap:8}}>
         {PACK_CATS.map(cat=>{
           const catItems=items.filter(it=>it.category===cat.id);
           const catDone=catItems.filter(it=>it.checked).length;
