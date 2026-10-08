@@ -79,7 +79,10 @@ export default function LoginPage() {
     if (cap?.isNativePlatform?.()) {
       try {
         const { FirebaseAuthentication } = cap.Plugins;
-        const result = await FirebaseAuthentication.signInWithApple();
+        // iOS: without skipNativeAuth the plugin signs in to Firebase natively
+        // first, which uses up Apple's single-use nonce, and the JS SDK sign-in
+        // below is then rejected with auth/missing-or-invalid-nonce.
+        const result = await FirebaseAuthentication.signInWithApple(cap.getPlatform?.() === "ios" ? { skipNativeAuth: true } : undefined);
         const idToken = result?.credential?.idToken;
         if (!idToken) throw new Error("no-id-token");
         const provider = new OAuthProvider("apple.com");

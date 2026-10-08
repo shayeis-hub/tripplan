@@ -62,7 +62,7 @@ export default function DeleteAccountPage() {
         const { FirebaseAuthentication } = cap.Plugins;
         const result = which === "google"
           ? await FirebaseAuthentication.signInWithGoogle()
-          : await FirebaseAuthentication.signInWithApple();
+          : await FirebaseAuthentication.signInWithApple(cap.getPlatform?.() === "ios" ? { skipNativeAuth: true } : undefined); // see login/page.tsx
         const idToken = result?.credential?.idToken;
         if (!idToken) throw new Error("no-id-token");
         const credential = which === "google"
