@@ -668,7 +668,10 @@ function Btn({children,onClick,color,outline,small,disabled,style}){
   );
 }
 
-function PieChart({data}){
+function PieChart({data,fmt}){
+  const{lang}=useLang();
+  // Amounts arrive in ILS; the caller's fmt converts to the trip's display currency.
+  const money=fmt||(v=>v.toFixed(0));
   const total=data.reduce((s,d)=>s+d.value,0);
   if(!total)return null;
   let cum=-Math.PI/2;
@@ -694,8 +697,8 @@ function PieChart({data}){
             onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(null)}
             onTouchStart={()=>setHov(i)} onTouchEnd={()=>setTimeout(()=>setHov(null),1200)}/>
         ))}
-        <text x={cx} y={cy-8} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={11} fill={W40} fontWeight={600}>{hov!==null?slices[hov].label:'סה"כ'}</text>
-        <text x={cx} y={cy+10} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={14} fill={TEAL} fontWeight={900}>{hov!==null?`${slices[hov].value.toFixed(0)}`:`${total.toFixed(0)}`}</text>
+        <text x={cx} y={cy-8} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={11} fill={W40} fontWeight={600}>{hov!==null?slices[hov].label:(lang==="he"?'סה"כ':"Total")}</text>
+        <text x={cx} y={cy+10} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={14} fill={TEAL} fontWeight={900}>{hov!==null?money(slices[hov].value):money(total)}</text>
         {hov!==null&&<text x={cx} y={cy+26} textAnchor="middle" fontFamily="Rubik,sans-serif" fontSize={9} fill={W35}>{((slices[hov].value/total)*100).toFixed(1)}%</text>}
       </svg>
       <div style={{display:"flex",flexWrap:"wrap",gap:"6px 12px",justifyContent:"center",width:170,direction:"ltr"}}>
@@ -2858,7 +2861,7 @@ function BudgetScreen({trip,expenses,rates={}}){
               </div>
               {/* Donut */}
               <div style={{flexShrink:0}}>
-                <PieChart data={pieData}/>
+                <PieChart data={pieData} fmt={fmt}/>
               </div>
             </div>
           </div>
@@ -3011,7 +3014,7 @@ function CalendarScreen({trip,expenses,onSaveActs}){
     for(let d=1;d<=lastDay.getDate();d++) days.push(new Date(year,month,d));
 
     const monthName=firstDay.toLocaleDateString(lang==="he"?"he-IL":lang==="es"?"es-ES":"en-US",{month:"long",year:"numeric"});
-    const dayNames=["א","ב","ג","ד","ה","ו","ש"];
+    const dayNames=lang==="he"?["א","ב","ג","ד","ה","ו","ש"]:lang==="es"?["D","L","M","X","J","V","S"]:["S","M","T","W","T","F","S"];
 
     return(
       <div style={{padding:"14px 14px 20px"}}>
