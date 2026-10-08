@@ -414,6 +414,9 @@ const GS=`
   ::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}
   ::-webkit-scrollbar-thumb{background:rgba(100,223,223,0.3);border-radius:4px}
   input,select,textarea,button{font-family:'Rubik',sans-serif}
+  input,select{min-width:0;max-width:100%}
+  input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block}
+  input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:start;min-height:1.3em}
   /* Instant press feedback on every button in the app: respond on touch-down, not on
      release. :where() keeps specificity at zero, so .tap-btn / .nav-btn and any inline
      style (e.g. a button that sets its own transform or transition) still win. */
@@ -1718,7 +1721,7 @@ function CurrencyManager({trip,onUpdate,allCodes,rates}){
 
   return(
     <Card>
-      <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:4,color:"#0a3050"}}>{t("dest_currencies",lang)}</h2>
+      <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:4,color:"rgba(255,255,255,0.92)"}}>{t("dest_currencies",lang)}</h2>
       <p style={{fontSize:12,color:W35,marginBottom:12}}>{t("dest_curr_sub",lang)}</p>
 
       {/* Active currencies */}
@@ -2087,7 +2090,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
       <WaveHeader title={t("dest_title",lang)} subtitle={t("dest_subtitle",lang)}/>
       <div style={twoCol?{padding:"20px",display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:16,alignItems:"start"}:{padding:"20px",display:"flex",flexDirection:"column",gap:16}}>
         <Card>
-          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:16,color:"#0a3050"}}>{t("dest_details",lang)}</h2>
+          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:16,color:"rgba(255,255,255,0.92)"}}>{t("dest_details",lang)}</h2>
           <SI label={t("dest_field",lang)} value={trip.destination} onChange={v=>onUpdate({destination:v})} placeholder={t("dest_placeholder",lang)}/>
           <SI label={t("dest_depart",lang)} value={trip.startDate} onChange={v=>onUpdate({startDate:v})} type="date"/>
           <SI label={t("dest_return",lang)}  value={trip.endDate}   onChange={v=>onUpdate({endDate:v})}   type="date" min={trip.startDate}/>
@@ -2104,7 +2107,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
 
         {/* People */}
         <Card>
-          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:4,color:"#0a3050"}}>{t("dest_people",lang)}</h2>
+          <h2 style={{fontFamily:RF,fontSize:20,fontWeight:700,letterSpacing:"-0.3px",lineHeight:1.2,marginBottom:4,color:"rgba(255,255,255,0.92)"}}>{t("dest_people",lang)}</h2>
           <p style={{fontSize:13,color:W35,marginBottom:14}}>{t("dest_people_sub",lang)}</p>
           <div style={{display:"flex",gap:8,marginBottom:12}}>
             <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder={t("dest_people_ph",lang)} onKeyDown={e=>e.key==="Enter"&&addPerson()}
@@ -2574,7 +2577,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                 {/* Hotel */}
                 {form.category==="hotel"&&(
                   <div style={{marginBottom:14,padding:"12px",background:`${C.oceanLight}12`,borderRadius:14,border:`1.5px solid ${C.oceanLight}40`}}>
-                    <div style={{fontWeight:700,fontSize:13,color:"#0a3050",marginBottom:10}}>{t("hotel_dates",lang)}</div>
+                    <div style={{fontWeight:700,fontSize:13,color:"rgba(255,255,255,0.92)",marginBottom:10}}>{t("hotel_dates",lang)}</div>
                     <SI label={t("hotel_checkin",lang)}  value={form.checkIn}  onChange={v=>set({checkIn:v})}  type="date" min={trip.startDate} max={trip.endDate}/>
                     <SI label={t("hotel_checkout",lang)} value={form.checkOut} onChange={v=>set({checkOut:v})} type="date" min={form.checkIn}  max={trip.endDate}/>
                     {form.checkIn&&form.checkOut&&form.checkOut>form.checkIn&&(
@@ -2587,11 +2590,11 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                 {/* Flight */}
                 {form.category==="flight"&&(
                   <div style={{marginBottom:14,padding:"12px",background:`${C.ocean}0D`,borderRadius:14,border:`1.5px solid ${C.ocean}30`}}>
-                    <div style={{fontWeight:700,fontSize:13,color:"#0a3050",marginBottom:10}}>{t("flight_details",lang)}</div>
+                    <div style={{fontWeight:700,fontSize:13,color:"rgba(255,255,255,0.92)",marginBottom:10}}>{t("flight_details",lang)}</div>
                     <SI label={t("flight_number",lang)} value={form.flightNumber} onChange={v=>set({flightNumber:v.toUpperCase()})} placeholder={t("flight_number_ph",lang)}/>
-                    <div style={{display:"flex",gap:10}}>
-                      <div style={{flex:1}}><SI label={t("flight_depart",lang)} value={form.departureTime} onChange={v=>set({departureTime:v})} type="time"/></div>
-                      <div style={{flex:1}}><SI label={t("flight_landing",lang)} value={form.landingTime} onChange={v=>set({landingTime:v})} type="time"/></div>
+                    <div style={{display:"flex",gap:10,alignItems:"flex-end"}}>
+                      <div style={{flex:1,minWidth:0}}><SI label={t("flight_depart",lang)} value={form.departureTime} onChange={v=>set({departureTime:v})} type="time"/></div>
+                      <div style={{flex:1,minWidth:0}}><SI label={t("flight_landing",lang)} value={form.landingTime} onChange={v=>set({landingTime:v})} type="time"/></div>
                     </div>
                     <TripDatePicker dates={dates} value={form.date} onChange={v=>set({date:v})} label={t("flight_date",lang)} lang={lang}/>
                     {form.departureTime&&(
@@ -2627,14 +2630,14 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
                 {form.category!=="hotel"&&form.category!=="flight"&&form.category!=="shopping"&&(
                   <div style={{marginBottom:14}}>
-                    <div style={{display:"flex",gap:10}}>
-                      <div style={{flex:1}}>
+                    <div style={{display:"flex",gap:10,alignItems:"flex-end"}}>
+                      <div style={{flex:1,minWidth:0}}>
                         <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:W40,letterSpacing:"0.5px",textTransform:"uppercase"}}>{t("exp_time",lang)}</label>
                         <input type="time" value={form.time} onChange={e=>set({time:e.target.value})}
                           style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:15,color:"#ffffff",background:W07,outline:"none",direction:"ltr"}}
                           onFocus={e=>(e.target.style.borderColor=TEAL)} onBlur={e=>(e.target.style.borderColor=TBB)}/>
                       </div>
-                      <div style={{flex:1}}>
+                      <div style={{flex:1,minWidth:0}}>
                         <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:W40,letterSpacing:"0.5px",textTransform:"uppercase"}}>{t("exp_time_end",lang)}</label>
                         <input type="time" value={form.timeEnd} onChange={e=>set({timeEnd:e.target.value})}
                           style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:15,color:"#ffffff",background:W07,outline:"none",direction:"ltr"}}
@@ -3414,10 +3417,10 @@ function CalendarScreen({trip,expenses,onSaveActs}){
               <span style={{color:"rgba(255,255,255,0.35)",fontSize:11,flexShrink:0,fontFamily:RF}}>{lang==="he"?"מ-":lang==="es"?"desde":"from"}</span>
               <input value={act.time||""} onChange={e=>updateAct(i,"time",e.target.value)} type="time"
                 style={{flex:1,padding:"8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none"}}/>
-              <span style={{color:"rgba(255,255,255,0.3)",fontSize:13,flexShrink:0}}>–</span>
+              <span style={{color:"rgba(255,255,255,0.3)",fontSize:lang==="he"?13:11,flexShrink:0}}>{lang==="he"?"–":lang==="es"?"hasta":"to"}</span>
               <input value={act.timeEnd||""} onChange={e=>updateAct(i,"timeEnd",e.target.value)} type="time"
                 style={{flex:1,padding:"8px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.2)",fontFamily:RF,fontSize:13,color:"#ffffff",background:W07,outline:"none"}}/>
-              <span style={{color:"rgba(255,255,255,0.35)",fontSize:11,flexShrink:0,fontFamily:RF}}>{lang==="he"?"עד":lang==="es"?"hasta":"to"}</span>
+              {lang==="he"&&<span style={{color:"rgba(255,255,255,0.35)",fontSize:11,flexShrink:0,fontFamily:RF}}>עד</span>}
             </div>
           </div>
         ))}
