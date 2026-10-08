@@ -32,7 +32,7 @@ export default function PrivacyPage() {
           {tr("מדיניות פרטיות", "Privacy Policy", "Política de privacidad")}
         </h1>
         <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, marginBottom: 40 }}>
-          {tr("עודכן לאחרונה: מאי 2025", "Last updated: May 2025", "Última actualización: mayo de 2025")}
+          {tr("עודכן לאחרונה: אוקטובר 2026", "Last updated: October 2026", "Última actualización: octubre de 2026")}
         </p>
 
         {lang === "he" ? <HeContent /> : lang === "es" ? <EsContent /> : <EnContent />}
@@ -68,6 +68,9 @@ function HeContent() {
         <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>נתוני טיול:</strong> יעדים, תאריכים, הוצאות, פעילויות ופרטי משתתפים שאתה מזין באפליקציה.</p>
         <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>תמונות קבלות:</strong> תמונות שתבחר לסרוק מועברות לשרת לצורך עיבוד ואינן נשמרות.</p>
         <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>התראות:</strong> אם תאשר, נשמר token להתראות push. לא נשלח ספאם.</p>
+        <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>שפת האפליקציה:</strong> אם תאשר התראות, נשמרת שפת האפליקציה שבחרת יחד עם ה-token, כדי שההתראות יגיעו אליך בשפה הנכונה.</p>
+        <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>מקור ההגעה:</strong> ברגע ההרשמה אנו שומרים פעם אחת כיצד הגעת אלינו: תגיות הקמפיין בקישור (UTM), כתובת האתר שהפנתה אותך (ללא פרמטרים), העמוד הראשון שנחתת בו, והאם נכנסת דרך האתר או האפליקציה. עד ההרשמה המידע נשמר רק בדפדפן שלך. אנו משתמשים בו באופן מצטבר בלבד, כדי להבין אילו ערוצים מביאים משתמשים. הוא לא משמש לפרסום, לא למעקב באתרים אחרים, ואינו משותף עם צד שלישי.</p>
+        <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>פתיחת התראה:</strong> כשאתה פותח התראה שנשלחה אליך, נשמר חותם זמן אחד של הפתיחה, כדי שנדע אם התזכורות מועילות.</p>
       </Section>
 
       <Section title="2. כיצד אנו משתמשים במידע">
@@ -75,6 +78,7 @@ function HeContent() {
           <li>הפעלת השירות, שמירה וסנכרון נתוני הטיול שלך</li>
           <li>שיתוף טיול עם משתתפים שהזמנת</li>
           <li>שליחת תזכורות טיסה שביקשת</li>
+          <li>שליחת תזכורת אחת, שבוע לפני תחילת הטיול, למי שאישר התראות</li>
           <li>המלצות מבוססות AI על יעד הטיול (ללא שמירת השיחה)</li>
         </ul>
         <p style={{ marginTop: 12 }}>אנחנו <strong style={{ color: "#ffffff" }}>לא מוכרים, לא משתפים ולא מסחרים</strong> את המידע שלך עם צדדים שלישיים.</p>
@@ -102,11 +106,12 @@ function HeContent() {
           <li>למחוק טיולים והוצאות</li>
           <li>לבקש מחיקת חשבונך המלאה בפנייה אלינו</li>
           <li>לבטל הרשמה לתזכורות push בכל עת</li>
+          <li>בעת מחיקת חשבון נמחקים גם ה-token להתראות, השפה השמורה, רשומות ההתראות ומקור ההגעה</li>
         </ul>
       </Section>
 
       <Section title="6. קובצי Cookie ואחסון מקומי">
-        <p>האפליקציה משתמשת ב-localStorage לשמירת העדפות שפה בלבד. אנחנו לא משתמשים ב-cookies למעקב.</p>
+        <p>האפליקציה משתמשת ב-localStorage לשמירת העדפות (כגון שפה), ולמבקרים חדשים גם לשמירה זמנית של מקור ההגעה שתואר לעיל עד ההרשמה. אנחנו לא משתמשים ב-cookies למעקב.</p>
       </Section>
 
       <Section title="7. ילדים">
@@ -136,6 +141,9 @@ function EnContent() {
         <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Trip data:</strong> Destinations, dates, expenses, activities, and participant details you enter in the app.</p>
         <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Receipt images:</strong> Photos you choose to scan are sent to the server for processing only and are not stored.</p>
         <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Notifications:</strong> If you consent, we store a push notification token. We do not send spam.</p>
+        <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>App language:</strong> If you enable notifications, we store the app language you chose next to the push token so notifications arrive in your language.</p>
+        <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>How you found us:</strong> When you register, we record once how you arrived: the campaign tags in the link (UTM), the address of the referring site (no query string), the first page you landed on, and whether you came through the website or the app. Until you register this is kept only in your browser. We use it in aggregate only, to understand which channels bring users. It is not used for advertising or tracking across other sites, and it is not shared with third parties.</p>
+        <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Opening a notification:</strong> When you open a notification we sent you, a single timestamp of the opening is stored so we can tell whether reminders are useful.</p>
       </Section>
 
       <Section title="2. How We Use Your Information">
@@ -143,6 +151,7 @@ function EnContent() {
           <li>Operating the service, saving and syncing your trip data</li>
           <li>Sharing a trip with participants you invite</li>
           <li>Sending flight reminders you requested</li>
+          <li>Sending one reminder a week before a trip starts, to users who enabled notifications</li>
           <li>AI-based recommendations for your destination (conversations are not stored)</li>
         </ul>
         <p style={{ marginTop: 12 }}>We <strong style={{ color: "#ffffff" }}>do not sell, share, or commercialize</strong> your data with third parties.</p>
@@ -170,11 +179,12 @@ function EnContent() {
           <li>Delete trips and expenses</li>
           <li>Request full account deletion by contacting us</li>
           <li>Unsubscribe from push notifications at any time</li>
+          <li>When you delete your account, your push token, saved language, notification records and arrival source are deleted too</li>
         </ul>
       </Section>
 
       <Section title="6. Cookies & Local Storage">
-        <p>The app uses localStorage to save language preferences only. We do not use tracking cookies.</p>
+        <p>The app uses localStorage to save preferences (such as language) and, for new visitors, to temporarily keep the arrival source described above until registration. We do not use tracking cookies.</p>
       </Section>
 
       <Section title="7. Children">
@@ -204,6 +214,9 @@ function EsContent() {
         <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Datos del viaje:</strong> Destinos, fechas, gastos, actividades y datos de participantes que introduces en la app.</p>
         <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Imágenes de recibos:</strong> Las fotos que decides escanear se envían al servidor solo para su procesamiento y no se almacenan.</p>
         <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Notificaciones:</strong> Si lo consientes, almacenamos un token de notificación push. No enviamos spam.</p>
+        <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Idioma de la app:</strong> Si activas las notificaciones, guardamos el idioma de la app que elegiste junto con el token push, para que las notificaciones lleguen en tu idioma.</p>
+        <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Cómo nos encontraste:</strong> Al registrarte, guardamos una sola vez cómo llegaste: las etiquetas de campaña del enlace (UTM), la dirección del sitio de origen (sin parámetros), la primera página en la que aterrizaste y si entraste por la web o por la app. Hasta que te registres, esto se guarda solo en tu navegador. Lo usamos únicamente de forma agregada, para saber qué canales traen usuarios. No se usa para publicidad ni para seguimiento en otros sitios, ni se comparte con terceros.</p>
+        <p style={{ marginTop: 8 }}><strong style={{ color: "#ffffff" }}>Apertura de una notificación:</strong> Cuando abres una notificación que te enviamos, se guarda una única marca de tiempo de la apertura, para saber si los recordatorios son útiles.</p>
       </Section>
 
       <Section title="2. Cómo usamos tu información">
@@ -211,6 +224,7 @@ function EsContent() {
           <li>Operar el servicio, guardar y sincronizar los datos de tu viaje</li>
           <li>Compartir un viaje con los participantes que invitas</li>
           <li>Enviar recordatorios de vuelo que solicitaste</li>
+          <li>Enviar un recordatorio una semana antes de que empiece un viaje, a los usuarios que activaron las notificaciones</li>
           <li>Recomendaciones basadas en IA para tu destino (las conversaciones no se almacenan)</li>
         </ul>
         <p style={{ marginTop: 12 }}><strong style={{ color: "#ffffff" }}>No vendemos, compartimos ni comercializamos</strong> tus datos con terceros.</p>
@@ -238,11 +252,12 @@ function EsContent() {
           <li>Eliminar viajes y gastos</li>
           <li>Solicitar la eliminación completa de tu cuenta contactándonos</li>
           <li>Cancelar la suscripción a las notificaciones push en cualquier momento</li>
+          <li>Al eliminar tu cuenta se eliminan también tu token push, el idioma guardado, los registros de notificaciones y el origen de llegada</li>
         </ul>
       </Section>
 
       <Section title="6. Cookies y almacenamiento local">
-        <p>La app utiliza localStorage únicamente para guardar las preferencias de idioma. No utilizamos cookies de seguimiento.</p>
+        <p>La app utiliza localStorage para guardar preferencias (como el idioma) y, para los visitantes nuevos, para conservar temporalmente el origen de llegada descrito arriba hasta el registro. No utilizamos cookies de seguimiento.</p>
       </Section>
 
       <Section title="7. Menores">
