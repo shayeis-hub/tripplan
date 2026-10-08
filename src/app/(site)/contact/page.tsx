@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { goHome } from "@/lib/nativeApp";
 import { Mail, Clock, Copy, Check, Bug, Lightbulb, Lock, Users } from "lucide-react";
 import { useLang } from "@/lib/LangContext";
 
@@ -24,7 +25,7 @@ export default function ContactPage() {
     <div style={{ minHeight: "100vh", background: "#0a1628", color: "#ffffff", fontFamily: "'Rubik',sans-serif", direction: dir }}>
       {/* Header */}
       <div style={{ background: "rgba(0,0,0,0.3)", borderBottom: "0.5px solid rgba(100,223,223,0.15)", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/" style={{ color: "#64dfdf", textDecoration: "none", fontWeight: 700, fontSize: 18 }}>
+        <Link href="/" onClick={goHome} style={{ color: "#64dfdf", textDecoration: "none", fontWeight: 700, fontSize: 18 }}>
           {tr("← טיולון", "← TUlon", "← TUlon")}
         </Link>
         <div style={{ display: "flex", gap: 8 }}>
@@ -107,7 +108,7 @@ export default function ContactPage() {
         <div style={{ marginTop: 48, paddingTop: 24, borderTop: "0.5px solid rgba(255,255,255,0.1)", display: "flex", gap: 24, flexWrap: "wrap" }}>
           <Link href="/privacy" style={{ color: "#64dfdf", fontSize: 13 }}>{tr("מדיניות פרטיות", "Privacy Policy", "Política de privacidad")}</Link>
           <Link href="/terms" style={{ color: "#64dfdf", fontSize: 13 }}>{tr("תנאי שימוש", "Terms of Service", "Términos de servicio")}</Link>
-          <Link href="/" style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{tr("חזרה לאפליקציה", "Back to App", "Volver a la app")}</Link>
+          <Link href="/" onClick={goHome} style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{tr("חזרה לאפליקציה", "Back to App", "Volver a la app")}</Link>
         </div>
       </div>
     </div>

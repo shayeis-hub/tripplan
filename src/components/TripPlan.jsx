@@ -54,6 +54,7 @@ import { parseTripLink, parseTripUrl, takePendingTripLink, stripTripParams } fro
 import { buildAgodaUrl, buildGygUrl, buildAiraloUrl, buildGetTransferUrl, buildKiwiUrl } from "@/lib/affiliate";
 import ReceiptCamera from "@/components/ReceiptCamera";
 import TravelProfile from "@/components/TravelProfile";
+import { isIosApp, openLegal } from "@/lib/nativeApp";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
   Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send,
@@ -236,12 +237,6 @@ const HE_TO_EN_DEST={
 };
 const translateDest=(name)=>HE_TO_EN_DEST[name]||name;
 
-// Legal pages (/privacy, /terms, /contact) open in a new tab on the web. In the
-// iOS app a new tab means the system Safari, which has no way back to the app,
-// so there they load in the same WebView (each page has a "Back to App" link).
-// Android already handles a new tab fine, so it keeps the old behaviour.
-const isIosApp=()=>typeof window!=="undefined"&&window.Capacitor?.getPlatform?.()==="ios";
-const openLegal=path=>{if(isIosApp())window.location.href=path;else window.open(path,"_blank");};
 
 const WMO={0:"☀️ בהיר",1:"🌤️ בהיר חלקית",2:"⛅ מעונן חלקית",3:"☁️ מעונן",45:"🌫️ ערפל",48:"🌫️ ערפל",51:"🌦️ טפטוף קל",53:"🌦️ טפטוף",55:"🌧️ טפטוף כבד",61:"🌧️ גשם קל",63:"🌧️ גשם",65:"🌧️ גשם כבד",80:"🌦️ ממטרים",81:"🌧️ ממטרים",82:"⛈️ ממטרים כבדים",95:"⛈️ סערה",96:"⛈️ סערה+ברד",99:"⛈️ סערה חזקה"};
 const PERSON_COLORS=[C.ocean,C.coral,C.palm,C.sunset,C.purple,C.oceanLight,"#C0392B","#8E44AD"];
