@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/plan",                 priority: 0.8, changeFrequency: "monthly" },
     { path: "/group-trip-planner",              priority: 0.8, changeFrequency: "monthly" },
     { path: "/paris-travel-resources",         priority: 0.6, changeFrequency: "monthly" },
+    { path: "/prague-travel-resources",        priority: 0.6, changeFrequency: "monthly" },
     { path: "/splitwise-alternative-for-travel", priority: 0.8, changeFrequency: "monthly" },
     { path: "/group-travel-expense-tracker",    priority: 0.8, changeFrequency: "monthly" },
     { path: "/blog",     priority: 0.7, changeFrequency: "weekly"  },
