@@ -18,7 +18,10 @@ export type AffSource =
   | "calendar-empty" // Suggestion on an empty calendar day
   | "calendar-flight"// Transfer banner on a calendar day that has a flight
   | "splash"         // Landing / pre-login surfaces
-  | "plan-page";     // /plan marketing page (LinkCards)
+  | "plan-page"      // /plan marketing page (LinkCards)
+  | "paris-resources"// /paris-travel-resources hotel + tour cards
+  | "paris-flights"  // /paris-travel-resources flights button
+  | "paris-esim";    // /paris-travel-resources France eSIM button
 
 interface BuildParams {
   destination: string;       // raw destination name (will be URL-encoded)
@@ -121,6 +124,32 @@ export function buildAgodaUrl({ destination, checkIn, checkOut, source }: BuildP
   return `https://www.agoda.com/search?q=${q}${dates(checkIn, checkOut, true)}&adults=2&rooms=1${cid}&${utm(source)}`;
 }
 
+// Deep link to ONE specific Agoda property page (editorial recommendations).
+// Adds the partner CID and UTM to the property URL, and drops a locale path
+// segment such as /en-ie/ or /fr-fr/ so the page opens in English.
+export function buildAgodaPropertyUrl(propertyUrl: string, source: AffSource): string {
+  const u = new URL(propertyUrl);
+  u.pathname = u.pathname.replace(/^\/[a-z]{2}-[a-z]{2}\//, "/");
+  if (AGODA_CID) u.searchParams.set("cid", AGODA_CID);
+  u.searchParams.set("utm_source", "tulon");
+  u.searchParams.set("utm_medium", "web");
+  u.searchParams.set("utm_campaign", source);
+  return u.toString();
+}
+
+// Deep link to ONE specific GetYourGuide activity (editorial recommendations).
+export function buildGygActivityUrl(activityUrl: string, source: AffSource): string {
+  const u = new URL(activityUrl);
+  if (GYG_ID) {
+    u.searchParams.set("partner_id", GYG_ID);
+    u.searchParams.set("cmp", "share_to_earn");
+  }
+  u.searchParams.set("utm_source", "tulon");
+  u.searchParams.set("utm_medium", "web");
+  u.searchParams.set("utm_campaign", source);
+  return u.toString();
+}
+
 export function buildViatorUrl({ destination, source }: BuildParams): string {
   const q = encodeURIComponent(destination);
   // Viator uses ? as the query starter — if no partner_id, still need to attach UTM
@@ -138,8 +167,12 @@ export function buildGygUrl({ destination, source }: BuildParams): string {
 // The SmartLink handles affiliate attribution; we add sub_id for source + partner tracking.
 const AIRALO_TP_URL = "https://airalo.tpk.ro/A5T0EOcn";
 
-export function buildAiraloUrl({ source }: Pick<BuildParams, "source">): string {
-  return `${AIRALO_TP_URL}${tpSubId(source)}`;
+// `landing` deep-links to a specific Airalo page (for example a country eSIM
+// page). The Travelpayouts short link forwards it as `u` and keeps the
+// affiliate tracking (checked: it lands on the page through Airalo's partner
+// redirect). Without it the link opens Airalo's home page.
+export function buildAiraloUrl({ source, landing }: { source: AffSource; landing?: string }): string {
+  return `${AIRALO_TP_URL}${tpSubId(source)}${landing ? `&u=${encodeURIComponent(landing)}` : ""}`;
 }
 
 // GetTransfer airport transfers — TravelPayouts SmartLink (all tracking built-in).
