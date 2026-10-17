@@ -14,6 +14,11 @@ export const RES_CSS = `
   .seo .res-btn { align-self: flex-start; display: inline-block; margin-top: 4px; background: #64dfdf; color: #0d2137; font-size: 14px; font-weight: 800; padding: 10px 22px; border-radius: 999px; text-decoration: none; }
   .seo .res-btn:hover { background: #4fd4d4; }
   .seo .res-btn:focus-visible { outline: 2px solid #64dfdf; outline-offset: 3px; }
+  .res-links { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 4px; }
+  .res-links .res-btn { margin-top: 0; }
+  .seo .res-alt { font-size: 13.5px; font-weight: 600; }
+  .res-lead-strong { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.92); margin-bottom: 14px; }
+  .res-lead-strong em { font-style: italic; }
   .res-two { display: grid; gap: 14px; grid-template-columns: 1fr; }
   @media (min-width: 640px) { .res-two { grid-template-columns: 1fr 1fr; } }
 `;

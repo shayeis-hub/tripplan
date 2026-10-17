@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
-import { SeoPage, Section, P, CtaBand } from "@/components/SeoLanding";
+import { SeoPage, Section, P, List } from "@/components/SeoLanding";
 import { RES_CSS, AFFILIATE_REL } from "@/components/resourcePageStyles";
-import { buildAgodaPropertyUrl, buildAiraloUrl, buildKiwiUrl } from "@/lib/affiliate";
+import {
+  buildAgodaPropertyUrl,
+  buildGygActivityUrl,
+  buildAiraloUrl,
+  buildKiwiUrl,
+} from "@/lib/affiliate";
 
 const PATH = "/prague-travel-resources";
 const TITLE = "Prague Travel Resources | TUlon";
 const DESCRIPTION =
-  "A first-timer's shortlist for Prague: where to stay by neighborhood, the official sites for the main sights and public transport, plus flights and an eSIM for the Czech Republic.";
+  "A practical companion to Prague for First-Timers: four well-placed hotels, selected tours and experiences, and official resources for tickets and transport.";
 
 export const metadata: Metadata = pageMeta({
   title: TITLE,
@@ -20,67 +25,64 @@ export const metadata: Metadata = pageMeta({
 const HOTELS = [
   {
     name: "Hotel Josef",
-    area: "Old Town",
-    text: "Central base for the Old Town and Jewish Quarter.",
+    area: "Old Town / Josefov",
+    text: "A contemporary base near the Old Town and Jewish Quarter, especially convenient for exploring on foot.",
     url: "https://www.agoda.com/hotel-josef/hotel/prague-cz.html",
   },
   {
     name: "Hotel Pod Věží",
-    area: "Malá Strana",
-    text: "Near Charles Bridge, good for a walkable sightseeing base.",
+    area: "Malá Strana / Charles Bridge",
+    text: "A small hotel in the Lesser Town, close to the western end of Charles Bridge. Useful for early walks and quieter evenings.",
     url: "https://www.agoda.com/hotel-pod-vezi/hotel/prague-cz.html",
   },
   {
-    name: "Mosaic House Design Hotel",
+    name: "MOSAIC HOUSE Design Hotel",
     area: "New Town",
-    text: "Alternative base with access to central Prague.",
-    url: "https://www.agoda.com/mosaic-house/hotel/prague-cz.html",
+    text: "A design-led option near Karlovo náměstí, with good access to the riverside and public transport.",
+    url: "https://www.agoda.com/mosaic-house_2/hotel/prague-cz.html",
   },
   {
-    name: "NYX Hotel Prague",
-    area: "New Town / near Wenceslas Square",
-    text: "Central urban base near transport and shopping.",
+    name: "NYX Hotel Prague by Leonardo Hotels",
+    area: "Central New Town",
+    text: "A lively central base near Wenceslas Square, shopping and transport connections.",
     url: "https://www.agoda.com/nyx-hotel-prague-by-leonardo-hotels/hotel/prague-cz.html",
   },
 ];
 
-const SITES = [
+const TOURS = [
   {
-    name: "Prague Castle and St Vitus Cathedral",
-    tag: "Castle day",
-    text: "Visitor information from the official castle website.",
-    url: "https://www.hrad.cz/en/prague-castle-for-visitors",
+    name: "Prague Jewish Town Walking Tour",
+    text: "A guided introduction to Josefov and its history, with a route that includes important Jewish heritage sites. Confirm exactly which synagogue and museum admissions are included, and note that Jewish Museum sites close on Saturdays and Jewish holidays.",
+    gygLabel: "View on GetYourGuide",
+    gyg: "https://www.getyourguide.com/prague-l10/jewish-town-walking-tour-in-prague-t8815/",
+    altLabel: "Official Jewish Museum",
+    alt: "https://www.jewishmuseum.cz/en/",
   },
   {
-    name: "Jewish Museum in Prague",
-    tag: "Jewish Quarter",
-    text: "Official site for the museum, with tickets and opening details.",
-    url: "https://www.jewishmuseum.cz/en/",
+    name: "Prague Castle and St. Vitus Cathedral",
+    text: "Explore the castle complex and its historic buildings. Check language and admission conditions carefully before booking a tour: the linked guided tour is conducted in German, and the listing describes entrance tickets separately.",
+    gygLabel: "View on GetYourGuide (German-language guided tour)",
+    gyg: "https://www.getyourguide.com/prague-l10/guided-tour-of-st-vitus-cathedral-royal-palace-st-george-s-basilica-t610182/",
+    altLabel: "Official castle tickets and visitor information",
+    alt: "https://www.hrad.cz/en/prague-castle-for-visitors",
   },
   {
-    name: "Prague public transport",
-    tag: "All days",
-    text: "Official routes, timetables and fares.",
-    url: "https://pid.cz/en/",
+    name: "Vltava River sightseeing cruise",
+    text: "A relaxed view of the city from the river. The linked afternoon cruise includes drinks and lasts about 45 minutes; it is an optional extra rather than an essential part of the itinerary.",
+    gygLabel: "View on GetYourGuide",
+    gyg: "https://www.getyourguide.com/prague-l10/prague-vltava-river-sightseeing-beer-cruise-t450142/",
+    altLabel: "",
+    alt: "",
   },
-  {
-    name: "Prague tourism",
-    tag: "General planning",
-    text: "The city's official tourism site, for general planning.",
-    url: "https://www.prague.eu/en",
-  },
-  {
-    name: "National Museum",
-    tag: "Optional visit",
-    text: "Exhibitions and admission information.",
-    url: "https://www.nm.cz/en",
-  },
-  {
-    name: "Prague City Gallery",
-    tag: "Optional art",
-    text: "Exhibitions and opening details.",
-    url: "https://www.ghmp.cz/en/",
-  },
+];
+
+const OFFICIAL = [
+  { label: "Prague City Tourism", url: "https://prague.eu/en/" },
+  { label: "Public transport, routes and fares", url: "https://pid.cz/en/" },
+  { label: "Prague Castle visitor information", url: "https://www.hrad.cz/en/prague-castle-for-visitors" },
+  { label: "Jewish Museum in Prague", url: "https://www.jewishmuseum.cz/en/" },
+  { label: "National Museum", url: "https://www.nm.cz/en" },
+  { label: "Petřín funicular updates", url: "https://pid.cz/en/funicular/" },
 ];
 
 export default function PragueTravelResourcesPage() {
@@ -91,10 +93,14 @@ export default function PragueTravelResourcesPage() {
       <header className="seo-hero">
         <div className="seo-hero-inner">
           <h1 className="seo-h1">Prague Travel Resources</h1>
+          <p className="res-lead-strong">
+            A practical companion to <em>Prague for First-Timers</em> by Shay Eisenberg
+          </p>
           <p className="seo-lead">
-            Prague is a city best explored in walkable neighborhoods, with time to enjoy its bridges, courtyards,
-            and historic streets. This page gathers useful places to stay, key sights, and practical booking links
-            to complement <em>Prague for First-Timers</em>.
+            Plan your Prague stay without turning every day into a race. Below are four well-placed hotel
+            options, selected experiences that fit a relaxed four-day itinerary, and official resources for
+            tickets and transport. Prices, schedules and availability change, so always confirm details for
+            your dates.
           </p>
         </div>
       </header>
@@ -102,15 +108,11 @@ export default function PragueTravelResourcesPage() {
       <div className="res-note">
         <div className="res-note-box">
           <strong>Affiliate disclosure.</strong> Some links on this page may be affiliate links. If you book
-          through them, we may earn a commission at no extra cost to you.
+          through them, we may earn a commission at no additional cost to you.
         </div>
       </div>
 
       <Section title="Where to stay">
-        <P>
-          Four hotels in different neighborhoods. Each link opens the hotel&apos;s own page on Agoda, where you can
-          enter your dates and see current prices.
-        </P>
         <div className="res-grid">
           {HOTELS.map((h) => (
             <article className="res-card" key={h.name}>
@@ -131,30 +133,52 @@ export default function PragueTravelResourcesPage() {
           ))}
         </div>
         <P>
-          Before you book, check each hotel&apos;s exact neighborhood, step-free access, room air-conditioning,
-          cancellation terms and price.
+          <strong>Choosing a location:</strong> Old Town is ideal for a first visit; Malá Strana has atmosphere
+          and bridge access; New Town can offer more options while remaining walkable. Compare cancellation
+          policies, accessibility, air conditioning and room details for your dates.
         </P>
       </Section>
 
-      <Section title="Attractions and official sites">
-        <P>
-          Opening hours, ticket details and fares change, so use the official sites below for the latest
-          information before you go.
-        </P>
+      <Section title="Tours and experiences">
         <div className="res-grid">
-          {SITES.map((s) => (
-            <article className="res-card" key={s.name}>
-              <h3>{s.name}</h3>
-              <div className="res-meta">
-                <span className="res-pill">{s.tag}</span>
+          {TOURS.map((t) => (
+            <article className="res-card" key={t.name}>
+              <h3>{t.name}</h3>
+              <p>{t.text}</p>
+              <div className="res-links">
+                <a
+                  className="res-btn"
+                  href={buildGygActivityUrl(t.gyg, "prague-resources")}
+                  target="_blank"
+                  rel={AFFILIATE_REL}
+                >
+                  {t.gygLabel}
+                </a>
+                {t.alt && (
+                  <a className="res-alt" href={t.alt} target="_blank" rel="noopener noreferrer">
+                    {t.altLabel}
+                  </a>
+                )}
               </div>
-              <p>{s.text}</p>
-              <a className="res-btn" href={s.url} target="_blank" rel="noopener noreferrer">
-                Official website
-              </a>
             </article>
           ))}
         </div>
+        <P>
+          <strong>Prefer independent sightseeing?</strong> Charles Bridge, Old Town Square, Kampa and many
+          riverside walks can be enjoyed without a paid tour.
+        </P>
+      </Section>
+
+      <Section title="Official planning links">
+        <List
+          items={OFFICIAL.map((o) => (
+            <span key={o.url}>
+              <a href={o.url} target="_blank" rel="noopener noreferrer">
+                {o.label}
+              </a>
+            </span>
+          ))}
+        />
       </Section>
 
       <Section title="Flights and mobile data">
@@ -192,11 +216,24 @@ export default function PragueTravelResourcesPage() {
         </div>
       </Section>
 
-      <CtaBand
-        title="Plan your Prague trip in TUlon"
-        text="Build a day-by-day Prague itinerary, keep your bookings and budget in one place, and split expenses with the people you travel with."
-        cta="Start planning"
-      />
+      <Section title="Organize your trip with TUlon">
+        <P>
+          Keep your hotel, sightseeing ideas, bookings and shared plans in one place with{" "}
+          <a href="https://www.tulon.app/">
+            <strong>TUlon</strong>
+          </a>
+          , a free group travel-planning app created by the author.
+        </P>
+      </Section>
+
+      <Section title="Disclosure">
+        <P>
+          Some links on this page may be affiliate links. If you book through them, we may earn a commission at
+          no additional cost to you. Recommendations are editorial selections, not a guarantee of availability,
+          suitability or the lowest price.
+        </P>
+      </Section>
+      <div style={{ height: 56 }} />
     </SeoPage>
   );
 }
