@@ -22,6 +22,12 @@ export const RES_CSS = `
   .res-sub { font-size: 14px; font-weight: 600; color: #64dfdf; margin-top: -4px; }
   .res-card p strong { color: rgba(255,255,255,0.92); font-weight: 600; }
   .res-updated { margin-top: 14px; font-size: 13px; color: rgba(255,255,255,0.6); }
+  .res-anchor { scroll-margin-top: 76px; }
+  .res-coast { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 12px; }
+  .res-info { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.6); }
+  .res-info a { font-weight: 600; }
+  .res-sec-h { font-size: 13px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #64dfdf; margin: 26px 0 10px; }
+  .res-sec-h:first-of-type { margin-top: 6px; }
   .res-two { display: grid; gap: 14px; grid-template-columns: 1fr; }
   @media (min-width: 640px) { .res-two { grid-template-columns: 1fr 1fr; } }
 `;
