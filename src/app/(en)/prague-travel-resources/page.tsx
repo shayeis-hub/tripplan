@@ -68,9 +68,9 @@ const TOURS = [
   },
   {
     name: "Vltava River sightseeing cruise",
-    text: "A relaxed view of the city from the river. The linked afternoon cruise includes drinks and lasts about 45 minutes; it is an optional extra rather than an essential part of the itinerary.",
+    text: "A relaxed view of the city from the river. The linked cruise lasts about 45 minutes, departs near Charles Bridge, and lists a drink and Charles Bridge Museum entry among its inclusions; it is an optional extra rather than an essential part of the itinerary.",
     gygLabel: "View on GetYourGuide",
-    gyg: "https://www.getyourguide.com/prague-l10/prague-vltava-river-sightseeing-beer-cruise-t450142/",
+    gyg: "https://www.getyourguide.com/prague-l10/prague-canal-cruise-around-charles-bridge-t382608/",
     altLabel: "",
     alt: "",
   },

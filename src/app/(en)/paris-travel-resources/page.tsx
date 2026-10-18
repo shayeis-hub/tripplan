@@ -83,8 +83,8 @@ const TOURS = [
   {
     name: "Louvre guided tour",
     tag: "Suggested for Day 2",
-    text: "A guided visit helps first-time visitors navigate a very large museum. This particular listing includes a coffee/croissant introduction; check the exact package.",
-    url: "https://www.getyourguide.com/paris-l16/paris-louvre-museum-skip-the-line-guided-tour-t900893/",
+    text: "A guided visit helps first-time visitors navigate a very large museum. The listing describes a roughly two-hour tour with skip-the-line entry that meets at the Arc de Triomphe du Carrousel; check the languages, group type and exact inclusions before booking.",
+    url: "https://www.getyourguide.com/paris-l16/paris-louvre-museum-skip-the-line-tour-t43833/",
   },
   {
     name: "Best of Paris small-group bike tour",
