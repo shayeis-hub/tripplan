@@ -24,7 +24,10 @@ export type AffSource =
   | "paris-esim"     // /paris-travel-resources France eSIM button
   | "prague-resources"// /prague-travel-resources hotel cards
   | "prague-flights" // /prague-travel-resources flights button
-  | "prague-esim";   // /prague-travel-resources Czech Republic eSIM button
+  | "prague-esim"    // /prague-travel-resources Czech Republic eSIM button
+  | "rome-resources" // /rome-travel-resources hotel + tour cards
+  | "rome-flights"   // /rome-travel-resources flights button
+  | "rome-esim";     // /rome-travel-resources Italy eSIM button
 
 interface BuildParams {
   destination: string;       // raw destination name (will be URL-encoded)

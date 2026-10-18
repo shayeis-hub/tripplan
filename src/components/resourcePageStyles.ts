@@ -19,6 +19,9 @@ export const RES_CSS = `
   .seo .res-alt { font-size: 13.5px; font-weight: 600; }
   .res-lead-strong { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.92); margin-bottom: 14px; }
   .res-lead-strong em { font-style: italic; }
+  .res-sub { font-size: 14px; font-weight: 600; color: #64dfdf; margin-top: -4px; }
+  .res-card p strong { color: rgba(255,255,255,0.92); font-weight: 600; }
+  .res-updated { margin-top: 14px; font-size: 13px; color: rgba(255,255,255,0.6); }
   .res-two { display: grid; gap: 14px; grid-template-columns: 1fr; }
   @media (min-width: 640px) { .res-two { grid-template-columns: 1fr 1fr; } }
 `;
