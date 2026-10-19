@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { Wallet, Users, Calendar, Building2, Backpack, Share2 } from "lucide-react";
 import { useLang } from "@/lib/LangContext";
+import { usePageLinks } from "@/lib/pageLinks";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
 import { DESTINATIONS, DESTINATIONS_PATH } from "@/lib/destinations";
@@ -192,7 +193,8 @@ function AppleGlyph() {
 
 export default function LandingPage() {
   const router = useRouter();
-  const { lang, setLang } = useLang();
+  const { lang } = useLang();
+  const { prefix } = usePageLinks();
   const isHe = lang === "he";
   const dir = isHe ? "rtl" : "ltr";
   const guideHref = lang === "he" ? "/guide-he.html" : lang === "es" ? "/guide-es.html" : "/guide-en.html";
@@ -494,7 +496,7 @@ export default function LandingPage() {
             <div style={{fontSize:15,color:"rgba(255,255,255,0.5)",lineHeight:1.7,marginBottom:28,maxWidth:460,margin:"0 auto 28px"}}>
               {T.planSub[lang]}
             </div>
-            <a href="/plan" style={{
+            <a href={`${prefix}/plan`} style={{
               display:"inline-block",
               background:"#64dfdf",
               color:"#0d2137",

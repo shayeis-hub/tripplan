@@ -21,6 +21,7 @@ export function pageMeta({
   noindex = false,
   locale,
   image,
+  languages,
 }: {
   title: string;
   description: string;
@@ -28,15 +29,23 @@ export function pageMeta({
   noindex?: boolean;
   // Defaults keep every existing caller unchanged (Hebrew-first site). The
   // English-only landing pages pass locale "en_US" and an explicit image.
-  locale?: "en_US";
+  locale?: "en_US" | "es_ES";
   image?: { url: string; width: number; height: number; alt: string };
+  // hreflang alternates: language code (or "x-default") -> path on this site.
+  languages?: Record<string, string>;
 }): Metadata {
   const url = `${SITE_URL}${path}`;
   const isEn = locale === "en_US";
+  const isEs = locale === "es_ES";
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      ...(languages
+        ? { languages: Object.fromEntries(Object.entries(languages).map(([k, v]) => [k, `${SITE_URL}${v}`])) }
+        : {}),
+    },
     ...(noindex ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       type: "website",
@@ -44,8 +53,8 @@ export function pageMeta({
       title,
       description,
       url,
-      locale: isEn ? "en_US" : "he_IL",
-      alternateLocale: isEn ? ["he_IL", "es_ES"] : ["en_US", "es_ES"],
+      locale: isEn ? "en_US" : isEs ? "es_ES" : "he_IL",
+      alternateLocale: isEn ? ["he_IL", "es_ES"] : isEs ? ["he_IL", "en_US"] : ["en_US", "es_ES"],
       ...(image ? { images: [image] } : {}),
     },
     twitter: {

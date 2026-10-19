@@ -4,6 +4,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { useTrips } from "@/lib/useTrips";
 import TripPlan from "@/components/TripPlan";
 import LandingPage from "@/components/LandingPage";
+import HebrewGate from "@/components/HebrewGate";
+import { LOCALIZED_PAGES, pagePaths } from "@/lib/localizedPages";
 import OfflineBanner from "@/components/OfflineBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import RatePrompt from "@/components/RatePrompt";
@@ -71,7 +73,11 @@ export default function Home() {
 
   return (
     <ErrorBoundary>
-      {!showApp ? <LandingPage />
+      {!showApp ? (
+        <HebrewGate paths={pagePaths(LOCALIZED_PAGES.home)}>
+          <LandingPage />
+        </HebrewGate>
+      )
         : tripsLoading ? loadingScreen
         : (
           <>

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { blogPosts } from "@/lib/blog-posts";
 import { SITE_URL } from "@/lib/seo";
 import { DESTINATIONS, DESTINATIONS_PATH } from "@/lib/destinations";
+import { LOCALIZED_PAGES, hreflang } from "@/lib/localizedPages";
 
 // Next.js serves this at /sitemap.xml. Only public, indexable routes —
 // /login, /admin, /trip/* and internal pages are left out on purpose.
@@ -13,9 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: number;
     changeFrequency: "weekly" | "monthly" | "yearly";
   }[] = [
-    { path: "/",                     priority: 1.0, changeFrequency: "weekly"  },
-    { path: "/features",             priority: 0.8, changeFrequency: "monthly" },
-    { path: "/plan",                 priority: 0.8, changeFrequency: "monthly" },
+
     { path: "/group-trip-planner",              priority: 0.8, changeFrequency: "monthly" },
     { path: "/splitwise-alternative-for-travel", priority: 0.8, changeFrequency: "monthly" },
     { path: "/group-travel-expense-tracker",    priority: 0.8, changeFrequency: "monthly" },
@@ -27,7 +26,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/terms",    priority: 0.2, changeFrequency: "yearly"  },
   ];
 
+  // Hebrew, English and Spanish copies of the home, features and plan pages. Each
+  // entry lists all alternates (and x-default), as Google expects.
+  const localized = Object.values(LOCALIZED_PAGES).flatMap((p) => {
+    const languages = Object.fromEntries(Object.entries(hreflang(p)).map(([k, v]) => [k, `${SITE_URL}${v}`]));
+    const priority = p.key === "home" ? 1.0 : 0.8;
+    return ([p.he, p.en, p.es] as const).map((path) => ({
+      url: `${SITE_URL}${path}`,
+      lastModified: now,
+      changeFrequency: (p.key === "home" ? "weekly" : "monthly") as "weekly" | "monthly",
+      priority,
+      alternates: { languages },
+    }));
+  });
+
   return [
+    ...localized,
     ...staticRoutes.map((r) => ({
       url: `${SITE_URL}${r.path}`,
       lastModified: now,

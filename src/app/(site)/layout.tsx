@@ -9,6 +9,7 @@ import LegalViewer from "@/components/LegalViewer";
 import RootHead from "@/components/RootHead";
 import { Analytics } from "@vercel/analytics/next";
 import { pageMeta } from "@/lib/seo";
+import { LOCALIZED_PAGES, hreflang } from "@/lib/localizedPages";
 import { rootBaseMetadata, rootViewport } from "@/lib/rootMeta";
 
 // Root layout for the Hebrew-first site (everything except the English-only
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
     description:
       "טיולון היא אפליקציה לתכנון טיולים: בונים מסלול יומי, מנהלים תקציב והוצאות, מחלקים תשלומים בין חברי הטיול ומגלים מה לעשות ביעד – כל הטיול במקום אחד.",
     path: "/",
+    languages: hreflang(LOCALIZED_PAGES.home),
   }),
 };
 

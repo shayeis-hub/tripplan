@@ -2,6 +2,7 @@
 import { useLang } from "@/lib/LangContext";
 import { useRouter, usePathname } from "next/navigation";
 import { isDestinationPath } from "@/lib/destinations";
+import { usePageLinks } from "@/lib/pageLinks";
 
 const T = {
   plan:     { he: "תכנן טיול",  en: "Plan a Trip",  es: "Planifica" },
@@ -17,10 +18,11 @@ export default function SiteNav({ hideLang = false }: { hideLang?: boolean } = {
   const router = useRouter();
   const pathname = usePathname();
   const isHe = lang === "he";
+  const { prefix, langLinks } = usePageLinks();
 
   const navLinks = [
-    { href: "/plan",     label: T.plan[lang]     },
-    { href: "/features", label: T.features[lang] },
+    { href: `${prefix}/plan`,     label: T.plan[lang]     },
+    { href: `${prefix}/features`, label: T.features[lang] },
     { href: "/destinations", label: T.destinations[lang] },
     { href: "/blog",     label: T.blog[lang]     },
     { href: "/about",    label: T.about[lang]    },
@@ -91,7 +93,7 @@ export default function SiteNav({ hideLang = false }: { hideLang?: boolean } = {
         @media (max-width: 480px) { .sitenav-cta { padding: 7px 13px; font-size: 12px; } }
       `}</style>
       <nav className="sitenav" dir={isHe ? "rtl" : "ltr"}>
-        <a className="sitenav-logo" href="/">TU<span>lon</span></a>
+        <a className="sitenav-logo" href={prefix || "/"}>TU<span>lon</span></a>
 
         <div className="sitenav-links">
           {navLinks.map(l => (
@@ -108,9 +110,26 @@ export default function SiteNav({ hideLang = false }: { hideLang?: boolean } = {
         <div className="sitenav-right">
           {!hideLang && (
             <div className="sitenav-lang">
-              <button className={`sitenav-lang-btn${lang==="he"?" active":""}`} onClick={()=>setLang("he")}>עב</button>
-              <button className={`sitenav-lang-btn${lang==="en"?" active":""}`} onClick={()=>setLang("en")}>EN</button>
-              <button className={`sitenav-lang-btn${lang==="es"?" active":""}`} onClick={()=>setLang("es")}>ES</button>
+              {langLinks ? (
+                (["he", "en", "es"] as const).map(l => (
+                  <a
+                    key={l}
+                    className={`sitenav-lang-btn${lang===l?" active":""}`}
+                    href={langLinks[l]}
+                    hrefLang={l}
+                    style={{ textDecoration: "none", display: "inline-block" }}
+                    onClick={() => { try { localStorage.setItem("tulon_lang", l); } catch { /* storage blocked */ } }}
+                  >
+                    {l === "he" ? "עב" : l.toUpperCase()}
+                  </a>
+                ))
+              ) : (
+                <>
+                  <button className={`sitenav-lang-btn${lang==="he"?" active":""}`} onClick={()=>setLang("he")}>עב</button>
+                  <button className={`sitenav-lang-btn${lang==="en"?" active":""}`} onClick={()=>setLang("en")}>EN</button>
+                  <button className={`sitenav-lang-btn${lang==="es"?" active":""}`} onClick={()=>setLang("es")}>ES</button>
+                </>
+              )}
             </div>
           )}
           <button className="sitenav-cta" onClick={()=>router.push("/login")}>{T.cta[lang]}</button>

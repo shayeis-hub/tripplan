@@ -1,6 +1,7 @@
 "use client";
 import { useLang } from "@/lib/LangContext";
 import { GOOGLE_PLAY_URL, APP_STORE_URL } from "@/lib/stores";
+import { usePageLinks } from "@/lib/pageLinks";
 
 const T = {
   getApp:   { he: "הורידו את האפליקציה", en: "Get the app",       es: "Descarga la app"      },
@@ -20,6 +21,7 @@ export default function SiteFooter() {
   const { lang } = useLang();
   const guideHref = lang === "he" ? "/guide-he.html" : lang === "es" ? "/guide-es.html" : "/guide-en.html";
   const isHe = lang === "he";
+  const { prefix } = usePageLinks();
 
   return (
     <>
@@ -66,9 +68,9 @@ export default function SiteFooter() {
           )}
         </div>
         <div className="sitefooter-links">
-          <a className="sitefooter-link" href="/plan">{T.plan[lang]}</a>
+          <a className="sitefooter-link" href={`${prefix}/plan`}>{T.plan[lang]}</a>
           <span className="sitefooter-sep">·</span>
-          <a className="sitefooter-link" href="/features">{T.features[lang]}</a>
+          <a className="sitefooter-link" href={`${prefix}/features`}>{T.features[lang]}</a>
           <span className="sitefooter-sep">·</span>
           <a className="sitefooter-link" href="/destinations">{T.destinations[lang]}</a>
           <span className="sitefooter-sep">·</span>
