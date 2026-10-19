@@ -1,0 +1,212 @@
+"use client";
+import { useLang } from "@/lib/LangContext";
+import SiteNav from "@/components/SiteNav";
+import SiteFooter from "@/components/SiteFooter";
+import { blogPosts } from "@/lib/blog-posts";
+import { SITE_URL } from "@/lib/seo";
+import ShareButtons from "@/components/ShareButtons";
+import JsonLd from "@/components/JsonLd";
+import { usePageLinks } from "@/lib/pageLinks";
+
+const T = {
+  notFound: { he: "מאמר לא נמצא", en: "Post not found", es: "Artículo no encontrado" },
+  back:     { he: "← חזרה לבלוג", en: "← Back to blog", es: "← Volver al blog" },
+  min:      { he: "דק׳ קריאה",    en: "min read",       es: "min de lectura"    },
+  cta: {
+    he: "רוצים לתכנן טיול? נסו את טיולון — חינמי לחלוטין",
+    en: "Ready to plan a trip? Try TUlon — completely free",
+    es: "¿Listo para planificar un viaje? Prueba TUlon — completamente gratis",
+  },
+  ctaBtn: { he: "פתח את טיולון", en: "Open TUlon", es: "Abrir TUlon" },
+} as const;
+
+function formatDate(dateStr: string, lang: "he"|"en"|"es") {
+  const d = new Date(dateStr);
+  const locales = { he: "he-IL", en: "en-US", es: "es-ES" };
+  return d.toLocaleDateString(locales[lang], { year:"numeric", month:"long", day:"numeric" });
+}
+
+/** Very simple markdown-to-HTML: bold, headers, paragraphs */
+function renderBody(text: string, prefix: string) {
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let key = 0;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      elements.push(<div key={key++} style={{height:8}}/>);
+      continue;
+    }
+    if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
+      const content = trimmed.slice(2,-2);
+      elements.push(
+        <h3 key={key++} style={{fontSize:16,fontWeight:800,color:"#fff",marginTop:20,marginBottom:6}}>
+          {content}
+        </h3>
+      );
+      continue;
+    }
+    // Inline bold and [text](url) links
+    const parts = trimmed.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g).map((p,i) => {
+      if (p.startsWith("**") && p.endsWith("**")) {
+        return <strong key={i} style={{color:"#fff",fontWeight:700}}>{p.slice(2,-2)}</strong>;
+      }
+      const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(p);
+      if (link) {
+        // Every markdown link used to get nofollow+sponsored unconditionally
+        // — correct for the affiliate links this was written for (Google
+        // expects that disclosure), but wrong for a link to another page on
+        // this same site: nofollow tells Google not to pass any authority
+        // through it, which defeats the point of linking a blog post to a
+        // related page on tulon.app. Internal links (relative, or an
+        // absolute tulon.app URL) get plain rel="noopener noreferrer";
+        // everything else keeps the original affiliate-safe treatment.
+        const isInternal = link[2].startsWith("/") || /^https?:\/\/(www\.)?tulon\.app/i.test(link[2]);
+        // On /en and /es the blog lives under the language prefix, so links to other posts follow it.
+        const href = isInternal && prefix && /^\/blog(\/|$)/.test(link[2]) ? prefix + link[2] : link[2];
+        return (
+          <a key={i} href={href} target={isInternal ? undefined : "_blank"}
+             rel={isInternal ? "noopener noreferrer" : "noopener noreferrer nofollow sponsored"}
+             style={{color:"#64dfdf",textDecoration:"underline",fontWeight:600}}>
+            {link[1]}
+          </a>
+        );
+      }
+      return p;
+    });
+    elements.push(
+      <p key={key++} style={{fontSize:15,color:"rgba(255,255,255,0.6)",lineHeight:1.8,marginBottom:2}}>
+        {parts}
+      </p>
+    );
+  }
+  return elements;
+}
+
+export default function BlogPostView({ slug }: { slug: string }) {
+  const { lang } = useLang();
+  const { prefix } = usePageLinks();
+  const isHe = lang === "he";
+
+  const post = blogPosts.find(p => p.slug === slug);
+
+  if (!post) {
+    return (
+      <div style={{fontFamily:"'Rubik',sans-serif",background:"#0d2137",color:"#fff",minHeight:"100vh"}} dir={isHe?"rtl":"ltr"}>
+        <SiteNav/>
+        <div style={{padding:"80px 24px",textAlign:"center",fontSize:20,color:"rgba(255,255,255,0.4)"}}>
+          {T.notFound[lang]}
+        </div>
+        <SiteFooter/>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Rubik', sans-serif; background: #0d2137; }
+      `}</style>
+      <div style={{fontFamily:"'Rubik',sans-serif",background:"#0d2137",color:"#fff",minHeight:"100vh"}} dir={isHe?"rtl":"ltr"}>
+        <JsonLd data={{
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          headline: post.title[lang],
+          description: post.excerpt[lang],
+          inLanguage: lang,
+          datePublished: post.date,
+          dateModified: post.date,
+          url: `${SITE_URL}${prefix}/blog/${post.slug}`,
+          mainEntityOfPage: `${SITE_URL}${prefix}/blog/${post.slug}`,
+          author: { "@type": "Organization", name: "TUlon", url: SITE_URL },
+          publisher: { "@type": "Organization", name: "TUlon", logo: { "@type": "ImageObject", url: `${SITE_URL}/icon-512.png` } },
+        }}/>
+        <SiteNav/>
+
+        <div style={{maxWidth:660,margin:"0 auto",padding:"40px 24px 60px"}}>
+
+          {/* Back */}
+          <a href={`${prefix}/blog`} style={{
+            display:"inline-block",marginBottom:32,
+            fontSize:14,color:"rgba(100,223,223,0.7)",
+            textDecoration:"none",fontWeight:600,
+          }}>
+            {T.back[lang]}
+          </a>
+
+          {/* Category + emoji */}
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+            <span style={{fontSize:32}}>{post.emoji}</span>
+            <span style={{
+              fontSize:12,fontWeight:700,
+              color:"rgba(100,223,223,0.75)",
+              background:"rgba(100,223,223,0.08)",
+              border:"0.5px solid rgba(100,223,223,0.2)",
+              borderRadius:999,padding:"4px 12px",
+            }}>
+              {post.category[lang]}
+            </span>
+          </div>
+
+          {/* Title */}
+          <h1 style={{
+            fontSize:28,fontWeight:900,color:"#fff",
+            lineHeight:1.3,marginBottom:14,letterSpacing:-0.5,
+          }}>
+            {post.title[lang]}
+          </h1>
+
+          {/* Meta */}
+          <div style={{
+            fontSize:12,color:"rgba(255,255,255,0.25)",
+            marginBottom:20,display:"flex",gap:16,flexWrap:"wrap",
+          }}>
+            <span>{formatDate(post.date, lang)}</span>
+            <span>{post.readMin} {T.min[lang]}</span>
+          </div>
+
+          <ShareButtons url={`${SITE_URL}${prefix}/blog/${post.slug}`} title={post.title[lang]}/>
+
+          {/* Divider */}
+          <div style={{height:0.5,background:"rgba(255,255,255,0.08)",marginTop:24,marginBottom:32}}/>
+
+          {/* Body */}
+          <div>{renderBody(post.body[lang], prefix)}</div>
+
+          {/* Share again — a natural moment once someone's actually read it */}
+          <div style={{marginTop:44,paddingTop:28,borderTop:"0.5px solid rgba(255,255,255,0.08)"}}>
+            <ShareButtons url={`${SITE_URL}${prefix}/blog/${post.slug}`} title={post.title[lang]}/>
+          </div>
+
+          {/* CTA */}
+          <div style={{
+            marginTop:52,
+            background:"linear-gradient(135deg,rgba(100,223,223,0.1),rgba(100,223,223,0.04))",
+            border:"0.5px solid rgba(100,223,223,0.2)",
+            borderRadius:18,padding:"28px 24px",textAlign:"center",
+          }}>
+            <div style={{fontSize:17,fontWeight:700,color:"rgba(255,255,255,0.85)",marginBottom:18,lineHeight:1.5}}>
+              {T.cta[lang]}
+            </div>
+            <a href="/login" style={{
+              display:"inline-block",
+              background:"#64dfdf",color:"#0d2137",
+              fontFamily:"'Rubik',sans-serif",
+              fontSize:15,fontWeight:800,
+              padding:"12px 30px",borderRadius:999,
+              textDecoration:"none",
+            }}>
+              {T.ctaBtn[lang]} →
+            </a>
+          </div>
+
+        </div>
+
+        <SiteFooter/>
+      </div>
+    </>
+  );
+}

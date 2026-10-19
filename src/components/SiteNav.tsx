@@ -24,7 +24,7 @@ export default function SiteNav({ hideLang = false }: { hideLang?: boolean } = {
     { href: `${prefix}/plan`,     label: T.plan[lang]     },
     { href: `${prefix}/features`, label: T.features[lang] },
     { href: "/destinations", label: T.destinations[lang] },
-    { href: "/blog",     label: T.blog[lang]     },
+    { href: `${prefix}/blog`,     label: T.blog[lang]     },
     { href: `${prefix}/about`,    label: T.about[lang]    },
   ];
 
@@ -99,7 +99,7 @@ export default function SiteNav({ hideLang = false }: { hideLang?: boolean } = {
           {navLinks.map(l => (
             <a
               key={l.href}
-              className={`sitenav-link${pathname === l.href || (l.href === "/destinations" && isDestinationPath(pathname)) ? " active" : ""}`}
+              className={`sitenav-link${pathname === l.href || (pathname ?? "").startsWith(l.href + "/") || (l.href === "/destinations" && isDestinationPath(pathname)) ? " active" : ""}`}
               href={l.href}
             >
               {l.label}

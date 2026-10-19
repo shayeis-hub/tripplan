@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { blogPosts } from "@/lib/blog-posts";
 import { pageMeta } from "@/lib/seo";
+import { blogPostPage, hreflang } from "@/lib/localizedPages";
 
 // The post page itself is a client component (language switching), so its
 // per-post <title>/<meta> is built here from the same blog-posts data.
@@ -22,6 +23,7 @@ export async function generateMetadata(
     title: `${post.title.he} | הבלוג של טיולון`,
     description: post.excerpt.he,
     path: `/blog/${post.slug}`,
+    languages: hreflang(blogPostPage(post.slug)),
   });
 }
 

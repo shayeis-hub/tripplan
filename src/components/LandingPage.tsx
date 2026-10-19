@@ -552,7 +552,7 @@ export default function LandingPage() {
               {slug:"budget-travel",      emoji:"💰", title:T.blogPost2Title[lang]},
               {slug:"winter-destinations-2026", emoji:"❄️", title:T.blogPost3Title[lang]},
             ].map(p=>(
-              <a key={p.slug} className="teaser-card" href={`/blog/${p.slug}`}>
+              <a key={p.slug} className="teaser-card" href={`${prefix}/blog/${p.slug}`}>
                 <span style={{fontSize:15}}>{p.emoji}</span>
                 {" "}
                 <span style={{fontSize:14,fontWeight:600,color:"rgba(255,255,255,0.7)"}}>{p.title}</span>
@@ -561,7 +561,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{textAlign:"center"}}>
-            <a href="/blog" style={{
+            <a href={`${prefix}/blog`} style={{
               display:"inline-block",
               background:"transparent",
               border:"0.5px solid rgba(100,223,223,0.25)",
