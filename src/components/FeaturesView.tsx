@@ -104,9 +104,9 @@ export default function FeaturesView() {
           padding:"56px 24px 48px",textAlign:"center",
         }}>
           <div style={{maxWidth:580,margin:"0 auto"}}>
-            <div style={{fontSize:30,fontWeight:900,color:"#fff",lineHeight:1.25,marginBottom:12,letterSpacing:-0.5}}>
+            <h1 style={{fontSize:30,fontWeight:900,color:"#fff",lineHeight:1.25,marginBottom:12,letterSpacing:-0.5}}>
               {T.heroTitle[lang]}
-            </div>
+            </h1>
             <div style={{fontSize:15,color:"rgba(255,255,255,0.45)",lineHeight:1.6,marginBottom:20}}>
               {T.heroSub[lang]}
             </div>
@@ -142,9 +142,9 @@ export default function FeaturesView() {
                   }}>
                     <Icon size={22} color={color} strokeWidth={1.5}/>
                   </div>
-                  <div style={{fontSize:15,fontWeight:700,color:"#fff",marginBottom:7}}>
+                  <h2 style={{fontSize:15,fontWeight:700,color:"#fff",marginBottom:7}}>
                     {(T[titleKey] as Record<string,string>)[lang]}
-                  </div>
+                  </h2>
                   <div style={{fontSize:13,color:"rgba(255,255,255,0.42)",lineHeight:1.65}}>
                     {(T[bodyKey] as Record<string,string>)[lang]}
                   </div>
@@ -155,9 +155,9 @@ export default function FeaturesView() {
 
           {/* CTA */}
           <div style={{marginTop:52,textAlign:"center"}}>
-            <div style={{fontSize:22,fontWeight:800,color:"#fff",marginBottom:22}}>
+            <h2 style={{fontSize:22,fontWeight:800,color:"#fff",marginBottom:22}}>
               {T.ctaTitle[lang]}
-            </div>
+            </h2>
             <a href="/login" style={{
               display:"inline-block",
               background:"#64dfdf",color:"#0d2137",

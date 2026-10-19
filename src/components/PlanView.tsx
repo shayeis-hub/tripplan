@@ -132,7 +132,7 @@ function LinkCard({
     >
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
         <div>
-          <div style={{fontSize:16,fontWeight:700,color:"#fff",marginBottom:5}}>{logo} {title}</div>
+          <h3 style={{fontSize:16,fontWeight:700,color:"#fff",marginBottom:5}}>{logo} {title}</h3>
           <div style={{fontSize:13,color:"rgba(255,255,255,0.42)",lineHeight:1.55}}>{desc}</div>
         </div>
         <div style={{
@@ -169,9 +169,9 @@ export default function PlanView() {
           padding:"56px 24px 48px", textAlign:"center",
         }}>
           <div style={{maxWidth:620,margin:"0 auto"}}>
-            <div style={{fontSize:30,fontWeight:900,color:"#fff",lineHeight:1.25,marginBottom:12,letterSpacing:-0.5}}>
+            <h1 style={{fontSize:30,fontWeight:900,color:"#fff",lineHeight:1.25,marginBottom:12,letterSpacing:-0.5}}>
               {T.heroTitle[lang]}
-            </div>
+            </h1>
             <div style={{fontSize:15,color:"rgba(255,255,255,0.45)",lineHeight:1.6}}>
               {T.heroSub[lang]}
             </div>
@@ -182,7 +182,7 @@ export default function PlanView() {
 
           {/* Flights */}
           <div style={{marginTop:48}}>
-            <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.flightsTitle[lang]}</div>
+            <h2 style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.flightsTitle[lang]}</h2>
             <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:18}}>{T.flightsSub[lang]}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               <LinkCard logo="🟢" title="Google Flights"   desc={T.gflightsDesc[lang]} builder={linkBuilders.gflights} lang={lang}/>
@@ -193,7 +193,7 @@ export default function PlanView() {
 
           {/* Hotels */}
           <div style={{marginTop:44}}>
-            <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.hotelsTitle[lang]}</div>
+            <h2 style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.hotelsTitle[lang]}</h2>
             <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:18}}>{T.hotelsSub[lang]}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               <LinkCard logo="🟡" title="Agoda"       desc={T.agodaDesc[lang]}   builder={linkBuilders.agoda}   lang={lang}/>
@@ -202,7 +202,7 @@ export default function PlanView() {
 
           {/* Activities */}
           <div style={{marginTop:44}}>
-            <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.activitiesTitle[lang]}</div>
+            <h2 style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.activitiesTitle[lang]}</h2>
             <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:18}}>{T.activitiesSub[lang]}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               <LinkCard logo="🟣" title="Viator"          desc={T.viatorDesc[lang]} builder={linkBuilders.viator} lang={lang}/>
@@ -212,7 +212,7 @@ export default function PlanView() {
 
           {/* eSIM */}
           <div style={{marginTop:44}}>
-            <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.esimTitle[lang]}</div>
+            <h2 style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:6}}>{T.esimTitle[lang]}</h2>
             <div style={{fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:18}}>{T.esimSub[lang]}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               <LinkCard logo="📶" title="Airalo" desc={T.airaloDesc[lang]} builder={linkBuilders.airalo} lang={lang}/>
