@@ -25,6 +25,13 @@ const nextConfig: NextConfig = {
         destination: "/group-trip-planner",
         statusCode: 301,
       },
+      // The Destinations library is a single English page at /destinations.
+      // /en/destinations (the pattern the other English URLs follow) points to it.
+      {
+        source: "/en/destinations",
+        destination: "/destinations",
+        statusCode: 301,
+      },
       // The legacy tulon.co.il domain used to serve the full app in parallel
       // with tulon.app, which caused Google Play to flag our account-deletion
       // URL as not matching the listed app. Consolidate on one canonical
