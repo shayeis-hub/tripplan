@@ -78,11 +78,11 @@ export default function SiteFooter() {
           <span className="sitefooter-sep">·</span>
           <a className="sitefooter-link" href={`${prefix}/about`}>{T.about[lang]}</a>
           <span className="sitefooter-sep">·</span>
-          <a className="sitefooter-link" href="/privacy">{T.privacy[lang]}</a>
+          <a className="sitefooter-link" href={`${prefix}/privacy`}>{T.privacy[lang]}</a>
           <span className="sitefooter-sep">·</span>
-          <a className="sitefooter-link" href="/terms">{T.terms[lang]}</a>
+          <a className="sitefooter-link" href={`${prefix}/terms`}>{T.terms[lang]}</a>
           <span className="sitefooter-sep">·</span>
-          <a className="sitefooter-link" href="/contact">{T.contact[lang]}</a>
+          <a className="sitefooter-link" href={`${prefix}/contact`}>{T.contact[lang]}</a>
           <span className="sitefooter-sep">·</span>
           <a className="sitefooter-link" href={guideHref}>{T.guide[lang]}</a>
         </div>

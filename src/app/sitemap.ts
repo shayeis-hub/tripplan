@@ -6,6 +6,18 @@ import { LOCALIZED_PAGES, hreflang, blogPostPage } from "@/lib/localizedPages";
 
 // Next.js serves this at /sitemap.xml. Only public, indexable routes —
 // /login, /admin, /trip/* and internal pages are left out on purpose.
+// Sitemap priority and change frequency for each page that exists in three languages.
+const SITEMAP_META: Record<string, [number, "weekly" | "monthly" | "yearly"]> = {
+  home: [1.0, "weekly"],
+  features: [0.8, "monthly"],
+  plan: [0.8, "monthly"],
+  about: [0.5, "yearly"],
+  blog: [0.7, "weekly"],
+  privacy: [0.2, "yearly"],
+  terms: [0.2, "yearly"],
+  contact: [0.3, "yearly"],
+};
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
@@ -19,20 +31,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/splitwise-alternative-for-travel", priority: 0.8, changeFrequency: "monthly" },
     { path: "/group-travel-expense-tracker",    priority: 0.8, changeFrequency: "monthly" },
     { path: DESTINATIONS_PATH, priority: 0.7, changeFrequency: "monthly" },
-    { path: "/contact",  priority: 0.3, changeFrequency: "yearly"  },
-    { path: "/privacy",  priority: 0.2, changeFrequency: "yearly"  },
-    { path: "/terms",    priority: 0.2, changeFrequency: "yearly"  },
   ];
 
   // Hebrew, English and Spanish copies of the home, features and plan pages. Each
   // entry lists all alternates (and x-default), as Google expects.
   const localized = Object.values(LOCALIZED_PAGES).flatMap((p) => {
     const languages = Object.fromEntries(Object.entries(hreflang(p)).map(([k, v]) => [k, `${SITE_URL}${v}`]));
-    const priority = p.key === "home" ? 1.0 : p.key === "about" ? 0.5 : p.key === "blog" ? 0.7 : 0.8;
+    const [priority, freq] = SITEMAP_META[p.key];
     return ([p.he, p.en, p.es] as const).map((path) => ({
       url: `${SITE_URL}${path}`,
       lastModified: now,
-      changeFrequency: (p.key === "home" || p.key === "blog" ? "weekly" : p.key === "about" ? "yearly" : "monthly") as "weekly" | "monthly" | "yearly",
+      changeFrequency: freq,
       priority,
       alternates: { languages },
     }));

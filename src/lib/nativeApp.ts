@@ -12,9 +12,14 @@ export const LEGAL_EVENT = "tulon:legal";
 // Android. In the iOS app a new tab means system Safari, which has no way back,
 // and navigating the app's own WebView away reloads the app (the trip list came
 // back empty), so there the page is shown in an overlay (LegalViewer).
-export const openLegal = (path: string): void => {
+// The legal pages live at /privacy (Hebrew), /en/privacy and /es/privacy.
+export const legalPath = (path: string, lang?: string): string =>
+  lang === "en" || lang === "es" ? `/${lang}${path}` : path;
+
+export const openLegal = (path: string, lang?: string): void => {
+  // LegalViewer picks the language itself; the browser opens the matching URL.
   if (isIosApp()) window.dispatchEvent(new CustomEvent(LEGAL_EVENT, { detail: path }));
-  else window.open(path, "_blank");
+  else window.open(legalPath(path, lang), "_blank");
 };
 
 // True when the page is displayed inside the LegalViewer iframe, where the

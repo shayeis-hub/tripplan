@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useLang } from "@/lib/LangContext";
-import { LEGAL_EVENT } from "@/lib/nativeApp";
+import { LEGAL_EVENT, legalPath } from "@/lib/nativeApp";
 
 const ALLOWED = ["/privacy", "/terms", "/contact"];
 const TITLES: Record<string, { he: string; en: string; es: string }> = {
@@ -50,7 +50,7 @@ export default function LegalViewer() {
         </button>
       </div>
       <iframe
-        src={path}
+        src={legalPath(path, lang)}
         title={TITLES[path][lang]}
         style={{ flex: 1, width: "100%", border: "none", background: "#0a1628", paddingBottom: "env(safe-area-inset-bottom)" }}
       />

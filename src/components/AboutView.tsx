@@ -1,5 +1,6 @@
 "use client";
 import { useLang } from "@/lib/LangContext";
+import { usePageLinks } from "@/lib/pageLinks";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -66,6 +67,7 @@ const T = {
 
 export default function AboutView() {
   const { lang } = useLang();
+  const { prefix } = usePageLinks();
   const isHe = lang === "he";
 
   const values = [T.val1[lang], T.val2[lang], T.val3[lang], T.val4[lang]];
@@ -183,7 +185,7 @@ export default function AboutView() {
             <p style={{fontSize:15,color:"rgba(255,255,255,0.55)",lineHeight:1.7,marginBottom:20}}>
               {T.contactBody[lang]}
             </p>
-            <a href="/contact" style={{
+            <a href={`${prefix}/contact`} style={{
               display:"inline-block",
               background:"#64dfdf",color:"#0d2137",
               fontFamily:"'Rubik',sans-serif",

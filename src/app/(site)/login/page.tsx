@@ -5,6 +5,7 @@ import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, sendPasswordResetEmail, updateProfile } from "firebase/auth";
 import { useLang } from "@/lib/LangContext";
 import { t } from "@/lib/i18n";
+import { legalPath } from "@/lib/nativeApp";
 import { AlertCircle, Loader, Globe } from "lucide-react";
 
 const ERROR_CODES: Record<string, "login_err_not_found" | "login_err_password" | "login_err_credential" | "login_err_in_use" | "login_err_weak" | "login_err_email"> = {
@@ -258,11 +259,11 @@ export default function LoginPage() {
 
           {/* Legal footer – inside card so it's always below */}
           <div className="legal">
-            <a href="/privacy">{lang === "he" ? "מדיניות פרטיות" : lang === "es" ? "Política de privacidad" : "Privacy Policy"}</a>
+            <a href={legalPath("/privacy", lang)}>{lang === "he" ? "מדיניות פרטיות" : lang === "es" ? "Política de privacidad" : "Privacy Policy"}</a>
             <span>·</span>
-            <a href="/terms">{lang === "he" ? "תנאי שימוש" : lang === "es" ? "Términos de servicio" : "Terms of Service"}</a>
+            <a href={legalPath("/terms", lang)}>{lang === "he" ? "תנאי שימוש" : lang === "es" ? "Términos de servicio" : "Terms of Service"}</a>
             <span>·</span>
-            <a href="/contact">{lang === "he" ? "צור קשר" : lang === "es" ? "Contacto" : "Contact"}</a>
+            <a href={legalPath("/contact", lang)}>{lang === "he" ? "צור קשר" : lang === "es" ? "Contacto" : "Contact"}</a>
           </div>
         </div>
       </div>

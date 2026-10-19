@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
+import { legalPath } from "@/lib/nativeApp";
 
 const RF = "'Rubik',sans-serif";
 const TEAL = "#64dfdf";
@@ -96,7 +97,7 @@ export default function RatePrompt({ lang = "he", hasTrips }) {
           <button onClick={() => go(PLAY_URL)} style={{ ...btn, background: TEAL, color: "#0d2137" }}>
             {t.rate}
           </button>
-          <button onClick={() => go("/contact")} style={{
+          <button onClick={() => go(legalPath("/contact", lang))} style={{
             ...btn, background: "rgba(255,255,255,0.06)",
             border: "0.5px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.75)",
           }}>

@@ -54,7 +54,7 @@ import { parseTripLink, parseTripUrl, takePendingTripLink, stripTripParams } fro
 import { buildAgodaUrl, buildGygUrl, buildAiraloUrl, buildGetTransferUrl, buildKiwiUrl } from "@/lib/affiliate";
 import ReceiptCamera from "@/components/ReceiptCamera";
 import TravelProfile from "@/components/TravelProfile";
-import { isIosApp, openLegal } from "@/lib/nativeApp";
+import { isIosApp, openLegal, legalPath } from "@/lib/nativeApp";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
   Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send,
@@ -1670,8 +1670,8 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,r
             // WebView on native; harmless on web.
             {href:"/delete-account",label:lang==="he"?"מחיקת חשבון":lang==="es"?"Eliminar cuenta":"Delete Account",blank:false},
           ].map(l=>(
-            <a key={l.href} href={l.href} target={l.blank?"_blank":undefined} rel={l.blank?"noopener noreferrer":undefined}
-              onClick={l.blank?e=>{if(isIosApp()){e.preventDefault();window.location.href=l.href;}}:undefined}
+            <a key={l.href} href={l.blank?legalPath(l.href,lang):l.href} target={l.blank?"_blank":undefined} rel={l.blank?"noopener noreferrer":undefined}
+              onClick={l.blank?e=>{if(isIosApp()){e.preventDefault();openLegal(l.href,lang);}}:undefined}
               style={{color:"rgba(255,255,255,0.2)",fontSize:11,textDecoration:"none",fontFamily:RF,transition:"color 0.15s"}}
               onMouseEnter={e=>(e.currentTarget.style.color="rgba(100,223,223,0.5)")}
               onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.2)")}>
@@ -4932,11 +4932,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         </div>
         {/* Footer */}
         <div style={{padding:"12px 0",paddingBottom:"calc(12px + env(safe-area-inset-bottom))",borderTop:"0.5px solid rgba(255,255,255,0.06)",flexShrink:0}}>
-          <button onClick={()=>{openLegal("/privacy");setSideMenu(false);}}
+          <button onClick={()=>{openLegal("/privacy",lang);setSideMenu(false);}}
             style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"start"}}>
             <Lock size={15} color={W35} strokeWidth={1.5}/>{lang==="he"?"מדיניות פרטיות":lang==="es"?"Política de privacidad":"Privacy Policy"}
           </button>
-          <button onClick={()=>{openLegal("/contact");setSideMenu(false);}}
+          <button onClick={()=>{openLegal("/contact",lang);setSideMenu(false);}}
             style={{width:"100%",padding:"10px 20px",background:"none",border:"none",color:W35,fontFamily:RF,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"start"}}>
             <Mail size={15} color={W35} strokeWidth={1.5}/>{lang==="he"?"צור קשר":lang==="es"?"Contacto":"Contact"}
           </button>

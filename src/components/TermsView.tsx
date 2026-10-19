@@ -1,0 +1,263 @@
+"use client";
+import Link from "next/link";
+import { goHome, useEmbedded } from "@/lib/nativeApp";
+import { useLang } from "@/lib/LangContext";
+import { usePageLinks } from "@/lib/pageLinks";
+
+type L = "he" | "en" | "es";
+
+export default function TermsView() {
+  const embedded = useEmbedded();
+  const { lang } = useLang();
+  const { prefix, langLinks } = usePageLinks();
+  const dir = lang === "he" ? "rtl" : "ltr";
+  const tr = (he: string, en: string, es: string) => lang === "he" ? he : lang === "es" ? es : en;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0a1628", color: "#ffffff", fontFamily: "'Rubik',sans-serif", direction: dir }}>
+      {/* Header */}
+      <div style={{ background: "rgba(0,0,0,0.3)", borderBottom: "0.5px solid rgba(100,223,223,0.15)", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Link href="/" onClick={goHome} style={{ ...(embedded ? { display: "none" } : {}), color: "#64dfdf", textDecoration: "none", fontWeight: 700, fontSize: 18 }}>
+          {tr("← טיולון", "← TUlon", "← TUlon")}
+        </Link>
+        <div style={{ display: "flex", gap: 8 }}>
+          {(["he","en","es"] as L[]).map(L => (
+            <a key={L} href={langLinks?.[L] ?? "#"} hrefLang={L} onClick={() => { try { localStorage.setItem("tulon_lang", L); } catch { /* storage blocked */ } }} style={{ display: "inline-block", textDecoration: "none", padding: "5px 12px", borderRadius: 8, border: "none", background: lang === L ? "#64dfdf" : "rgba(255,255,255,0.08)", color: lang === L ? "#0a1628" : "#ffffff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+              {L === "he" ? "עב" : L === "en" ? "EN" : "ES"}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 80px" }}>
+        <h1 style={{ fontSize: 32, fontWeight: 900, color: "#64dfdf", marginBottom: 8 }}>
+          {tr("תנאי שימוש", "Terms of Service", "Términos de servicio")}
+        </h1>
+        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, marginBottom: 40 }}>
+          {tr("עודכן לאחרונה: מאי 2025", "Last updated: May 2025", "Última actualización: mayo de 2025")}
+        </p>
+
+        {lang === "he" ? <HeContent /> : lang === "es" ? <EsContent /> : <EnContent />}
+
+        <div style={{ marginTop: 48, paddingTop: 24, borderTop: "0.5px solid rgba(255,255,255,0.1)", display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <Link href={`${prefix}/privacy`} style={{ color: "#64dfdf", fontSize: 13 }}>{tr("מדיניות פרטיות", "Privacy Policy", "Política de privacidad")}</Link>
+          <Link href={`${prefix}/contact`} style={{ color: "#64dfdf", fontSize: 13 }}>{tr("צור קשר", "Contact", "Contacto")}</Link>
+          <Link href="/" onClick={goHome} style={{ ...(embedded ? { display: "none" } : {}), color: "rgba(255,255,255,0.4)", fontSize: 13 }}>{tr("חזרה לאפליקציה", "Back to App", "Volver a la app")}</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 700, color: "#ffffff", marginBottom: 12, paddingBottom: 8, borderBottom: "0.5px solid rgba(100,223,223,0.2)" }}>{title}</h2>
+      <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.8 }}>{children}</div>
+    </div>
+  );
+}
+
+function HeContent() {
+  return (
+    <>
+      <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.8, marginBottom: 32 }}>
+        ברוך הבא לטיולון. השימוש באפליקציה מהווה הסכמה לתנאים הבאים. אם אינך מסכים — אנא הפסק את השימוש.
+      </p>
+
+      <Section title="1. השירות">
+        <p>טיולון היא אפליקציית ניהול טיולים המאפשרת תכנון יעדים, מעקב הוצאות, לוח שנה, המלצות ושיתוף עם חברי טיול. השירות ניתן &quot;כפי שהוא&quot; (As-Is).</p>
+      </Section>
+
+      <Section title="2. חשבון משתמש">
+        <ul style={{ paddingRight: 20, margin: 0 }}>
+          <li>עליך להיות בן 13 ומעלה לשימוש בשירות</li>
+          <li>אתה אחראי לשמירת סיסמתך בסוד</li>
+          <li>חשבון אחד לאדם אחד — אין לשתף גישה</li>
+          <li>אנו שומרים לעצמנו הזכות לחסום חשבונות שמפרים את התנאים</li>
+        </ul>
+      </Section>
+
+      <Section title="3. שימוש מותר">
+        <p>מותר להשתמש בשירות לצורכים אישיים ולא מסחריים. אסור:</p>
+        <ul style={{ paddingRight: 20, margin: "8px 0 0" }}>
+          <li>להשתמש בשירות לפעילות בלתי חוקית</li>
+          <li>לנסות לפרוץ, לסרוק או להפריע לתפקוד השירות</li>
+          <li>להעלות תוכן פוגעני, מזויף או המפר זכויות יוצרים</li>
+          <li>למכור גישה לשירות לאחרים</li>
+        </ul>
+      </Section>
+
+      <Section title="4. קניין רוחני">
+        <p>כל הקוד, העיצוב והתוכן של האפליקציה שייכים לטיולון. המידע שאתה מזין (יעדים, הוצאות וכד&apos;) שייך לך.</p>
+      </Section>
+
+      <Section title="5. תשלום ומנוי">
+        <p>השירות ניתן כרגע ללא תשלום. אם בעתיד יתווספו תכניות בתשלום, תישלח הודעה מראש ותינתן האפשרות לבחור.</p>
+      </Section>
+
+      <Section title="6. ביטול וסיום">
+        <p>תוכל להפסיק את השימוש בכל עת. לבקשת מחיקת חשבון פנה אלינו ב-<a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a>. נמחק את הנתונים שלך תוך 30 יום.</p>
+        <p style={{ marginTop: 8 }}>אנו שומרים לעצמנו הזכות לסגור חשבונות שמפרים את התנאים, לאחר התראה.</p>
+      </Section>
+
+      <Section title="7. הגבלת אחריות">
+        <p>טיולון אינה אחראית לנזקים ישירים או עקיפים הנובעים מהשימוש באפליקציה, כולל:</p>
+        <ul style={{ paddingRight: 20, margin: "8px 0 0" }}>
+          <li>אובדן נתונים עקב תקלה טכנית</li>
+          <li>אי-דיוקים בנתוני מטבע, מזג אוויר או המלצות AI</li>
+          <li>קישורים חיצוניים (Booking.com, Agoda וכד&apos;)</li>
+        </ul>
+        <p style={{ marginTop: 8 }}>ההמלצות המוצגות (מסעדות, אטרקציות) מבוססות על AI ואינן מהוות אחריות מקצועית.</p>
+      </Section>
+
+      <Section title="8. שינויים בשירות">
+        <p>אנו עשויים לשנות, להשעות או להפסיק חלקים מהשירות בכל עת. נודיע על שינויים מהותיים מראש ככל האפשר.</p>
+      </Section>
+
+      <Section title="9. דין חל">
+        <p>תנאים אלה כפופים לחוקי מדינת ישראל. כל מחלוקת תידון בבתי המשפט המוסמכים בישראל.</p>
+      </Section>
+
+      <Section title="10. יצירת קשר">
+        <p>שאלות בנוגע לתנאים: <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a></p>
+      </Section>
+    </>
+  );
+}
+
+function EnContent() {
+  return (
+    <>
+      <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.8, marginBottom: 32 }}>
+        Welcome to TUlon. By using the app, you agree to the following terms. If you disagree, please stop using the service.
+      </p>
+
+      <Section title="1. The Service">
+        <p>TUlon is a trip management app that allows destination planning, expense tracking, calendar management, recommendations, and sharing with travel companions. The service is provided &quot;As-Is&quot;.</p>
+      </Section>
+
+      <Section title="2. User Account">
+        <ul style={{ paddingLeft: 20, margin: 0 }}>
+          <li>You must be 13 years or older to use the service</li>
+          <li>You are responsible for keeping your password confidential</li>
+          <li>One account per person — access sharing is not permitted</li>
+          <li>We reserve the right to suspend accounts that violate these terms</li>
+        </ul>
+      </Section>
+
+      <Section title="3. Permitted Use">
+        <p>You may use the service for personal, non-commercial purposes. You may not:</p>
+        <ul style={{ paddingLeft: 20, margin: "8px 0 0" }}>
+          <li>Use the service for illegal activities</li>
+          <li>Attempt to hack, scan, or disrupt the service</li>
+          <li>Upload harmful, fraudulent, or copyright-infringing content</li>
+          <li>Resell or sublicense access to the service</li>
+        </ul>
+      </Section>
+
+      <Section title="4. Intellectual Property">
+        <p>All code, design, and content of the application belongs to TUlon. The data you enter (destinations, expenses, etc.) belongs to you.</p>
+      </Section>
+
+      <Section title="5. Payment & Subscription">
+        <p>The service is currently provided free of charge. If paid plans are introduced in the future, advance notice will be given and you will have the option to choose.</p>
+      </Section>
+
+      <Section title="6. Cancellation & Termination">
+        <p>You may stop using the service at any time. To request account deletion, contact us at <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a>. We will delete your data within 30 days.</p>
+        <p style={{ marginTop: 8 }}>We reserve the right to close accounts that violate these terms, following notice where possible.</p>
+      </Section>
+
+      <Section title="7. Limitation of Liability">
+        <p>TUlon is not liable for direct or indirect damages arising from use of the app, including:</p>
+        <ul style={{ paddingLeft: 20, margin: "8px 0 0" }}>
+          <li>Data loss due to technical failure</li>
+          <li>Inaccuracies in currency rates, weather data, or AI recommendations</li>
+          <li>External links (Booking.com, Agoda, etc.)</li>
+        </ul>
+        <p style={{ marginTop: 8 }}>Recommendations shown (restaurants, attractions) are AI-generated and do not constitute professional advice.</p>
+      </Section>
+
+      <Section title="8. Service Changes">
+        <p>We may modify, suspend, or discontinue parts of the service at any time. We will provide advance notice of material changes where possible.</p>
+      </Section>
+
+      <Section title="9. Governing Law">
+        <p>These terms are governed by the laws of the State of Israel. Any disputes shall be handled by the competent courts of Israel.</p>
+      </Section>
+
+      <Section title="10. Contact">
+        <p>Questions about these terms: <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a></p>
+      </Section>
+    </>
+  );
+}
+
+function EsContent() {
+  return (
+    <>
+      <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.8, marginBottom: 32 }}>
+        Bienvenido a TUlon. El uso de la app implica la aceptación de los siguientes términos. Si no estás de acuerdo, por favor deja de usar el servicio.
+      </p>
+
+      <Section title="1. El Servicio">
+        <p>TUlon es una aplicación de gestión de viajes que permite planificar destinos, registrar gastos, gestionar el calendario, recibir recomendaciones y compartir con compañeros de viaje. El servicio se proporciona &quot;tal cual&quot; (As-Is).</p>
+      </Section>
+
+      <Section title="2. Cuenta de usuario">
+        <ul style={{ paddingLeft: 20, margin: 0 }}>
+          <li>Debes tener al menos 13 años para usar el servicio</li>
+          <li>Eres responsable de mantener tu contraseña en secreto</li>
+          <li>Una cuenta por persona — no se permite compartir el acceso</li>
+          <li>Nos reservamos el derecho de suspender cuentas que infrinjan estos términos</li>
+        </ul>
+      </Section>
+
+      <Section title="3. Uso permitido">
+        <p>Puedes usar el servicio para fines personales y no comerciales. No está permitido:</p>
+        <ul style={{ paddingLeft: 20, margin: "8px 0 0" }}>
+          <li>Usar el servicio para actividades ilegales</li>
+          <li>Intentar hackear, escanear o interrumpir el servicio</li>
+          <li>Subir contenido dañino, fraudulento o que infrinja derechos de autor</li>
+          <li>Revender el acceso al servicio</li>
+        </ul>
+      </Section>
+
+      <Section title="4. Propiedad intelectual">
+        <p>Todo el código, diseño y contenido de la aplicación pertenece a TUlon. Los datos que introduces (destinos, gastos, etc.) son tuyos.</p>
+      </Section>
+
+      <Section title="5. Pago y suscripción">
+        <p>El servicio se ofrece actualmente sin coste. Si en el futuro se introducen planes de pago, se avisará con antelación y tendrás la opción de elegir.</p>
+      </Section>
+
+      <Section title="6. Cancelación y terminación">
+        <p>Puedes dejar de usar el servicio en cualquier momento. Para solicitar la eliminación de tu cuenta, contáctanos en <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a>. Eliminaremos tus datos en un plazo de 30 días.</p>
+        <p style={{ marginTop: 8 }}>Nos reservamos el derecho de cerrar cuentas que infrinjan estos términos, previo aviso cuando sea posible.</p>
+      </Section>
+
+      <Section title="7. Limitación de responsabilidad">
+        <p>TUlon no se hace responsable de daños directos o indirectos derivados del uso de la app, incluyendo:</p>
+        <ul style={{ paddingLeft: 20, margin: "8px 0 0" }}>
+          <li>Pérdida de datos por fallos técnicos</li>
+          <li>Imprecisiones en tipos de cambio, datos meteorológicos o recomendaciones de IA</li>
+          <li>Enlaces externos (Booking.com, Agoda, etc.)</li>
+        </ul>
+        <p style={{ marginTop: 8 }}>Las recomendaciones mostradas (restaurantes, atracciones) se generan con IA y no constituyen asesoramiento profesional.</p>
+      </Section>
+
+      <Section title="8. Cambios en el servicio">
+        <p>Podemos modificar, suspender o discontinuar partes del servicio en cualquier momento. Avisaremos con antelación de los cambios importantes cuando sea posible.</p>
+      </Section>
+
+      <Section title="9. Ley aplicable">
+        <p>Estos términos se rigen por las leyes del Estado de Israel. Cualquier disputa será resuelta por los tribunales competentes de Israel.</p>
+      </Section>
+
+      <Section title="10. Contacto">
+        <p>Consultas sobre estos términos: <a href="mailto:contact@tulon.app" style={{ color: "#64dfdf" }}>contact@tulon.app</a></p>
+      </Section>
+    </>
+  );
+}

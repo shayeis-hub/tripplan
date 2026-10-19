@@ -1,7 +1,7 @@
 // The marketing pages that exist in Hebrew (root) and in /en and /es, with the
 // hreflang set they share. x-default points at the English version.
 export interface LocalizedPage {
-  key: "home" | "features" | "plan" | "about" | "blog";
+  key: "home" | "features" | "plan" | "about" | "blog" | "privacy" | "terms" | "contact";
   he: string;
   en: string;
   es: string;
@@ -13,6 +13,9 @@ export const LOCALIZED_PAGES: Record<LocalizedPage["key"], LocalizedPage> = {
   plan: { key: "plan", he: "/plan", en: "/en/plan", es: "/es/plan" },
   about: { key: "about", he: "/about", en: "/en/about", es: "/es/about" },
   blog: { key: "blog", he: "/blog", en: "/en/blog", es: "/es/blog" },
+  privacy: { key: "privacy", he: "/privacy", en: "/en/privacy", es: "/es/privacy" },
+  terms: { key: "terms", he: "/terms", en: "/en/terms", es: "/es/terms" },
+  contact: { key: "contact", he: "/contact", en: "/en/contact", es: "/es/contact" },
 };
 
 export const hreflang = (p: LocalizedPage): Record<string, string> => ({
