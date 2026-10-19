@@ -20,7 +20,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/group-travel-expense-tracker",    priority: 0.8, changeFrequency: "monthly" },
     { path: DESTINATIONS_PATH, priority: 0.7, changeFrequency: "monthly" },
     { path: "/blog",     priority: 0.7, changeFrequency: "weekly"  },
-    { path: "/about",    priority: 0.5, changeFrequency: "yearly"  },
     { path: "/contact",  priority: 0.3, changeFrequency: "yearly"  },
     { path: "/privacy",  priority: 0.2, changeFrequency: "yearly"  },
     { path: "/terms",    priority: 0.2, changeFrequency: "yearly"  },
@@ -30,11 +29,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // entry lists all alternates (and x-default), as Google expects.
   const localized = Object.values(LOCALIZED_PAGES).flatMap((p) => {
     const languages = Object.fromEntries(Object.entries(hreflang(p)).map(([k, v]) => [k, `${SITE_URL}${v}`]));
-    const priority = p.key === "home" ? 1.0 : 0.8;
+    const priority = p.key === "home" ? 1.0 : p.key === "about" ? 0.5 : 0.8;
     return ([p.he, p.en, p.es] as const).map((path) => ({
       url: `${SITE_URL}${path}`,
       lastModified: now,
-      changeFrequency: (p.key === "home" ? "weekly" : "monthly") as "weekly" | "monthly",
+      changeFrequency: (p.key === "home" ? "weekly" : p.key === "about" ? "yearly" : "monthly") as "weekly" | "monthly" | "yearly",
       priority,
       alternates: { languages },
     }));

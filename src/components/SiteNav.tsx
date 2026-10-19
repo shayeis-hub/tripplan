@@ -25,7 +25,7 @@ export default function SiteNav({ hideLang = false }: { hideLang?: boolean } = {
     { href: `${prefix}/features`, label: T.features[lang] },
     { href: "/destinations", label: T.destinations[lang] },
     { href: "/blog",     label: T.blog[lang]     },
-    { href: "/about",    label: T.about[lang]    },
+    { href: `${prefix}/about`,    label: T.about[lang]    },
   ];
 
   return (

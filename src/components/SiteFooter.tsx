@@ -76,7 +76,7 @@ export default function SiteFooter() {
           <span className="sitefooter-sep">·</span>
           <a className="sitefooter-link" href="/blog">{T.blog[lang]}</a>
           <span className="sitefooter-sep">·</span>
-          <a className="sitefooter-link" href="/about">{T.about[lang]}</a>
+          <a className="sitefooter-link" href={`${prefix}/about`}>{T.about[lang]}</a>
           <span className="sitefooter-sep">·</span>
           <a className="sitefooter-link" href="/privacy">{T.privacy[lang]}</a>
           <span className="sitefooter-sep">·</span>
