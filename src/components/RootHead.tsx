@@ -10,6 +10,9 @@ const orgSchema = {
   alternateName: "טיולון",
   url: SITE_URL,
   logo: `${SITE_URL}/icon-512.png`,
+  description:
+    "TUlon is a free group trip planner that combines a shared day-by-day itinerary, a trip budget and multi-currency expense tracking in one place.",
+  founder: { "@type": "Person", name: "Shay Eisenberg", alternateName: "שי אייזנברג" },
   sameAs: ["https://www.instagram.com/tulonapp"],
 };
 const websiteSchema = {

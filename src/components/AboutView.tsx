@@ -29,6 +29,19 @@ const T = {
     es: "Dar a cada grupo de viajeros — familia, amigos, parejas — una herramienta gratuita, sencilla y poderosa que transforma la planificación de viajes de una tarea en parte de la experiencia.",
   },
 
+  whoTitle: { he: "מי מאחורי טיולון", en: "Who is behind TUlon", es: "Quién está detrás de TUlon" },
+  whoBody1: {
+    he: "טיולון נוצרה ומתוחזקת על ידי שי אייזנברג, מטייל בנשמה. שי אוהב לגלות מקומות חדשים, להכיר תרבויות אחרות ולהתרשם מנופים רחוקים מהבית, וטיולון נולדה מתוך האהבה הזו לטיולים: הרצון להקדיש פחות זמן לארגון הטיול ויותר זמן ליהנות ממנו.",
+    en: "TUlon is created and maintained by Shay Eisenberg, a traveler at heart. Shay loves discovering new places, meeting different cultures and taking in landscapes far from home, and TUlon grew out of that love of travel: the wish to spend less time organizing a trip and more time enjoying it.",
+    es: "TUlon está creada y mantenida por Shay Eisenberg, un viajero de corazón. A Shay le encanta descubrir lugares nuevos, conocer otras culturas y contemplar paisajes lejos de casa, y TUlon nació de ese amor por viajar: las ganas de dedicar menos tiempo a organizar un viaje y más tiempo a disfrutarlo.",
+  },
+  whoBody2: {
+    he: "שי הוא גם מחבר סדרת מדריכי הטיול First-Timers (באנגלית), חוברות מעשיות למי שמבקר ביעד בפעם הראשונה. עמודי היעדים באתר הם נלווים לחוברות האלה, עם מלונות, סיורים, קישורים רשמיים וטיפים להזמנה לכל עיר.",
+    en: "Shay is also the author of the First-Timers series of travel guides, practical booklets for visitors seeing a destination for the first time. The Destinations pages on this site are companions to those guides, with hotels, tours, official links and booking tips for each city.",
+    es: "Shay es también el autor de la serie de guías de viaje First-Timers (en inglés), cuadernillos prácticos para quienes visitan un destino por primera vez. Las páginas de destinos de este sitio acompañan a esas guías, con hoteles, tours, enlaces oficiales y consejos de reserva para cada ciudad.",
+  },
+  whoAmazon: { he: "המדריכים של First-Timers באמזון", en: "See the First-Timers guides on Amazon", es: "Ver las guías First-Timers en Amazon" },
+  whoDest: { he: "גלו את היעדים", en: "Explore our Destinations", es: "Explorar nuestros destinos" },
   valuesTitle: { he: "הערכים שלנו", en: "Our Values", es: "Nuestros Valores" },
   val1: { he: "פשטות — תיכנון טיולים לא צריך להיות מסובך", en: "Simplicity — trip planning shouldn't be complicated", es: "Simplicidad — planificar viajes no debería ser complicado" },
   val2: { he: "שקיפות — כל ההוצאות גלויות לכולם", en: "Transparency — all expenses visible to everyone", es: "Transparencia — todos los gastos visibles para todos" },
@@ -101,6 +114,38 @@ export default function AboutView() {
               <p style={{fontSize:16,fontWeight:600,color:"rgba(255,255,255,0.8)",lineHeight:1.7}}>
                 {T.missionBody[lang]}
               </p>
+            </div>
+          </Section>
+
+          {/* Who is behind TUlon */}
+          <Section title={T.whoTitle[lang]}>
+            <p style={{fontSize:15,color:"rgba(255,255,255,0.6)",lineHeight:1.8,marginBottom:14}}>
+              {T.whoBody1[lang]}
+            </p>
+            <p style={{fontSize:15,color:"rgba(255,255,255,0.6)",lineHeight:1.8,marginBottom:20}}>
+              {T.whoBody2[lang]}
+            </p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:"10px 12px"}}>
+              <a href="https://www.amazon.com/dp/B0HNGL6RCX" target="_blank" rel="noopener noreferrer" style={{
+                display:"inline-block",
+                background:"#64dfdf",color:"#0d2137",
+                fontFamily:"'Rubik',sans-serif",
+                fontSize:14,fontWeight:800,
+                padding:"11px 24px",borderRadius:999,
+                textDecoration:"none",
+              }}>
+                {T.whoAmazon[lang]} {isHe ? "←" : "→"}
+              </a>
+              <a href="/destinations" style={{
+                display:"inline-block",
+                background:"transparent",border:"0.5px solid rgba(100,223,223,0.3)",color:"#64dfdf",
+                fontFamily:"'Rubik',sans-serif",
+                fontSize:14,fontWeight:700,
+                padding:"11px 24px",borderRadius:999,
+                textDecoration:"none",
+              }}>
+                {T.whoDest[lang]} {isHe ? "←" : "→"}
+              </a>
             </div>
           </Section>
 
