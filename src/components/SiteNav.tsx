@@ -1,10 +1,12 @@
 "use client";
 import { useLang } from "@/lib/LangContext";
 import { useRouter, usePathname } from "next/navigation";
+import { isDestinationPath } from "@/lib/destinations";
 
 const T = {
   plan:     { he: "תכנן טיול",  en: "Plan a Trip",  es: "Planifica" },
   features: { he: "פיצ'רים",    en: "Features",     es: "Funciones" },
+  destinations: { he: "Destinations", en: "Destinations", es: "Destinations" }, // English in every language for now
   blog:     { he: "בלוג",       en: "Blog",          es: "Blog"      },
   about:    { he: "אודות",      en: "About",         es: "Nosotros"  },
   cta:      { he: "התחל בחינם", en: "Start free",   es: "Empezar"   },
@@ -19,6 +21,7 @@ export default function SiteNav({ hideLang = false }: { hideLang?: boolean } = {
   const navLinks = [
     { href: "/plan",     label: T.plan[lang]     },
     { href: "/features", label: T.features[lang] },
+    { href: "/destinations", label: T.destinations[lang] },
     { href: "/blog",     label: T.blog[lang]     },
     { href: "/about",    label: T.about[lang]    },
   ];
@@ -94,7 +97,7 @@ export default function SiteNav({ hideLang = false }: { hideLang?: boolean } = {
           {navLinks.map(l => (
             <a
               key={l.href}
-              className={`sitenav-link${pathname === l.href ? " active" : ""}`}
+              className={`sitenav-link${pathname === l.href || (l.href === "/destinations" && isDestinationPath(pathname)) ? " active" : ""}`}
               href={l.href}
             >
               {l.label}

@@ -6,6 +6,7 @@ const T = {
   getApp:   { he: "הורידו את האפליקציה", en: "Get the app",       es: "Descarga la app"      },
   plan:     { he: "תכנן טיול",          en: "Plan a Trip",       es: "Planifica un viaje"   },
   features: { he: "פיצ'רים",             en: "Features",          es: "Funciones"            },
+  destinations: { he: "Destinations",    en: "Destinations",      es: "Destinations"         }, // English in every language for now
   blog:     { he: "בלוג",                en: "Blog",              es: "Blog"                 },
   about:    { he: "אודות",               en: "About",             es: "Nosotros"             },
   privacy:  { he: "מדיניות פרטיות",      en: "Privacy Policy",    es: "Privacidad"           },
@@ -68,6 +69,8 @@ export default function SiteFooter() {
           <a className="sitefooter-link" href="/plan">{T.plan[lang]}</a>
           <span className="sitefooter-sep">·</span>
           <a className="sitefooter-link" href="/features">{T.features[lang]}</a>
+          <span className="sitefooter-sep">·</span>
+          <a className="sitefooter-link" href="/destinations">{T.destinations[lang]}</a>
           <span className="sitefooter-sep">·</span>
           <a className="sitefooter-link" href="/blog">{T.blog[lang]}</a>
           <span className="sitefooter-sep">·</span>

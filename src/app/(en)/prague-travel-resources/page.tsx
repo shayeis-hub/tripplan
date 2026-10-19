@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
+import { DestinationCrumb, MoreDestinations } from "@/components/DestinationLinks";
 import { SeoPage, Section, P, List } from "@/components/SeoLanding";
 import { RES_CSS, AFFILIATE_REL } from "@/components/resourcePageStyles";
 import {
@@ -92,6 +93,7 @@ export default function PragueTravelResourcesPage() {
 
       <header className="seo-hero">
         <div className="seo-hero-inner">
+          <DestinationCrumb city="Prague" />
           <h1 className="seo-h1">Prague Travel Resources</h1>
           <p className="res-lead-strong">
             A practical companion to <em>Prague for First-Timers</em> by Shay Eisenberg
@@ -215,6 +217,8 @@ export default function PragueTravelResourcesPage() {
           </article>
         </div>
       </Section>
+
+      <MoreDestinations current="prague" />
 
       <Section title="Organize your trip with TUlon">
         <P>

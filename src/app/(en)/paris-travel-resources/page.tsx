@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
+import { DestinationCrumb, MoreDestinations } from "@/components/DestinationLinks";
 import { RES_CSS, AFFILIATE_REL as REL } from "@/components/resourcePageStyles";
 import { SeoPage, Section, P, CtaBand } from "@/components/SeoLanding";
 import {
@@ -107,6 +108,7 @@ export default function ParisTravelResourcesPage() {
 
       <header className="seo-hero">
         <div className="seo-hero-inner">
+          <DestinationCrumb city="Paris" />
           <h1 className="seo-h1">Paris Travel Resources</h1>
           <p className="seo-lead">
             A shortlist for first-time visitors: places to stay in different neighbourhoods and budgets,
@@ -218,6 +220,8 @@ export default function ParisTravelResourcesPage() {
           category, as it is not guaranteed by the hotel alone.
         </P>
       </Section>
+
+      <MoreDestinations current="paris" />
 
       <CtaBand
         title="Plan your Paris trip in TUlon"

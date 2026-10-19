@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { pageMeta } from "@/lib/seo";
+import { DestinationCrumb, MoreDestinations } from "@/components/DestinationLinks";
 import { SeoPage, Section, P, List, CtaBand } from "@/components/SeoLanding";
 import { RES_CSS, AFFILIATE_REL } from "@/components/resourcePageStyles";
 import {
@@ -331,6 +332,7 @@ export default function ThailandTravelResourcesPage() {
 
       <header className="seo-hero">
         <div className="seo-hero-inner">
+          <DestinationCrumb city="Thailand" />
           <h1 className="seo-h1">Thailand Travel Resources</h1>
           <p className="res-lead-strong">
             A companion to <em>Thailand for First-Timers</em> by Shay Eisenberg
@@ -509,6 +511,8 @@ export default function ThailandTravelResourcesPage() {
           the option that best suits your trip.
         </P>
       </Section>
+
+      <MoreDestinations current="thailand" />
 
       <CtaBand
         title="Plan your Thailand trip in TUlon"

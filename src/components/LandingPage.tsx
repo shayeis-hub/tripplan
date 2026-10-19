@@ -4,6 +4,7 @@ import { Wallet, Users, Calendar, Building2, Backpack, Share2 } from "lucide-rea
 import { useLang } from "@/lib/LangContext";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
+import { DESTINATIONS, DESTINATIONS_PATH } from "@/lib/destinations";
 import { GOOGLE_PLAY_URL, APP_STORE_URL } from "@/lib/stores";
 import { SITE_URL } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
@@ -322,6 +323,10 @@ export default function LandingPage() {
         .band-text span { color: #64dfdf; }
 
         /* Plan & Blog teasers */
+        .dest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
+        @media (max-width: 480px) { .dest-grid { grid-template-columns: 1fr; } }
+        .dest-card { display: flex; flex-direction: column; gap: 3px; background: rgba(255,255,255,0.04); border: 0.5px solid rgba(100,223,223,0.14); border-radius: 14px; padding: 14px 16px; text-decoration: none; transition: border-color 0.15s, background 0.15s; }
+        .dest-card:hover { border-color: rgba(100,223,223,0.4); background: rgba(100,223,223,0.05); }
         .teaser-card {
           background: rgba(255,255,255,0.03);
           border: 0.5px solid rgba(255,255,255,0.08);
@@ -501,6 +506,35 @@ export default function LandingPage() {
               letterSpacing:-0.3,
             }}>
               {T.planBtn[lang]} →
+            </a>
+          </div>
+        </div>
+
+        {/* Destinations — English only for now, in every language */}
+        <div className="divider"/>
+        <div className="section" style={{paddingTop:40,paddingBottom:40}} dir="ltr">
+          <h2 className="section-title" style={{textAlign:"center"}}>Destinations</h2>
+          <div className="section-sub" style={{marginBottom:22,textAlign:"center"}}>Where to stay and what to book for a first visit: hotels, tours, official links, flights and an eSIM.</div>
+          <div className="dest-grid">
+            {DESTINATIONS.map(d=>(
+              <a key={d.slug} className="dest-card" href={d.path}>
+                <span style={{fontSize:16,fontWeight:700,color:"#fff"}}>{d.city}</span>
+                <span style={{fontSize:12.5,color:"rgba(255,255,255,0.5)"}}>{d.sub}</span>
+              </a>
+            ))}
+          </div>
+          <div style={{textAlign:"center"}}>
+            <a href={DESTINATIONS_PATH} style={{
+              display:"inline-block",
+              background:"transparent",
+              border:"0.5px solid rgba(100,223,223,0.25)",
+              color:"rgba(100,223,223,0.7)",
+              fontFamily:"'Rubik',sans-serif",
+              fontSize:13,fontWeight:700,
+              padding:"9px 22px",borderRadius:999,
+              textDecoration:"none",
+            }}>
+              All destinations →
             </a>
           </div>
         </div>

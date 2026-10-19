@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
+import { DestinationCrumb, MoreDestinations } from "@/components/DestinationLinks";
 import { SeoPage, Section, P, List, CtaBand } from "@/components/SeoLanding";
 import { RES_CSS, AFFILIATE_REL } from "@/components/resourcePageStyles";
 import {
@@ -186,6 +187,7 @@ export default function RomeTravelResourcesPage() {
 
       <header className="seo-hero">
         <div className="seo-hero-inner">
+          <DestinationCrumb city="Rome" />
           <h1 className="seo-h1">Rome Travel Resources: Where to Stay and What to Book</h1>
           <p className="seo-lead">
             Plan a first visit to Rome around a comfortable base and a few well-chosen reservations. These
@@ -368,6 +370,8 @@ export default function RomeTravelResourcesPage() {
           appropriate, and choosing the booking method that suits your trip.
         </P>
       </Section>
+
+      <MoreDestinations current="rome" />
 
       <CtaBand
         title="Plan your Rome trip in TUlon"
