@@ -10,6 +10,7 @@ export interface Destination {
   blurb: string;
   includes: string[];
   updated: string; // ISO date of the last content update
+  he?: string; // path of the Hebrew copy, when there is one (hreflang pair of `path`)
 }
 
 export const DESTINATIONS: Destination[] = [
@@ -27,6 +28,7 @@ export const DESTINATIONS: Destination[] = [
     city: "Prague",
     sub: "Czech Republic",
     path: "/prague-travel-resources",
+    he: "/he/prague-travel-resources",
     blurb: "Four hotels by neighborhood, guided tours, and official sites for sights and transport.",
     includes: ["Hotels", "Tours", "Official links", "Flights and eSIM"],
     updated: "2026-10-18",

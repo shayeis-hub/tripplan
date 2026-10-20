@@ -29,7 +29,7 @@ export function pageMeta({
   noindex?: boolean;
   // Defaults keep every existing caller unchanged (Hebrew-first site). The
   // English-only landing pages pass locale "en_US" and an explicit image.
-  locale?: "en_US" | "es_ES";
+  locale?: "en_US" | "es_ES" | "he_IL";
   image?: { url: string; width: number; height: number; alt: string };
   // hreflang alternates: language code (or "x-default") -> path on this site.
   languages?: Record<string, string>;

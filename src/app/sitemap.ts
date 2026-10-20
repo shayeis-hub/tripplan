@@ -55,12 +55,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: r.changeFrequency,
       priority: r.priority,
     })),
-    ...DESTINATIONS.map((d) => ({
-      url: `${SITE_URL}${d.path}`,
-      lastModified: new Date(`${d.updated}T00:00:00Z`),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    })),
+    // English destination pages; those with a Hebrew copy list both as alternates.
+    ...DESTINATIONS.flatMap((d) => {
+      const languages = d.he
+        ? { en: `${SITE_URL}${d.path}`, he: `${SITE_URL}${d.he}`, "x-default": `${SITE_URL}${d.path}` }
+        : undefined;
+      return [d.path, ...(d.he ? [d.he] : [])].map((p) => ({
+        url: `${SITE_URL}${p}`,
+        lastModified: new Date(`${d.updated}T00:00:00Z`),
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+        ...(languages ? { alternates: { languages } } : {}),
+      }));
+    }),
     ...blogPosts.flatMap((p) => {
       const pg = blogPostPage(p.slug);
       const languages = Object.fromEntries(Object.entries(hreflang(pg)).map(([k, v]) => [k, `${SITE_URL}${v}`]));

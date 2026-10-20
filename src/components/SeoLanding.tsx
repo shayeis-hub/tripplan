@@ -72,6 +72,13 @@ const CSS = `
   .seo-cta-box { background: linear-gradient(135deg, rgba(100,223,223,0.1), rgba(100,223,223,0.04)); border: 0.5px solid rgba(100,223,223,0.22); border-radius: 20px; padding: 34px 24px; text-align: center; }
   .seo-cta-box .seo-h2 { margin-bottom: 10px; }
   .seo-cta-box .seo-p { margin-bottom: 22px; }
+  .res-altlang { font-size: 13px; margin: -12px 0 0; }
+  .res-altlang a { font-weight: 600; }
+  .seo.seo-he { direction: rtl; text-align: right; }
+  .seo-he .seo-h1, .seo-he .seo-h2 { letter-spacing: 0; }
+  .seo-he .seo-list li { padding-left: 0; padding-right: 22px; }
+  .seo-he .seo-list li::before { left: auto; right: 2px; }
+  .seo-he .seo-hero { text-align: center; }
 `;
 
 function GooglePlayGlyph() {
@@ -109,9 +116,9 @@ export function StoreBadges() {
   );
 }
 
-// Page frame: English-pinned nav/footer, styles, and the page's JSON-LD.
-export function SeoPage({ path, name, description, children }: {
-  path: string; name: string; description: string; children: ReactNode;
+// Page frame: nav/footer pinned to the page language (English, or Hebrew for the /he copies), styles, and the page's JSON-LD.
+export function SeoPage({ path, name, description, children, lang = "en" }: {
+  path: string; name: string; description: string; children: ReactNode; lang?: "en" | "he";
 }) {
   const url = `${SITE_URL}${path}`;
   // WebPage only, pointing at the one SoftwareApplication already declared on
@@ -123,14 +130,14 @@ export function SeoPage({ path, name, description, children }: {
     url,
     name,
     description,
-    inLanguage: "en",
+    inLanguage: lang,
     isPartOf: { "@type": "WebSite", url: SITE_URL },
     about: { "@id": `${SITE_URL}/#software` },
   };
   return (
-    <ForcedLang lang="en">
+    <ForcedLang lang={lang}>
       <style>{CSS}</style>
-      <div className="seo" dir="ltr">
+      <div className={lang === "he" ? "seo seo-he" : "seo"} dir={lang === "he" ? "rtl" : "ltr"}>
         <JsonLd data={pageSchema} />
         <SiteNav hideLang />
         <main>{children}</main>
