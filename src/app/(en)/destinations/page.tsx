@@ -7,7 +7,7 @@ import { DESTINATIONS, DESTINATIONS_PATH, formatUpdated } from "@/lib/destinatio
 
 const TITLE = "Destinations: Where to Stay and What to Book | TUlon";
 const DESCRIPTION =
-  "Travel resources for first-time visitors: hotels, guided tours and tickets, official sites, flights and eSIMs for Paris, Prague, Rome and Thailand.";
+  "Travel resources for first-time visitors: hotels, guided tours and tickets, official sites, flights and eSIMs for Paris, Prague, Rome, Thailand and Vienna & the Lakes.";
 
 export const metadata: Metadata = pageMeta({
   title: TITLE,

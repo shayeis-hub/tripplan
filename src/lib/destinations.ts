@@ -51,6 +51,16 @@ export const DESTINATIONS: Destination[] = [
     includes: ["Hotels", "Tours", "Official links", "Flights and eSIM"],
     updated: "2026-10-18",
   },
+  {
+    slug: "vienna",
+    city: "Vienna & the Lakes",
+    sub: "Austria",
+    path: "/vienna-lakes-travel-resources",
+    he: "/he/vienna-lakes-travel-resources",
+    blurb: "Where to stay in Bad Goisern and Vienna, official links for every stop from Melk to Hallstatt, and tickets for Schönbrunn and the Prater.",
+    includes: ["Hotels", "Official links", "Tours and tickets", "Food stops"],
+    updated: "2026-10-20",
+  },
 ];
 
 export const DESTINATIONS_PATH = "/destinations";
