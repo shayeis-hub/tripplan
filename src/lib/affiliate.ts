@@ -24,6 +24,7 @@ export type AffSource =
   | "paris-esim"     // /paris-travel-resources France eSIM button
   | "prague-resources"// /prague-travel-resources hotel cards
   | "prague-flights" // /prague-travel-resources flights button
+  | "budapest-resources"// /budapest-travel-resources hotel + tour cards
   | "vienna-resources"// /vienna-lakes-travel-resources hotel + tour cards
   | "prague-esim"    // /prague-travel-resources Czech Republic eSIM button
   | "rome-resources" // /rome-travel-resources hotel + tour cards

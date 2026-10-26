@@ -61,6 +61,16 @@ export const DESTINATIONS: Destination[] = [
     includes: ["Hotels", "Official links", "Tours and tickets", "Food stops"],
     updated: "2026-10-20",
   },
+  {
+    slug: "budapest",
+    city: "Budapest",
+    sub: "Hungary",
+    path: "/budapest-travel-resources",
+    he: "/he/budapest-travel-resources",
+    blurb: "Three hotels in different parts of the city, a Danube cruise and the Széchenyi baths, official tickets, free sights and transport links.",
+    includes: ["Hotels", "Tours and tickets", "Official links", "Food and transport"],
+    updated: "2026-10-26",
+  },
 ];
 
 export const DESTINATIONS_PATH = "/destinations";
