@@ -57,11 +57,12 @@ export default function AdminEmailPage() {
     await load();
   };
 
-  if (user === undefined) return <main style={{ padding: 24, color: "#fff" }}>...</main>;
+  if (user === undefined) return <div style={{ minHeight: "100vh", background: "#0d2137", padding: 24, color: "#fff" }}>...</div>;
   if (!user || user.email !== ADMIN_EMAIL) {
-    return <main style={{ padding: 24, color: "#fff", fontFamily: "sans-serif" }}>Sign in to TUlon as the admin account in this browser, then reload this page.</main>;
+    return <div style={{ minHeight: "100vh", background: "#0d2137", padding: 24, color: "#fff", fontFamily: "sans-serif" }}>Sign in to TUlon as the admin account in this browser, then reload this page.</div>;
   }
   return (
+    <div style={{ minHeight: "100vh", background: "#0d2137" }}>
     <main style={{ maxWidth: 640, margin: "0 auto", padding: 24, color: "#fff", fontFamily: "'Rubik',sans-serif", direction: "ltr" }}>
       <h1 style={{ fontSize: 22 }}>Welcome e-mail</h1>
       <div style={box}>
@@ -84,5 +85,6 @@ export default function AdminEmailPage() {
         <pre style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{JSON.stringify(report, null, 2)}</pre>
       </div>
     </main>
+    </div>
   );
 }
