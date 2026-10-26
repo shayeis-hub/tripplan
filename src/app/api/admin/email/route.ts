@@ -50,7 +50,19 @@ export async function GET(req: NextRequest) {
       if (s.clicked) createdTripAfterClick++;
     }
   }
+  // The 15 most recent e-mail events of any kind (tests included), no addresses.
+  const recentSnap = await db.collection("emailEvents").orderBy("createdAt", "desc").limit(15).get();
+  const recent = recentSnap.docs.map((d) => {
+    const e = d.data();
+    return {
+      flow: e.flow, status: e.status, lang: e.lang, variant: e.variant ?? null, skipReason: e.skipReason ?? null,
+      createdAt: e.createdAt, sentAt: e.sentAt ?? null, deliveredAt: e.deliveredAt ?? null,
+      firstClickAt: e.firstClickAt ?? null, clickCount: e.clickCount ?? 0,
+      bouncedAt: e.bouncedAt ?? null, complainedAt: e.complainedAt ?? null, errorName: e.errorName ?? null,
+    };
+  });
   return NextResponse.json({
+    recent,
     config: await getWelcomeConfig(true),
     events: counts,
     welcome: { sent, delivered, clicked, bounced, complained, createdTrip7d: createdTrip, createdTrip7dAmongClicked: createdTripAfterClick },

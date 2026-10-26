@@ -29,6 +29,15 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
 
     const allTrips: { [id: string]: any } = {};
 
+    // "loading" ends only once BOTH queries have answered at least once.
+    // Before, whichever answered first ended it: a user with owned trips whose
+    // (empty) shared-trips query answered first was shown as having no trips
+    // until the second answer arrived. A query that errors counts as answered
+    // (and a timer is a last resort), so one failing query cannot block the app.
+    const answered = { mine: false, shared: false };
+    const maybeDone = () => { if (answered.mine && answered.shared) setLoading(false); };
+    const lastResort = setTimeout(() => setLoading(false), 8000);
+
     // Listen to both queries simultaneously
     const unsub1 = onSnapshot(myTripsQ, snap => {
       snap.docs.forEach(d => { allTrips[d.id] = { id: d.id, ...d.data() }; });
@@ -40,8 +49,9 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
         }
       });
       setTrips(Object.values(allTrips).sort((a: any, b: any) => b.updatedAt - a.updatedAt));
-      setLoading(false);
-    });
+      answered.mine = true;
+      maybeDone();
+    }, () => { answered.mine = true; maybeDone(); });
 
     const unsub2 = onSnapshot(sharedTripsQ, snap => {
       snap.docs.forEach(d => { allTrips[d.id] = { id: d.id, ...d.data() }; });
@@ -57,10 +67,11 @@ export function useTrips(userId: string | undefined, userEmail: string | undefin
         }
       });
       setTrips(Object.values(allTrips).sort((a: any, b: any) => b.updatedAt - a.updatedAt));
-      setLoading(false);
-    });
+      answered.shared = true;
+      maybeDone();
+    }, () => { answered.shared = true; maybeDone(); });
 
-    return () => { unsub1(); unsub2(); };
+    return () => { clearTimeout(lastResort); unsub1(); unsub2(); };
   }, [userId, userEmail]);
 
   // Remove undefined values recursively (Firebase doesn't accept undefined).

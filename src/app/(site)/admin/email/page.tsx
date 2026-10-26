@@ -11,9 +11,17 @@ const ADMIN_EMAIL = "shayeis@gmail.com";
 const box: React.CSSProperties = { background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(100,223,223,0.2)", borderRadius: 14, padding: 18, marginBottom: 16 };
 const btn: React.CSSProperties = { background: "#64dfdf", color: "#0d2137", border: 0, borderRadius: 999, padding: "9px 20px", fontWeight: 800, cursor: "pointer", marginInlineEnd: 8 };
 
+type RecentEvent = {
+  flow: string; status: string; lang: string; variant: string | null; skipReason: string | null;
+  createdAt: number; sentAt: number | null; deliveredAt: number | null; firstClickAt: number | null;
+  clickCount: number; bouncedAt: number | null; complainedAt: number | null; errorName: string | null;
+};
+type Report = { recent?: RecentEvent[]; config?: unknown; events?: unknown; welcome?: unknown };
+const t = (ms: number | null) => (ms ? new Date(ms).toLocaleString("he-IL", { hour12: false }) : "-");
+
 export default function AdminEmailPage() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
-  const [report, setReport] = useState<unknown>(null);
+  const [report, setReport] = useState<Report | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -37,7 +45,7 @@ export default function AdminEmailPage() {
 
   const load = async () => {
     const r = await call("GET");
-    if (r) setReport(r.json);
+    if (r) setReport(r.json as Report);
   };
   useEffect(() => {
     if (user?.email === ADMIN_EMAIL) void load();
@@ -82,7 +90,30 @@ export default function AdminEmailPage() {
       <div style={box}>
         <h2 style={{ fontSize: 16, marginTop: 0 }}>Results</h2>
         <button style={btn} disabled={busy} onClick={load}>Refresh</button>
-        <pre style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{JSON.stringify(report, null, 2)}</pre>
+        <pre style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{JSON.stringify({ config: report?.config, events: report?.events, welcome: report?.welcome }, null, 2)}</pre>
+      </div>
+      <div style={{ ...box, overflowX: "auto" }}>
+        <h2 style={{ fontSize: 16, marginTop: 0 }}>Recent e-mail events</h2>
+        <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ textAlign: "left", opacity: 0.7 }}>
+              <th>Created</th><th>Flow</th><th>Lang</th><th>Status</th><th>Delivered</th><th>Clicked</th><th>Issue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(report?.recent ?? []).map((e, i) => (
+              <tr key={i} style={{ borderTop: "0.5px solid rgba(255,255,255,0.1)" }}>
+                <td>{t(e.createdAt)}</td>
+                <td>{e.flow}{e.variant === "control" ? " (control)" : ""}</td>
+                <td>{e.lang}</td>
+                <td>{e.status}{e.skipReason ? ` (${e.skipReason})` : ""}</td>
+                <td>{t(e.deliveredAt)}</td>
+                <td>{e.clickCount ? `${e.clickCount}x, first ${t(e.firstClickAt)}` : "-"}</td>
+                <td>{e.bouncedAt ? "bounced" : e.complainedAt ? "complained" : e.errorName ?? "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </main>
     </div>
