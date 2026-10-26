@@ -1,4 +1,5 @@
 "use client";
+import { syncProfileLangForCurrentUser } from "@/lib/emailClient";
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import type { Lang } from "./i18n";
 
@@ -40,6 +41,8 @@ export function LangProvider({ children }: { children: ReactNode }) {
     setLangState(l);
     setSource("saved");
     localStorage.setItem("tulon_lang", l);
+    // Keep the profile language (used for e-mail) in step; best effort.
+    void syncProfileLangForCurrentUser(true);
   };
 
   return <LangContext.Provider value={{ lang, setLang, source }}>{children}</LangContext.Provider>;

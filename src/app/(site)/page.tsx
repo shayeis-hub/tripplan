@@ -37,6 +37,10 @@ export default function Home() {
       // Reminder deep link: remember the target across sign-in (validated, 24h)
       const tripLink = parseTripLink(window.location.search);
       if (tripLink) stashPendingTripLink(tripLink);
+      // E-mail CTA: remember "start a new trip" across sign-in (handled in TripPlan)
+      if (params.get("start") === "newtrip") {
+        try { sessionStorage.setItem("pendingStart", "newtrip"); } catch {}
+      }
       const quickadd = params.get("quickadd");
       if (quickadd) {
         try { sessionStorage.setItem("pendingQuickAdd", quickadd); } catch {}

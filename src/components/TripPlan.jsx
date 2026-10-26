@@ -4766,6 +4766,29 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     startWizard();
   };
 
+  // ── E-mail CTA deep link: /?start=newtrip ──
+  // Opens the new-trip flow for someone who has no trip yet (the welcome e-mail
+  // goes to exactly those people). The intent survives sign-in via sessionStorage.
+  // With any existing trip nothing is created, so a later click never makes a
+  // second empty trip. It runs once.
+  const startHandledRef=useRef(false);
+  useEffect(()=>{
+    if(startHandledRef.current||!userEmail)return;
+    const params=new URLSearchParams(window.location.search);
+    let st=params.get("start");
+    if(!st){try{st=sessionStorage.getItem("pendingStart");}catch{}}
+    if(st!=="newtrip")return;
+    startHandledRef.current=true;
+    try{sessionStorage.removeItem("pendingStart");}catch{}
+    try{
+      const u=new URL(window.location.href);
+      ["start","utm_source","utm_medium","utm_campaign"].forEach(k=>u.searchParams.delete(k));
+      window.history.replaceState({},"",u.pathname+(u.search||"")+u.hash);
+    }catch{}
+    if(trips.length===0)handleCreate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[userEmail,trips.length]);
+
   const handleSelect=id=>{
     pushNav("splash",id,null,null);
     setActiveId(id);setSection(null);setScreen("expenses");

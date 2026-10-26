@@ -9,6 +9,7 @@ import {
 } from "firebase/auth";
 import { auth } from "./firebase";
 import { reportAcquisitionIfNewUser } from "./acquisitionClient";
+import { reportNewUserForWelcome, syncProfileLang } from "./emailClient";
 
 interface AuthContextType {
   user: User | null;
@@ -30,6 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       // No-op unless this is a brand-new registration (see acquisitionClient).
       if (authUser) reportAcquisitionIfNewUser(authUser);
+      // Fire-and-forget; the server decides whether a welcome e-mail is due.
+      if (authUser) {
+        void reportNewUserForWelcome(authUser).then(() => syncProfileLang(authUser));
+      }
     });
     return unsub;
   }, []);

@@ -74,6 +74,14 @@ export async function POST(req: NextRequest) {
     const eventsSnap = await db.collection("notificationEvents").where("userId", "==", uid).get();
     await Promise.all(eventsSnap.docs.map(d => d.ref.delete()));
 
+    // 5c. E-mail system: the per-user event log and profile (language). Records
+    //     in emailSuppressions are about the ADDRESS (explicit unsubscribe, hard
+    //     bounce, complaint) and are deliberately kept: deleting an account must
+    //     not re-enable mail someone asked us to stop sending.
+    const emailEventsSnap = await db.collection("emailEvents").where("uid", "==", uid).get();
+    await Promise.all(emailEventsSnap.docs.map(d => d.ref.delete()));
+    await db.collection("userProfiles").doc(uid).delete();
+
     // 6. Everything else keyed directly by uid.
     await Promise.all([
       db.collection("travelProfiles").doc(uid).delete(),
