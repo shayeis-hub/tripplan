@@ -3,26 +3,45 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
-// Admin-only control panel for the welcome e-mail. The server enforces the admin
+// Admin-only view of the e-mails TUlon has sent. The server enforces the admin
 // check on every call (see /api/admin/email); this page only shows what it says.
-// "Send test" goes to the signed-in admin's own verified address and nowhere else.
 
 const ADMIN_EMAIL = "shayeis@gmail.com";
-const box: React.CSSProperties = { background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(100,223,223,0.2)", borderRadius: 14, padding: 18, marginBottom: 16 };
-const btn: React.CSSProperties = { background: "#64dfdf", color: "#0d2137", border: 0, borderRadius: 999, padding: "9px 20px", fontWeight: 800, cursor: "pointer", marginInlineEnd: 8 };
+const TEAL = "#64dfdf";
 
 type RecentEvent = {
   flow: string; status: string; lang: string; variant: string | null; skipReason: string | null;
   createdAt: number; sentAt: number | null; deliveredAt: number | null; firstClickAt: number | null;
   clickCount: number; bouncedAt: number | null; complainedAt: number | null; errorName: string | null;
 };
-type Report = { recent?: RecentEvent[]; config?: unknown; events?: unknown; welcome?: unknown };
-const t = (ms: number | null) => (ms ? new Date(ms).toLocaleString("he-IL", { hour12: false }) : "-");
+type Report = {
+  recent?: RecentEvent[];
+  config?: { mode?: string };
+  welcome?: { sent: number; delivered: number; clicked: number; bounced: number; complained: number; createdTrip7d: number };
+};
+
+const fmt = (ms: number | null) =>
+  ms ? new Date(ms).toLocaleString("he-IL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "-";
+
+const LANG: Record<string, string> = { he: "עברית", en: "English", es: "Español" };
+const STATUS_COLOR: Record<string, string> = { sent: "#4ade80", failed: "#ff6b6b", unknown: "#fbbf24", skipped: "rgba(255,255,255,0.45)", held_out: "#fbbf24", reserved: "#fbbf24" };
+
+function Stat({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div style={{ flex: "1 1 130px", background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(100,223,223,0.18)", borderRadius: 14, padding: "14px 16px" }}>
+      <div style={{ fontSize: 26, fontWeight: 900, color: TEAL }}>{value}</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{label}</div>
+    </div>
+  );
+}
+
+const th: React.CSSProperties = { textAlign: "left", padding: "12px 16px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap" };
+const td: React.CSSProperties = { padding: "13px 16px", fontSize: 13, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" };
 
 export default function AdminEmailPage() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [report, setReport] = useState<Report | null>(null);
-  const [msg, setMsg] = useState("");
+  const [showTests, setShowTests] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
@@ -37,7 +56,7 @@ export default function AdminEmailPage() {
         headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
         body: body ? JSON.stringify(body) : undefined,
       });
-      return { status: res.status, json: await res.json().catch(() => null) };
+      return await res.json().catch(() => null);
     } finally {
       setBusy(false);
     }
@@ -45,77 +64,106 @@ export default function AdminEmailPage() {
 
   const load = async () => {
     const r = await call("GET");
-    if (r) setReport(r.json as Report);
+    if (r) setReport(r as Report);
   };
   useEffect(() => {
     if (user?.email === ADMIN_EMAIL) void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const sendTest = async (lang: "he" | "en" | "es") => {
-    setMsg("");
-    const r = await call("POST", { action: "test", lang });
-    setMsg(r ? `${r.status}: ${JSON.stringify(r.json)}` : "not signed in");
-  };
-
-  const setMode = async (mode: "off" | "allowlist" | "all") => {
-    if (mode === "all" && !window.confirm("Enable the welcome e-mail for ALL new registrations from now on?")) return;
-    const r = await call("POST", { action: "config", mode, allowlist: user?.email ? [user.email] : [], eligibleSince: "now", controlPct: 0 });
-    setMsg(r ? `${r.status}: ${JSON.stringify(r.json)}` : "not signed in");
+  // Kill switch only: turning it ON is done deliberately by the owner.
+  const turnOff = async () => {
+    if (!window.confirm("Stop sending the welcome e-mail to new users?")) return;
+    await call("POST", { action: "config", mode: "off", allowlist: [], eligibleSince: "now", controlPct: 0 });
     await load();
   };
 
-  if (user === undefined) return <div style={{ minHeight: "100vh", background: "#0d2137", padding: 24, color: "#fff" }}>...</div>;
+  const wrap: React.CSSProperties = { minHeight: "100vh", background: "#0d2137", color: "#fff", fontFamily: "'Rubik',sans-serif", direction: "ltr" };
+  if (user === undefined) return <div style={{ ...wrap, padding: 24 }}>...</div>;
   if (!user || user.email !== ADMIN_EMAIL) {
-    return <div style={{ minHeight: "100vh", background: "#0d2137", padding: 24, color: "#fff", fontFamily: "sans-serif" }}>Sign in to TUlon as the admin account in this browser, then reload this page.</div>;
+    return <div style={{ ...wrap, padding: 24 }}>Sign in to TUlon as the admin account in this browser, then reload this page.</div>;
   }
+
+  const w = report?.welcome;
+  const mode = report?.config?.mode ?? "off";
+  const rows = (report?.recent ?? []).filter((e) => showTests || e.flow === "welcome");
+
   return (
-    <div style={{ minHeight: "100vh", background: "#0d2137" }}>
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: 24, color: "#fff", fontFamily: "'Rubik',sans-serif", direction: "ltr" }}>
-      <h1 style={{ fontSize: 22 }}>Welcome e-mail</h1>
-      <div style={box}>
-        <h2 style={{ fontSize: 16, marginTop: 0 }}>Send a test to {user.email}</h2>
-        <button style={btn} disabled={busy} onClick={() => sendTest("he")}>Hebrew</button>
-        <button style={btn} disabled={busy} onClick={() => sendTest("en")}>English</button>
-        <button style={btn} disabled={busy} onClick={() => sendTest("es")}>Spanish</button>
-      </div>
-      <div style={box}>
-        <h2 style={{ fontSize: 16, marginTop: 0 }}>Who receives it automatically</h2>
-        <p style={{ fontSize: 13, opacity: 0.7 }}>off: nobody. allowlist: only your own address. all: every new Google/Apple registration from now on.</p>
-        <button style={btn} disabled={busy} onClick={() => setMode("off")}>Off</button>
-        <button style={btn} disabled={busy} onClick={() => setMode("allowlist")}>Allowlist (me)</button>
-        <button style={{ ...btn, background: "#ff6b6b" }} disabled={busy} onClick={() => setMode("all")}>All new users</button>
-      </div>
-      {msg && <pre style={{ ...box, whiteSpace: "pre-wrap", fontSize: 12 }}>{msg}</pre>}
-      <div style={box}>
-        <h2 style={{ fontSize: 16, marginTop: 0 }}>Results</h2>
-        <button style={btn} disabled={busy} onClick={load}>Refresh</button>
-        <pre style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{JSON.stringify({ config: report?.config, events: report?.events, welcome: report?.welcome }, null, 2)}</pre>
-      </div>
-      <div style={{ ...box, overflowX: "auto" }}>
-        <h2 style={{ fontSize: 16, marginTop: 0 }}>Recent e-mail events</h2>
-        <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ textAlign: "left", opacity: 0.7 }}>
-              <th>Created</th><th>Flow</th><th>Lang</th><th>Status</th><th>Delivered</th><th>Clicked</th><th>Issue</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(report?.recent ?? []).map((e, i) => (
-              <tr key={i} style={{ borderTop: "0.5px solid rgba(255,255,255,0.1)" }}>
-                <td>{t(e.createdAt)}</td>
-                <td>{e.flow}{e.variant === "control" ? " (control)" : ""}</td>
-                <td>{e.lang}</td>
-                <td>{e.status}{e.skipReason ? ` (${e.skipReason})` : ""}</td>
-                <td>{t(e.deliveredAt)}</td>
-                <td>{e.clickCount ? `${e.clickCount}x, first ${t(e.firstClickAt)}` : "-"}</td>
-                <td>{e.bouncedAt ? "bounced" : e.complainedAt ? "complained" : e.errorName ?? "-"}</td>
+    <div style={wrap}>
+      <main style={{ maxWidth: 1180, margin: "0 auto", padding: "28px 24px 60px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 22 }}>
+          <div>
+            <a href="/admin" style={{ color: TEAL, fontSize: 13, textDecoration: "none" }}>← Admin</a>
+            <h1 style={{ fontSize: 24, fontWeight: 900, margin: "6px 0 0" }}>Emails</h1>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 13, color: mode === "all" ? "#4ade80" : "#fbbf24" }}>
+              Welcome e-mail: {mode === "all" ? "on for new users" : mode === "allowlist" ? "test mode" : "off"}
+            </span>
+            {mode !== "off" && (
+              <button onClick={turnOff} disabled={busy} style={{ background: "transparent", color: "#ff6b6b", border: "0.5px solid #ff6b6b", borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>
+                Turn off
+              </button>
+            )}
+            <button onClick={load} disabled={busy} style={{ background: TEAL, color: "#0d2137", border: 0, borderRadius: 999, padding: "8px 18px", fontWeight: 800, cursor: "pointer" }}>
+              {busy ? "..." : "Refresh"}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
+          <Stat label="Sent" value={w?.sent ?? 0} />
+          <Stat label="Delivered" value={w?.delivered ?? 0} />
+          <Stat label="Clicked" value={w?.clicked ?? 0} />
+          <Stat label="Created a trip (7 days)" value={w?.createdTrip7d ?? 0} />
+          <Stat label="Bounced" value={w?.bounced ?? 0} />
+          <Stat label="Complaints" value={w?.complained ?? 0} />
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <h2 style={{ fontSize: 16, margin: 0 }}>Sent e-mails</h2>
+          <label style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", cursor: "pointer" }}>
+            <input type="checkbox" checked={showTests} onChange={(e) => setShowTests(e.target.checked)} style={{ marginInlineEnd: 6 }} />
+            Include test sends
+          </label>
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(100,223,223,0.18)", borderRadius: 16, overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
+            <thead>
+              <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                <th style={th}>Created</th>
+                <th style={th}>Type</th>
+                <th style={th}>Language</th>
+                <th style={th}>Status</th>
+                <th style={th}>Delivered</th>
+                <th style={th}>Clicked</th>
+                <th style={th}>Issue</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </main>
+            </thead>
+            <tbody>
+              {rows.length === 0 && (
+                <tr><td colSpan={7} style={{ ...td, textAlign: "center", color: "rgba(255,255,255,0.4)", padding: 28 }}>No e-mails yet</td></tr>
+              )}
+              {rows.map((e, i) => (
+                <tr key={i} style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
+                  <td style={td}>{fmt(e.createdAt)}</td>
+                  <td style={td}>{e.flow === "welcome" ? "Welcome" : "Welcome (test)"}{e.variant === "control" ? " · control" : ""}</td>
+                  <td style={td}>{LANG[e.lang] ?? e.lang}</td>
+                  <td style={{ ...td, color: STATUS_COLOR[e.status] ?? "#fff", fontWeight: 700 }}>
+                    {e.status}{e.skipReason ? ` (${e.skipReason})` : ""}
+                  </td>
+                  <td style={td}>{fmt(e.deliveredAt)}</td>
+                  <td style={td}>{e.clickCount ? `${e.clickCount}× · ${fmt(e.firstClickAt)}` : "-"}</td>
+                  <td style={{ ...td, color: e.bouncedAt || e.complainedAt || e.errorName ? "#ff6b6b" : undefined }}>
+                    {e.bouncedAt ? "bounced" : e.complainedAt ? "complaint" : e.errorName ?? "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
     </div>
   );
 }

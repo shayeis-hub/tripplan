@@ -50,8 +50,8 @@ export async function GET(req: NextRequest) {
       if (s.clicked) createdTripAfterClick++;
     }
   }
-  // The 15 most recent e-mail events of any kind (tests included), no addresses.
-  const recentSnap = await db.collection("emailEvents").orderBy("createdAt", "desc").limit(15).get();
+  // The 50 most recent e-mail events of any kind (tests included), no addresses.
+  const recentSnap = await db.collection("emailEvents").orderBy("createdAt", "desc").limit(50).get();
   const recent = recentSnap.docs.map((d) => {
     const e = d.data();
     return {
