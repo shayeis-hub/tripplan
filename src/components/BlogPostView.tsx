@@ -13,9 +13,9 @@ const T = {
   back:     { he: "← חזרה לבלוג", en: "← Back to blog", es: "← Volver al blog" },
   min:      { he: "דק׳ קריאה",    en: "min read",       es: "min de lectura"    },
   cta: {
-    he: "רוצים לתכנן טיול? נסו את טיולון — חינמי לחלוטין",
-    en: "Ready to plan a trip? Try TUlon — completely free",
-    es: "¿Listo para planificar un viaje? Prueba TUlon — completamente gratis",
+    he: "רוצים לתכנן טיול? נסו את טיולון. כרגע השימוש בטיולון אינו כרוך בתשלום",
+    en: "Ready to plan a trip? Try TUlon. It is currently free to use",
+    es: "¿Listo para planificar un viaje? Prueba TUlon. Por ahora, no tiene costo",
   },
   ctaBtn: { he: "פתח את טיולון", en: "Open TUlon", es: "Abrir TUlon" },
 } as const;

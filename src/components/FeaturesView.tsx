@@ -16,24 +16,24 @@ const T = {
     es: "Todo lo que construimos para que te concentres en el viaje — no en la logística",
   },
   free: {
-    he: "חינמי לחלוטין — ללא פרימיום, ללא מגבלות",
-    en: "Completely Free — No Premium, No Limits",
-    es: "Completamente Gratis — Sin Premium, Sin Límites",
+    he: "כרגע השימוש בטיולון אינו כרוך בתשלום",
+    en: "Currently Free to Use",
+    es: "Por Ahora, Gratis",
   },
   ctaTitle: { he: "מוכן לנסות?", en: "Ready to Try?", es: "¿Listo para Probar?" },
   ctaBtn: { he: "פתח את טיולון — בחינם", en: "Open TUlon — Free", es: "Abrir TUlon — Gratis" },
 
   feat1Title: { he: "ניהול הוצאות מתקדם", en: "Advanced Expense Tracking", es: "Seguimiento de Gastos Avanzado" },
   feat1Body: {
-    he: "רשמו כל הוצאה בכל מטבע — האפליקציה ממירה למטבע ברירת המחדל שלכם אוטומטית לפי שער חי. ראו סיכום לפי קטגוריות, לפי ימים, ולפי משתתפים.",
-    en: "Log every expense in any currency — the app converts to your default currency automatically at live exchange rates. View summaries by category, by day, and by participant.",
-    es: "Registra cada gasto en cualquier moneda — la app convierte a tu moneda predeterminada automáticamente al tipo de cambio en vivo. Ve resúmenes por categoría, por día y por participante.",
+    he: "רשמו כל הוצאה בכל מטבע — האפליקציה ממירה למטבע ברירת המחדל שלכם אוטומטית לפי שערי המרה שהאפליקציה מביאה מהרשת. ראו סיכום לפי קטגוריות, לפי ימים, ולפי משתתפים.",
+    en: "Log every expense in any currency — the app converts to your default currency automatically using exchange rates the app fetches from the web. View summaries by category, by day, and by participant.",
+    es: "Registra cada gasto en cualquier moneda — la app convierte a tu moneda predeterminada automáticamente con tipos de cambio que la app obtiene de internet. Ve resúmenes por categoría, por día y por participante.",
   },
   feat2Title: { he: "התחשבנות קבוצתית אוטומטית", en: "Automatic Group Settlement", es: "Liquidación de Grupo Automática" },
   feat2Body: {
-    he: "בסוף הטיול, לחצו 'התחשבן' — האפליקציה מחשבת מי חייב כמה למי ומציגה את המינימום מספר העברות הדרושות. אין יותר חישובים ידניים.",
-    en: "At the end of the trip, tap 'Settle Up' — the app calculates who owes what to whom and shows the minimum number of transfers needed. No more manual calculations.",
-    es: "Al final del viaje, toca 'Ajustar cuentas' — la app calcula quién debe qué a quién y muestra el número mínimo de transferencias necesarias. No más cálculos manuales.",
+    he: "בסוף הטיול, לחצו 'התחשבן' — האפליקציה מחשבת מי חייב כמה למי ומציגה מי צריך להעביר למי וכמה. אין יותר חישובים ידניים.",
+    en: "At the end of the trip, tap 'Settle Up' — the app calculates who owes what to whom and shows who needs to pay whom, and how much. No more manual calculations.",
+    es: "Al final del viaje, toca 'Ajustar cuentas' — la app calcula quién debe qué a quién y muestra quién debe pagar a quién y cuánto. No más cálculos manuales.",
   },
   feat3Title: { he: "יומן ומסלול יומי", en: "Daily Calendar & Itinerary", es: "Calendario Diario e Itinerario" },
   feat3Body: {
@@ -67,9 +67,9 @@ const T = {
   },
   feat8Title: { he: "PWA — ללא הורדה", en: "PWA — No Download Needed", es: "PWA — Sin Descarga" },
   feat8Body: {
-    he: "טיולון היא אפליקציית PWA — עובדת ישירות בדפדפן, גם ללא חיבור לאינטרנט. ניתן להוסיף לסמל הבית בלחיצה אחת.",
-    en: "TUlon is a PWA — works directly in the browser, even offline. Add to home screen with one tap.",
-    es: "TUlon es una PWA — funciona directamente en el navegador, incluso sin conexión. Añade a la pantalla de inicio con un toque.",
+    he: "טיולון היא אפליקציית PWA — עובדת ישירות בדפדפן, בלי צורך בהורדה. ניתן להוסיף לסמל הבית בלחיצה אחת.",
+    en: "TUlon is a PWA — works directly in the browser, no download needed. Add to home screen with one tap.",
+    es: "TUlon es una PWA — funciona directamente en el navegador, sin necesidad de descargar. Añade a la pantalla de inicio con un toque.",
   },
 } as const;
 

@@ -46,14 +46,14 @@ const T = {
   valuesTitle: { he: "הערכים שלנו", en: "Our Values", es: "Nuestros Valores" },
   val1: { he: "פשטות — תיכנון טיולים לא צריך להיות מסובך", en: "Simplicity — trip planning shouldn't be complicated", es: "Simplicidad — planificar viajes no debería ser complicado" },
   val2: { he: "שקיפות — כל ההוצאות גלויות לכולם", en: "Transparency — all expenses visible to everyone", es: "Transparencia — todos los gastos visibles para todos" },
-  val3: { he: "חינמיות — ללא תשלום, ללא פרימיום, ללא הגבלות", en: "Free forever — no payment, no premium, no limits", es: "Gratis para siempre — sin pago, sin premium, sin límites" },
+  val3: { he: "חינמיות — כרגע השימוש בטיולון אינו כרוך בתשלום", en: "Free to use — TUlon is currently free to use", es: "Gratis — por ahora, usar TUlon no tiene costo" },
   val4: { he: "פרטיות — הנתונים שלכם שייכים רק לכם", en: "Privacy — your data belongs only to you", es: "Privacidad — tus datos pertenecen solo a ti" },
 
   techTitle: { he: "הטכנולוגיה", en: "The Technology", es: "La Tecnología" },
   techBody: {
-    he: "טיולון בנויה כ-Progressive Web App (PWA) — אפליקציה שעובדת ישירות בדפדפן, גם ללא חיבור לאינטרנט, בכל מכשיר. אנחנו משתמשים ב-Firebase לסנכרון נתונים בזמן אמת בין כל חברי הטיול.",
-    en: "TUlon is built as a Progressive Web App (PWA) — an app that works directly in the browser, even offline, on any device. We use Firebase for real-time data synchronization between all trip members.",
-    es: "TUlon está construida como Progressive Web App (PWA) — una app que funciona directamente en el navegador, incluso sin conexión, en cualquier dispositivo. Usamos Firebase para la sincronización de datos en tiempo real entre todos los miembros del viaje.",
+    he: "טיולון בנויה כ-Progressive Web App (PWA) — אפליקציה שעובדת ישירות בדפדפן, בכל מכשיר. אנחנו משתמשים ב-Firebase לסנכרון נתונים בזמן אמת בין כל חברי הטיול.",
+    en: "TUlon is built as a Progressive Web App (PWA) — an app that works directly in the browser, on any device. We use Firebase for real-time data synchronization between all trip members.",
+    es: "TUlon está construida como Progressive Web App (PWA) — una app que funciona directamente en el navegador, en cualquier dispositivo. Usamos Firebase para la sincronización de datos en tiempo real entre todos los miembros del viaje.",
   },
 
   contactTitle: { he: "צור קשר", en: "Contact Us", es: "Contáctanos" },

@@ -8,16 +8,15 @@ export const dynamic = "force-dynamic";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const BRAND_CONTEXT = `Tulon (טיולון, www.tulon.app) is a free app for planning group trips together, in Hebrew (primary audience: Israeli travelers), with English and Spanish support. It is completely free, no ads, no premium tier.
+const BRAND_CONTEXT = `Tulon (טיולון, www.tulon.app) is a free app for planning group trips together, in Hebrew (primary audience: Israeli travelers), with English and Spanish support. It is currently free to use.
 
 Standout features to draw content ideas from:
 - AI receipt scan: photograph a receipt, it auto-fills amount/currency/date/category
-- Automatic group settlement: calculates the minimum number of transactions to settle up between friends
-- Multi-currency auto-conversion with live rates
+- Automatic group settlement: calculates who owes whom, and how much, to settle up between friends
+- Multi-currency auto-conversion using exchange rates fetched from the web
 - Kosher restaurant filter in the Discover tab
 - Optimal walking route planner between the day's places
 - Daily weather forecast per trip day
-- Full offline support
 - Real-time sync between everyone in the group (Firebase-backed)
 - 7 blog articles at tulon.app/blog with travel planning tips
 

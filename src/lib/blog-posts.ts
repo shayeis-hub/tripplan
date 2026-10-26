@@ -57,7 +57,7 @@ Splitwise היא שם דבר בעולם חלוקת ההוצאות המשותפו
 מי שלא מנהל הוצאות משותפות בטיול — למשל מטייל יחיד, או קבוצה שכל אחד משלם על עצמו בנפרד.
 
 **האם טיולון עולה כסף?**
-לא. טיולון חינמית לחלוטין.`,
+לא. כרגע השימוש בטיולון אינו כרוך בתשלום.`,
       en: `Anyone who's searched "Wanderlog vs Splitwise" or "Splitwise vs TUlon" has probably noticed something confusing: these apps aren't really competing with each other. Each one does a different job.
 
 **Wanderlog — Map-Based Itinerary Planning**
@@ -88,7 +88,7 @@ Anyone who already has a separate planning tool (or doesn't need itinerary plann
 Anyone not managing shared trip expenses — a solo traveler, for instance, or a group where everyone pays for themselves separately.
 
 **Does TUlon cost anything?**
-No. TUlon is completely free.`,
+No. TUlon is currently free to use.`,
       es: `Cualquiera que haya buscado "Wanderlog vs Splitwise" o "Splitwise vs TUlon" probablemente notó algo confuso: estas apps en realidad no compiten entre sí. Cada una hace un trabajo distinto.
 
 **Wanderlog — Planificación de Itinerario con Mapa**
@@ -119,7 +119,7 @@ Quien ya tenga otra herramienta de planificación (o no necesite planificar itin
 Quien no gestione gastos compartidos del viaje — un viajero solo, por ejemplo, o un grupo donde cada quien paga por su cuenta.
 
 **¿TUlon cuesta algo?**
-No. TUlon es completamente gratis.`,
+No. Por ahora, usar TUlon no tiene costo.`,
     },
   },
   {
@@ -142,7 +142,7 @@ No. TUlon es completamente gratis.`,
       he: `Splitwise היא הבחירה הכי מוכרת לחלוקת הוצאות משותפות, וזה מוצדק — היא פשוטה ומדויקת. אבל היא נבנתה לכל סוג של הוצאה משותפת (שותפים לדירה, חברים, משפחה), לא ספציפית לטיולים. אם אתם מחפשים חלופה שמכוונת יותר לחוויית הטיול עצמו, הנה האפשרויות.
 
 **1. טיולון — כשרוצים גם מסלול**
-ההבדל המרכזי: טיולון לא רק מחלקת הוצאות (עם חישוב מספר ההעברות המינימלי, בדיוק כמו Splitwise) — היא גם בונה את מסלול הטיול היומי, עם תחזית מזג אוויר, שיתוף בזמן אמת ומפה משותפת. אם אתם ממילא מתכננים טיול, זה חוסך אפליקציה שלמה. חינמית לגמרי.
+ההבדל המרכזי: טיולון לא רק מחלקת הוצאות (כולל חישוב של מי צריך להעביר למי וכמה) — היא גם בונה את מסלול הטיול היומי, עם תחזית מזג אוויר, שיתוף בזמן אמת ומפה משותפת. אם אתם ממילא מתכננים טיול, זה חוסך אפליקציה שלמה. חינמית לגמרי.
 
 **2. Tricount — פשוטה וממוקדת אירופה**
 אפליקציה אירופית פופולרית לחלוקת הוצאות קבוצתיות, עם תמיכה חזקה במספר מטבעות. דומה מאוד ל-Splitwise בתפיסה — פשטות ומיקוד בחישוב בלבד, בלי כלי תכנון טיול.
@@ -173,7 +173,7 @@ Splitwise עושה רק חלוקת הוצאות. טיולון עושה חלוק�
       en: `Splitwise is the best-known choice for splitting shared expenses, and for good reason — it's simple and accurate. But it was built for any kind of shared cost (roommates, friends, family), not specifically for travel. If you're looking for an alternative more geared toward the trip itself, here are the options.
 
 **1. TUlon — When You Also Want an Itinerary**
-The key difference: TUlon doesn't just split expenses (with the same minimum-transfers calculation Splitwise uses) — it also builds your day-by-day trip itinerary, with a weather forecast, real-time sharing, and a shared map. If you're planning a trip anyway, this saves you a whole separate app. Completely free.
+The key difference: TUlon doesn't just split expenses (including a calculation of who should pay whom, and how much) — it also builds your day-by-day trip itinerary, with a weather forecast, real-time sharing, and a shared map. If you're planning a trip anyway, this saves you a whole separate app. TUlon is currently free to use.
 
 **2. Tricount — Simple, Europe-Focused**
 A popular European app for splitting group expenses, with strong multi-currency support. Very similar to Splitwise in approach — simplicity and pure expense-calculation focus, with no trip-planning tools.
@@ -197,14 +197,14 @@ Splitwise only splits expenses. TUlon splits expenses and builds a full day-by-d
 Yes — TUlon, Tricount, and Settle Up are all free for basic use. TUlon is the only one of the three that also adds itinerary planning.
 
 **Do Tricount or Settle Up support multiple currencies?**
-Both are known for multi-currency support, similar to Splitwise. TUlon also converts automatically at a live exchange rate.
+Both are known for multi-currency support, similar to Splitwise. TUlon also converts automatically using exchange rates the app fetches from the web.
 
 **What's best for a large group?**
 Every app on this list supports larger groups. The real difference is whether you also want itinerary planning (TUlon) or just expense splitting (the rest).`,
       es: `Splitwise es la opción más conocida para dividir gastos compartidos, y con razón — es simple y precisa. Pero fue creada para cualquier tipo de gasto compartido (compañeros de piso, amigos, familia), no específicamente para viajes. Si buscas una alternativa más orientada al viaje en sí, aquí están las opciones.
 
 **1. TUlon — Cuando También Quieres un Itinerario**
-La diferencia clave: TUlon no solo divide gastos (con el mismo cálculo de transferencias mínimas que usa Splitwise) — también arma el itinerario día a día de tu viaje, con pronóstico del tiempo, compartición en tiempo real y un mapa compartido. Si de todos modos estás planificando un viaje, esto te ahorra una app completa. Totalmente gratis.
+La diferencia clave: TUlon no solo divide gastos (incluido el cálculo de quién debe pagar a quién y cuánto) — también arma el itinerario día a día de tu viaje, con pronóstico del tiempo, compartición en tiempo real y un mapa compartido. Si de todos modos estás planificando un viaje, esto te ahorra una app completa. TUlon no tiene costo por ahora.
 
 **2. Tricount — Simple, Enfocada en Europa**
 Una app europea popular para dividir gastos grupales, con buen soporte multi-moneda. Muy similar a Splitwise en su enfoque — simplicidad y foco puro en el cálculo de gastos, sin herramientas de planificación de viaje.
@@ -228,7 +228,7 @@ Splitwise solo divide gastos. TUlon divide gastos y arma un itinerario de viaje 
 Sí — TUlon, Tricount y Settle Up son gratis para uso básico. TUlon es la única de las tres que también suma planificación de itinerario.
 
 **¿Tricount o Settle Up admiten múltiples monedas?**
-Ambas son conocidas por su soporte multi-moneda, similar a Splitwise. TUlon también convierte automáticamente al tipo de cambio en vivo.
+Ambas son conocidas por su soporte multi-moneda, similar a Splitwise. TUlon también convierte automáticamente con tipos de cambio que la app obtiene de internet.
 
 **¿Qué es mejor para un grupo grande?**
 Todas las apps de esta lista admiten grupos grandes. La diferencia real es si también quieres planificación de itinerario (TUlon) o solo división de gastos (el resto).`,
@@ -269,7 +269,7 @@ Todas las apps de esta lista admiten grupos grandes. La diferencia real es si ta
 ברגע שמשלמים — לא "מוסיפים לרשימה לזכור לרשום באקסל בערב" — פותחים את הטלפון ורושמים. זה ההבדל בין לתעד הכל לבין לגלות בסוף הטיול שחצי מההוצאות נעלמו.
 
 **3. חישוב אוטומטי בסוף**
-לא עוד "רגע, בואו נעשה חשבון" בשדה התעופה. מי שילם, מי חייב וכמה — מחושב אוטומטית, במספר המינימלי של העברות.
+לא עוד "רגע, בואו נעשה חשבון" בשדה התעופה. מי שילם, מי חייב וכמה — מחושב אוטומטית.
 
 **איך טיולון עושה את זה**
 טיולון בנויה בדיוק סביב שלוש הבעיות האלה: מסלול משותף שכל חברי הקבוצה רואים ועורכים בזמן אמת, רישום הוצאה מהטלפון תוך שניות (כולל צילום קבלה שהאפליקציה קוראת לבד), והתחשבנות אוטומטית בסוף הטיול. בלי טאבים, בלי גרסאות סותרות, בלי "מי עדכן את זה לאחרונה" — וחינמי לגמרי. פירוט מלא ב[עמוד תכנון הטיול הקבוצתי](/group-trip-planner) שלנו. וברגע שהטיול כבר יצא לדרך, יש לנו גם מדריך ל[ניהול הוצאות בזמן אמת](/blog/manage-expenses-during-group-trip) לאורך הטיול עצמו.
@@ -284,7 +284,7 @@ Todas las apps de esta lista admiten grupos grandes. La diferencia real es si ta
 כרגע לא, אבל התחלת טיול חדש בטיולון לוקחת פחות מדקה — קל יותר להתחיל טרי מאשר לייבא גיליון מבולגן.
 
 **האם זה עובד גם לקבוצה גדולה?**
-כן, אין הגבלה על מספר המשתתפים בטיול.`,
+כן. אפשר להוסיף לטיול את כל חברי הקבוצה, והם מצטרפים בקישור הזמנה.`,
       en: `A shared spreadsheet feels like the obvious solution for a group trip: everyone already knows how to use it, it's free, and you can add any column you want. The problem starts once the trip actually gets underway.
 
 **Why Spreadsheets Actually Break Down**
@@ -303,10 +303,10 @@ Instead of a separate tab per day, a live itinerary everyone sees at the same mo
 The moment you pay, you don't "add it to the list to remember to enter into the spreadsheet tonight" — you open your phone and log it. That's the difference between capturing everything and discovering at the end of the trip that half the expenses vanished.
 
 **3. Automatic Calculation at the End**
-No more "hold on, let's do the math" at the airport. Who paid, who owes, and how much — calculated automatically, in the minimum number of transfers.
+No more "hold on, let's do the math" at the airport. Who paid, who owes, and how much — calculated automatically.
 
 **How TUlon Does This**
-TUlon is built around exactly these three problems: a shared itinerary the whole group sees and edits in real time, expense logging from a phone in seconds (including a photographed receipt the app reads on its own), and automatic settlement at the end of the trip. No tabs, no conflicting versions, no "who last updated this" — and completely free. Full details on our [group trip planner page](/group-trip-planner). And once the trip is actually underway, see our guide to [managing expenses in real time](/blog/manage-expenses-during-group-trip) throughout the trip itself.
+TUlon is built around exactly these three problems: a shared itinerary the whole group sees and edits in real time, expense logging from a phone in seconds (including a photographed receipt the app reads on its own), and automatic settlement at the end of the trip. No tabs, no conflicting versions, no "who last updated this" — and currently free to use. Full details on our [group trip planner page](/group-trip-planner). And once the trip is actually underway, see our guide to [managing expenses in real time](/blog/manage-expenses-during-group-trip) throughout the trip itself.
 
 **Why isn't a spreadsheet enough for a group trip?**
 Because it has no real real-time sync, no easy way to log an expense from a phone the moment it happens, and no automatic calculation of who owes whom. All of that requires manual work that's easy to get wrong.
@@ -318,7 +318,7 @@ A dedicated app that combines a shared itinerary and expense management in one p
 Not currently, but starting a new trip in TUlon takes under a minute — easier than importing a messy spreadsheet.
 
 **Does this work for a large group too?**
-Yes, there's no limit on the number of people in a trip.`,
+Yes. You can add everyone in your group to a trip, and they join with an invite link.`,
       es: `Una planilla compartida parece la solución obvia para un viaje en grupo: todos ya saben usarla, es gratis, y puedes agregar cualquier columna que quieras. El problema empieza cuando el viaje realmente arranca.
 
 **Por Qué las Planillas Fallan en la Práctica**
@@ -337,10 +337,10 @@ En lugar de una pestaña por día, un itinerario en vivo que todos ven en el mis
 En el momento en que pagas, no "lo agregas a la lista para recordar anotarlo en la planilla a la noche" — abres el celular y lo registras. Esa es la diferencia entre capturar todo y descubrir al final del viaje que la mitad de los gastos desaparecieron.
 
 **3. Cálculo Automático al Final**
-Nada de "esperen, hagamos la cuenta" en el aeropuerto. Quién pagó, quién debe y cuánto — calculado automáticamente, con el número mínimo de transferencias.
+Nada de "esperen, hagamos la cuenta" en el aeropuerto. Quién pagó, quién debe y cuánto — calculado automáticamente.
 
 **Cómo Lo Hace TUlon**
-TUlon está construida exactamente alrededor de estos tres problemas: un itinerario compartido que todo el grupo ve y edita en tiempo real, registro de gastos desde el celular en segundos (incluida una foto de un recibo que la app lee sola), y liquidación automática al final del viaje. Sin pestañas, sin versiones en conflicto, sin "quién actualizó esto por última vez" — y totalmente gratis. Todos los detalles en nuestra [página de planificador de viajes en grupo](/group-trip-planner). Y una vez que el viaje ya esté en marcha, mira nuestra guía para [gestionar los gastos en tiempo real](/blog/manage-expenses-during-group-trip) durante el viaje mismo.
+TUlon está construida exactamente alrededor de estos tres problemas: un itinerario compartido que todo el grupo ve y edita en tiempo real, registro de gastos desde el celular en segundos (incluida una foto de un recibo que la app lee sola), y liquidación automática al final del viaje. Sin pestañas, sin versiones en conflicto, sin "quién actualizó esto por última vez" — y por ahora sin costo. Todos los detalles en nuestra [página de planificador de viajes en grupo](/group-trip-planner). Y una vez que el viaje ya esté en marcha, mira nuestra guía para [gestionar los gastos en tiempo real](/blog/manage-expenses-during-group-trip) durante el viaje mismo.
 
 **¿Por qué no alcanza una planilla para un viaje en grupo?**
 Porque no tiene sincronización real en tiempo real, no hay forma fácil de registrar un gasto desde el celular en el momento en que ocurre, y no hay cálculo automático de quién le debe a quién. Todo eso requiere trabajo manual fácil de hacer mal.
@@ -381,7 +381,7 @@ Sí, no hay límite en la cantidad de personas en un viaje.`,
 ריכוז יומי נשמע מסודר, אבל בפועל הוא אומר לזכור עשר הוצאות מהיום מהזיכרון בערב, עייפים, אחרי יום שלם. עדיף לתעד תוך כדי.
 
 **3. תנו לאפליקציה להמיר מטבע, לא לכם**
-בטיול עם כמה מטבעות (למשל אירו למלונות, באט תאילנדי לאוכל), לנסות לחשב "כמה זה בשקלים" בראש בכל פעם זה מתכון לטעויות. אפליקציה שממירה אוטומטית לפי שער חי חוסכת את זה לגמרי.
+בטיול עם כמה מטבעות (למשל אירו למלונות, באט תאילנדי לאוכל), לנסות לחשב "כמה זה בשקלים" בראש בכל פעם זה מתכון לטעויות. אפליקציה שממירה אוטומטית לפי שערי המרה שהאפליקציה מביאה מהרשת חוסכת את זה לגמרי.
 
 **4. תעדו מי בפועל שילם, לא מי "היה אמור"**
 אם התכנון היה שכל אחד ישלם על עצמו אבל בפועל מישהו שילם על כולם במסעדה — תעדו את מה שקרה באמת, לא את התוכנית המקורית. זה בדיוק המקום שבו זיכרון בסוף הטיול נכשל.
@@ -390,7 +390,7 @@ Sí, no hay límite en la cantidad de personas en un viaje.`,
 לדעת שחרגתם מהתקציב ביום השלישי מתוך עשרה נותן זמן לתקן. לגלות את זה ביום העשירי — לא.
 
 **איך טיולון תומכת בזה**
-טיולון בנויה סביב רישום מיידי — כולל צילום קבלה שהאפליקציה קוראת לבד, המרת מטבע אוטומטית לפי שער חי, ותצוגת תקציב חיה שמתעדכנת עם כל הוצאה. ההתחשבנות בסוף נהיית קלה כי המידע כבר שם, מדויק, מהרגע הראשון. עוד על ההרגלים הנכונים עוד לפני שיוצאים לדרך — ב[מדריך לתכנון טיול קבוצתי בלי אקסל](/blog/plan-group-trip-without-spreadsheets). ועל מה קורה אחרי שחוזרים — ב[מדריך המלא להתחשבנות בטיול קבוצתי](/blog/group-settlement-guide). פירוט מלא של התכונות ב[עמוד תכנון הטיול הקבוצתי](/group-trip-planner) שלנו.
+טיולון בנויה סביב רישום מיידי — כולל צילום קבלה שהאפליקציה קוראת לבד, המרת מטבע אוטומטית לפי שערי המרה שהאפליקציה מביאה מהרשת, ותצוגת תקציב חיה שמתעדכנת עם כל הוצאה. ההתחשבנות בסוף נהיית קלה כי המידע כבר שם, מדויק, מהרגע הראשון. עוד על ההרגלים הנכונים עוד לפני שיוצאים לדרך — ב[מדריך לתכנון טיול קבוצתי בלי אקסל](/blog/plan-group-trip-without-spreadsheets). ועל מה קורה אחרי שחוזרים — ב[מדריך המלא להתחשבנות בטיול קבוצתי](/blog/group-settlement-guide). פירוט מלא של התכונות ב[עמוד תכנון הטיול הקבוצתי](/group-trip-planner) שלנו.
 
 **מתי הכי טוב לרשום הוצאה?**
 מיד ברגע התשלום. זה ההרגל היחיד שבאמת מונע הוצאות נשכחות.
@@ -412,7 +412,7 @@ Sí, no hay límite en la cantidad de personas en un viaje.`,
 Doing it once a day sounds tidy, but in practice it means recalling ten expenses from memory in the evening, tired, after a full day. Logging as you go beats reconstructing later.
 
 **3. Let the App Convert Currency, Not You**
-On a trip with several currencies (euros for hotels, Thai baht for food, say), trying to calculate "how much is that in my currency" in your head every time is a recipe for mistakes. An app that converts automatically at a live rate removes that entirely.
+On a trip with several currencies (euros for hotels, Thai baht for food, say), trying to calculate "how much is that in my currency" in your head every time is a recipe for mistakes. An app that converts automatically using exchange rates the app fetches from the web removes that entirely.
 
 **4. Record Who Actually Paid, Not Who Was "Supposed To"**
 If the plan was everyone pays for themselves but in practice someone covered the whole table at dinner, log what actually happened, not the original plan. This is exactly where memory fails by the end of the trip.
@@ -421,13 +421,13 @@ If the plan was everyone pays for themselves but in practice someone covered the
 Knowing you're over budget on day three of ten leaves time to correct course. Finding out on day ten doesn't.
 
 **How TUlon Supports This**
-TUlon is built around instant logging — including a photographed receipt the app reads on its own, automatic currency conversion at a live rate, and a live budget view that updates with every expense. Settlement at the end becomes easy because the information is already there, accurate, from the first moment. For the right habits before you even leave, see our guide to [planning a group trip without spreadsheets](/blog/plan-group-trip-without-spreadsheets). For what happens after you're back, see our [complete guide to settling up after a group trip](/blog/group-settlement-guide). Full feature details on our [group trip planner page](/group-trip-planner).
+TUlon is built around instant logging — including a photographed receipt the app reads on its own, automatic currency conversion using exchange rates the app fetches from the web, and a live budget view that updates with every expense. Settlement at the end becomes easy because the information is already there, accurate, from the first moment. For the right habits before you even leave, see our guide to [planning a group trip without spreadsheets](/blog/plan-group-trip-without-spreadsheets). For what happens after you're back, see our [complete guide to settling up after a group trip](/blog/group-settlement-guide). Full feature details on our [group trip planner page](/group-trip-planner).
 
 **When's the best time to log an expense?**
 Immediately, the moment you pay. It's the one habit that actually prevents forgotten expenses.
 
 **How do you handle multiple currencies on one trip?**
-An app that converts automatically at a live exchange rate is better than calculating it manually every time.
+An app that converts automatically using exchange rates the app fetches from the web is better than calculating it manually every time.
 
 **Does the group need one designated "expense person"?**
 Not necessarily — if everyone logs what they personally paid in the moment, there's no need for one person to collect everything after the fact.
@@ -443,7 +443,7 @@ Both help, but tracking by category (food, transport, activities) helps you spot
 Hacerlo una vez al día suena ordenado, pero en la práctica significa recordar diez gastos de memoria en la noche, cansado, después de un día entero. Registrar sobre la marcha es mejor que reconstruir después.
 
 **3. Deja que la App Convierta la Moneda, No Tú**
-En un viaje con varias monedas (euros para hoteles, baht tailandés para comida, digamos), intentar calcular "cuánto es eso en mi moneda" mentalmente cada vez es una receta para errores. Una app que convierte automáticamente al tipo de cambio en vivo elimina eso por completo.
+En un viaje con varias monedas (euros para hoteles, baht tailandés para comida, digamos), intentar calcular "cuánto es eso en mi moneda" mentalmente cada vez es una receta para errores. Una app que convierte automáticamente con tipos de cambio que la app obtiene de internet elimina eso por completo.
 
 **4. Registra Quién Pagó Realmente, No Quién "Debía" Pagar**
 Si el plan era que cada uno pagara lo suyo pero en la práctica alguien cubrió toda la mesa en la cena, registra lo que realmente pasó, no el plan original. Ahí es exactamente donde falla la memoria al final del viaje.
@@ -452,13 +452,13 @@ Si el plan era que cada uno pagara lo suyo pero en la práctica alguien cubrió 
 Saber que te pasaste del presupuesto el día tres de diez te da tiempo para corregir. Descubrirlo el día diez, no.
 
 **Cómo Te Ayuda TUlon con Esto**
-TUlon está construida alrededor del registro instantáneo — incluida una foto de un recibo que la app lee sola, conversión automática de moneda al tipo de cambio en vivo, y una vista de presupuesto en vivo que se actualiza con cada gasto. La liquidación al final se vuelve fácil porque la información ya está ahí, precisa, desde el primer momento. Para los hábitos correctos incluso antes de salir de viaje, mira nuestra guía para [planificar un viaje en grupo sin hojas de cálculo](/blog/plan-group-trip-without-spreadsheets). Para lo que pasa después de volver, mira nuestra [guía completa para liquidar cuentas tras un viaje en grupo](/blog/group-settlement-guide). Todos los detalles en nuestra [página de planificador de viajes en grupo](/group-trip-planner).
+TUlon está construida alrededor del registro instantáneo — incluida una foto de un recibo que la app lee sola, conversión automática de moneda con tipos de cambio que la app obtiene de internet, y una vista de presupuesto en vivo que se actualiza con cada gasto. La liquidación al final se vuelve fácil porque la información ya está ahí, precisa, desde el primer momento. Para los hábitos correctos incluso antes de salir de viaje, mira nuestra guía para [planificar un viaje en grupo sin hojas de cálculo](/blog/plan-group-trip-without-spreadsheets). Para lo que pasa después de volver, mira nuestra [guía completa para liquidar cuentas tras un viaje en grupo](/blog/group-settlement-guide). Todos los detalles en nuestra [página de planificador de viajes en grupo](/group-trip-planner).
 
 **¿Cuál es el mejor momento para registrar un gasto?**
 Inmediatamente, en el momento en que pagas. Es el único hábito que realmente previene los gastos olvidados.
 
 **¿Cómo se manejan varias monedas en un mismo viaje?**
-Una app que convierte automáticamente al tipo de cambio en vivo es mejor que calcularlo a mano cada vez.
+Una app que convierte automáticamente con tipos de cambio que la app obtiene de internet es mejor que calcularlo a mano cada vez.
 
 **¿El grupo necesita una persona designada para los gastos?**
 No necesariamente — si cada uno registra lo que pagó personalmente en el momento, no hace falta que una sola persona recopile todo después.
@@ -487,12 +487,12 @@ Ambos ayudan, pero seguir por categoría (comida, transporte, actividades) ayuda
       he: `מי שתכנן טיול קבוצתי יודע: השאלה היא לא רק לאן נוסעים, אלא איך שומרים על כולם מתואמים — מה קורה מחר, מי שילם על מה, וכמה כל אחד באמת הוציא. בדקנו חמש אפליקציות שאנשים בפועל משתמשים בהן לתכנון טיול קבוצתי, בלי הגזמות ובלי להתעלם מהחסרונות.
 
 **מה הופך אפליקציה לתכנון טיול לשווה שימוש**
-לפני ההשוואה עצמה, שווה להגדיר מה בודקים. אפליקציה טובה לטיול קבוצתי צריכה לתכנן מסלול יומי אמיתי (לא רק רשימת מקומות), לנהל תקציב והוצאות ולחשב מי חייב למי, לעדכן את כל הקבוצה בזמן אמת, ולעבוד גם בלי חיבור לאינטרנט. רוב האפליקציות עושות חלק מזה. מעטות עושות את הכל.
+לפני ההשוואה עצמה, שווה להגדיר מה בודקים. אפליקציה טובה לטיול קבוצתי צריכה לתכנן מסלול יומי אמיתי (לא רק רשימת מקומות), לנהל תקציב והוצאות ולחשב מי חייב למי, ולעדכן את כל הקבוצה בזמן אמת. רוב האפליקציות עושות חלק מזה. מעטות עושות את הכל.
 
 **1. טיולון — הכי שלמה: גם מסלול, גם הוצאות, בחינם**
-טיולון היא היחידה מבין החמש שעושה גם תכנון מסלול יומי וגם ניהול הוצאות מלא, באותה אפליקציה. בונים לוח זמנים לכל יום — עם תחזית מזג אוויר ומסלול הליכה מומלץ בין המקומות — ומנהלים תקציב שבו כל הוצאה, בכל מטבע, מומרת אוטומטית לפי שער חי. אפשר גם לצלם קבלה והאפליקציה תזהה סכום, מטבע ותאריך לבד.
+טיולון היא היחידה מבין החמש שעושה גם תכנון מסלול יומי וגם ניהול הוצאות מלא, באותה אפליקציה. בונים לוח זמנים לכל יום — עם תחזית מזג אוויר ומסלול הליכה מומלץ בין המקומות — ומנהלים תקציב שבו כל הוצאה, בכל מטבע, מומרת אוטומטית לפי שערי המרה שהאפליקציה מביאה מהרשת. אפשר גם לצלם קבלה והאפליקציה תזהה סכום, מטבע ותאריך לבד.
 
-בסוף הטיול טיולון מחשבת לבד מי חייב למי וכמה, במספר המינימלי של העברות. כל חברי הקבוצה מצטרפים בקישור אחד ורואים את אותו הטיול בזמן אמת, כולל מצב "צפייה בלבד" למי שרק רוצה לעקוב בלי לערוך.
+בסוף הטיול טיולון מחשבת לבד מי חייב למי וכמה. כל חברי הקבוצה מצטרפים בקישור אחד ורואים את אותו הטיול בזמן אמת, כולל מצב "צפייה בלבד" למי שרק רוצה לעקוב בלי לערוך.
 
 - מה חסר: זו אפליקציה צעירה יחסית, בלי מאגר ההמלצות הענק של Wanderlog ובלי חיבור אוטומטי למיילים של הזמנות כמו TripIt.
 - למי מתאימה: לכל קבוצה — משפחה, חברים, נסיעת עבודה — שרוצה גם מסלול וגם הוצאות באותו מקום, בלי לשלם.
@@ -539,19 +539,16 @@ Wanderlog מתמקדת בתכנון מסלול על מפה ובשיתוף פעו
 לחלוקת הוצאות בלבד — כן. אבל היא לא כוללת שום כלי תכנון מסלול, לוח זמנים או שיתוף פעילויות, אז רוב הקבוצות עדיין צריכות כלי נוסף לצד Splitwise.
 
 **כמה עולה טיולון?**
-טיולון חינמית לחלוטין, בלי גרסת פרימיום ובלי פרסומות.
-
-**האם אפשר להשתמש בטיולון בלי חיבור לאינטרנט?**
-כן, האפליקציה עובדת גם במצב לא מקוון, ומסתנכרנת ברגע שיש חיבור.`,
+כרגע השימוש בטיולון אינו כרוך בתשלום.`,
       en: `Anyone who's planned a group trip knows the real challenge isn't picking a destination — it's keeping everyone on the same page: what's happening tomorrow, who paid for what, and how much everyone has actually spent. We compared five apps people actually use for group trip planning — no exaggeration, and no skipping the downsides.
 
 **What Makes a Group Trip App Worth Using**
-Before comparing, it's worth agreeing on the bar. A good group trip app should plan a real day-by-day itinerary (not just a list of places), manage a shared budget and work out who owes whom, keep the whole group updated in real time, and work offline. Most apps do part of this. Few do all of it.
+Before comparing, it's worth agreeing on the bar. A good group trip app should plan a real day-by-day itinerary (not just a list of places), manage a shared budget and work out who owes whom and keep the whole group updated in real time. Most apps do part of this. Few do all of it.
 
 **1. TUlon — The Only One That Does Both: Itinerary and Expenses, Free**
-TUlon is the only one of the five that handles full day-by-day itinerary planning and full expense management in the same app. Build a schedule for each day — with a weather forecast and a suggested walking route between that day's places — and track a budget where every expense, in any currency, converts automatically at a live rate. Photograph a receipt and the app reads the amount, currency, and date on its own.
+TUlon is the only one of the five that handles full day-by-day itinerary planning and full expense management in the same app. Build a schedule for each day — with a weather forecast and a suggested walking route between that day's places — and track a budget where every expense, in any currency, converts automatically using exchange rates the app fetches from the web. Photograph a receipt and the app reads the amount, currency, and date on its own.
 
-At the end of the trip, TUlon works out who owes whom and how much, in the minimum number of transfers. Everyone joins with one link and sees the same trip update in real time, including a "view-only" mode for someone who just wants to follow along.
+At the end of the trip, TUlon works out who owes whom and how much. Everyone joins with one link and sees the same trip update in real time, including a "view-only" mode for someone who just wants to follow along.
 
 - What's missing: it's a younger app, without Wanderlog's huge place-recommendation database or TripIt's automatic email-confirmation import.
 - Best for: any group — family, friends, work trip — that wants itinerary and expenses in the same place, for free.
@@ -598,19 +595,16 @@ Wanderlog focuses on map-based itinerary planning and visual collaboration, with
 For splitting expenses alone, yes. But it has no trip-planning tools at all — no itinerary, no schedule, no activity sharing — so most groups still need a second app alongside it.
 
 **How much does TUlon cost?**
-TUlon is completely free, with no premium tier and no ads.
-
-**Can you use TUlon offline?**
-Yes, the app works offline and syncs automatically once you're back online.`,
+TUlon is currently free to use.`,
       es: `Quien haya planificado un viaje en grupo lo sabe: el verdadero desafío no es elegir el destino, sino mantener a todos coordinados — qué pasa mañana, quién pagó qué y cuánto gastó realmente cada uno. Comparamos cinco apps que la gente realmente usa para planificar viajes en grupo, sin exagerar y sin ocultar los defectos.
 
 **Qué Hace que una App de Viajes en Grupo Valga la Pena**
-Antes de comparar, conviene definir el criterio. Una buena app de viaje en grupo debería planificar un itinerario real día a día (no solo una lista de lugares), gestionar un presupuesto compartido y calcular quién le debe a quién, mantener a todo el grupo actualizado en tiempo real, y funcionar sin conexión. La mayoría de las apps hacen parte de esto. Pocas lo hacen todo.
+Antes de comparar, conviene definir el criterio. Una buena app de viaje en grupo debería planificar un itinerario real día a día (no solo una lista de lugares), gestionar un presupuesto compartido y calcular quién le debe a quién y mantener a todo el grupo actualizado en tiempo real. La mayoría de las apps hacen parte de esto. Pocas lo hacen todo.
 
 **1. TUlon — La Única que Hace Ambas Cosas: Itinerario y Gastos, Gratis**
-TUlon es la única de las cinco que ofrece planificación completa de itinerario día a día y gestión completa de gastos en la misma app. Arma un horario para cada día — con pronóstico del tiempo y una ruta a pie sugerida entre los lugares de ese día — y controla un presupuesto donde cada gasto, en cualquier moneda, se convierte automáticamente al tipo de cambio en vivo. Fotografía un recibo y la app reconoce el monto, la moneda y la fecha por sí sola.
+TUlon es la única de las cinco que ofrece planificación completa de itinerario día a día y gestión completa de gastos en la misma app. Arma un horario para cada día — con pronóstico del tiempo y una ruta a pie sugerida entre los lugares de ese día — y controla un presupuesto donde cada gasto, en cualquier moneda, se convierte automáticamente con tipos de cambio que la app obtiene de internet. Fotografía un recibo y la app reconoce el monto, la moneda y la fecha por sí sola.
 
-Al final del viaje, TUlon calcula sola quién le debe a quién y cuánto, con el número mínimo de transferencias. Todos se unen con un solo enlace y ven el mismo viaje actualizado en tiempo real, incluido un modo "solo lectura" para quien solo quiere seguir el plan sin editarlo.
+Al final del viaje, TUlon calcula sola quién le debe a quién y cuánto. Todos se unen con un solo enlace y ven el mismo viaje actualizado en tiempo real, incluido un modo "solo lectura" para quien solo quiere seguir el plan sin editarlo.
 
 - Lo que falta: es una app más joven, sin la enorme base de recomendaciones de lugares de Wanderlog ni la importación automática de emails de confirmación de TripIt.
 - Ideal para: cualquier grupo — familia, amigos, viaje de trabajo — que quiera itinerario y gastos en el mismo lugar, gratis.
@@ -657,10 +651,7 @@ Wanderlog se enfoca en la planificación de itinerario con mapa y la colaboraci�
 Para dividir gastos solamente, sí. Pero no tiene ninguna herramienta de planificación de viaje — ni itinerario, ni horario, ni compartir actividades — así que la mayoría de los grupos igual necesita una segunda app.
 
 **¿Cuánto cuesta TUlon?**
-TUlon es completamente gratis, sin nivel premium y sin publicidad.
-
-**¿Se puede usar TUlon sin conexión?**
-Sí, la app funciona sin conexión y se sincroniza automáticamente en cuanto vuelve la conexión.`,
+Por ahora, usar TUlon no tiene costo.`,
     },
   },
   {
@@ -702,9 +693,9 @@ Sí, la app funciona sin conexión y se sincroniza automáticamente en cuanto vu
 **איפה התקציב באמת נשבר**
 לא בטיסה ולא במלון — אלה הוצאות שסגרתם מראש וידעתם עליהן. התקציב נשבר בשבוע עצמו: ארוחות, מוניות, כניסות לאתרים, קפה פה ושם. במטבע זר, כשכולם משלמים לסירוגין, קשה מאוד להחזיק את התמונה בראש.
 
-זה בדיוק מה שטיולון פותר. כל הוצאה נרשמת במטבע שבו שילמתם ומומרת אוטומטית לפי שער חי, כך שאתם רואים כל הזמן כמה באמת הוצאתם — לא כמה נשאר בארנק. אפשר לצלם קבלה והאפליקציה תמלא את הסכום, המטבע והתאריך לבד.
+זה בדיוק מה שטיולון פותר. כל הוצאה נרשמת במטבע שבו שילמתם ומומרת אוטומטית לפי שערי המרה שהאפליקציה מביאה מהרשת, כך שאתם רואים כל הזמן כמה באמת הוצאתם — לא כמה נשאר בארנק. אפשר לצלם קבלה והאפליקציה תמלא את הסכום, המטבע והתאריך לבד.
 
-וכשנוסעים כמה משפחות יחד, החלק הכי לא נעים הוא ההתחשבנות בסוף. טיולון עושה אותה לבד: מי שילם על מה, ומה מספר ההעברות המינימלי שיסגור את החשבון. בלי טבלאות אקסל ובלי שיחות מביכות בטרמינל בחזרה.
+וכשנוסעים כמה משפחות יחד, החלק הכי לא נעים הוא ההתחשבנות בסוף. טיולון עושה אותה לבד: מי שילם על מה, ומי צריך להעביר למי וכמה כדי לסגור את החשבון. בלי טבלאות אקסל ובלי שיחות מביכות בטרמינל בחזרה.
 
 **לפני שסוגרים**
 תשוו מחירי מלונות מוקדם ככל האפשר — בחגים ההיצע נגמר לפני שהמחירים מתייצבים.
@@ -736,9 +727,9 @@ Kotor, Budva and the bays. It looks like Croatia did a decade ago, at lower pric
 **Where the budget actually breaks**
 Not on flights and not on hotels — those you booked in advance and knew about. The budget breaks during the week itself: meals, taxis, entrance tickets, coffee here and there. In a foreign currency, with everyone paying in turn, holding that picture in your head is close to impossible.
 
-This is exactly what TUlon solves. Every expense is recorded in the currency you actually paid in and converted automatically at a live rate, so you always see what you have really spent — not what is left in your wallet. Photograph a receipt and the app fills in the amount, currency and date by itself.
+This is exactly what TUlon solves. Every expense is recorded in the currency you actually paid in and converted automatically using exchange rates the app fetches from the web, so you always see what you have really spent — not what is left in your wallet. Photograph a receipt and the app fills in the amount, currency and date by itself.
 
-And when several families travel together, the least pleasant part is settling up at the end. TUlon does it for you: who paid for what, and the minimum number of transfers that closes the account. No spreadsheets, no awkward conversations in the terminal on the way home.
+And when several families travel together, the least pleasant part is settling up at the end. TUlon does it for you: who paid for what, and who needs to pay whom, and how much, to close the account. No spreadsheets, no awkward conversations in the terminal on the way home.
 
 **Before you book**
 Compare hotel prices as early as you can — over the holidays availability runs out before prices settle.
@@ -770,9 +761,9 @@ Kotor, Budva y las bahías. Se parece a la Croacia de hace una década, con prec
 **Dónde se rompe de verdad el presupuesto**
 No en los vuelos ni en el hotel — eso ya lo reservasteis y lo teníais contado. El presupuesto se rompe durante la semana: comidas, taxis, entradas, un café aquí y allá. En moneda extranjera, y pagando cada uno por turnos, mantener esa foto en la cabeza es casi imposible.
 
-Esto es justo lo que resuelve TUlon. Cada gasto se registra en la moneda en que pagasteis y se convierte automáticamente con tipo de cambio en vivo, así siempre veis lo que habéis gastado de verdad — no lo que queda en la cartera. Fotografiad un recibo y la app rellena sola el importe, la moneda y la fecha.
+Esto es justo lo que resuelve TUlon. Cada gasto se registra en la moneda en que pagasteis y se convierte automáticamente con tipos de cambio que la app obtiene de internet, así siempre veis lo que habéis gastado de verdad — no lo que queda en la cartera. Fotografiad un recibo y la app rellena sola el importe, la moneda y la fecha.
 
-Y cuando viajan varias familias juntas, la parte más incómoda es cuadrar cuentas al final. TUlon lo hace por vosotros: quién pagó qué, y el número mínimo de transferencias que salda la cuenta. Sin hojas de cálculo y sin conversaciones incómodas en la terminal de vuelta.
+Y cuando viajan varias familias juntas, la parte más incómoda es cuadrar cuentas al final. TUlon lo hace por vosotros: quién pagó qué, y quién debe pagar a quién, y cuánto, para saldar la cuenta. Sin hojas de cálculo y sin conversaciones incómodas en la terminal de vuelta.
 
 **Antes de reservar**
 Comparad precios de hotel cuanto antes — en fiestas la disponibilidad se agota antes de que los precios se estabilicen.
@@ -1132,8 +1123,8 @@ Vuela a Phuket o Koh Samui. Practica snorkel, descansa en la playa y come marisc
 בשיטה הישנה: ניסיון לזכור מי שילם מה, אקסל מסובך, ויכוחים.
 בשיטה החדשה: כל הוצאה נרשמת בזמן אמת באפליקציה, וההתחשבנות היא אוטומטית.
 
-**עקרון ה"מינימום עסקאות"**
-אפליקציה חכמה לא רק מחשבת מי חייב כמה — היא מחשבת את המינימום מספר ההעברות הדרושות. במקום שכל אחד ישלם לכולם, כל אחד עושה העברה אחת בלבד.
+**התחשבנות ברורה**
+אפליקציה טובה לא רק מחשבת מי חייב כמה — היא גם מציגה מי צריך להעביר למי וכמה, כך שאפשר לסגור את החשבון בלי חישובים ידניים.
 
 **טיפ: רשמו הוצאות בזמן אמת**
 אל תחכו לסוף הטיול. ברגע ששילמתם, פיתחו את האפליקציה ורשמו. זה לוקח 10 שניות ומונע שכחה.
@@ -1146,8 +1137,8 @@ Vuela a Phuket o Koh Samui. Practica snorkel, descansa en la playa y come marisc
 Old method: Trying to remember who paid what, complicated spreadsheets, arguments.
 New method: Every expense logged in real time via app, and settlement is automatic.
 
-**The "minimum transactions" principle**
-A smart app doesn't just calculate who owes what — it calculates the minimum number of transfers needed. Instead of everyone paying everyone, each person makes just one transfer.
+**A clear settlement**
+A good app doesn't just calculate who owes what — it also shows who needs to pay whom, and how much, so you can close the account without manual math.
 
 **Tip: Log expenses in real time**
 Don't wait until the end of the trip. The moment you pay, open the app and log it. Takes 10 seconds and prevents forgetting.
@@ -1160,8 +1151,8 @@ When traveling abroad, expenses can be in different currencies. An app like TUlo
 Método antiguo: Intentar recordar quién pagó qué, hojas de cálculo complicadas, discusiones.
 Método nuevo: Cada gasto registrado en tiempo real en la app, y el ajuste es automático.
 
-**El principio de "transacciones mínimas"**
-Una app inteligente no solo calcula quién debe qué — calcula el número mínimo de transferencias necesarias. En lugar de que todos paguen a todos, cada persona hace solo una transferencia.
+**Una liquidación clara**
+Una buena app no solo calcula quién debe qué: también muestra quién debe pagar a quién y cuánto, para saldar la cuenta sin cálculos manuales.
 
 **Consejo: Registra los gastos en tiempo real**
 No esperes hasta el final del viaje. En el momento en que pagas, abre la app y regístralo. Toma 10 segundos y evita olvidos.
