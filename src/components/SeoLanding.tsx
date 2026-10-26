@@ -79,6 +79,14 @@ const CSS = `
   .seo-he .seo-list li { padding-left: 0; padding-right: 22px; }
   .seo-he .seo-list li::before { left: auto; right: 2px; }
   .seo-he .seo-hero { text-align: center; }
+  .seo-he .seo-table th, .seo-he .seo-table td { text-align: right; }
+  .seo-callout { max-width: 720px; margin: 28px auto 0; padding: 0 24px; }
+  .seo-callout-box { background: linear-gradient(135deg, rgba(100,223,223,0.1), rgba(100,223,223,0.04)); border: 0.5px solid rgba(100,223,223,0.28); border-radius: 18px; padding: 22px 24px; }
+  .seo-callout-box .seo-h2 { font-size: 20px; margin-bottom: 8px; }
+  .seo-callout-box .seo-p { margin-bottom: 16px; }
+  .seo-callout-box .btn-cta { font-size: 15px; padding: 12px 30px; }
+  .seo-num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+  .seo-caption { font-size: 13.5px; font-weight: 700; color: rgba(255,255,255,0.88); margin: 18px 0 2px; }
 `;
 
 function GooglePlayGlyph() {

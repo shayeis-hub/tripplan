@@ -31,6 +31,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/splitwise-alternative-for-travel", priority: 0.8, changeFrequency: "monthly" },
     { path: "/group-travel-expense-tracker",    priority: 0.8, changeFrequency: "monthly" },
     { path: DESTINATIONS_PATH, priority: 0.7, changeFrequency: "monthly" },
+    { path: "/trip-planning-app", priority: 0.8, changeFrequency: "monthly" },
   ];
 
   // Hebrew, English and Spanish copies of the home, features and plan pages. Each
