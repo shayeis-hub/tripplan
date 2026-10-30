@@ -576,12 +576,19 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div style={{textAlign:"center",padding:"8px 24px 28px"}}>
+        <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"center",gap:"16px 24px",padding:"8px 24px 28px"}}>
           <a href="https://alternativeto.net/software/tulon/about/?utm_source=badge&utm_medium=referral" target="_blank" rel="noopener noreferrer">
             <img src="https://alternativeto.net/static/badges/badge-compact-light.svg"
                  alt="TUlon | AlternativeTo"
                  width="171" height="58"
                  style={{width:171,height:58}} />
+          </a>
+          <a href="https://peerpush.com/p/tulon" target="_blank" rel="noopener">
+            <img src="https://peerpush.com/p/tulon/badge.png"
+                 alt="TUlon on PeerPush"
+                 width="230" height="65"
+                 loading="lazy"
+                 style={{width:230,height:"auto"}} />
           </a>
         </div>
 
