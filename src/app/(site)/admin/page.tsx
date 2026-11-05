@@ -206,14 +206,25 @@ export default function AdminPage() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, fontFamily: RF, color: "#fff" }}>
+    <div className="adm-root" style={{ minHeight: "100vh", background: BG, fontFamily: RF, color: "#fff", overflowX: "hidden" }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .adm-head { padding: 16px !important; flex-wrap: wrap; gap: 12px; }
+          .adm-btns { flex-wrap: wrap; }
+          .adm-btns > * { padding: 8px 14px !important; }
+          .adm-wrap { padding: 20px 14px !important; }
+          .adm-kpi4 { grid-template-columns: repeat(2, 1fr) !important; }
+          .adm-row4 { grid-template-columns: 1fr 1fr !important; row-gap: 4px !important; }
+          .adm-split { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg,#091928,#0d2137)", padding: "24px 32px", borderBottom: "0.5px solid rgba(100,223,223,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="adm-head" style={{ background: "linear-gradient(135deg,#091928,#0d2137)", padding: "24px 32px", borderBottom: "0.5px solid rgba(100,223,223,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <div style={{ fontSize: 24, fontWeight: 900 }}>🛡️ טיולון Admin</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Dashboard</div>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div className="adm-btns" style={{ display: "flex", gap: 10 }}>
           <a href="/admin/instagram" style={{ padding: "10px 20px", borderRadius: 10, border: `0.5px solid ${TEAL}40`, background: "rgba(100,223,223,0.08)", color: TEAL, fontWeight: 700, fontSize: 13, textDecoration: "none", display: "flex", alignItems: "center" }}>
             Instagram
           </a>
@@ -227,7 +238,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px" }}>
+      <div className="adm-wrap" style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px" }}>
         {loading && !stats && (
           <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.4)", fontSize: 16 }}>⏳ טוען נתונים...</div>
         )}
@@ -238,7 +249,7 @@ export default function AdminPage() {
           <>
             {/* Users KPIs */}
             <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>👥 משתמשים</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
+            <div className="adm-kpi4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
               <KPI label="סה״כ משתמשים" value={stats.users.total} />
               <KPI label="פעילים השבוע" value={stats.users.activeWeek ?? "—"} color="#64dfdf" sub="נכנסו ב-7 ימים" />
               <KPI label="נרשמו השבוע" value={stats.users.week} color="#4ade80" />
@@ -320,7 +331,7 @@ export default function AdminPage() {
                         onClick={() => setOpenGroup(openGroup === key ? null : key)}
                         onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenGroup(openGroup === key ? null : key); } }}
                         style={{ padding: "10px 0", cursor: "pointer", background: openGroup === key ? "rgba(100,223,223,0.05)" : "transparent" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1.5fr 0.7fr", gap: 8, alignItems: "baseline", fontSize: 12 }}>
+                        <div className="adm-row4" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1.5fr 0.7fr", gap: 8, alignItems: "baseline", fontSize: 12 }}>
                           <div style={{ fontSize: 13, fontWeight: bold ? 700 : 500, color: indent ? "rgba(255,255,255,0.75)" : "#fff" }}>{label}</div>
                           <div style={{ color: "rgba(255,255,255,0.55)" }}><b style={{ color: "#fff", fontSize: 14 }}>{trips}</b> טיולים</div>
                           <div style={{ color: "rgba(255,255,255,0.55)" }}><b style={{ color: "#fff", fontSize: 14 }}>{withContent}</b> עם תוכן משמעותי</div>
@@ -340,7 +351,7 @@ export default function AdminPage() {
                     const g = Object.fromEntries(lc.groups.map(x => [x.key, x]));
                     return (
                       <>
-                        <div style={{ display: "grid", gridTemplateColumns: "minmax(150px,230px) 1fr", gap: 12, marginBottom: 12, alignItems: "stretch" }}>
+                        <div className="adm-split" style={{ display: "grid", gridTemplateColumns: "minmax(150px,230px) 1fr", gap: 12, marginBottom: 12, alignItems: "stretch" }}>
                           <KPI label="טיולים קרובים עם תוכן"
                             value={up.total > 0 ? `${up.withContent} מתוך ${up.total}` : "—"}
                             sub={up.total > 0 ? `${up.pct}%` : "אין טיולים שיוצאים ב-30 הימים הקרובים"}
