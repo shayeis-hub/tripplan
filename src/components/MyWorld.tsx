@@ -155,14 +155,14 @@ export default function MyWorld({ onClose, openYear = false }: { onClose: () => 
   // Yearly summary: only in the window around the year end, and only if there is at least one visit in that year.
   const yearStats = useMemo(() => {
     if (!data) return null;
-    const y = annualYear(new Date());
+    const y = annualYear(new Date(), openYear);
     if (y == null) return null;
     // The summary counts trips from the app too (suggestions), accepted or not, so it matches the yearly e-mail.
     const merged: VisitMap = { ...data.visits };
     for (const t of data.suggestions) merged[`t:${t.cc}:${t.year}`] = { cc: t.cc, year: t.year, source: "trip" };
     const ys = computeYearStats(data.home, merged, y);
     return ys.visits > 0 ? ys : null;
-  }, [data]);
+  }, [data, openYear]);
 
   const addItems = async (items: { cc: string; year: number; city?: string; source?: "manual" | "trip" }[]) => {
     setSaveErr(false);

@@ -62,8 +62,11 @@ export function computeStats(home: string | null | undefined, visits: VisitMap):
 
 // The year whose summary is shown now: from Dec 17 (two weeks before year end) it is the current year, and
 // through January it is still the year that just ended. Otherwise there is none.
-export function annualYear(now: Date = new Date()): number | null {
+// force: the person came from the yearly e-mail (or a test of it), so show the summary whatever the date is
+// (the e-mail goes out on Dec 17 UTC, which is still Dec 16 in the Americas).
+export function annualYear(now: Date = new Date(), force = false): number | null {
   const m = now.getMonth(); // 0 = January
+  if (force) return m === 0 ? now.getFullYear() - 1 : now.getFullYear();
   if (m === 11 && now.getDate() >= 17) return now.getFullYear();
   if (m === 0) return now.getFullYear() - 1;
   return null;
