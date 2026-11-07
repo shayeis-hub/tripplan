@@ -3,6 +3,9 @@
   "target": {
     "namespace": "android_app",
     "package_name": "il.co.tulon.www.twa",
-    "sha256_cert_fingerprints": ["5C:BB:58:AE:D3:56:68:18:50:45:D3:FE:7E:08:2D:20:3F:51:8C:6E:4A:D6:B6:42:51:F6:41:69:EC:1F:33:D3"]
+    "sha256_cert_fingerprints": [
+      "08:12:C0:DD:A4:CC:1E:74:8A:66:85:44:D3:6D:58:05:77:56:19:DF:6C:73:6D:D1:C1:60:78:12:41:53:4D:98",
+      "5C:BB:58:AE:D3:56:68:18:50:45:D3:FE:7E:08:2D:20:3F:51:8C:6E:4A:D6:B6:42:51:F6:41:69:EC:1F:33:D3"
+    ]
   }
 }]
