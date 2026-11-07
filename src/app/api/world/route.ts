@@ -91,21 +91,17 @@ export async function POST(req: Request) {
     if (!items.length) return NextResponse.json({ error: "no_items" }, { status: 400 });
     const snap = await ref.get();
     const existing = (snap.exists ? snap.data()?.visits || {} : {}) as Record<string, Visit>;
-    const have = new Set(Object.values(existing).map((v) => `${v.cc}:${v.year}`));
     let count = Object.keys(existing).length;
     const added: Record<string, Visit> = {};
     for (const raw of items) {
       const it = raw as Record<string, unknown>;
       if (!validCc(it?.cc) || !validYear(it?.year)) continue;
-      const key = `${it.cc}:${it.year}`;
-      if (have.has(key)) continue; // same country in the same year is one entry
       if (count >= MAX_VISITS) return NextResponse.json({ error: "limit" }, { status: 400 });
       const id = randomBytes(6).toString("hex");
       const v: Visit = { cc: it.cc, year: it.year, addedAt: Date.now(), source: it.source === "trip" ? "trip" : "manual" };
       const city = cleanCity(it.city);
       if (city) v.city = city;
       added[id] = v;
-      have.add(key);
       count++;
     }
     if (Object.keys(added).length) {

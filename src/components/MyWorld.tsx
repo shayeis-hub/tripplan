@@ -418,15 +418,17 @@ function AddPanel({ search, T: tr, data, nameOf, addItems, onDone }: {
   const thisYear = new Date().getFullYear();
   const [year, setYear] = useState(thisYear);
   const [city, setCity] = useState("");
-  const [session, setSession] = useState<string[]>([]); // "cc:year" added in this sitting
+  const [session, setSession] = useState<{ cc: string; year: number }[]>([]); // added in this sitting
+  const [busy, setBusy] = useState(false);
 
-  const has = (cc: string) =>
-    Object.values(data.visits).some((v) => v.cc === cc && v.year === year) || session.includes(`${cc}:${year}`);
-
+  // The same country (even the same city, the same year) can be added again: each entry is one trip.
+  // The lock below only stops an accidental double tap while a save is still in flight.
   const pick = async (cc: string) => {
-    if (has(cc)) return;
+    if (busy) return;
+    setBusy(true);
     const ok = await addItems([{ cc, year, ...(city.trim() ? { city: city.trim() } : {}) }]);
-    if (ok) { setSession((s) => [...s, `${cc}:${year}`]); setCity(""); }
+    setBusy(false);
+    if (ok) { setSession((s) => [...s, { cc, year }]); setCity(""); }
   };
 
   const years: number[] = [];
@@ -448,14 +450,13 @@ function AddPanel({ search, T: tr, data, nameOf, addItems, onDone }: {
             style={{ width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 12, border: LINE, background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 15, fontFamily: RF, outline: "none" }} />
         </label>
       </div>
-      <CountrySearch search={search} placeholder={tr("searchPh")} noResults={tr("noResults")} onPick={pick} autoFocus
-        disabledFor={(cc) => (has(cc) ? tr("added") : null)} />
+      <CountrySearch search={search} placeholder={tr("searchPh")} noResults={tr("noResults")} onPick={pick} autoFocus />
       {session.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
-          {session.map((k) => {
-            const [cc, y] = k.split(":");
+          {session.map((s, i) => {
+            const { cc, year: y } = s;
             return (
-              <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 999, background: "rgba(100,223,223,0.12)", color: TEAL, fontSize: 13 }}>
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 999, background: "rgba(100,223,223,0.12)", color: TEAL, fontSize: 13 }}>
                 <Check size={13} strokeWidth={2} />{nameOf(cc)} {y}
               </span>
             );
