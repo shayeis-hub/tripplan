@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/admin-auth";
 import { isEmailLang } from "@/lib/email/constants";
-import { clearConfigCache, getAnnualConfig, getWelcomeConfig } from "@/lib/email/config";
+import { clearConfigCache, getAnnualConfig, getVerifyConfig, getWelcomeConfig } from "@/lib/email/config";
+import { handleVerifyEmail } from "@/lib/email/verify";
 import { runAnnualBatch, sendAnnualTest } from "@/lib/email/annual";
 import { sendWelcomeTest } from "@/lib/email/welcome";
 import { isCreatedTrip, toTripLite } from "@/lib/adminMetrics";
@@ -66,6 +67,7 @@ export async function GET(req: NextRequest) {
     recent,
     config: await getWelcomeConfig(true),
     annualConfig: await getAnnualConfig(),
+    verifyConfig: await getVerifyConfig(),
     events: counts,
     welcome: { sent, delivered, clicked, bounced, complained, createdTrip7d: createdTrip, createdTrip7dAmongClicked: createdTripAfterClick },
   });
@@ -101,6 +103,18 @@ export async function POST(req: NextRequest) {
     await getAdminDb().collection("emailConfig").doc("lifecycle").set({ welcome, updatedAt: Date.now() }, { merge: true });
     clearConfigCache();
     return NextResponse.json({ ok: true, welcome });
+  }
+
+  // Address-verification e-mail for e-mail/password sign-ups (off unless turned on here).
+  if (body?.action === "verify_test") {
+    const decoded = await getAdminAuth().verifyIdToken(req.headers.get("authorization")!.replace("Bearer ", ""));
+    const r = await handleVerifyEmail({ uid: decoded.uid, requestedLang: isEmailLang(body?.lang) ? body.lang : "he", test: true });
+    return NextResponse.json({ ok: r.status === "sent", result: r }, { status: r.status === "sent" ? 200 : 400 });
+  }
+  if (body?.action === "verify_config") {
+    const mode = body.mode === "all" || body.mode === "allowlist" ? body.mode : "off";
+    await getAdminDb().collection("emailConfig").doc("lifecycle").set({ verify: { mode, allowlist: [] }, updatedAt: Date.now() }, { merge: true });
+    return NextResponse.json({ ok: true, verify: { mode } });
   }
 
   // Yearly "My World" summary (separate from the welcome e-mail; off unless set here).
