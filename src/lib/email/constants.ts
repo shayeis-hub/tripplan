@@ -34,3 +34,9 @@ export const CTA_TARGET = `${SITE_URL}/?start=newtrip&utm_source=email&utm_mediu
 export const ANNUAL_FLOW = "annual";
 export const ANNUAL_VERSION = 1;
 export const ANNUAL_CTA_TARGET = `${SITE_URL}/?start=world-year&utm_source=email&utm_medium=lifecycle&utm_campaign=annual`;
+
+// Address verification e-mail for e-mail/password registrations (Google and Apple addresses arrive verified).
+export const VERIFY_FLOW = "verify";
+export const VERIFY_VERSION = 1;
+// Only an account this young can ask for one (so the endpoint cannot be used to mail old accounts).
+export const VERIFY_MAX_ACCOUNT_AGE_MS = 60 * 60 * 1000;

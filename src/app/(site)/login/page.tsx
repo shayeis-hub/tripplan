@@ -135,7 +135,21 @@ export default function LoginPage() {
     setBusy(true); setErrMsg(""); setOkMsg("");
     try {
       if (isNew) {
-        await createUserWithEmailAndPassword(auth, emailVal, passVal);
+        const cred = await createUserWithEmailAndPassword(auth, emailVal, passVal);
+        // Ask the server to send the address-verification e-mail (it decides; a failure never blocks registration).
+        // Awaited briefly because the page navigates right after, which would cancel a request still in flight.
+        try {
+          const idToken = await cred.user.getIdToken();
+          await Promise.race([
+            fetch("/api/verify-email", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", authorization: `Bearer ${idToken}` },
+              body: JSON.stringify({ lang }),
+              keepalive: true,
+            }),
+            new Promise((r) => setTimeout(r, 4000)),
+          ]);
+        } catch { /* never blocks the sign-up */ }
       } else {
         await signInWithEmailAndPassword(auth, emailVal, passVal);
       }

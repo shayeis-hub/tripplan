@@ -287,6 +287,122 @@ ${esc(c.why)}<br>
   return { subject, html, text };
 }
 
+// ---------------------------------------------------------------- address verification
+
+interface VerifyCopy {
+  subject: string;
+  preheader: string;
+  hiNamed: (name: string) => string;
+  hi: string;
+  p1: string;
+  p2: string;
+  cta: string;
+  ignore: string;
+  signoff: string;
+  team: string;
+  why: string;
+}
+
+const VERIFY: Record<EmailLang, VerifyCopy> = {
+  he: {
+    subject: "אימות כתובת המייל שלך בטיולון",
+    preheader: "עוד צעד קטן להשלמת ההרשמה.",
+    hiNamed: (n) => `היי ${n},`,
+    hi: "היי,",
+    p1: "כדי להשלים את ההרשמה, אמתו את כתובת המייל.",
+    p2: "האימות עוזר לנו לשמור על החשבון שלכם.",
+    cta: "אימות כתובת המייל",
+    ignore: "לא נרשמתם לטיולון? אפשר להתעלם מהמייל הזה.",
+    signoff: "נסיעה טובה,",
+    team: "צוות טיולון",
+    why: "קיבלתם את המייל הזה כי נרשמתם לטיולון.",
+  },
+  en: {
+    subject: "Verify your email for TUlon",
+    preheader: "One small step to finish signing up.",
+    hiNamed: (n) => `Hi ${n},`,
+    hi: "Hi,",
+    p1: "To finish signing up, please verify your email address.",
+    p2: "Verifying helps us keep your account safe.",
+    cta: "Verify my email",
+    ignore: "Didn't sign up for TUlon? You can ignore this email.",
+    signoff: "Happy travels,",
+    team: "The TUlon team",
+    why: "You're receiving this email because you signed up for TUlon.",
+  },
+  es: {
+    subject: "Verifica tu correo en TUlon",
+    preheader: "Un pequeño paso para terminar el registro.",
+    hiNamed: (n) => `Hola ${n},`,
+    hi: "Hola,",
+    p1: "Para terminar el registro, verifica tu dirección de correo.",
+    p2: "Verificarla nos ayuda a proteger tu cuenta.",
+    cta: "Verificar mi correo",
+    ignore: "¿No te registraste en TUlon? Puedes ignorar este correo.",
+    signoff: "¡Buen viaje!",
+    team: "El equipo de TUlon",
+    why: "Recibes este correo porque te registraste en TUlon.",
+  },
+};
+
+export interface VerifyInput {
+  lang: EmailLang;
+  firstName: string | null;
+  verifyUrl: string;
+}
+
+export function renderVerify({ lang, firstName, verifyUrl }: VerifyInput): Rendered {
+  const c = VERIFY[lang];
+  const rtl = lang === "he";
+  const dir = rtl ? "rtl" : "ltr";
+  const align = rtl ? "right" : "left";
+  const greeting = firstName ? c.hiNamed(firstName) : c.hi;
+  const font = "Arial,'Segoe UI',Helvetica,sans-serif";
+
+  const text = [greeting, "", c.p1, "", c.p2, "", `${c.cta}: ${verifyUrl}`, "", c.ignore, "", c.signoff, c.team, "", "--", c.why].join("\n");
+
+  const html = `<!doctype html>
+<html lang="${lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>${esc(c.subject)}</title>
+</head>
+<body dir="ltr" style="margin:0;padding:0;background:#eef3f6;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#eef3f6;">${esc(c.preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef3f6;">
+<tr><td align="center" style="padding:28px 14px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:#ffffff;border-radius:16px;">
+<tr><td dir="${dir}" align="${align}" style="padding:28px 28px 8px 28px;font-family:${font};">
+<span style="font-size:26px;font-weight:900;letter-spacing:-0.5px;color:#0d2137;">TU<span style="color:#1aa7a7;">lon</span></span>
+</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:12px 28px 4px 28px;font-family:${font};font-size:16px;line-height:1.7;color:#1b2f40;text-align:${align};">
+<p style="margin:0 0 14px 0;">${esc(greeting)}</p>
+<p style="margin:0 0 14px 0;font-weight:700;">${esc(c.p1)}</p>
+<p style="margin:0 0 22px 0;">${esc(c.p2)}</p>
+</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:0 28px 22px 28px;font-family:${font};">
+<a href="${esc(verifyUrl)}" style="display:inline-block;background:#64dfdf;color:#0d2137;font-weight:800;font-size:16px;text-decoration:none;padding:14px 30px;border-radius:999px;font-family:${font};">${esc(c.cta)}</a>
+</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:0 28px 22px 28px;font-family:${font};font-size:14px;line-height:1.6;color:#4a5f70;text-align:${align};">
+${esc(c.ignore)}
+</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:0 28px 26px 28px;font-family:${font};font-size:16px;line-height:1.6;color:#1b2f40;text-align:${align};">
+${esc(c.signoff)}<br>${esc(c.team)}
+</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:16px 28px 26px 28px;border-top:1px solid #e3eaef;font-family:${font};font-size:12px;line-height:1.6;color:#6b7f8e;text-align:${align};">
+${esc(c.why)}
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  return { subject: c.subject, html, text };
+}
+
 // Texts of the unsubscribe page (GET shows the question, POST confirms).
 export const UNSUB_COPY: Record<EmailLang, { title: string; ask: string; button: string; done: string; home: string }> = {
   he: {

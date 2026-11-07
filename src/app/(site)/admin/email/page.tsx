@@ -18,6 +18,7 @@ type Report = {
   recent?: RecentEvent[];
   config?: { mode?: string };
   annualConfig?: { mode?: string };
+  verifyConfig?: { mode?: string };
   welcome?: { sent: number; delivered: number; clicked: number; bounced: number; complained: number; createdTrip7d: number };
 };
 
@@ -96,6 +97,18 @@ export default function AdminEmailPage() {
     await load();
   };
 
+  const [verifyMsg, setVerifyMsg] = useState<string>("");
+  const verifyTest = async (lang: string) => {
+    const r = await call("POST", { action: "verify_test", lang });
+    setVerifyMsg(r?.ok ? "Test sent to your address" : `Test failed: ${r?.result?.reason ?? r?.result?.status ?? r?.error ?? "unknown"}`);
+    await load();
+  };
+  const verifySet = async (mode: "all" | "off") => {
+    if (!window.confirm(mode === "all" ? "Turn ON the verification e-mail for new e-mail/password sign-ups?" : "Turn OFF the verification e-mail?")) return;
+    await call("POST", { action: "verify_config", mode });
+    await load();
+  };
+
   const wrap: React.CSSProperties = { minHeight: "100vh", background: "#0d2137", color: "#fff", fontFamily: "'Rubik',sans-serif", direction: "ltr" };
   if (user === undefined) return <div style={{ ...wrap, padding: 24 }}>...</div>;
   if (!user || user.email !== ADMIN_EMAIL) {
@@ -105,6 +118,7 @@ export default function AdminEmailPage() {
   const w = report?.welcome;
   const mode = report?.config?.mode ?? "off";
   const annualMode = report?.annualConfig?.mode ?? "off";
+  const verifyMode = report?.verifyConfig?.mode ?? "off";
   const rows = (report?.recent ?? []).filter((e) => showTests || e.flow === "welcome");
 
   return (
@@ -155,6 +169,30 @@ export default function AdminEmailPage() {
           {annualMsg && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 10 }}>{annualMsg}</div>}
         </div>
 
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(100,223,223,0.18)", borderRadius: 16, padding: "14px 18px", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 800 }}>Address verification e-mail</div>
+              <div style={{ fontSize: 12, marginTop: 2, color: verifyMode === "off" ? "#fbbf24" : "#4ade80" }}>
+                {verifyMode === "off" ? "Off. Nothing is sent." : "On. Sent once to each new e-mail/password sign-up."}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {(["he", "en", "es"] as const).map((l) => (
+                <button key={l} onClick={() => verifyTest(l)} disabled={busy} style={{ background: "transparent", color: TEAL, border: "0.5px solid " + TEAL, borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>
+                  Test to me ({LANG[l]})
+                </button>
+              ))}
+              {verifyMode === "off" ? (
+                <button onClick={() => verifySet("all")} disabled={busy} style={{ background: TEAL, color: "#0d2137", border: 0, borderRadius: 999, padding: "6px 16px", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>Turn on</button>
+              ) : (
+                <button onClick={() => verifySet("off")} disabled={busy} style={{ background: "transparent", color: "#ff6b6b", border: "0.5px solid #ff6b6b", borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Turn off</button>
+              )}
+            </div>
+          </div>
+          {verifyMsg && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 10 }}>{verifyMsg}</div>}
+        </div>
+
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
           <Stat label="Sent" value={w?.sent ?? 0} />
           <Stat label="Delivered" value={w?.delivered ?? 0} />
@@ -192,7 +230,7 @@ export default function AdminEmailPage() {
               {rows.map((e, i) => (
                 <tr key={i} style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
                   <td style={td}>{fmt(e.createdAt)}</td>
-                  <td style={td}>{e.flow === "welcome" ? "Welcome" : e.flow === "annual" ? "Yearly summary" : e.flow === "annual_test" ? "Yearly summary (test)" : "Welcome (test)"}{e.variant === "control" ? " · control" : ""}</td>
+                  <td style={td}>{e.flow === "welcome" ? "Welcome" : e.flow === "annual" ? "Yearly summary" : e.flow === "annual_test" ? "Yearly summary (test)" : e.flow === "verify" ? "Verification" : e.flow === "verify_test" ? "Verification (test)" : "Welcome (test)"}{e.variant === "control" ? " · control" : ""}</td>
                   <td style={td}>{LANG[e.lang] ?? e.lang}</td>
                   <td style={{ ...td, color: STATUS_COLOR[e.status] ?? "#fff", fontWeight: 700 }}>
                     {e.status}{e.skipReason ? ` (${e.skipReason})` : ""}
