@@ -38,8 +38,9 @@ export default function Home() {
       const tripLink = parseTripLink(window.location.search);
       if (tripLink) stashPendingTripLink(tripLink);
       // E-mail CTA: remember "start a new trip" across sign-in (handled in TripPlan)
-      if (params.get("start") === "newtrip") {
-        try { sessionStorage.setItem("pendingStart", "newtrip"); } catch {}
+      const startParam = params.get("start");
+      if (startParam === "newtrip" || startParam === "world-year") {
+        try { sessionStorage.setItem("pendingStart", startParam); } catch {}
       }
       const quickadd = params.get("quickadd");
       if (quickadd) {

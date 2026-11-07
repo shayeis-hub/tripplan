@@ -17,6 +17,7 @@ type RecentEvent = {
 type Report = {
   recent?: RecentEvent[];
   config?: { mode?: string };
+  annualConfig?: { mode?: string };
   welcome?: { sent: number; delivered: number; clicked: number; bounced: number; complained: number; createdTrip7d: number };
 };
 
@@ -78,6 +79,23 @@ export default function AdminEmailPage() {
     await load();
   };
 
+  // Yearly "My World" summary ("2026 in the world"): off unless turned on here. The cron only sends Dec 17-31.
+  const [annualMsg, setAnnualMsg] = useState<string>("");
+  const annualTest = async (lang: string) => {
+    const r = await call("POST", { action: "annual_test", lang });
+    setAnnualMsg(r?.ok ? "Test sent to your address" : `Test failed: ${r?.error ?? r?.result?.status ?? "unknown"}`);
+    await load();
+  };
+  const annualDry = async () => {
+    const r = await call("POST", { action: "annual_dryrun" });
+    setAnnualMsg(r?.ok ? `Users with a visit this year: ${r.candidates}. Would receive it: ${r.eligible}. Skipped: ${JSON.stringify(r.reasons)}` : "Dry run failed");
+  };
+  const annualSet = async (mode: "all" | "off") => {
+    if (!window.confirm(mode === "all" ? "Turn ON the yearly summary e-mail? It is sent daily from Dec 17 to Dec 31." : "Turn OFF the yearly summary e-mail?")) return;
+    await call("POST", { action: "annual_config", mode, allowlist: [] });
+    await load();
+  };
+
   const wrap: React.CSSProperties = { minHeight: "100vh", background: "#0d2137", color: "#fff", fontFamily: "'Rubik',sans-serif", direction: "ltr" };
   if (user === undefined) return <div style={{ ...wrap, padding: 24 }}>...</div>;
   if (!user || user.email !== ADMIN_EMAIL) {
@@ -86,6 +104,7 @@ export default function AdminEmailPage() {
 
   const w = report?.welcome;
   const mode = report?.config?.mode ?? "off";
+  const annualMode = report?.annualConfig?.mode ?? "off";
   const rows = (report?.recent ?? []).filter((e) => showTests || e.flow === "welcome");
 
   return (
@@ -109,6 +128,31 @@ export default function AdminEmailPage() {
               {busy ? "..." : "Refresh"}
             </button>
           </div>
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(100,223,223,0.18)", borderRadius: 16, padding: "14px 18px", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 800 }}>Yearly summary e-mail</div>
+              <div style={{ fontSize: 12, marginTop: 2, color: annualMode === "off" ? "#fbbf24" : "#4ade80" }}>
+                {annualMode === "off" ? "Off. Nothing is sent." : annualMode === "allowlist" ? "Test mode" : "On. Sent daily Dec 17 to Dec 31, once per user."}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {(["he", "en", "es"] as const).map((l) => (
+                <button key={l} onClick={() => annualTest(l)} disabled={busy} style={{ background: "transparent", color: TEAL, border: "0.5px solid " + TEAL, borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>
+                  Test to me ({LANG[l]})
+                </button>
+              ))}
+              <button onClick={annualDry} disabled={busy} style={{ background: "transparent", color: "#fff", border: "0.5px solid rgba(255,255,255,0.3)", borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Dry run</button>
+              {annualMode === "off" ? (
+                <button onClick={() => annualSet("all")} disabled={busy} style={{ background: TEAL, color: "#0d2137", border: 0, borderRadius: 999, padding: "6px 16px", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>Turn on</button>
+              ) : (
+                <button onClick={() => annualSet("off")} disabled={busy} style={{ background: "transparent", color: "#ff6b6b", border: "0.5px solid #ff6b6b", borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Turn off</button>
+              )}
+            </div>
+          </div>
+          {annualMsg && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 10 }}>{annualMsg}</div>}
         </div>
 
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
@@ -148,7 +192,7 @@ export default function AdminEmailPage() {
               {rows.map((e, i) => (
                 <tr key={i} style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
                   <td style={td}>{fmt(e.createdAt)}</td>
-                  <td style={td}>{e.flow === "welcome" ? "Welcome" : "Welcome (test)"}{e.variant === "control" ? " · control" : ""}</td>
+                  <td style={td}>{e.flow === "welcome" ? "Welcome" : e.flow === "annual" ? "Yearly summary" : e.flow === "annual_test" ? "Yearly summary (test)" : "Welcome (test)"}{e.variant === "control" ? " · control" : ""}</td>
                   <td style={td}>{LANG[e.lang] ?? e.lang}</td>
                   <td style={{ ...td, color: STATUS_COLOR[e.status] ?? "#fff", fontWeight: 700 }}>
                     {e.status}{e.skipReason ? ` (${e.skipReason})` : ""}

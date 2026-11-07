@@ -29,3 +29,8 @@ export const BOUNCE_SUPPRESSION_MS = 180 * 24 * 3600 * 1000;
 // The only page a tracked CTA ever leads to (fixed, so the redirect endpoint is
 // not an open redirect). "start=newtrip" is handled in TripPlan.jsx.
 export const CTA_TARGET = `${SITE_URL}/?start=newtrip&utm_source=email&utm_medium=lifecycle&utm_campaign=welcome`;
+
+// Yearly "My World" summary ("2026 in the world"). Sent once per user per year, from Dec 17.
+export const ANNUAL_FLOW = "annual";
+export const ANNUAL_VERSION = 1;
+export const ANNUAL_CTA_TARGET = `${SITE_URL}/?start=world-year&utm_source=email&utm_medium=lifecycle&utm_campaign=annual`;

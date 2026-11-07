@@ -83,6 +83,7 @@ function HeContent() {
           <li>שליחת תזכורת אחת, שבוע לפני תחילת הטיול, למי שאישר התראות</li>
           <li>המלצות מבוססות AI על יעד הטיול (ללא שמירת השיחה)</li>
           <li>מסך "העולם שלי": אם תבחרו להזין מדינות שביקרתם בהן, נשמור את המדינות, השנים, ערים (אם הזנתם) ומדינת המוצא שלכם. המידע משמש רק להצגת המפה והסטטיסטיקות בחשבונכם, והוא נמחק כשאתם מוחקים את החשבון</li>
+          <li>מייל סיכום שנתי של "העולם שלי", פעם בשנה, למי שתכנן טיולים או הזין מדינות באותה שנה. אפשר להפסיק לקבל אותו בכל עת מהקישור בתחתית המייל</li>
         </ul>
         <p style={{ marginTop: 12 }}>אנחנו <strong style={{ color: "#ffffff" }}>לא מוכרים, לא משתפים ולא מסחרים</strong> את המידע שלך עם צדדים שלישיים.</p>
       </Section>
@@ -157,6 +158,7 @@ function EnContent() {
           <li>Sending one reminder a week before a trip starts, to users who enabled notifications</li>
           <li>AI-based recommendations for your destination (conversations are not stored)</li>
           <li>"My World" screen: if you choose to enter countries you have visited, we store the countries, years, cities (if you enter them) and your home country. This is used only to show your map and statistics in your account, and is deleted when you delete your account</li>
+          <li>A yearly "My World" summary email, once a year, if you planned trips or entered countries that year. You can stop receiving it at any time from the link at the bottom of the email</li>
         </ul>
         <p style={{ marginTop: 12 }}>We <strong style={{ color: "#ffffff" }}>do not sell, share, or commercialize</strong> your data with third parties.</p>
       </Section>
@@ -231,6 +233,7 @@ function EsContent() {
           <li>Enviar un recordatorio una semana antes de que empiece un viaje, a los usuarios que activaron las notificaciones</li>
           <li>Recomendaciones basadas en IA para tu destino (las conversaciones no se almacenan)</li>
           <li>Pantalla "Mi mundo": si decides ingresar los países que has visitado, guardamos los países, los años, las ciudades (si las ingresas) y tu país de origen. Se usa solo para mostrar tu mapa y estadísticas en tu cuenta, y se elimina cuando eliminas tu cuenta</li>
+          <li>Un correo anual con el resumen de "Mi mundo", una vez al año, si planeaste viajes o ingresaste países ese año. Puedes dejar de recibirlo en cualquier momento desde el enlace al final del correo</li>
         </ul>
         <p style={{ marginTop: 12 }}><strong style={{ color: "#ffffff" }}>No vendemos, compartimos ni comercializamos</strong> tus datos con terceros.</p>
       </Section>

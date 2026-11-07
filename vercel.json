@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/instagram-scheduler",
       "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/annual-email",
+      "schedule": "0 7 17-31 12 *"
     }
   ]
 }

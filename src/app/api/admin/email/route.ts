@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/admin-auth";
 import { isEmailLang } from "@/lib/email/constants";
-import { clearConfigCache, getWelcomeConfig } from "@/lib/email/config";
+import { clearConfigCache, getAnnualConfig, getWelcomeConfig } from "@/lib/email/config";
+import { runAnnualBatch, sendAnnualTest } from "@/lib/email/annual";
 import { sendWelcomeTest } from "@/lib/email/welcome";
 import { isCreatedTrip, toTripLite } from "@/lib/adminMetrics";
 
@@ -64,6 +65,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     recent,
     config: await getWelcomeConfig(true),
+    annualConfig: await getAnnualConfig(),
     events: counts,
     welcome: { sent, delivered, clicked, bounced, complained, createdTrip7d: createdTrip, createdTrip7dAmongClicked: createdTripAfterClick },
   });
@@ -99,6 +101,29 @@ export async function POST(req: NextRequest) {
     await getAdminDb().collection("emailConfig").doc("lifecycle").set({ welcome, updatedAt: Date.now() }, { merge: true });
     clearConfigCache();
     return NextResponse.json({ ok: true, welcome });
+  }
+
+  // Yearly "My World" summary (separate from the welcome e-mail; off unless set here).
+  if (body?.action === "annual_test") {
+    const decoded = await getAdminAuth().verifyIdToken(req.headers.get("authorization")!.replace("Bearer ", ""));
+    if (!decoded.email || decoded.email_verified !== true) {
+      return NextResponse.json({ ok: false, error: "admin address is not verified" }, { status: 400 });
+    }
+    const lang = isEmailLang(body?.lang) ? body.lang : "he";
+    const r = await sendAnnualTest({ uid: decoded.uid, email: decoded.email, displayName: decoded.name as string | undefined, lang });
+    return NextResponse.json(r, { status: r.ok ? 200 : 400 });
+  }
+  if (body?.action === "annual_dryrun") {
+    // Counts only: nothing is reserved or sent.
+    return NextResponse.json({ ok: true, ...(await runAnnualBatch({ dryRun: true, ignoreWindow: true })) });
+  }
+  if (body?.action === "annual_config") {
+    const mode = body.mode === "all" || body.mode === "allowlist" ? body.mode : "off";
+    const allowlist: string[] = Array.isArray(body.allowlist)
+      ? body.allowlist.filter((x: unknown): x is string => typeof x === "string").map((x: string) => x.trim().toLowerCase())
+      : [];
+    await getAdminDb().collection("emailConfig").doc("lifecycle").set({ annual: { mode, allowlist }, updatedAt: Date.now() }, { merge: true });
+    return NextResponse.json({ ok: true, annual: { mode, allowlist } });
   }
 
   return NextResponse.json({ error: "unknown_action" }, { status: 400 });

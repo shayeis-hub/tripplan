@@ -148,6 +148,145 @@ ${esc(c.why)}<br>
   return { subject: c.subject, html, text };
 }
 
+// ---------------------------------------------------------------- yearly "My World" summary
+
+interface AnnualCopy {
+  subject: (year: number) => string;
+  title: (year: number) => string;
+  summary: (n: number, newN: number) => string;
+  p2: string;
+  cta: string;
+  signoff: string;
+  team: string;
+  why: string;
+  unsubscribe: string;
+  hiNamed: (name: string) => string;
+  hi: string;
+}
+
+const ANNUAL: Record<EmailLang, AnnualCopy> = {
+  he: {
+    subject: (y) => `${y} שלי בעולם: הסיכום שלך מוכן`,
+    title: (y) => `${y} שלי בעולם`,
+    summary: (n, k) =>
+      n === 1
+        ? k ? "השנה ביקרת במדינה אחת, והיא חדשה לך." : "השנה ביקרת במדינה אחת."
+        : k === 0 ? `השנה ביקרת ב-${n} מדינות.`
+        : k === n ? `השנה ביקרת ב-${n} מדינות, כולן חדשות לך.`
+        : k === 1 ? `השנה ביקרת ב-${n} מדינות, אחת מהן חדשה.`
+        : `השנה ביקרת ב-${n} מדינות, ${k} מהן חדשות.`,
+    p2: "הכנו לך מפה וכרטיס שאפשר לשתף עם החברים.",
+    cta: "לסיכום שלי",
+    signoff: "נסיעה טובה,",
+    team: "צוות טיולון",
+    why: "קיבלתם את המייל הזה כי תכננתם טיולים בטיולון.",
+    unsubscribe: "להפסקת קבלת מיילים מטיולון",
+    hiNamed: (n) => `היי ${n},`,
+    hi: "היי,",
+  },
+  en: {
+    subject: (y) => `Your ${y} in the world is ready`,
+    title: (y) => `My ${y} in the world`,
+    summary: (n, k) =>
+      n === 1
+        ? k ? "This year you visited 1 country, and it was new to you." : "This year you visited 1 country."
+        : k === 0 ? `This year you visited ${n} countries.`
+        : k === n ? `This year you visited ${n} countries, all of them new to you.`
+        : k === 1 ? `This year you visited ${n} countries, one of them new.`
+        : `This year you visited ${n} countries, ${k} of them new.`,
+    p2: "We made you a map and a card you can share with friends.",
+    cta: "My summary",
+    signoff: "Happy travels,",
+    team: "The TUlon team",
+    why: "You're receiving this email because you planned trips in TUlon.",
+    unsubscribe: "Stop receiving emails from TUlon",
+    hiNamed: (n) => `Hi ${n},`,
+    hi: "Hi,",
+  },
+  es: {
+    subject: (y) => `Tu ${y} en el mundo está listo`,
+    title: (y) => `Mi ${y} en el mundo`,
+    summary: (n, k) =>
+      n === 1
+        ? k ? "Este año visitaste 1 país, y era nuevo para ti." : "Este año visitaste 1 país."
+        : k === 0 ? `Este año visitaste ${n} países.`
+        : k === n ? `Este año visitaste ${n} países, todos nuevos para ti.`
+        : k === 1 ? `Este año visitaste ${n} países, uno de ellos nuevo.`
+        : `Este año visitaste ${n} países, ${k} de ellos nuevos.`,
+    p2: "Preparamos un mapa y una tarjeta para compartir con tus amigos.",
+    cta: "Mi resumen",
+    signoff: "¡Buen viaje!",
+    team: "El equipo de TUlon",
+    why: "Recibes este correo porque planeaste viajes en TUlon.",
+    unsubscribe: "Dejar de recibir correos de TUlon",
+    hiNamed: (n) => `Hola ${n},`,
+    hi: "Hola,",
+  },
+};
+
+export interface AnnualInput {
+  lang: EmailLang;
+  year: number;
+  countries: number;
+  newCountries: number;
+  firstName: string | null;
+  ctaUrl: string;
+  unsubscribeUrl: string;
+}
+
+export function renderAnnual({ lang, year, countries, newCountries, firstName, ctaUrl, unsubscribeUrl }: AnnualInput): Rendered {
+  const c = ANNUAL[lang];
+  const rtl = lang === "he";
+  const dir = rtl ? "rtl" : "ltr";
+  const align = rtl ? "right" : "left";
+  const greeting = firstName ? c.hiNamed(firstName) : c.hi;
+  const summary = c.summary(countries, newCountries);
+  const subject = c.subject(year);
+  const font = "Arial,'Segoe UI',Helvetica,sans-serif";
+
+  const text = [greeting, "", c.title(year), "", summary, "", c.p2, "", `${c.cta}: ${ctaUrl}`, "", c.signoff, c.team, "", "--", c.why, `${c.unsubscribe}: ${unsubscribeUrl}`].join("\n");
+
+  const html = `<!doctype html>
+<html lang="${lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>${esc(subject)}</title>
+</head>
+<body dir="ltr" style="margin:0;padding:0;background:#eef3f6;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#eef3f6;">${esc(summary)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef3f6;">
+<tr><td align="center" style="padding:28px 14px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:#ffffff;border-radius:16px;">
+<tr><td dir="${dir}" align="${align}" style="padding:28px 28px 8px 28px;font-family:${font};">
+<span style="font-size:26px;font-weight:900;letter-spacing:-0.5px;color:#0d2137;">TU<span style="color:#1aa7a7;">lon</span></span>
+</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:12px 28px 4px 28px;font-family:${font};font-size:16px;line-height:1.7;color:#1b2f40;text-align:${align};">
+<p style="margin:0 0 14px 0;">${esc(greeting)}</p>
+<p style="margin:0 0 14px 0;font-size:22px;font-weight:900;color:#0d2137;">${esc(c.title(year))}</p>
+<p style="margin:0 0 14px 0;">${esc(summary)}</p>
+<p style="margin:0 0 22px 0;">${esc(c.p2)}</p>
+</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:0 28px 22px 28px;font-family:${font};">
+<a href="${esc(ctaUrl)}" style="display:inline-block;background:#64dfdf;color:#0d2137;font-weight:800;font-size:16px;text-decoration:none;padding:14px 30px;border-radius:999px;font-family:${font};">${esc(c.cta)}</a>
+</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:0 28px 26px 28px;font-family:${font};font-size:16px;line-height:1.6;color:#1b2f40;text-align:${align};">
+${esc(c.signoff)}<br>${esc(c.team)}
+</td></tr>
+<tr><td dir="${dir}" align="${align}" style="padding:16px 28px 26px 28px;border-top:1px solid #e3eaef;font-family:${font};font-size:12px;line-height:1.6;color:#6b7f8e;text-align:${align};">
+${esc(c.why)}<br>
+<a href="${esc(unsubscribeUrl)}" style="color:#6b7f8e;text-decoration:underline;">${esc(c.unsubscribe)}</a>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  return { subject, html, text };
+}
+
 // Texts of the unsubscribe page (GET shows the question, POST confirms).
 export const UNSUB_COPY: Record<EmailLang, { title: string; ask: string; button: string; done: string; home: string }> = {
   he: {
