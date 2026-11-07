@@ -54,6 +54,7 @@ import { parseTripLink, parseTripUrl, takePendingTripLink, stripTripParams } fro
 import { buildAgodaUrl, buildGygUrl, buildAiraloUrl, buildGetTransferUrl, buildKiwiUrl } from "@/lib/affiliate";
 import ReceiptCamera from "@/components/ReceiptCamera";
 import TravelProfile from "@/components/TravelProfile";
+const MyWorld=dynamic(()=>import("@/components/MyWorld"),{ssr:false});
 import { isIosApp, openLegal, legalPath } from "@/lib/nativeApp";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
@@ -4461,6 +4462,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   const[inspireSaving,setInspireSaving]=useState(false);
   const[showConverter,setShowConverter]=useState(false);
   const[showGuide,setShowGuide]=useState(false); // in-app user guide modal
+  const[showWorld,setShowWorld]=useState(false); // "My World" screen (visited countries), from the side menu
   const[showTravelProfile,setShowTravelProfile]=useState(false); // Personal Travel Profile modal (manual edit, from menu)
   const[onboarding,setOnboarding]=useState(false); // Traveler DNA onboarding — shown once, before a user's first trip
   const[hasProfile,setHasProfile]=useState(true); // assume yes until checked, so we never flash onboarding needlessly
@@ -4929,6 +4931,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
               <div style={{margin:"10px 20px",height:"0.5px",background:"rgba(255,255,255,0.06)"}}/>
             </>
           )}
+          <button onClick={()=>{setShowWorld(true);setSideMenu(false);}}
+            style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"start"}}>
+            <Globe size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"העולם שלי":lang==="es"?"Mi mundo":"My World"}
+          </button>
           <button onClick={()=>{setShowTravelProfile(true);setSideMenu(false);}}
             style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"start"}}>
             <Sparkles size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"פרופיל הטיולים שלי":lang==="es"?"Mi perfil de viaje":"My Travel Profile"}
@@ -5037,7 +5043,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     <>{showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]} defaultCurrency={trips[0]?.defaultCurrency} displayCurrency={trips[0]?.displayCurrency}/>}</>
   );
   const renderHomeCluster=()=>(
-    <><Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}</>
+    <><Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld onClose={()=>setShowWorld(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}</>
   );
   const renderTripList=(selectedId)=>(
     <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates} selectedId={selectedId}/>
@@ -5313,7 +5319,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           </div>
           <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
           <Fx show={!!inspireModal}>{inspireModal&&renderInspireModal()}</Fx>
-          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld onClose={()=>setShowWorld(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             <TripSplashScreen trip={active} expenses={active.expenses||[]}
               onBudget={()=>{pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}
@@ -5350,7 +5356,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
           <Fx show={!!inspireModal}>{inspireModal&&renderInspireModal()}</Fx>
-          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld onClose={()=>setShowWorld(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             {/* Trip settings button */}
             {screen!=="destination"&&!isViewOnly&&(
@@ -5397,7 +5403,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
           <Fx show={!!inspireModal}>{inspireModal&&renderInspireModal()}</Fx>
-          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld onClose={()=>setShowWorld(false)}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:screen==="map"?"hidden":"auto",position:"relative",minHeight:0}}>
             <div key={screen} className="screen-enter" style={screen==="map"?{height:"100%"}:undefined}>
               {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={isViewOnly?null:(acts=>updTrip({activities:acts}))}/>}

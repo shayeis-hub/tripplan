@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
     // 6. Everything else keyed directly by uid.
     await Promise.all([
       db.collection("travelProfiles").doc(uid).delete(),
+      db.collection("worldProfiles").doc(uid).delete(), // "My World" visited countries
       db.collection("pushSubscriptions").doc(uid).delete(),
       db.collection("userAcquisition").doc(uid).delete(),
     ]);
