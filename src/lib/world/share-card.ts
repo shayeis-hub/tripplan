@@ -19,6 +19,12 @@ export type ShareCardInput = {
   pctWorld: number;
   km: number | null; // null (no home country) hides the km figure
   languages: number;
+  // Yearly summary ("2026 in the world"): `visited` is then the countries visited IN that year, `prev` the ones from earlier years.
+  kind?: "world" | "year";
+  year?: number;
+  prev?: Set<string>;
+  visits?: number; // entries in that year
+  newCountries?: number; // countries whose first visit was that year
 };
 
 const W = 1080;
@@ -28,10 +34,10 @@ const FONT = "Rubik, 'Segoe UI', Arial, sans-serif";
 
 // DRAFT COPY: every string below is pending the owner's approval before this ships.
 const TXT = {
-  he: { title: "העולם שלי", brand: "טיולון", continents: "יבשות", ofWorld: "מהעולם", km: "ק״מ בטיסה", langs: "שפות רשמיות שכנראה שמעתי", q: "בכמה מדינות ביקרתם?", cta: "צרו את המפה שלכם חינם", ticketWord: "העולם שלי" },
-  en: { title: "My World", brand: "TUlon", continents: "continents", ofWorld: "of the world", km: "km flown", langs: "Official languages I probably heard", q: "How many countries have you visited?", cta: "Make your own map for free", ticketWord: "My World" },
-  es: { title: "Mi mundo", brand: "TUlon", continents: "continentes", ofWorld: "del mundo", km: "km volados", langs: "Idiomas oficiales que probablemente oí", q: "¿Cuántos países has visitado?", cta: "Crea tu mapa gratis", ticketWord: "Mi mundo" },
-} as const;
+  he: { title: "העולם שלי", brand: "טיולון", continents: "יבשות", ofWorld: "מהעולם", km: "ק״מ בטיסה", langs: "שפות רשמיות שכנראה שמעתי", q: "בכמה מדינות ביקרתם?", cta: "צרו את המפה שלכם חינם", ticketWord: "העולם שלי", yearTitle: (y: number) => `${y} שלי בעולם`, visitsLabel: "ביקורים השנה", newLabel: (n: number) => (n === 1 ? "מדינה חדשה" : "מדינות חדשות") },
+  en: { title: "My World", brand: "TUlon", continents: "continents", ofWorld: "of the world", km: "km flown", langs: "Official languages I probably heard", q: "How many countries have you visited?", cta: "Make your own map for free", ticketWord: "My World", yearTitle: (y: number) => `My ${y} in the world`, visitsLabel: "visits this year", newLabel: (n: number) => (n === 1 ? "new country" : "new countries") },
+  es: { title: "Mi mundo", brand: "TUlon", continents: "continentes", ofWorld: "del mundo", km: "km volados", langs: "Idiomas oficiales que probablemente oí", q: "¿Cuántos países has visitado?", cta: "Crea tu mapa gratis", ticketWord: "Mi mundo", yearTitle: (y: number) => `Mi ${y} en el mundo`, visitsLabel: "visitas este año", newLabel: (n: number) => (n === 1 ? "país nuevo" : "países nuevos") },
+};
 
 type Run = { t: string; accent?: boolean };
 function headline(lang: CardLang, n: number): { l1: string; runs: Run[]; noun: string; visited: string } {
@@ -44,6 +50,18 @@ function headline(lang: CardLang, n: number): { l1: string; runs: Run[]; noun: s
     return { l1: "He estado en", runs: [{ t: String(n), accent: true }, { t: n === 1 ? " país" : " países" }], noun: n === 1 ? "país" : "países", visited: "que he visitado" };
   }
   return { l1: "I've been to", runs: [{ t: String(n), accent: true }, { t: n === 1 ? " country" : " countries" }], noun: n === 1 ? "country" : "countries", visited: "I've visited" };
+}
+
+function headlineYear(lang: CardLang, n: number): { l1: string; runs: Run[]; noun: string; visited: string } {
+  if (lang === "he") {
+    return n === 1
+      ? { l1: "ביקרתי", runs: [{ t: "במדינה אחת השנה" }], noun: "מדינה", visited: "ביקרתי בה השנה" }
+      : { l1: "ביקרתי", runs: [{ t: "ב-" }, { t: String(n), accent: true }, { t: " מדינות השנה" }], noun: "מדינות", visited: "ביקרתי בהן השנה" };
+  }
+  if (lang === "es") {
+    return { l1: "Visité", runs: [{ t: String(n), accent: true }, { t: n === 1 ? " país este año" : " países este año" }], noun: n === 1 ? "país" : "países", visited: "que visité este año" };
+  }
+  return { l1: "I visited", runs: [{ t: String(n), accent: true }, { t: n === 1 ? " country this year" : " countries this year" }], noun: n === 1 ? "country" : "countries", visited: "I visited this year" };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -115,7 +133,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     }
     return cur;
   };
-  const drawMap = (x: number, y: number, w: number, c: { base: string; vis: string; stroke: string; glow?: string; blur?: number; dotBase: string; dotVis: string; bg?: string }) => {
+  const drawMap = (x: number, y: number, w: number, c: { base: string; vis: string; stroke: string; glow?: string; blur?: number; prevFill?: string; dotBase: string; dotVis: string; bg?: string }) => {
     const k = w / MAP_W;
     ctx.save();
     ctx.translate(x, y);
@@ -128,7 +146,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     for (const [cc, d] of entries) {
       if (input.visited.has(cc)) continue;
       const p = new Path2D(d);
-      ctx.fillStyle = c.base; ctx.fill(p); ctx.stroke(p);
+      ctx.fillStyle = input.prev?.has(cc) && c.prevFill ? c.prevFill : c.base; ctx.fill(p); ctx.stroke(p);
     }
     for (const [cc, d] of entries) {
       if (!input.visited.has(cc)) continue;
@@ -141,7 +159,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     for (const [cc, [dx, dy]] of Object.entries(MAP_DOTS)) {
       const v = input.visited.has(cc);
       if (v && c.glow) { ctx.shadowColor = c.glow; ctx.shadowBlur = (c.blur ?? 12) / k; }
-      ctx.fillStyle = v ? c.dotVis : c.dotBase;
+      ctx.fillStyle = v ? c.dotVis : input.prev?.has(cc) && c.prevFill ? c.prevFill : c.dotBase;
       ctx.beginPath(); ctx.arc(dx, dy, v ? 5.5 : 3, 0, Math.PI * 2); ctx.fill();
       ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
     }
@@ -155,12 +173,17 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
   };
   const logoX = (size: number, inset = MARGIN) => (rtl ? W - inset - size : inset);
 
-  const stats: { v: string; l: string }[] = [
-    { v: String(input.continents), l: tx.continents },
-    { v: `${input.pctWorld}%`, l: tx.ofWorld },
-  ];
-  if (input.km != null && input.km > 0) stats.push({ v: input.km.toLocaleString(lang), l: tx.km });
-  const hl = headline(lang, input.countries);
+  const isYear = input.kind === "year" && input.year != null;
+  type Field = { v: string; l: string };
+  const kmField: Field[] = input.km != null && input.km > 0 ? [{ v: input.km.toLocaleString(lang), l: tx.km }] : [];
+  const main: Field[] = isYear
+    ? [{ v: String(input.visits ?? 0), l: tx.visitsLabel }, { v: String(input.continents), l: tx.continents }, ...kmField]
+    : [{ v: String(input.continents), l: tx.continents }, { v: `${input.pctWorld}%`, l: tx.ofWorld }, ...kmField];
+  const extra: Field | null = isYear
+    ? (input.newCountries ?? 0) > 0 ? { v: String(input.newCountries), l: tx.newLabel(input.newCountries ?? 0) } : null
+    : { v: String(input.languages), l: tx.langs };
+  const title = isYear ? tx.yearTitle(input.year as number) : tx.title;
+  const hl = isYear ? headlineYear(lang, input.countries) : headline(lang, input.countries);
 
   // ================= NIGHT =================
   if (design === "night") {
@@ -172,7 +195,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H);
 
     drawLogo(logoX(84), 64, 84);
-    text(tx.title, rtl ? logoX(84) - 22 : logoX(84) + 84 + 22, 64 + 58, font(800, 40), "#fff");
+    text(title, rtl ? logoX(84) - 22 : logoX(84) + 84 + 22, 64 + 58, font(800, 40), "#fff");
 
     const numStr = String(input.countries);
     const labW = 430;
@@ -186,10 +209,10 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     text(hl.visited, E(MARGIN), 150 + nz * 0.8 - nz * 0.4 + visZ * 1.35, font(600, visZ), "rgba(255,255,255,0.75)", alignStart === "right" ? "left" : "right");
 
     const mapTop = 560 + e * 0.3;
-    drawMap(MARGIN, mapTop, W - MARGIN * 2, { base: "rgba(255,255,255,0.13)", vis: "#64dfdf", stroke: "#0d2137", glow: "rgba(100,223,223,0.7)", blur: 18, dotBase: "rgba(255,255,255,0.25)", dotVis: "#64dfdf" });
+    drawMap(MARGIN, mapTop, W - MARGIN * 2, { base: "rgba(255,255,255,0.13)", vis: "#64dfdf", stroke: "#0d2137", glow: "rgba(100,223,223,0.7)", blur: 18, prevFill: "rgba(100,223,223,0.32)", dotBase: "rgba(255,255,255,0.25)", dotVis: "#64dfdf" });
 
     // stat cards (+ languages), weights keep long values inside their card
-    const cards = [...stats, { v: String(input.languages), l: tx.langs }];
+    const cards = extra ? [...main, extra] : main;
     const weights = cards.length === 4 ? [0.8, 0.9, 1.45, 1.15] : [0.9, 1, 1.4];
     const gap = 16;
     const total = W - MARGIN * 2 - gap * (cards.length - 1);
@@ -231,10 +254,10 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
 
     drawLogo(logoX(84), 64, 84);
     text(tx.brand, rtl ? logoX(84) - 18 : logoX(84) + 84 + 18, 64 + 58, font(800, 38), "#08202f");
-    const pillZ = 30; const pw = width(tx.title, font(700, pillZ)) + 52;
+    const pillZ = 30; const pw = width(title, font(700, pillZ)) + 52;
     const px = rtl ? MARGIN : W - MARGIN - pw;
     ctx.fillStyle = "#08202f"; rr(px, 78, pw, 56, 28); ctx.fill();
-    text(tx.title, px + pw / 2, 78 + 39, font(700, pillZ), "#7ff0ea", "center");
+    text(title, px + pw / 2, 78 + 39, font(700, pillZ), "#7ff0ea", "center");
 
     // headline: two lines, shrunk until both fit
     const l2 = hl.runs.map((r) => r.t).join("");
@@ -243,12 +266,12 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     text(hl.l1, S(MARGIN), 165 + hz * 0.9, font(900, hz), "#08202f");
     runs(hl.runs, S(MARGIN), 165 + hz * 0.9 + hz * 0.98, font(900, hz), "#08202f", "#ffffff", "rgba(8,32,47,0.18)");
 
-    drawMap(MARGIN, 490 + e * 0.32, W - MARGIN * 2, { base: "rgba(8,32,47,0.2)", vis: "#ffffff", stroke: "#46cfd0", glow: "rgba(8,32,47,0.4)", blur: 10, dotBase: "rgba(8,32,47,0.3)", dotVis: "#fff" });
+    drawMap(MARGIN, 490 + e * 0.32, W - MARGIN * 2, { base: "rgba(8,32,47,0.2)", vis: "#ffffff", stroke: "#46cfd0", glow: "rgba(8,32,47,0.4)", blur: 10, prevFill: "rgba(255,255,255,0.5)", dotBase: "rgba(8,32,47,0.3)", dotVis: "#fff" });
 
     // chips flow from the start edge, wrapping
     let cx = S(MARGIN), cy = 900 + e * 0.72;
     const chipW = (c: { v: string; l: string }) => width(c.v, font(900, 56)) + 14 + width(c.l, font(500, 32)) + 64;
-    for (const c of stats) {
+    for (const c of main) {
       const cw = chipW(c);
       if (rtl ? cx - cw < MARGIN : cx + cw > W - MARGIN) { cx = S(MARGIN); cy += 108; }
       const x = rtl ? cx - cw : cx;
@@ -258,9 +281,11 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
       text(c.l, rtl ? ex - 14 : ex + 14, cy + 65, font(500, 32), "#08202f");
       cx += rtl ? -(cw + 16) : cw + 16;
     }
-    const ly = cy + 92 + 56;
-    const lend = runs([{ t: String(input.languages) }], S(MARGIN), ly, font(900, 36), "#08202f", "#08202f");
-    text(tx.langs, rtl ? lend - 12 : lend + 12, ly, font(600, 34), "#08202f");
+    if (extra) {
+      const ly = cy + 92 + 56;
+      const lend = runs([{ t: extra.v }], S(MARGIN), ly, font(900, 36), "#08202f", "#08202f");
+      text(extra.l, rtl ? lend - 12 : lend + 12, ly, font(600, 34), "#08202f");
+    }
 
     ctx.fillStyle = "#08202f"; ctx.fillRect(0, H - 150, W, 150);
     const qz = fit(tx.q, 800, W - MARGIN * 2 - 230, 40, 26);
@@ -281,7 +306,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     ctx.fillStyle = "#0d2137"; ctx.fillRect(tx0, ty, tw, 130);
     const lg = logoX(70, tx0 + 48);
     drawLogo(lg, ty + 30, 70);
-    text(tx.ticketWord, rtl ? lg - 20 : lg + 70 + 20, ty + 82, font(900, 46), "#fff");
+    text(isYear ? title : tx.ticketWord, rtl ? lg - 20 : lg + 70 + 20, ty + 82, font(900, isYear ? fit(title, 900, tw - 96 - 70 - 20 - 80, 46, 30) : 46), "#fff");
     // plane icon on the end side
     ctx.save();
     const sc = 46 / 24;
@@ -293,7 +318,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
 
     const mapW = tw - 72;
     const mapTop = ty + 130 + 34 + e * 0.14;
-    const mh = drawMap(tx0 + 36, mapTop, mapW, { base: "#d3dee5", vis: "#12b3b3", stroke: "#f2f6f8", dotBase: "#aebdc7", dotVis: "#12b3b3" });
+    const mh = drawMap(tx0 + 36, mapTop, mapW, { base: "#d3dee5", vis: "#12b3b3", stroke: "#f2f6f8", prevFill: "#9fdcdc", dotBase: "#aebdc7", dotVis: "#12b3b3" });
 
     const full = `${hl.l1} ${hl.runs.map((r) => r.t).join("")}`;
     const hz = fit(full, 900, tw - 96, 112, 54);
@@ -312,14 +337,16 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     // fields
     const colW = (tw - 96) / 3;
     const colX = (i: number) => (rtl ? tx0 + tw - 48 - i * colW : tx0 + 48 + i * colW);
-    stats.forEach((c, i) => {
+    main.forEach((c, i) => {
       text(c.l, colX(i), py + 52, font(600, 24), "#6a8394");
       const z = fit(c.v, 900, colW - 16, 64, 36);
       text(c.v, colX(i), py + 52 + 58, font(900, z), "#0d2137");
     });
     const ry = py + 52 + 58 + 62 + e * 0.12;
-    text(tx.langs, S(tx0 + 48), ry, font(600, 24), "#6a8394");
-    text(String(input.languages), S(tx0 + 48), ry + 58, font(900, 52), "#0d2137");
+    if (extra) {
+      text(extra.l, S(tx0 + 48), ry, font(600, 24), "#6a8394");
+      text(extra.v, S(tx0 + 48), ry + 58, font(900, 52), "#0d2137");
+    }
 
     // barcode
     ctx.fillStyle = "#0d2137";
