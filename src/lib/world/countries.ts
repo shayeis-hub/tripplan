@@ -1375,7 +1375,7 @@ export const COUNTRY_ALIASES: Record<string, string[]> = {
  ]
 };
 
-const norm = (s: string) =>
+export const norm = (s: string) =>
   s
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
