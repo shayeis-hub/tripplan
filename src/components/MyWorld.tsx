@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLang } from "@/lib/LangContext";
 import { COUNTRY_ALIASES, COUNTRY_NAMES, norm } from "@/lib/world/countries";
 import { CONTINENT, MAP_DOTS, MAP_H, MAP_PATHS, MAP_W } from "@/lib/world/geo";
-import { computeStats, type VisitMap, type WorldStats } from "@/lib/world/stats";
+import { annualYear, computeStats, computeYearStats, type VisitMap, type WorldStats, type YearStats } from "@/lib/world/stats";
 import { CARD_DESIGNS, CARD_FORMATS, downloadImage, isNativeShell, renderWorldCard, shareImage, type CardDesign, type CardFormat } from "@/lib/world/share-card";
 
 const RF = "'Rubik',sans-serif";
@@ -75,6 +75,9 @@ const T = {
   retry: { he: "נסו שוב", en: "Try again", es: "Reintentar" },
   saveError: { he: "השמירה נכשלה. נסו שוב.", en: "Couldn't save. Try again.", es: "No se pudo guardar. Inténtalo de nuevo." },
   close: { he: "סגירה", en: "Close", es: "Cerrar" },
+  yearReady: { he: "הסיכום שלך מוכן", en: "Your summary is ready", es: "Tu resumen está listo" },
+  yearOpen: { he: "הסיכום שלי", en: "My summary", es: "Mi resumen" },
+  yearTitle: { he: (y: number) => `${y} שלי בעולם`, en: (y: number) => `My ${y} in the world`, es: (y: number) => `Mi ${y} en el mundo` },
   share: { he: "שתפו", en: "Share", es: "Compartir" },
   download: { he: "הורידו תמונה", en: "Download image", es: "Descargar imagen" },
   designName: {
@@ -117,7 +120,7 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
   const [saveErr, setSaveErr] = useState(false);
   const [mode, setMode] = useState<"view" | "add" | "home">("view");
   const [hideSuggest, setHideSuggest] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState<null | "world" | "year">(null);
 
   const api = useCallback(
     async (method: "GET" | "POST", body?: unknown) => {
@@ -148,6 +151,14 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
   const search = useMemo(() => buildSearch(lang), [lang]);
   const nameOf = (cc: string) => COUNTRY_NAMES[cc]?.[lang] || cc;
   const stats = useMemo(() => (data ? computeStats(data.home, data.visits) : null), [data]);
+  // Yearly summary: only in the window around the year end, and only if there is at least one visit in that year.
+  const yearStats = useMemo(() => {
+    if (!data) return null;
+    const y = annualYear(new Date());
+    if (y == null) return null;
+    const ys = computeYearStats(data.home, data.visits, y);
+    return ys.visits > 0 ? ys : null;
+  }, [data]);
 
   const addItems = async (items: { cc: string; year: number; city?: string; source?: "manual" | "trip" }[]) => {
     setSaveErr(false);
@@ -218,6 +229,16 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
               </div>
             )}
 
+            {yearStats && (
+              <div style={{ background: "linear-gradient(135deg,rgba(100,223,223,0.22),rgba(100,223,223,0.08))", border: "0.5px solid rgba(100,223,223,0.45)", borderRadius: 14, padding: 14, marginTop: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 800 }}>{(T.yearTitle[lang] as (y: number) => string)(yearStats.year)}</div>
+                  <div style={{ fontSize: 13, color: W60, marginTop: 2 }}>{tr("yearReady")}</div>
+                </div>
+                <button onClick={() => setShareOpen("year")} style={btn(true)}>{tr("yearOpen")}</button>
+              </div>
+            )}
+
             {data.suggestions.length > 0 && !hideSuggest && (
               <div style={{ background: "rgba(100,223,223,0.08)", border: "0.5px solid rgba(100,223,223,0.3)", borderRadius: 14, padding: 14, marginTop: 14 }}>
                 <div style={{ fontSize: 14, marginBottom: 10 }}>{tr("suggest")(suggestCountries)}</div>
@@ -259,7 +280,7 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
 
                 <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
                   <button onClick={() => setMode("add")} style={btn(true)}><Plus size={16} strokeWidth={2} />{tr("addMore")}</button>
-                  <button onClick={() => setShareOpen(true)} style={btn(false)}><Share2 size={16} strokeWidth={1.75} />{tr("share")}</button>
+                  <button onClick={() => setShareOpen("world")} style={btn(false)}><Share2 size={16} strokeWidth={1.75} />{tr("share")}</button>
                   {data.home && (
                     <button onClick={() => setMode("home")} style={btn(false)}>
                       <MapPin size={15} strokeWidth={1.75} />{tr("homeLabel")}: {nameOf(data.home)} · {tr("homeChange")}
@@ -275,7 +296,7 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
         )}
 
         {shareOpen && stats && (
-          <ShareSheet stats={stats} lang={lang} dir={dir} T={tr} onClose={() => setShareOpen(false)} />
+          <ShareSheet stats={stats} yearStats={shareOpen === "year" ? yearStats : null} lang={lang} dir={dir} T={tr} onClose={() => setShareOpen(null)} />
         )}
 
         {saveErr && <div style={{ color: "#ff8a8a", fontSize: 13, marginTop: 12 }}>{tr("saveError")}</div>}
@@ -471,7 +492,7 @@ function AddPanel({ search, T: tr, data, nameOf, addItems, onDone }: {
   );
 }
 
-function ShareSheet({ stats, lang, dir, T: tr, onClose }: { stats: WorldStats; lang: Lang; dir: string; T: (k: any) => any; onClose: () => void }) {
+function ShareSheet({ stats, yearStats, lang, dir, T: tr, onClose }: { stats: WorldStats; yearStats: YearStats | null; lang: Lang; dir: string; T: (k: any) => any; onClose: () => void }) {
   const [blob, setBlob] = useState<Blob | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [err, setErr] = useState(false);
@@ -496,15 +517,24 @@ function ShareSheet({ stats, lang, dir, T: tr, onClose }: { stats: WorldStats; l
     setErr(false);
     (async () => {
       try {
-        const b = await renderWorldCard({
-          lang, design, format,
-          visited: new Set(stats.visited),
-          countries: stats.countries,
-          continents: stats.continents,
-          pctWorld: stats.pctWorld,
-          km: stats.km,
-          languages: stats.languages,
-        });
+        const b = await renderWorldCard(
+          yearStats
+            ? {
+                lang, design, format, kind: "year", year: yearStats.year,
+                visited: new Set(yearStats.visited), prev: new Set(yearStats.prev),
+                countries: yearStats.countries, continents: yearStats.continents, pctWorld: 0, km: yearStats.km, languages: 0,
+                visits: yearStats.visits, newCountries: yearStats.newCountries,
+              }
+            : {
+                lang, design, format,
+                visited: new Set(stats.visited),
+                countries: stats.countries,
+                continents: stats.continents,
+                pctWorld: stats.pctWorld,
+                km: stats.km,
+                languages: stats.languages,
+              },
+        );
         if (!alive) return;
         objUrl = URL.createObjectURL(b);
         setBlob(b);
@@ -514,9 +544,9 @@ function ShareSheet({ stats, lang, dir, T: tr, onClose }: { stats: WorldStats; l
       }
     })();
     return () => { alive = false; if (objUrl) URL.revokeObjectURL(objUrl); };
-  }, [stats, lang, design, format]);
+  }, [stats, yearStats, lang, design, format]);
 
-  const FILE = `tulon-my-world-${design}-${format}.png`;
+  const FILE = `tulon-${yearStats ? "year-" + yearStats.year : "my-world"}-${design}-${format}.png`;
   const doShare = async () => {
     if (!blob) return;
     try {

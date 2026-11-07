@@ -57,3 +57,53 @@ export function computeStats(home: string | null | undefined, visits: VisitMap):
     languages: langs.size,
   };
 }
+
+// ---------------------------------------------------------------- yearly summary ("2026 in the world")
+
+// The year whose summary is shown now: from Dec 17 (two weeks before year end) it is the current year, and
+// through January it is still the year that just ended. Otherwise there is none.
+export function annualYear(now: Date = new Date()): number | null {
+  const m = now.getMonth(); // 0 = January
+  if (m === 11 && now.getDate() >= 17) return now.getFullYear();
+  if (m === 0) return now.getFullYear() - 1;
+  return null;
+}
+
+export type YearStats = {
+  year: number;
+  visits: number; // entries in that year (each one is a trip)
+  visited: string[]; // every country/territory visited in that year (repeat visits included)
+  prev: string[]; // visited in earlier years only (shown dimmed on the map)
+  countries: number; // distinct members of the 195 visited in that year
+  newCountries: number; // of those, countries with no visit in an earlier year
+  continents: number;
+  km: number | null; // round trips of that year only
+};
+
+export function computeYearStats(home: string | null | undefined, visits: VisitMap, year: number): YearStats {
+  const all = Object.values(visits);
+  const inYear = all.filter((v) => v.year === year);
+  const visited = [...new Set(inYear.map((v) => v.cc))];
+  const earlier = new Set(all.filter((v) => v.year < year).map((v) => v.cc));
+  const members = visited.filter((c) => MEMBER_SET.has(c));
+  const homeCap = home ? CAPITALS[home] : undefined;
+  let km: number | null = null;
+  if (homeCap) {
+    km = 0;
+    for (const v of inYear) {
+      if (v.cc === home || !CAPITALS[v.cc]) continue;
+      km += 2 * distanceKm(homeCap, CAPITALS[v.cc]);
+    }
+    km = Math.round(km / 100) * 100;
+  }
+  return {
+    year,
+    visits: inYear.length,
+    visited,
+    prev: [...earlier].filter((c) => !visited.includes(c)),
+    countries: members.length,
+    newCountries: members.filter((c) => !earlier.has(c)).length,
+    continents: new Set(visited.map((c) => CONTINENT[c]).filter(Boolean)).size,
+    km,
+  };
+}
