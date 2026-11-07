@@ -4,7 +4,7 @@ import { resolveCountry } from "./countries";
 import type { Visit, VisitMap } from "./stats";
 
 // Server side only. A user's "world" = what they entered by hand in My World (worldProfiles/{uid}.visits)
-// plus what their own finished trips say: an owned trip with real content whose end date has passed counts as a
+// plus what their own finished trips say: a trip they own or joined (not as a view-only guest) with real content whose end date has passed counts as a
 // visit to the country of its destination, one per (country, year). Pairs already entered by hand are not repeated.
 // The yearly summary e-mail and the suggestions on the My World screen both use this, so they always agree.
 
@@ -18,7 +18,9 @@ function wasUsed(t: Record<string, unknown>): boolean {
 
 export type TripVisit = { cc: string; year: number };
 
-export async function loadWorld(uid: string): Promise<{ home: string | null; visits: Record<string, Visit>; tripVisits: TripVisit[] }> {
+// email: the person's address (lower-case). With it, trips shared WITH them count too: someone who joined a trip
+// travelled as well (view-only guests do not).
+export async function loadWorld(uid: string, email?: string | null): Promise<{ home: string | null; visits: Record<string, Visit>; tripVisits: TripVisit[] }> {
   const db = getAdminDb();
   const snap = await db.collection("worldProfiles").doc(uid).get();
   const data = snap.exists ? snap.data() || {} : {};
@@ -30,8 +32,18 @@ export async function loadWorld(uid: string): Promise<{ home: string | null; vis
     const thisYear = new Date().getFullYear();
     const have = new Set(Object.values(visits).map((v) => `${v.cc}:${v.year}`));
     const seen = new Set<string>();
-    const trips = await db.collection("trips").where("owner", "==", uid).get();
-    for (const d of trips.docs) {
+    const mine = await db.collection("trips").where("owner", "==", uid).get();
+    const docs = [...mine.docs];
+    const mail = email ? email.trim().toLowerCase() : null;
+    if (mail) {
+      const shared = await db.collection("trips").where("sharedWith", "array-contains", mail).get();
+      const ids = new Set(docs.map((d) => d.id));
+      for (const d of shared.docs) {
+        const viewOnly = Array.isArray(d.data().viewOnlyUsers) ? (d.data().viewOnlyUsers as string[]) : [];
+        if (!ids.has(d.id) && !viewOnly.map((x) => String(x).toLowerCase()).includes(mail)) docs.push(d);
+      }
+    }
+    for (const d of docs) {
       const t = d.data();
       const end = typeof t.endDate === "string" ? t.endDate : "";
       if (!end || end >= today || !wasUsed(t)) continue;

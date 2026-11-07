@@ -15,14 +15,18 @@ export const dynamic = "force-dynamic";
 const MAX_VISITS = 500;
 const MIN_YEAR = 1950;
 
-async function requireUid(req: Request) {
+async function requireAuth(req: Request): Promise<{ uid: string; email: string | null } | null> {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   try {
-    return (await getAdminAuth().verifyIdToken(token)).uid;
+    const d = await getAdminAuth().verifyIdToken(token);
+    return { uid: d.uid, email: d.email ?? null };
   } catch {
     return null;
   }
+}
+async function requireUid(req: Request) {
+  return (await requireAuth(req))?.uid ?? null;
 }
 
 type Visit = { cc: string; year: number; city?: string; addedAt: number; source: "manual" | "trip" };
@@ -37,10 +41,10 @@ const cleanCity = (v: unknown): string | undefined => {
 };
 
 export async function GET(req: Request) {
-  const uid = await requireUid(req);
-  if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const w = await loadWorld(uid);
-  // Suggestions: the user's own finished trips, one per (country, year), minus what is already entered.
+  const who = await requireAuth(req);
+  if (!who) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const w = await loadWorld(who.uid, who.email);
+  // Suggestions: the user's own finished trips (owned or joined), one per (country, year), minus what is already entered.
   return NextResponse.json({ home: w.home, visits: w.visits, suggestions: w.tripVisits });
 }
 

@@ -75,6 +75,7 @@ export async function runAnnualBatch(opts: { now?: Date; limit?: number; dryRun?
 
   // Everyone who may have a summary: users with a My World profile, plus owners of a trip that ended this year.
   const uids = new Set<string>();
+  const emailToUid = new Map<string, string>();
   for (let last: FirebaseFirestore.QueryDocumentSnapshot | null = null; ; ) {
     let q = db.collection("worldProfiles").orderBy("__name__").limit(300);
     if (last) q = q.startAfter(last);
@@ -88,18 +89,27 @@ export async function runAnnualBatch(opts: { now?: Date; limit?: number; dryRun?
     if (last) q = q.startAfter(last);
     const page = await q.get();
     for (const d of page.docs) {
-      const o = d.data().owner;
-      if (typeof o === "string") uids.add(o);
+      const t = d.data();
+      if (typeof t.owner === "string") uids.add(t.owner);
+      // People who joined the trip travelled too (view-only guests did not).
+      const viewOnly = (Array.isArray(t.viewOnlyUsers) ? t.viewOnlyUsers : []).map((x: unknown) => String(x).toLowerCase());
+      for (const m of Array.isArray(t.sharedWith) ? t.sharedWith : []) {
+        const mail = String(m).trim().toLowerCase();
+        if (!mail || viewOnly.includes(mail) || emailToUid.has(mail)) continue;
+        try {
+          emailToUid.set(mail, (await getAdminAuth().getUserByEmail(mail)).uid);
+        } catch {
+          emailToUid.set(mail, ""); // no account with that address
+        }
+      }
     }
     if (page.size < 300) break;
     last = page.docs[page.docs.length - 1];
   }
 
+  for (const u of emailToUid.values()) if (u) uids.add(u);
+
   for (const uid of [...uids].sort()) {
-    const w = await loadWorld(uid);
-    const stats = computeYearStats(w.home, mergeVisits(w.visits, w.tripVisits), year);
-    if (stats.visits < 1) continue;
-    out.candidates++;
     let user;
     try {
       user = await getAdminAuth().getUser(uid);
@@ -107,6 +117,10 @@ export async function runAnnualBatch(opts: { now?: Date; limit?: number; dryRun?
       bump("no_user");
       continue;
     }
+    const w = await loadWorld(uid, user.email ?? null);
+    const stats = computeYearStats(w.home, mergeVisits(w.visits, w.tripVisits), year);
+    if (stats.visits < 1) continue;
+    out.candidates++;
     const verdict = evaluateAnnual(
       { email: user.email ?? null, emailVerified: user.emailVerified === true, countries: stats.countries },
       opts.dryRun && cfg.mode === "off" ? { mode: "all", allowlist: [] } : cfg,
@@ -155,7 +169,7 @@ export async function sendAnnualTest(args: { uid: string; email: string; display
   if (await isAddressSuppressed(hash)) return { ok: false as const, error: "address is suppressed" };
 
   const year = new Date().getUTCFullYear();
-  const w = await loadWorld(args.uid);
+  const w = await loadWorld(args.uid, args.email);
   const real = computeYearStats(w.home, mergeVisits(w.visits, w.tripVisits), year);
   const countries = real.countries > 0 ? real.countries : 4;
   const newCountries = real.countries > 0 ? real.newCountries : 2;
