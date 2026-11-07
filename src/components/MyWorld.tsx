@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Globe, Plus, X, Trash2, Check, Search, MapPin, ChevronDown, Share2, Download } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { useLang } from "@/lib/LangContext";
@@ -108,7 +108,7 @@ function buildSearch(lang: Lang): SearchEntry[] {
 
 type Data = { home: string | null; visits: VisitMap; suggestions: { cc: string; year: number }[] };
 
-export default function MyWorld({ onClose }: { onClose: () => void }) {
+export default function MyWorld({ onClose, openYear = false }: { onClose: () => void; openYear?: boolean }) {
   const { user } = useAuth();
   const { lang: rawLang } = useLang();
   const lang = (["he", "en", "es"].includes(rawLang as string) ? rawLang : "en") as Lang;
@@ -120,6 +120,7 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
   const [saveErr, setSaveErr] = useState(false);
   const [mode, setMode] = useState<"view" | "add" | "home">("view");
   const [hideSuggest, setHideSuggest] = useState(false);
+  const autoOpenedRef = useRef(false);
   const [shareOpen, setShareOpen] = useState<null | "world" | "year">(null);
 
   const api = useCallback(
@@ -181,6 +182,14 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
     try { await api("POST", { action: "setHome", cc }); setData((d) => (d ? { ...d, home: cc } : d)); setMode("view"); }
     catch { setSaveErr(true); }
   };
+
+  // Arriving from the yearly e-mail: open the summary card once, when it exists.
+  useEffect(() => {
+    if (openYear && yearStats && !autoOpenedRef.current) {
+      autoOpenedRef.current = true;
+      setShareOpen("year");
+    }
+  }, [openYear, yearStats]);
 
   const hasVisits = !!data && Object.keys(data.visits).length > 0;
   const suggestCountries = data ? new Set(data.suggestions.map((s) => s.cc)).size : 0;

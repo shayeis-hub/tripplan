@@ -34,3 +34,26 @@ export async function getWelcomeConfig(fresh = false): Promise<WelcomeConfig> {
 export const clearConfigCache = () => {
   cache = null;
 };
+
+// emailConfig/lifecycle.annual = { mode: "off"|"allowlist"|"all", allowlist: string[] }. Missing = off.
+export interface AnnualConfig {
+  mode: "off" | "allowlist" | "all";
+  allowlist: string[];
+}
+export const DEFAULT_ANNUAL_CONFIG: AnnualConfig = { mode: "off", allowlist: [] };
+
+export async function getAnnualConfig(): Promise<AnnualConfig> {
+  try {
+    const snap = await getAdminDb().collection("emailConfig").doc("lifecycle").get();
+    const a = snap.exists ? (snap.data()?.annual as Record<string, unknown> | undefined) : undefined;
+    if (!a) return DEFAULT_ANNUAL_CONFIG;
+    return {
+      mode: a.mode === "all" || a.mode === "allowlist" ? a.mode : "off",
+      allowlist: Array.isArray(a.allowlist)
+        ? (a.allowlist as unknown[]).filter((x): x is string => typeof x === "string").map((x) => x.trim().toLowerCase())
+        : [],
+    };
+  } catch {
+    return DEFAULT_ANNUAL_CONFIG; // on any read problem, send nothing
+  }
+}

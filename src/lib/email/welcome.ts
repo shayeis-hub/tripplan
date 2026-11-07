@@ -4,7 +4,7 @@ import { getWelcomeConfig } from "./config";
 import { emailHash, signToken, bucketOf, EmailConfigError } from "./tokens";
 import { providerConfigured, sendEmail } from "./provider";
 import { isAddressSuppressed } from "./suppression";
-import { renderWelcome } from "./templates";
+import { renderWelcome, type Rendered } from "./templates";
 import {
   RECORDED_SKIPS,
   decideNext,
@@ -61,7 +61,7 @@ export async function saveProfileLang(uid: string, lang: EmailLang, source: "sav
   });
 }
 
-async function readProfileLang(uid: string): Promise<unknown> {
+export async function readProfileLang(uid: string): Promise<unknown> {
   const s = await getAdminDb().collection("userProfiles").doc(uid).get();
   return s.exists ? s.data()?.lang : null;
 }
@@ -76,10 +76,12 @@ interface Deliver {
   lang: EmailLang;
   hash: string;
   variantLabel: string;
-  flow?: string; // "welcome" unless this is an admin test send
+  flow?: string; // "welcome" unless this is an admin test send or another flow
+  version?: number; // WELCOME_VERSION unless another flow
+  render?: (clickUrl: string, unsubscribeUrl: string) => Rendered; // welcome template unless another flow
 }
 
-async function deliver(d: Deliver): Promise<WelcomeResult> {
+export async function deliver(d: Deliver): Promise<WelcomeResult> {
   const now = Date.now();
   const ref = events().doc(d.eventId);
 
@@ -93,7 +95,7 @@ async function deliver(d: Deliver): Promise<WelcomeResult> {
       tx.create(ref, {
         uid: d.uid,
         flow: d.flow ?? WELCOME_FLOW,
-        version: WELCOME_VERSION,
+        version: d.version ?? WELCOME_VERSION,
         status: "reserved",
         attempts: 1,
         lang: d.lang,
@@ -125,7 +127,7 @@ async function deliver(d: Deliver): Promise<WelcomeResult> {
   // 2. Send.
   const clickUrl = `${SITE_URL}/api/e/c?t=${signToken({ k: "c", ev: d.eventId })}`;
   const unsubscribeUrl = `${SITE_URL}/api/email/unsubscribe?t=${signToken({ k: "u", h: d.hash, ev: d.eventId, l: d.lang })}`;
-  const mail = renderWelcome({ lang: d.lang, firstName: d.firstName, ctaUrl: clickUrl, unsubscribeUrl });
+  const mail = d.render ? d.render(clickUrl, unsubscribeUrl) : renderWelcome({ lang: d.lang, firstName: d.firstName, ctaUrl: clickUrl, unsubscribeUrl });
 
   const out = await sendEmail({
     to: d.email,
