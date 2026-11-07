@@ -81,15 +81,21 @@ export default function AdminEmailPage() {
   };
 
   // Yearly "My World" summary ("2026 in the world"): off unless turned on here. The cron only sends Dec 17-31.
-  const [annualMsg, setAnnualMsg] = useState<string>("");
-  const annualTest = async (lang: string) => {
-    const r = await call("POST", { action: "annual_test", lang });
-    setAnnualMsg(r?.ok ? "Test sent to your address" : `Test failed: ${r?.error ?? r?.result?.status ?? "unknown"}`);
+  const [notice, setNotice] = useState<string>("");
+  const [testLang, setTestLang] = useState<"he" | "en" | "es">("he");
+  const welcomeTest = async () => {
+    const r = await call("POST", { action: "test", lang: testLang });
+    setNotice(r?.ok ? "Welcome test sent to your address" : `Welcome test failed: ${r?.error ?? r?.result?.status ?? "unknown"}`);
+    await load();
+  };
+  const annualTest = async () => {
+    const r = await call("POST", { action: "annual_test", lang: testLang });
+    setNotice(r?.ok ? "Yearly summary test sent to your address" : `Test failed: ${r?.error ?? r?.result?.status ?? "unknown"}`);
     await load();
   };
   const annualDry = async () => {
     const r = await call("POST", { action: "annual_dryrun" });
-    setAnnualMsg(r?.ok ? `Users with a visit this year: ${r.candidates}. Would receive it: ${r.eligible}. Skipped: ${JSON.stringify(r.reasons)}` : "Dry run failed");
+    setNotice(r?.ok ? `Yearly summary dry run: ${r.candidates} users with a visit this year, ${r.eligible} would receive it. Skipped: ${JSON.stringify(r.reasons)}` : "Dry run failed");
   };
   const annualSet = async (mode: "all" | "off") => {
     if (!window.confirm(mode === "all" ? "Turn ON the yearly summary e-mail? It is sent daily from Dec 17 to Dec 31." : "Turn OFF the yearly summary e-mail?")) return;
@@ -97,10 +103,9 @@ export default function AdminEmailPage() {
     await load();
   };
 
-  const [verifyMsg, setVerifyMsg] = useState<string>("");
-  const verifyTest = async (lang: string) => {
-    const r = await call("POST", { action: "verify_test", lang });
-    setVerifyMsg(r?.ok ? "Test sent to your address" : `Test failed: ${r?.result?.reason ?? r?.result?.status ?? r?.error ?? "unknown"}`);
+  const verifyTest = async () => {
+    const r = await call("POST", { action: "verify_test", lang: testLang });
+    setNotice(r?.ok ? "Verification test sent to your address" : `Test failed: ${r?.error ?? r?.result?.reason ?? r?.result?.status ?? "unknown"}`);
     await load();
   };
   const verifySet = async (mode: "all" | "off") => {
@@ -119,6 +124,12 @@ export default function AdminEmailPage() {
   const mode = report?.config?.mode ?? "off";
   const annualMode = report?.annualConfig?.mode ?? "off";
   const verifyMode = report?.verifyConfig?.mode ?? "off";
+  const linkBtn: React.CSSProperties = { background: "none", border: 0, color: TEAL, fontSize: 12, cursor: "pointer", padding: 0, textDecoration: "underline" };
+  const kinds = [
+    { name: "Welcome", on: mode !== "off", onText: mode === "all" ? "Sent to each new Google/Apple sign-up." : "Test mode.", test: welcomeTest, toggle: turnOff, canTurnOn: false, dry: null as null | (() => void) },
+    { name: "Address verification", on: verifyMode !== "off", onText: "Sent once to each new e-mail/password sign-up.", test: verifyTest, toggle: () => verifySet(verifyMode === "off" ? "all" : "off"), canTurnOn: true, dry: null as null | (() => void) },
+    { name: "Yearly summary", on: annualMode !== "off", onText: "Sent daily Dec 17 to Dec 31, once per user.", test: annualTest, toggle: () => annualSet(annualMode === "off" ? "all" : "off"), canTurnOn: true, dry: annualDry as null | (() => void) },
+  ];
   const rows = (report?.recent ?? []).filter((e) => showTests || e.flow === "welcome");
 
   return (
@@ -130,67 +141,51 @@ export default function AdminEmailPage() {
             <h1 style={{ fontSize: 24, fontWeight: 900, margin: "6px 0 0" }}>Emails</h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 13, color: mode === "all" ? "#4ade80" : "#fbbf24" }}>
-              Welcome e-mail: {mode === "all" ? "on for new users" : mode === "allowlist" ? "test mode" : "off"}
-            </span>
-            {mode !== "off" && (
-              <button onClick={turnOff} disabled={busy} style={{ background: "transparent", color: "#ff6b6b", border: "0.5px solid #ff6b6b", borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>
-                Turn off
-              </button>
-            )}
             <button onClick={load} disabled={busy} style={{ background: TEAL, color: "#0d2137", border: 0, borderRadius: 999, padding: "8px 18px", fontWeight: 800, cursor: "pointer" }}>
               {busy ? "..." : "Refresh"}
             </button>
           </div>
         </div>
 
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(100,223,223,0.18)", borderRadius: 16, padding: "14px 18px", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 800 }}>Yearly summary e-mail</div>
-              <div style={{ fontSize: 12, marginTop: 2, color: annualMode === "off" ? "#fbbf24" : "#4ade80" }}>
-                {annualMode === "off" ? "Off. Nothing is sent." : annualMode === "allowlist" ? "Test mode" : "On. Sent daily Dec 17 to Dec 31, once per user."}
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(100,223,223,0.18)", borderRadius: 16, marginBottom: 20, overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "12px 16px", borderBottom: "0.5px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>E-mail types</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
+              Test language
               {(["he", "en", "es"] as const).map((l) => (
-                <button key={l} onClick={() => annualTest(l)} disabled={busy} style={{ background: "transparent", color: TEAL, border: "0.5px solid " + TEAL, borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>
-                  Test to me ({LANG[l]})
+                <button key={l} onClick={() => setTestLang(l)} style={{ background: testLang === l ? TEAL : "transparent", color: testLang === l ? "#0d2137" : "rgba(255,255,255,0.7)", border: "0.5px solid " + (testLang === l ? TEAL : "rgba(255,255,255,0.25)"), borderRadius: 999, padding: "3px 11px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  {l.toUpperCase()}
                 </button>
               ))}
-              <button onClick={annualDry} disabled={busy} style={{ background: "transparent", color: "#fff", border: "0.5px solid rgba(255,255,255,0.3)", borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Dry run</button>
-              {annualMode === "off" ? (
-                <button onClick={() => annualSet("all")} disabled={busy} style={{ background: TEAL, color: "#0d2137", border: 0, borderRadius: 999, padding: "6px 16px", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>Turn on</button>
-              ) : (
-                <button onClick={() => annualSet("off")} disabled={busy} style={{ background: "transparent", color: "#ff6b6b", border: "0.5px solid #ff6b6b", borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Turn off</button>
-              )}
             </div>
           </div>
-          {annualMsg && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 10 }}>{annualMsg}</div>}
-        </div>
-
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(100,223,223,0.18)", borderRadius: 16, padding: "14px 18px", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 800 }}>Address verification e-mail</div>
-              <div style={{ fontSize: 12, marginTop: 2, color: verifyMode === "off" ? "#fbbf24" : "#4ade80" }}>
-                {verifyMode === "off" ? "Off. Nothing is sent." : "On. Sent once to each new e-mail/password sign-up."}
+          {kinds.map((k, i) => (
+            <div key={k.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", padding: "11px 16px", borderTop: i ? "0.5px solid rgba(255,255,255,0.06)" : "none" }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 999, background: k.on ? "#4ade80" : "#fbbf24", display: "inline-block" }} />
+                  {k.name}
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{k.on ? k.onText : "Off. Nothing is sent."}</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                {k.dry && <button onClick={k.dry} disabled={busy} style={linkBtn}>Dry run</button>}
+                <button onClick={k.test} disabled={busy} style={linkBtn}>Send me a test</button>
+                <button
+                  role="switch"
+                  aria-checked={k.on}
+                  aria-label={k.name}
+                  onClick={k.toggle}
+                  disabled={busy || (!k.on && !k.canTurnOn)}
+                  title={!k.on && !k.canTurnOn ? "Turning this one on is done deliberately by the owner" : undefined}
+                  style={{ width: 42, height: 24, borderRadius: 999, border: 0, padding: 2, background: k.on ? "#4ade80" : "rgba(255,255,255,0.2)", cursor: busy || (!k.on && !k.canTurnOn) ? "default" : "pointer", opacity: !k.on && !k.canTurnOn ? 0.4 : 1, display: "flex", justifyContent: k.on ? "flex-end" : "flex-start" }}
+                >
+                  <span style={{ width: 20, height: 20, borderRadius: 999, background: "#fff", display: "block" }} />
+                </button>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {(["he", "en", "es"] as const).map((l) => (
-                <button key={l} onClick={() => verifyTest(l)} disabled={busy} style={{ background: "transparent", color: TEAL, border: "0.5px solid " + TEAL, borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>
-                  Test to me ({LANG[l]})
-                </button>
-              ))}
-              {verifyMode === "off" ? (
-                <button onClick={() => verifySet("all")} disabled={busy} style={{ background: TEAL, color: "#0d2137", border: 0, borderRadius: 999, padding: "6px 16px", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>Turn on</button>
-              ) : (
-                <button onClick={() => verifySet("off")} disabled={busy} style={{ background: "transparent", color: "#ff6b6b", border: "0.5px solid #ff6b6b", borderRadius: 999, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Turn off</button>
-              )}
-            </div>
-          </div>
-          {verifyMsg && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 10 }}>{verifyMsg}</div>}
+          ))}
+          {notice && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", padding: "10px 16px", borderTop: "0.5px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}>{notice}</div>}
         </div>
 
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
