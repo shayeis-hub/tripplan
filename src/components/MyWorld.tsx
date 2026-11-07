@@ -6,7 +6,7 @@ import { useLang } from "@/lib/LangContext";
 import { COUNTRY_ALIASES, COUNTRY_NAMES, norm } from "@/lib/world/countries";
 import { CONTINENT, MAP_DOTS, MAP_H, MAP_PATHS, MAP_W } from "@/lib/world/geo";
 import { computeStats, type VisitMap, type WorldStats } from "@/lib/world/stats";
-import { downloadImage, isNativeShell, renderWorldCard, shareImage } from "@/lib/world/share-card";
+import { CARD_DESIGNS, CARD_FORMATS, downloadImage, isNativeShell, renderWorldCard, shareImage, type CardDesign, type CardFormat } from "@/lib/world/share-card";
 
 const RF = "'Rubik',sans-serif";
 const TEAL = "#64dfdf";
@@ -77,11 +77,14 @@ const T = {
   close: { he: "סגירה", en: "Close", es: "Cerrar" },
   share: { he: "שתפו", en: "Share", es: "Compartir" },
   download: { he: "הורידו תמונה", en: "Download image", es: "Descargar imagen" },
-  cardFooter: { he: "העולם שלי בטיולון", en: "My world on TUlon", es: "Mi mundo en TUlon" },
-  cardHeadline: {
-    he: (n: number, c: number) => `${n === 1 ? "מדינה אחת" : n + " מדינות"}. ${c === 1 ? "יבשת אחת" : c + " יבשות"}.`,
-    en: (n: number, c: number) => `${n} ${n === 1 ? "country" : "countries"}. ${c} ${c === 1 ? "continent" : "continents"}.`,
-    es: (n: number, c: number) => `${n} ${n === 1 ? "país" : "países"}. ${c} ${c === 1 ? "continente" : "continentes"}.`,
+  designName: {
+    ticket: { he: "כרטיס טיסה", en: "Boarding pass", es: "Tarjeta de embarque" },
+    night: { he: "כהה", en: "Dark", es: "Oscuro" },
+    sky: { he: "בהיר", en: "Bright", es: "Claro" },
+  },
+  formatName: {
+    post: { he: "פוסט", en: "Post", es: "Publicación" },
+    story: { he: "סטורי", en: "Story", es: "Historia" },
   },
   cardError: { he: "לא הצלחנו ליצור את התמונה. נסו שוב.", en: "Couldn't create the image. Try again.", es: "No se pudo crear la imagen. Inténtalo de nuevo." },
   loading: { he: "טוען...", en: "Loading...", es: "Cargando..." },
@@ -473,22 +476,34 @@ function ShareSheet({ stats, lang, dir, T: tr, onClose }: { stats: WorldStats; l
   const [url, setUrl] = useState<string | null>(null);
   const [err, setErr] = useState(false);
   const native = isNativeShell();
+  const [design, setDesign] = useState<CardDesign>(() => {
+    try { const v = localStorage.getItem("tulon_world_design"); if (v && (CARD_DESIGNS as string[]).includes(v)) return v as CardDesign; } catch { /* storage blocked */ }
+    return "ticket";
+  });
+  const [format, setFormat] = useState<CardFormat>(() => {
+    try { const v = localStorage.getItem("tulon_world_format"); if (v && (CARD_FORMATS as string[]).includes(v)) return v as CardFormat; } catch { /* storage blocked */ }
+    return "post";
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const choose = (key: string, v: string, set: (x: any) => void) => {
+    set(v);
+    try { localStorage.setItem(key, v); } catch { /* storage blocked */ }
+  };
 
   useEffect(() => {
     let alive = true;
     let objUrl: string | null = null;
+    setErr(false);
     (async () => {
       try {
-        const stat: { value: string; label: string }[] = [{ value: `${stats.pctWorld}%`, label: tr("ofWorld") }];
-        if (stats.km != null && stats.km > 0) stat.push({ value: stats.km.toLocaleString(lang), label: tr("km") });
-        stat.push({ value: String(stats.languages), label: tr("languages") });
         const b = await renderWorldCard({
-          rtl: lang === "he",
+          lang, design, format,
           visited: new Set(stats.visited),
-          title: tr("title"),
-          headline: tr("cardHeadline")(stats.countries, stats.continents),
-          footer: tr("cardFooter"),
-          stats: stat,
+          countries: stats.countries,
+          continents: stats.continents,
+          pctWorld: stats.pctWorld,
+          km: stats.km,
+          languages: stats.languages,
         });
         if (!alive) return;
         objUrl = URL.createObjectURL(b);
@@ -499,11 +514,9 @@ function ShareSheet({ stats, lang, dir, T: tr, onClose }: { stats: WorldStats; l
       }
     })();
     return () => { alive = false; if (objUrl) URL.revokeObjectURL(objUrl); };
-    // tr is re-created on every parent render; the card only depends on the stats and language
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stats, lang]);
+  }, [stats, lang, design, format]);
 
-  const FILE = "tulon-my-world.png";
+  const FILE = `tulon-my-world-${design}-${format}.png`;
   const doShare = async () => {
     if (!blob) return;
     try {
@@ -513,6 +526,10 @@ function ShareSheet({ stats, lang, dir, T: tr, onClose }: { stats: WorldStats; l
       setErr(true);
     }
   };
+  const seg = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: "9px 6px", borderRadius: 10, cursor: "pointer", fontFamily: RF, fontSize: 13, fontWeight: 600,
+    border: active ? "0.5px solid " + TEAL : LINE, background: active ? "rgba(100,223,223,0.16)" : "rgba(255,255,255,0.05)", color: active ? TEAL : "rgba(255,255,255,0.7)",
+  });
 
   return (
     <div role="dialog" aria-modal="true" dir={dir}
@@ -523,9 +540,25 @@ function ShareSheet({ stats, lang, dir, T: tr, onClose }: { stats: WorldStats; l
           <X size={18} strokeWidth={1.75} />
         </button>
       </div>
+      <div style={{ width: "100%", maxWidth: 360, display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+        <div style={{ display: "flex", gap: 6 }} role="group">
+          {CARD_DESIGNS.map((d) => (
+            <button key={d} onClick={() => choose("tulon_world_design", d, setDesign)} aria-pressed={design === d} style={seg(design === d)}>
+              {(T.designName[d] as Record<Lang, string>)[lang]}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 6 }} role="group">
+          {CARD_FORMATS.map((f) => (
+            <button key={f} onClick={() => choose("tulon_world_format", f, setFormat)} aria-pressed={format === f} style={seg(format === f)}>
+              {(T.formatName[f] as Record<Lang, string>)[lang]} {f === "post" ? "4:5" : "9:16"}
+            </button>
+          ))}
+        </div>
+      </div>
       {url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" style={{ width: "100%", maxWidth: 300, height: "auto", borderRadius: 16, border: LINE, display: "block" }} />
+        <img src={url} alt="" style={{ width: "100%", maxWidth: format === "post" ? 300 : 220, height: "auto", borderRadius: 16, border: LINE, display: "block" }} />
       )}
       {!url && !err && <div style={{ color: W40, padding: "80px 0" }}>{tr("loading")}</div>}
       {err && <div style={{ color: "#ff8a8a", fontSize: 14, padding: "12px 0" }}>{tr("cardError")}</div>}
