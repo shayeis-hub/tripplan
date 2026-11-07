@@ -39,10 +39,10 @@ export function computeStats(home: string | null | undefined, visits: VisitMap):
   const homeCap = home ? CAPITALS[home] : undefined;
   if (homeCap) {
     km = 0;
-    // One round trip per distinct country (not per visit): a lower-bound estimate.
-    for (const c of visited) {
-      if (c === home || !CAPITALS[c]) continue;
-      km += 2 * distanceKm(homeCap, CAPITALS[c]);
+    // One round trip per entered visit (country + year), capital to capital.
+    for (const v of Object.values(visits)) {
+      if (v.cc === home || !CAPITALS[v.cc]) continue;
+      km += 2 * distanceKm(homeCap, CAPITALS[v.cc]);
     }
     km = Math.round(km / 100) * 100;
   }

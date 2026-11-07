@@ -1,10 +1,10 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Globe, Plus, X, Trash2, Check, Search, MapPin } from "lucide-react";
+import { Globe, Plus, X, Trash2, Check, Search, MapPin, ChevronDown } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { useLang } from "@/lib/LangContext";
 import { COUNTRY_ALIASES, COUNTRY_NAMES, norm } from "@/lib/world/countries";
-import { MAP_DOTS, MAP_H, MAP_PATHS, MAP_W } from "@/lib/world/geo";
+import { CONTINENT, MAP_DOTS, MAP_H, MAP_PATHS, MAP_W } from "@/lib/world/geo";
 import { computeStats, type VisitMap } from "@/lib/world/stats";
 
 const RF = "'Rubik',sans-serif";
@@ -47,17 +47,20 @@ const T = {
   ofCountries: { he: "מתוך 195 מדינות", en: "of 195 countries", es: "de 195 países" },
   km: { he: "ק״מ בטיסה (משוער)", en: "km flown (estimate)", es: "km volados (estimación)" },
   kmNote: {
-    he: "קו אווירי בין הבירות, הלוך וחזור, פעם אחת לכל מדינה.",
-    en: "Straight line between capitals, round trip, once per country.",
-    es: "Línea recta entre capitales, ida y vuelta, una vez por país.",
+    he: "קו אווירי בין הבירות, הלוך וחזור, לכל ביקור שהוזן.",
+    en: "Straight line between capitals, round trip, for each visit you entered.",
+    es: "Línea recta entre capitales, ida y vuelta, por cada visita ingresada.",
   },
   lapsMany: { he: (n: string) => `פי ${n} סביב כדור הארץ`, en: (n: string) => `${n} times around the Earth`, es: (n: string) => `${n} vueltas a la Tierra` },
   lapsPart: { he: (n: number) => `${n}% מהדרך סביב כדור הארץ`, en: (n: number) => `${n}% of the way around the Earth`, es: (n: number) => `${n}% de la vuelta a la Tierra` },
-  languages: { he: "שפות רשמיות", en: "Official languages", es: "Idiomas oficiales" },
-  languagesNote: {
-    he: "בכל המדינות שביקרתם בהן, לא בהכרח שפות ששמעתם.",
-    en: "Across the countries you visited, not necessarily languages you heard.",
-    es: "En los países que visitaste, no necesariamente idiomas que oíste.",
+  languages: { he: "שפות רשמיות שכנראה שמעתם", en: "Official languages you probably heard", es: "Idiomas oficiales que probablemente oíste" },
+  continentNames: {
+    AF: { he: "אפריקה", en: "Africa", es: "África" },
+    AS: { he: "אסיה", en: "Asia", es: "Asia" },
+    EU: { he: "אירופה", en: "Europe", es: "Europa" },
+    NA: { he: "צפון אמריקה", en: "North America", es: "Norteamérica" },
+    SA: { he: "דרום אמריקה", en: "South America", es: "Sudamérica" },
+    OC: { he: "אוקיאניה", en: "Oceania", es: "Oceanía" },
   },
   territories: {
     he: (n: number) => (n === 1 ? "עוד שטח אחד מסומן במפה ואינו נכלל בסך המדינות." : `עוד ${n} שטחים מסומנים במפה ואינם נכללים בסך המדינות.`),
@@ -217,7 +220,7 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
                   <Stat big={stats.countries} label={tr("countries")} sub={tr("ofCountries")} />
                   <Stat big={stats.continents} label={tr("continents")} sub={tr("ofContinents")} />
                   <Stat big={`${stats.pctWorld}%`} label={tr("ofWorld")} sub={tr("ofCountries")} />
-                  <Stat big={stats.languages} label={tr("languages")} sub={tr("languagesNote")} />
+                  <Stat big={stats.languages} label={tr("languages")} />
                 </div>
 
                 <div style={{ background: CARD, border: LINE, borderRadius: 14, padding: 14, marginTop: 10 }}>
@@ -249,8 +252,8 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
                   )}
                 </div>
 
-                <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, margin: "22px 0 8px", letterSpacing: 0.4 }}>{tr("listTitle")}</div>
-                <VisitList visits={data.visits} nameOf={nameOf} onRemove={removeVisit} removeLabel={tr("remove")} />
+                <VisitList visits={data.visits} nameOf={nameOf} onRemove={removeVisit} removeLabel={tr("remove")} title={tr("listTitle")}
+                  contName={(c: string) => (T.continentNames as Record<string, Record<Lang, string>>)[c][lang]} />
               </>
             )}
           </>
@@ -292,32 +295,61 @@ function WorldMap({ visited }: { visited: Set<string> }) {
   );
 }
 
-function VisitList({ visits, nameOf, onRemove, removeLabel }: { visits: VisitMap; nameOf: (cc: string) => string; onRemove: (id: string) => void; removeLabel: string }) {
-  const byYear = new Map<number, [string, VisitMap[string]][]>();
+function Chevron({ open }: { open: boolean }) {
+  return <ChevronDown size={18} strokeWidth={1.75} style={{ transition: "transform 0.15s", transform: open ? "rotate(180deg)" : "none", flexShrink: 0 }} />;
+}
+
+// All visits live under one collapsible header; inside, one collapsible section per continent.
+function VisitList({ visits, nameOf, onRemove, removeLabel, title, contName }: {
+  visits: VisitMap; nameOf: (cc: string) => string; onRemove: (id: string) => void; removeLabel: string; title: string; contName: (c: string) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [openCont, setOpenCont] = useState<Record<string, boolean>>({});
+  const groups = new Map<string, [string, VisitMap[string]][]>();
   for (const e of Object.entries(visits)) {
-    const arr = byYear.get(e[1].year) || [];
+    const c = CONTINENT[e[1].cc] || "AS";
+    const arr = groups.get(c) || [];
     arr.push(e);
-    byYear.set(e[1].year, arr);
+    groups.set(c, arr);
   }
-  const years = [...byYear.keys()].sort((a, b) => b - a);
+  const conts = [...groups.keys()].sort((a, b) => groups.get(b)!.length - groups.get(a)!.length);
+  const total = Object.keys(visits).length;
+  const head: React.CSSProperties = { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", fontFamily: RF, textAlign: "start", color: "#fff" };
   return (
-    <div>
-      {years.map((y) => (
-        <div key={y} style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 12, color: W40, marginBottom: 4 }}>{y}</div>
-          {byYear.get(y)!.map(([id, v]) => (
-            <div key={id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: CARD, border: LINE, borderRadius: 10, marginBottom: 4 }}>
-              <div style={{ fontSize: 14 }}>
-                {nameOf(v.cc)}{v.city ? <span style={{ color: W40 }}> · {v.city}</span> : null}
+    <div style={{ marginTop: 18 }}>
+      <button onClick={() => setOpen(!open)} aria-expanded={open} style={{ ...head, padding: "13px 14px", background: CARD, border: LINE, borderRadius: 12, fontSize: 15, fontWeight: 700 }}>
+        <span>{title} <span style={{ color: W40, fontWeight: 500 }}>({total})</span></span>
+        <Chevron open={open} />
+      </button>
+      {open && (
+        <div style={{ marginTop: 8 }}>
+          {conts.map((c) => {
+            const rows = groups.get(c)!.sort((a, b) => b[1].year - a[1].year || nameOf(a[1].cc).localeCompare(nameOf(b[1].cc)));
+            const isOpen = !!openCont[c];
+            return (
+              <div key={c} style={{ marginBottom: 6 }}>
+                <button onClick={() => setOpenCont((o) => ({ ...o, [c]: !o[c] }))} aria-expanded={isOpen}
+                  style={{ ...head, padding: "10px 12px", background: "none", border: "none", borderBottom: LINE, fontSize: 14, fontWeight: 600, color: TEAL }}>
+                  <span>{contName(c)} <span style={{ color: W40, fontWeight: 500 }}>({rows.length})</span></span>
+                  <Chevron open={isOpen} />
+                </button>
+                {isOpen && rows.map(([id, v]) => (
+                  <div key={id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: CARD, border: LINE, borderRadius: 10, marginTop: 4 }}>
+                    <div style={{ fontSize: 14 }}>
+                      {nameOf(v.cc)}{v.city ? <span style={{ color: W40 }}> · {v.city}</span> : null}
+                      <span style={{ color: W40 }}> · {v.year}</span>
+                    </div>
+                    <button onClick={() => onRemove(id)} aria-label={removeLabel}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: W40, display: "flex", padding: 4 }}>
+                      <Trash2 size={16} strokeWidth={1.5} />
+                    </button>
+                  </div>
+                ))}
               </div>
-              <button onClick={() => onRemove(id)} aria-label={removeLabel}
-                style={{ background: "none", border: "none", cursor: "pointer", color: W40, display: "flex", padding: 4 }}>
-                <Trash2 size={16} strokeWidth={1.5} />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
-      ))}
+      )}
     </div>
   );
 }
