@@ -108,8 +108,12 @@ export async function POST(req: NextRequest) {
   // Address-verification e-mail for e-mail/password sign-ups (off unless turned on here).
   if (body?.action === "verify_test") {
     const decoded = await getAdminAuth().verifyIdToken(req.headers.get("authorization")!.replace("Bearer ", ""));
-    const r = await handleVerifyEmail({ uid: decoded.uid, requestedLang: isEmailLang(body?.lang) ? body.lang : "he", test: true });
-    return NextResponse.json({ ok: r.status === "sent", result: r }, { status: r.status === "sent" ? 200 : 400 });
+    try {
+      const r = await handleVerifyEmail({ uid: decoded.uid, requestedLang: isEmailLang(body?.lang) ? body.lang : "he", test: true });
+      return NextResponse.json({ ok: r.status === "sent", result: r }, { status: r.status === "sent" ? 200 : 400 });
+    } catch (err) {
+      return NextResponse.json({ ok: false, error: err instanceof Error ? err.message.slice(0, 160) : "unknown error" }, { status: 500 });
+    }
   }
   if (body?.action === "verify_config") {
     const mode = body.mode === "all" || body.mode === "allowlist" ? body.mode : "off";

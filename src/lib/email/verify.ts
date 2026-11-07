@@ -1,5 +1,5 @@
 import { getAdminAuth } from "@/lib/firebase-admin";
-import { SITE_URL, VERIFY_FLOW, VERIFY_MAX_ACCOUNT_AGE_MS, VERIFY_VERSION, type EmailLang } from "./constants";
+import { VERIFY_FLOW, VERIFY_MAX_ACCOUNT_AGE_MS, VERIFY_VERSION, type EmailLang } from "./constants";
 import { getVerifyConfig } from "./config";
 import { emailHash, EmailConfigError } from "./tokens";
 import { providerConfigured } from "./provider";
@@ -44,7 +44,11 @@ export async function handleVerifyEmail(args: { uid: string; requestedLang: unkn
   if (await isAddressSuppressed(hash)) return { status: "skipped", reason: "suppressed", final: true };
 
   const lang: EmailLang = resolveEmailLang(args.requestedLang, await readProfileLang(args.uid));
-  const raw = await getAdminAuth().generateEmailVerificationLink(email, { url: `${SITE_URL}/?verified=1` });
+  const raw = await getAdminAuth().generateEmailVerificationLink(email, {
+    // The apex is the authorized domain in Firebase Auth (www.tulon.app is not listed, and the Admin SDK rejects it
+    // with "Domain not allowlisted by project"); it redirects to www.
+    url: "https://tulon.app/?verified=1",
+  });
   // Firebase's hosted page honours ?lang= for its own wording.
   const u = new URL(raw);
   u.searchParams.set("lang", lang);
