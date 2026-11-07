@@ -157,7 +157,10 @@ export default function MyWorld({ onClose, openYear = false }: { onClose: () => 
     if (!data) return null;
     const y = annualYear(new Date());
     if (y == null) return null;
-    const ys = computeYearStats(data.home, data.visits, y);
+    // The summary counts trips from the app too (suggestions), accepted or not, so it matches the yearly e-mail.
+    const merged: VisitMap = { ...data.visits };
+    for (const t of data.suggestions) merged[`t:${t.cc}:${t.year}`] = { cc: t.cc, year: t.year, source: "trip" };
+    const ys = computeYearStats(data.home, merged, y);
     return ys.visits > 0 ? ys : null;
   }, [data]);
 

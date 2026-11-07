@@ -7,11 +7,13 @@ import { isAddressSuppressed } from "./suppression";
 import { renderAnnual } from "./templates";
 import { deliver, readProfileLang } from "./welcome";
 import { firstNameOf, resolveEmailLang } from "./welcomeLogic";
-import { computeYearStats, type VisitMap } from "@/lib/world/stats";
+import { computeYearStats } from "@/lib/world/stats";
+import { loadWorld, mergeVisits } from "@/lib/world/serverVisits";
 
 // Yearly "My World" summary e-mail ("2026 in the world").
 //
-// Who: users who entered at least one country visited IN that year, with a verified Google/Apple address
+// Who: users with at least one visit in that year, from My World OR from their own finished trips in the app
+// (see lib/world/serverVisits.ts), with a verified Google/Apple address
 // (not an Apple private relay), not suppressed (unsubscribed / bounced / complained).
 // When: a daily cron from Dec 17 to Dec 31 sends up to BATCH_LIMIT per run (Resend's free plan allows 100 a day
 // in total, shared with the welcome e-mail), so a larger audience simply spreads over several days.
@@ -70,61 +72,73 @@ export async function runAnnualBatch(opts: { now?: Date; limit?: number; dryRun?
 
   const db = getAdminDb();
   const limit = opts.limit ?? BATCH_LIMIT;
-  let last: FirebaseFirestore.QueryDocumentSnapshot | null = null;
 
-  for (;;) {
-    let q = db.collection("worldProfiles").orderBy("__name__").limit(200);
+  // Everyone who may have a summary: users with a My World profile, plus owners of a trip that ended this year.
+  const uids = new Set<string>();
+  for (let last: FirebaseFirestore.QueryDocumentSnapshot | null = null; ; ) {
+    let q = db.collection("worldProfiles").orderBy("__name__").limit(300);
     if (last) q = q.startAfter(last);
     const page = await q.get();
-    if (page.empty) break;
-    for (const doc of page.docs) {
-      last = doc;
-      const data = doc.data();
-      const stats = computeYearStats((data.home as string | null) ?? null, (data.visits || {}) as VisitMap, year);
-      if (stats.visits < 1) continue;
-      out.candidates++;
-      const uid = doc.id;
-      let user;
-      try {
-        user = await getAdminAuth().getUser(uid);
-      } catch {
-        bump("no_user");
-        continue;
-      }
-      const verdict = evaluateAnnual(
-        { email: user.email ?? null, emailVerified: user.emailVerified === true, countries: stats.countries },
-        opts.dryRun && cfg.mode === "off" ? { mode: "all", allowlist: [] } : cfg,
-      );
-      if ("reason" in verdict) { bump(verdict.reason); continue; }
-      let hash: string;
-      try {
-        hash = emailHash(user.email as string);
-      } catch (e) {
-        if (e instanceof EmailConfigError) return { ...out, skipped: "not_configured" };
-        throw e;
-      }
-      if (await isAddressSuppressed(hash)) { bump("suppressed"); continue; }
-      out.eligible++;
-      if (opts.dryRun) continue;
-
-      const eventId = annualEventId(uid, year);
-      const ev = await db.collection("emailEvents").doc(eventId).get();
-      const st = ev.exists ? (ev.data()?.status as string) : null;
-      if (st === "sent" || st === "unknown" || st === "skipped" || st === "held_out") { out.alreadyDone++; continue; }
-      if (out.sent >= limit) return out; // the rest goes out on the next daily run
-
-      const lang: EmailLang = resolveEmailLang(null, await readProfileLang(uid));
-      const r = await deliver({
-        eventId, uid, email: user.email as string, firstName: firstNameOf(user.displayName), lang, hash,
-        variantLabel: "treatment", flow: ANNUAL_FLOW, version: ANNUAL_VERSION,
-        render: (ctaUrl, unsubscribeUrl) =>
-          renderAnnual({ lang, year, countries: stats.countries, newCountries: stats.newCountries, firstName: firstNameOf(user.displayName), ctaUrl, unsubscribeUrl }),
-      });
-      if (r.status === "sent") out.sent++;
-      else if (r.status === "failed" || r.status === "unknown") out.failed++;
-      await sleep(150); // Resend: at most 10 requests a second
+    for (const d of page.docs) uids.add(d.id);
+    if (page.size < 300) break;
+    last = page.docs[page.docs.length - 1];
+  }
+  for (let last: FirebaseFirestore.QueryDocumentSnapshot | null = null; ; ) {
+    let q = db.collection("trips").where("endDate", ">=", `${year}-01-01`).where("endDate", "<=", `${year}-12-31`).orderBy("endDate").limit(300);
+    if (last) q = q.startAfter(last);
+    const page = await q.get();
+    for (const d of page.docs) {
+      const o = d.data().owner;
+      if (typeof o === "string") uids.add(o);
     }
-    if (page.size < 200) break;
+    if (page.size < 300) break;
+    last = page.docs[page.docs.length - 1];
+  }
+
+  for (const uid of [...uids].sort()) {
+    const w = await loadWorld(uid);
+    const stats = computeYearStats(w.home, mergeVisits(w.visits, w.tripVisits), year);
+    if (stats.visits < 1) continue;
+    out.candidates++;
+    let user;
+    try {
+      user = await getAdminAuth().getUser(uid);
+    } catch {
+      bump("no_user");
+      continue;
+    }
+    const verdict = evaluateAnnual(
+      { email: user.email ?? null, emailVerified: user.emailVerified === true, countries: stats.countries },
+      opts.dryRun && cfg.mode === "off" ? { mode: "all", allowlist: [] } : cfg,
+    );
+    if ("reason" in verdict) { bump(verdict.reason); continue; }
+    let hash: string;
+    try {
+      hash = emailHash(user.email as string);
+    } catch (e) {
+      if (e instanceof EmailConfigError) return { ...out, skipped: "not_configured" };
+      throw e;
+    }
+    if (await isAddressSuppressed(hash)) { bump("suppressed"); continue; }
+    out.eligible++;
+    if (opts.dryRun) continue;
+
+    const eventId = annualEventId(uid, year);
+    const ev = await db.collection("emailEvents").doc(eventId).get();
+    const st = ev.exists ? (ev.data()?.status as string) : null;
+    if (st === "sent" || st === "unknown" || st === "skipped" || st === "held_out") { out.alreadyDone++; continue; }
+    if (out.sent >= limit) return out; // the rest goes out on the next daily run
+
+    const lang: EmailLang = resolveEmailLang(null, await readProfileLang(uid));
+    const r = await deliver({
+      eventId, uid, email: user.email as string, firstName: firstNameOf(user.displayName), lang, hash,
+      variantLabel: "treatment", flow: ANNUAL_FLOW, version: ANNUAL_VERSION,
+      render: (ctaUrl, unsubscribeUrl) =>
+        renderAnnual({ lang, year, countries: stats.countries, newCountries: stats.newCountries, firstName: firstNameOf(user.displayName), ctaUrl, unsubscribeUrl }),
+    });
+    if (r.status === "sent") out.sent++;
+    else if (r.status === "failed" || r.status === "unknown") out.failed++;
+    await sleep(150); // Resend: at most 10 requests a second
   }
   return out;
 }
@@ -141,10 +155,10 @@ export async function sendAnnualTest(args: { uid: string; email: string; display
   if (await isAddressSuppressed(hash)) return { ok: false as const, error: "address is suppressed" };
 
   const year = new Date().getUTCFullYear();
-  const snap = await getAdminDb().collection("worldProfiles").doc(args.uid).get();
-  const real = snap.exists ? computeYearStats(snap.data()?.home ?? null, (snap.data()?.visits || {}) as VisitMap, year) : null;
-  const countries = real && real.countries > 0 ? real.countries : 4;
-  const newCountries = real && real.countries > 0 ? real.newCountries : 2;
+  const w = await loadWorld(args.uid);
+  const real = computeYearStats(w.home, mergeVisits(w.visits, w.tripVisits), year);
+  const countries = real.countries > 0 ? real.countries : 4;
+  const newCountries = real.countries > 0 ? real.newCountries : 2;
 
   const day = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   for (let n = 1; n <= 5; n++) {

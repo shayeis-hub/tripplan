@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { COUNTRY_NAMES, resolveCountry } from "@/lib/world/countries";
-import { hasMeaningfulContent } from "@/lib/tripContent";
+import { loadWorld } from "@/lib/world/serverVisits";
 
 export const dynamic = "force-dynamic";
 
@@ -39,38 +39,9 @@ const cleanCity = (v: unknown): string | undefined => {
 export async function GET(req: Request) {
   const uid = await requireUid(req);
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const db = getAdminDb();
-
-  const snap = await db.collection("worldProfiles").doc(uid).get();
-  const data = snap.exists ? snap.data() || {} : {};
-  const visits = (data.visits || {}) as Record<string, Visit>;
-
-  // Suggestions: finished trips of this user (owner only, with real content) whose destination resolves to
-  // a country, one per (country, year), minus what is already entered.
-  const suggestions: { cc: string; year: number }[] = [];
-  try {
-    const today = new Date().toISOString().slice(0, 10);
-    const trips = await db.collection("trips").where("owner", "==", uid).get();
-    const have = new Set(Object.values(visits).map((v) => `${v.cc}:${v.year}`));
-    const seen = new Set<string>();
-    for (const d of trips.docs) {
-      const t = d.data();
-      const end = typeof t.endDate === "string" ? t.endDate : "";
-      if (!end || end >= today || !hasMeaningfulContent(t)) continue;
-      const cc = resolveCountry(t.country) || resolveCountry(t.destination);
-      const year = Number(end.slice(0, 4));
-      if (!cc || !validYear(year)) continue;
-      const key = `${cc}:${year}`;
-      if (have.has(key) || seen.has(key)) continue;
-      seen.add(key);
-      suggestions.push({ cc, year });
-    }
-  } catch {
-    /* suggestions are a bonus; never fail the screen because of them */
-  }
-  suggestions.sort((a, b) => b.year - a.year);
-
-  return NextResponse.json({ home: data.home ?? null, visits, suggestions });
+  const w = await loadWorld(uid);
+  // Suggestions: the user's own finished trips, one per (country, year), minus what is already entered.
+  return NextResponse.json({ home: w.home, visits: w.visits, suggestions: w.tripVisits });
 }
 
 export async function POST(req: Request) {
