@@ -25,8 +25,9 @@ export async function handleVerifyEmail(args: { uid: string; requestedLang: unkn
   const user = await getAdminAuth().getUser(args.uid);
   const email = user.email ?? null;
   if (!email) return { status: "skipped", reason: "no_email", final: true };
-  if (cfg.mode === "off") return { status: "skipped", reason: "disabled", final: true };
-  if (cfg.mode === "allowlist" && !cfg.allowlist.includes(email.trim().toLowerCase())) return { status: "skipped", reason: "not_allowlisted", final: true };
+  // An admin test works whatever the switch says (it only ever goes to the admin's own address).
+  if (!args.test && cfg.mode === "off") return { status: "skipped", reason: "disabled", final: true };
+  if (!args.test && cfg.mode === "allowlist" && !cfg.allowlist.includes(email.trim().toLowerCase())) return { status: "skipped", reason: "not_allowlisted", final: true };
   if (!args.test && user.emailVerified) return { status: "skipped", reason: "already_verified", final: true };
   if (!args.test && !user.providerData.some((p) => p.providerId === "password")) return { status: "skipped", reason: "not_password", final: true };
   const created = Date.parse(user.metadata.creationTime);
