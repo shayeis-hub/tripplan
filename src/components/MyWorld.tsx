@@ -1,11 +1,12 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Globe, Plus, X, Trash2, Check, Search, MapPin, ChevronDown } from "lucide-react";
+import { Globe, Plus, X, Trash2, Check, Search, MapPin, ChevronDown, Share2, Download } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { useLang } from "@/lib/LangContext";
 import { COUNTRY_ALIASES, COUNTRY_NAMES, norm } from "@/lib/world/countries";
 import { CONTINENT, MAP_DOTS, MAP_H, MAP_PATHS, MAP_W } from "@/lib/world/geo";
-import { computeStats, type VisitMap } from "@/lib/world/stats";
+import { computeStats, type VisitMap, type WorldStats } from "@/lib/world/stats";
+import { downloadImage, isNativeShell, renderWorldCard, shareImage } from "@/lib/world/share-card";
 
 const RF = "'Rubik',sans-serif";
 const TEAL = "#64dfdf";
@@ -74,6 +75,15 @@ const T = {
   retry: { he: "נסו שוב", en: "Try again", es: "Reintentar" },
   saveError: { he: "השמירה נכשלה. נסו שוב.", en: "Couldn't save. Try again.", es: "No se pudo guardar. Inténtalo de nuevo." },
   close: { he: "סגירה", en: "Close", es: "Cerrar" },
+  share: { he: "שתפו", en: "Share", es: "Compartir" },
+  download: { he: "הורידו תמונה", en: "Download image", es: "Descargar imagen" },
+  cardFooter: { he: "העולם שלי בטיולון", en: "My world on TUlon", es: "Mi mundo en TUlon" },
+  cardHeadline: {
+    he: (n: number, c: number) => `${n === 1 ? "מדינה אחת" : n + " מדינות"}. ${c === 1 ? "יבשת אחת" : c + " יבשות"}.`,
+    en: (n: number, c: number) => `${n} ${n === 1 ? "country" : "countries"}. ${c} ${c === 1 ? "continent" : "continents"}.`,
+    es: (n: number, c: number) => `${n} ${n === 1 ? "país" : "países"}. ${c} ${c === 1 ? "continente" : "continentes"}.`,
+  },
+  cardError: { he: "לא הצלחנו ליצור את התמונה. נסו שוב.", en: "Couldn't create the image. Try again.", es: "No se pudo crear la imagen. Inténtalo de nuevo." },
   loading: { he: "טוען...", en: "Loading...", es: "Cargando..." },
 } as const;
 
@@ -104,6 +114,7 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
   const [saveErr, setSaveErr] = useState(false);
   const [mode, setMode] = useState<"view" | "add" | "home">("view");
   const [hideSuggest, setHideSuggest] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const api = useCallback(
     async (method: "GET" | "POST", body?: unknown) => {
@@ -245,6 +256,7 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
 
                 <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
                   <button onClick={() => setMode("add")} style={btn(true)}><Plus size={16} strokeWidth={2} />{tr("addMore")}</button>
+                  <button onClick={() => setShareOpen(true)} style={btn(false)}><Share2 size={16} strokeWidth={1.75} />{tr("share")}</button>
                   {data.home && (
                     <button onClick={() => setMode("home")} style={btn(false)}>
                       <MapPin size={15} strokeWidth={1.75} />{tr("homeLabel")}: {nameOf(data.home)} · {tr("homeChange")}
@@ -257,6 +269,10 @@ export default function MyWorld({ onClose }: { onClose: () => void }) {
               </>
             )}
           </>
+        )}
+
+        {shareOpen && stats && (
+          <ShareSheet stats={stats} lang={lang} dir={dir} T={tr} onClose={() => setShareOpen(false)} />
         )}
 
         {saveErr && <div style={{ color: "#ff8a8a", fontSize: 13, marginTop: 12 }}>{tr("saveError")}</div>}
@@ -447,6 +463,77 @@ function AddPanel({ search, T: tr, data, nameOf, addItems, onDone }: {
         </div>
       )}
       <button onClick={onDone} style={{ ...btn(true), marginTop: 18 }}>{tr("done")}</button>
+    </div>
+  );
+}
+
+function ShareSheet({ stats, lang, dir, T: tr, onClose }: { stats: WorldStats; lang: Lang; dir: string; T: (k: any) => any; onClose: () => void }) {
+  const [blob, setBlob] = useState<Blob | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
+  const [err, setErr] = useState(false);
+  const native = isNativeShell();
+
+  useEffect(() => {
+    let alive = true;
+    let objUrl: string | null = null;
+    (async () => {
+      try {
+        const stat: { value: string; label: string }[] = [{ value: `${stats.pctWorld}%`, label: tr("ofWorld") }];
+        if (stats.km != null && stats.km > 0) stat.push({ value: stats.km.toLocaleString(lang), label: tr("km") });
+        stat.push({ value: String(stats.languages), label: tr("languages") });
+        const b = await renderWorldCard({
+          rtl: lang === "he",
+          visited: new Set(stats.visited),
+          title: tr("title"),
+          headline: tr("cardHeadline")(stats.countries, stats.continents),
+          footer: tr("cardFooter"),
+          stats: stat,
+        });
+        if (!alive) return;
+        objUrl = URL.createObjectURL(b);
+        setBlob(b);
+        setUrl(objUrl);
+      } catch {
+        if (alive) setErr(true);
+      }
+    })();
+    return () => { alive = false; if (objUrl) URL.revokeObjectURL(objUrl); };
+    // tr is re-created on every parent render; the card only depends on the stats and language
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stats, lang]);
+
+  const FILE = "tulon-my-world.png";
+  const doShare = async () => {
+    if (!blob) return;
+    try {
+      const r = await shareImage(blob, FILE, tr("title"));
+      if (r === "unsupported") downloadImage(blob, FILE);
+    } catch {
+      setErr(true);
+    }
+  };
+
+  return (
+    <div role="dialog" aria-modal="true" dir={dir}
+      style={{ position: "fixed", inset: 0, zIndex: 520, background: "rgba(5,12,22,0.94)", display: "flex", flexDirection: "column", alignItems: "center", padding: "16px 16px calc(16px + env(safe-area-inset-bottom))", overflowY: "auto" }}>
+      <div style={{ width: "100%", maxWidth: 420, display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+        <button onClick={onClose} aria-label={tr("close")}
+          style={{ background: "rgba(255,255,255,0.06)", border: LINE, borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: W60 }}>
+          <X size={18} strokeWidth={1.75} />
+        </button>
+      </div>
+      {url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" style={{ width: "100%", maxWidth: 300, height: "auto", borderRadius: 16, border: LINE, display: "block" }} />
+      )}
+      {!url && !err && <div style={{ color: W40, padding: "80px 0" }}>{tr("loading")}</div>}
+      {err && <div style={{ color: "#ff8a8a", fontSize: 14, padding: "12px 0" }}>{tr("cardError")}</div>}
+      {blob && (
+        <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap", justifyContent: "center" }}>
+          <button onClick={doShare} style={btn(true)}><Share2 size={16} strokeWidth={1.75} />{tr("share")}</button>
+          {!native && <button onClick={() => downloadImage(blob, FILE)} style={btn(false)}><Download size={16} strokeWidth={1.75} />{tr("download")}</button>}
+        </div>
+      )}
     </div>
   );
 }
