@@ -1579,7 +1579,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,r
           <div style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(100,223,223,0.2)",borderRadius:14,padding:"14px"}}>
             <div style={{fontSize:12,color:W35,marginBottom:8,fontFamily:RF}}>{lang==="he"?"הדבק קישור שיתוף:":lang==="es"?"Pega el enlace para compartir:":"Paste share link:"}</div>
             <input value={joinLink} onChange={e=>setJoinLink(e.target.value)}
-              placeholder="https://tulon.app/trip/..."
+              placeholder="https://www.tulon.app/trip/..."
               dir="ltr"
               style={{width:"100%",padding:"11px 14px",borderRadius:12,border:"0.5px solid rgba(100,223,223,0.25)",background:"rgba(255,255,255,0.06)",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",marginBottom:8}}/>
             <button onClick={handleJoin} disabled={!joinLink.trim()}
@@ -1878,7 +1878,7 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
     setCityQ(full);setSugg([]);
   };
   const copyShare=()=>{
-    navigator.clipboard.writeText(`https://tulon.app/trip/${trip.shareId||trip.id}`);
+    navigator.clipboard.writeText(`https://www.tulon.app/trip/${trip.shareId||trip.id}`);
     setCopied(true);setTimeout(()=>setCopied(false),2000);
   };
 
@@ -4595,7 +4595,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         onUpdateTripFields(tripId,{inviteToken:data.token,inviteTokenRole:role||"edit"});
         setTrips(ts=>ts.map(t=>t.id===tripId?{...t,inviteToken:data.token,inviteTokenRole:role||"edit"}:t));
         // Auto-copy to clipboard
-        const url=`https://tulon.app?invite=${data.token}`;
+        const url=`https://www.tulon.app/?invite=${data.token}`;
         try{await navigator.clipboard.writeText(url);setInviteCopied(true);setTimeout(()=>setInviteCopied(false),2500);}catch(_){}
       }else{console.error("invite create failed",data);}
     }catch(e){console.error(e);}
@@ -4731,7 +4731,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         destination:active.destination,startDate:active.startDate,endDate:active.endDate,
         expenses:sanitized,createdAt:Date.now(),ownerUid:userId,
       });
-      setInspireLink(`https://tulon.app/trip/${shareId}`);
+      setInspireLink(`https://www.tulon.app/trip/${shareId}`);
     }catch(e){console.error(e);}
     setInspireSaving(false);
   };
@@ -5152,8 +5152,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             <div style={{fontSize:12,color:shareMsg.startsWith("✅")?"#4ade80":"#ff6b6b",marginBottom:shareMsg.startsWith("✅")?10:0,fontFamily:RF,fontWeight:500}}>{shareMsg}</div>
             {shareMsg.startsWith("✅")&&(
               <div style={{display:"flex",gap:8,marginTop:8}}>
-                <button onClick={()=>{const url="https://tulon.app";const dest=trips.find(tr=>tr.id===shareModal)?.destination||"";const text=lang==="he"?`הוזמנת לטיול "${dest}" בטיולון! היכנס עם האימייל ${shareEmail||""} :\n${url}`:lang==="es"?`¡Te invitaron al viaje "${dest}" en TUlon! Inicia sesión con el correo ${shareEmail||""} :\n${url}`:`You're invited to the trip "${dest}" on TUlon! Sign in with the email ${shareEmail||""} :\n${url}`;window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");}} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><Share2 size={14} color="#ffffff" strokeWidth={2}/> {lang==="he"?"שלח בוואטסאפ":lang==="es"?"Enviar por WhatsApp":"Send WhatsApp"}</button>
-                <button onClick={()=>{const url="https://tulon.app";const dest=trips.find(tr=>tr.id===shareModal)?.destination||"";const text=lang==="he"?`הוזמנת לטיול "${dest}" בטיולון! היכנס עם האימייל ${shareEmail||""} : ${url}`:lang==="es"?`¡Te invitaron al viaje "${dest}" en TUlon! Inicia sesión con el correo ${shareEmail||""} : ${url}`:`You're invited to the trip "${dest}" on TUlon! Sign in with the email ${shareEmail||""} : ${url}`;navigator.clipboard.writeText(text);setShareMsg(lang==="he"?"הועתק ללוח!":lang==="es"?"¡Copiado!":"Copied!");}} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><Copy size={14} color={TEAL} strokeWidth={2}/> {lang==="he"?"העתק לינק":lang==="es"?"Copiar enlace":"Copy link"}</button>
+                <button onClick={()=>{const url="https://www.tulon.app/";const dest=trips.find(tr=>tr.id===shareModal)?.destination||"";const text=lang==="he"?`הוזמנת לטיול "${dest}" בטיולון! היכנס עם האימייל ${shareEmail||""} :\n${url}`:lang==="es"?`¡Te invitaron al viaje "${dest}" en TUlon! Inicia sesión con el correo ${shareEmail||""} :\n${url}`:`You're invited to the trip "${dest}" on TUlon! Sign in with the email ${shareEmail||""} :\n${url}`;window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");}} style={{flex:1,padding:"10px",borderRadius:10,border:"none",background:"#25D366",color:"#ffffff",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><Share2 size={14} color="#ffffff" strokeWidth={2}/> {lang==="he"?"שלח בוואטסאפ":lang==="es"?"Enviar por WhatsApp":"Send WhatsApp"}</button>
+                <button onClick={()=>{const url="https://www.tulon.app/";const dest=trips.find(tr=>tr.id===shareModal)?.destination||"";const text=lang==="he"?`הוזמנת לטיול "${dest}" בטיולון! היכנס עם האימייל ${shareEmail||""} : ${url}`:lang==="es"?`¡Te invitaron al viaje "${dest}" en TUlon! Inicia sesión con el correo ${shareEmail||""} : ${url}`:`You're invited to the trip "${dest}" on TUlon! Sign in with the email ${shareEmail||""} : ${url}`;navigator.clipboard.writeText(text);setShareMsg(lang==="he"?"הועתק ללוח!":lang==="es"?"¡Copiado!":"Copied!");}} style={{flex:1,padding:"10px",borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.08)",color:TEAL,fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><Copy size={14} color={TEAL} strokeWidth={2}/> {lang==="he"?"העתק לינק":lang==="es"?"Copiar enlace":"Copy link"}</button>
               </div>
             )}
           </div>
@@ -5182,7 +5182,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         {(()=>{
           const shareTripObj=trips.find(tr=>tr.id===shareModal);
           const existingToken=shareTripObj?.inviteToken;
-          const inviteUrl=existingToken?`https://tulon.app?invite=${existingToken}`:"";
+          const inviteUrl=existingToken?`https://www.tulon.app/?invite=${existingToken}`:"";
           const dest=shareTripObj?.destination||"";
           return(
             <>
