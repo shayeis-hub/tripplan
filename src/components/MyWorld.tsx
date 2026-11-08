@@ -4,6 +4,7 @@ import { Globe, Plus, X, Trash2, Check, Search, MapPin, ChevronDown, Share2, Dow
 import { useAuth } from "@/lib/AuthContext";
 import { useLang } from "@/lib/LangContext";
 import { COUNTRY_ALIASES, COUNTRY_NAMES, norm } from "@/lib/world/countries";
+import { cityLabel, searchCities } from "@/lib/world/cities";
 import { CONTINENT, MAP_DOTS, MAP_H, MAP_PATHS, MAP_W } from "@/lib/world/geo";
 import { annualYear, computeStats, computeYearStats, tripVisitKey, type VisitMap, type WorldStats, type YearStats } from "@/lib/world/stats";
 import { CARD_DESIGNS, CARD_FORMATS, downloadImage, isNativeShell, renderWorldCard, shareImage, type CardDesign, type CardFormat } from "@/lib/world/share-card";
@@ -226,12 +227,12 @@ export default function MyWorld({ onClose, openYear = false }: { onClose: () => 
         )}
 
         {data && stats && mode === "add" && (
-          <AddPanel search={search} T={tr} data={data} nameOf={nameOf} addItems={addItems} onDone={() => setMode("view")} />
+          <AddPanel lang={lang} search={search} T={tr} data={data} nameOf={nameOf} addItems={addItems} onDone={() => setMode("view")} />
         )}
 
         {data && stats && mode === "view" && (
           <>
-            <WorldMap visited={new Set(stats.visited)} />
+            <WorldMap visited={new Set(stats.visited)} cityDots={stats.cityDots} />
 
             {!hasVisits && (
               <div style={{ textAlign: "center", padding: "20px 8px 8px" }}>
@@ -302,7 +303,7 @@ export default function MyWorld({ onClose, openYear = false }: { onClose: () => 
                   )}
                 </div>
 
-                <VisitList visits={data.visits} nameOf={nameOf} onRemove={removeVisit} removeLabel={tr("remove")} title={tr("listTitle")}
+                <VisitList visits={data.visits} nameOf={nameOf} cityOf={(cc, c) => cityLabel(cc, c, lang)} onRemove={removeVisit} removeLabel={tr("remove")} title={tr("listTitle")}
                   contName={(c: string) => (T.continentNames as Record<string, Record<Lang, string>>)[c][lang]} />
               </>
             )}
@@ -336,7 +337,7 @@ function Stat({ big, label, sub }: { big: string | number; label: string; sub?: 
   );
 }
 
-function WorldMap({ visited }: { visited: Set<string> }) {
+function WorldMap({ visited, cityDots = [] }: { visited: Set<string>; cityDots?: [number, number][] }) {
   return (
     <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} role="img" aria-hidden="true" style={{ width: "100%", height: "auto", display: "block", background: "rgba(255,255,255,0.03)", borderRadius: 14 }}>
       {Object.entries(MAP_PATHS).map(([cc, d]) => (
@@ -344,6 +345,9 @@ function WorldMap({ visited }: { visited: Set<string> }) {
       ))}
       {Object.entries(MAP_DOTS).map(([cc, [x, y]]) => (
         <circle key={cc} cx={x} cy={y} r={visited.has(cc) ? 4.5 : 2.5} fill={visited.has(cc) ? TEAL : "rgba(255,255,255,0.22)"} />
+      ))}
+      {cityDots.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={3.4} fill="#fff" stroke={BG} strokeWidth={1.2} />
       ))}
     </svg>
   );
@@ -354,8 +358,8 @@ function Chevron({ open }: { open: boolean }) {
 }
 
 // All visits live under one collapsible header; inside, one collapsible section per continent.
-function VisitList({ visits, nameOf, onRemove, removeLabel, title, contName }: {
-  visits: VisitMap; nameOf: (cc: string) => string; onRemove: (id: string) => void; removeLabel: string; title: string; contName: (c: string) => string;
+function VisitList({ visits, nameOf, cityOf, onRemove, removeLabel, title, contName }: {
+  visits: VisitMap; nameOf: (cc: string) => string; cityOf: (cc: string, city: string) => string; onRemove: (id: string) => void; removeLabel: string; title: string; contName: (c: string) => string;
 }) {
   const [open, setOpen] = useState(false);
   const [openCont, setOpenCont] = useState<Record<string, boolean>>({});
@@ -390,7 +394,7 @@ function VisitList({ visits, nameOf, onRemove, removeLabel, title, contName }: {
                 {isOpen && rows.map(([id, v]) => (
                   <div key={id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: CARD, border: LINE, borderRadius: 10, marginTop: 4 }}>
                     <div style={{ fontSize: 14 }}>
-                      {nameOf(v.cc)}{v.city ? <span style={{ color: W40 }}> · {v.city}</span> : null}
+                      {nameOf(v.cc)}{v.city ? <span style={{ color: W40 }}> · {cityOf(v.cc, v.city)}</span> : null}
                       <span style={{ color: W40 }}> · {v.year}</span>
                     </div>
                     <button onClick={() => onRemove(id)} aria-label={removeLabel}
@@ -449,8 +453,8 @@ function CountryPicker({ title, hint, search, placeholder, noResults, onPick, on
   );
 }
 
-function AddPanel({ search, T: tr, data, nameOf, addItems, onDone }: {
-  search: SearchEntry[]; T: (k: any) => any; data: Data; nameOf: (cc: string) => string;
+function AddPanel({ lang, search, T: tr, data, nameOf, addItems, onDone }: {
+  lang: Lang; search: SearchEntry[]; T: (k: any) => any; data: Data; nameOf: (cc: string) => string;
   addItems: (items: { cc: string; year: number; city?: string }[]) => Promise<boolean>; onDone: () => void;
 }) {
   const thisYear = new Date().getFullYear();
@@ -467,6 +471,16 @@ function AddPanel({ search, T: tr, data, nameOf, addItems, onDone }: {
     const ok = await addItems([{ cc, year, ...(city.trim() ? { city: city.trim() } : {}) }]);
     setBusy(false);
     if (ok) { setSession((s) => [...s, { cc, year }]); setCity(""); }
+  };
+
+  // Typing a city offers known cities from every country (any language); picking one adds it with its country.
+  const sug = city.trim().length >= 2 ? searchCities(city, lang) : [];
+  const pickCity = async (cc: string, name: string) => {
+    if (busy) return;
+    setBusy(true);
+    const ok = await addItems([{ cc, year, city: name }]);
+    setBusy(false);
+    if (ok) { setSession((x) => [...x, { cc, year }]); setCity(""); }
   };
 
   const years: number[] = [];
@@ -488,6 +502,12 @@ function AddPanel({ search, T: tr, data, nameOf, addItems, onDone }: {
             style={{ width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 12, border: LINE, background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 15, fontFamily: RF, outline: "none" }} />
         </label>
       </div>
+      {sug.map((c) => (
+        <button key={c.i} disabled={busy} onClick={() => pickCity(c.cc, c.name)}
+          style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 12px", marginBottom: 4, background: CARD, border: LINE, borderRadius: 10, color: "#fff", fontFamily: RF, fontSize: 15, cursor: "pointer", textAlign: "start" }}>
+          <span>{c.name}</span><span style={{ color: W40, fontSize: 13 }}>{nameOf(c.cc)}</span>
+        </button>
+      ))}
       <CountrySearch search={search} placeholder={tr("searchPh")} noResults={tr("noResults")} onPick={pick} autoFocus />
       {session.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
@@ -537,7 +557,7 @@ function ShareSheet({ stats, yearStats, lang, dir, T: tr, onClose }: { stats: Wo
                 lang, design, format, kind: "year", year: yearStats.year,
                 visited: new Set(yearStats.visited), prev: new Set(yearStats.prev),
                 countries: yearStats.countries, continents: yearStats.continents, pctWorld: 0, km: yearStats.km, languages: 0,
-                visits: yearStats.visits, newCountries: yearStats.newCountries, cities: yearStats.cities,
+                visits: yearStats.visits, newCountries: yearStats.newCountries, cities: yearStats.cities, cityDots: yearStats.cityDots,
               }
             : {
                 lang, design, format,
@@ -548,6 +568,7 @@ function ShareSheet({ stats, yearStats, lang, dir, T: tr, onClose }: { stats: Wo
                 km: stats.km,
                 languages: stats.languages,
                 cities: stats.cities,
+                cityDots: stats.cityDots,
               },
         );
         if (!alive) return;

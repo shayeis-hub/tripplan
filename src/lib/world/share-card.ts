@@ -25,6 +25,7 @@ export type ShareCardInput = {
   prev?: Set<string>;
   visits?: number; // entries in that year
   newCountries?: number; // countries whose first visit was that year
+  cityDots?: [number, number][]; // map positions of the known cities (no names are ever drawn)
   cities?: number; // distinct cities (only the number is shown, never a name); when > 0 it takes the place of languages / visits
 };
 
@@ -134,7 +135,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     }
     return cur;
   };
-  const drawMap = (x: number, y: number, w: number, c: { base: string; vis: string; stroke: string; glow?: string; blur?: number; prevFill?: string; dotBase: string; dotVis: string; bg?: string }) => {
+  const drawMap = (x: number, y: number, w: number, c: { base: string; vis: string; stroke: string; glow?: string; blur?: number; prevFill?: string; dotBase: string; dotVis: string; bg?: string; cityFill?: string; cityRing?: string }) => {
     const k = w / MAP_W;
     ctx.save();
     ctx.translate(x, y);
@@ -163,6 +164,12 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
       ctx.fillStyle = v ? c.dotVis : input.prev?.has(cc) && c.prevFill ? c.prevFill : c.dotBase;
       ctx.beginPath(); ctx.arc(dx, dy, v ? 5.5 : 3, 0, Math.PI * 2); ctx.fill();
       ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
+    }
+    if (input.cityDots?.length && c.cityFill) {
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = c.cityRing || c.stroke;
+      ctx.fillStyle = c.cityFill;
+      for (const [cx, cy] of input.cityDots) { ctx.beginPath(); ctx.arc(cx, cy, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
     }
     ctx.restore();
     return (MAP_H * w) / MAP_W;
@@ -210,7 +217,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     text(hl.visited, E(MARGIN), 150 + nz * 0.8 - nz * 0.4 + visZ * 1.35, font(600, visZ), "rgba(255,255,255,0.75)", alignStart === "right" ? "left" : "right");
 
     const mapTop = 560 + e * 0.3;
-    drawMap(MARGIN, mapTop, W - MARGIN * 2, { base: "rgba(255,255,255,0.13)", vis: "#64dfdf", stroke: "#0d2137", glow: "rgba(100,223,223,0.7)", blur: 18, prevFill: "rgba(100,223,223,0.32)", dotBase: "rgba(255,255,255,0.25)", dotVis: "#64dfdf" });
+    drawMap(MARGIN, mapTop, W - MARGIN * 2, { base: "rgba(255,255,255,0.13)", vis: "#64dfdf", stroke: "#0d2137", glow: "rgba(100,223,223,0.7)", blur: 18, prevFill: "rgba(100,223,223,0.32)", dotBase: "rgba(255,255,255,0.25)", dotVis: "#64dfdf", cityFill: "#ffffff", cityRing: "#0d2137" });
 
     // stat cards (+ languages), weights keep long values inside their card
     const cards = extra ? [...main, extra] : main;
@@ -267,7 +274,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
     text(hl.l1, S(MARGIN), 165 + hz * 0.9, font(900, hz), "#08202f");
     runs(hl.runs, S(MARGIN), 165 + hz * 0.9 + hz * 0.98, font(900, hz), "#08202f", "#ffffff", "rgba(8,32,47,0.18)");
 
-    drawMap(MARGIN, 490 + e * 0.32, W - MARGIN * 2, { base: "rgba(8,32,47,0.2)", vis: "#ffffff", stroke: "#46cfd0", glow: "rgba(8,32,47,0.4)", blur: 10, prevFill: "rgba(255,255,255,0.5)", dotBase: "rgba(8,32,47,0.3)", dotVis: "#fff" });
+    drawMap(MARGIN, 490 + e * 0.32, W - MARGIN * 2, { base: "rgba(8,32,47,0.2)", vis: "#ffffff", stroke: "#46cfd0", glow: "rgba(8,32,47,0.4)", blur: 10, prevFill: "rgba(255,255,255,0.5)", dotBase: "rgba(8,32,47,0.3)", dotVis: "#fff", cityFill: "#0d2137", cityRing: "#ffffff" });
 
     // chips flow from the start edge, wrapping
     let cx = S(MARGIN), cy = 900 + e * 0.72;
@@ -319,7 +326,7 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
 
     const mapW = tw - 72;
     const mapTop = ty + 130 + 34 + e * 0.14;
-    const mh = drawMap(tx0 + 36, mapTop, mapW, { base: "#d3dee5", vis: "#12b3b3", stroke: "#f2f6f8", prevFill: "#9fdcdc", dotBase: "#aebdc7", dotVis: "#12b3b3" });
+    const mh = drawMap(tx0 + 36, mapTop, mapW, { base: "#d3dee5", vis: "#12b3b3", stroke: "#f2f6f8", prevFill: "#9fdcdc", dotBase: "#aebdc7", dotVis: "#12b3b3", cityFill: "#0d2137", cityRing: "#ffffff" });
 
     const full = `${hl.l1} ${hl.runs.map((r) => r.t).join("")}`;
     const hz = fit(full, 900, tw - 96, 112, 54);

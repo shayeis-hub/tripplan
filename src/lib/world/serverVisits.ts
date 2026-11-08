@@ -1,7 +1,8 @@
 import { getAdminDb } from "@/lib/firebase-admin";
 import { hasMeaningfulContent } from "@/lib/tripContent";
 import { resolveCountry } from "./countries";
-import { normCity, tripVisitKey, type Visit, type VisitMap } from "./stats";
+import { cityId } from "./cities";
+import { tripVisitKey, type Visit, type VisitMap } from "./stats";
 
 // Server side only. A user's "world" = what they entered by hand in My World (worldProfiles/{uid}.visits)
 // plus what their own finished trips say: a trip they own or joined (not as a view-only guest) with real content whose end date has passed counts as a
@@ -46,8 +47,7 @@ export async function loadWorld(uid: string, email?: string | null): Promise<{ h
     const haveCity = new Set<string>();
     const haveBare = new Map<string, number>();
     for (const v of Object.values(visits)) {
-      const n = v.city ? normCity(v.city) : "";
-      if (n) haveCity.add(`${v.cc}:${v.year}:${n}`);
+      if (v.city && v.city.trim()) haveCity.add(`${v.year}:${cityId(v.cc, v.city)}`);
       else haveBare.set(`${v.cc}:${v.year}`, (haveBare.get(`${v.cc}:${v.year}`) || 0) + 1);
     }
     const seen = new Set<string>();
@@ -72,7 +72,7 @@ export async function loadWorld(uid: string, email?: string | null): Promise<{ h
       if (!cc || !Number.isInteger(year) || year < MIN_YEAR || year > thisYear) continue;
       const city = tripCity(t, cc);
       const key = tripVisitKey({ cc, year, city });
-      if (seen.has(key) || (city && haveCity.has(`${cc}:${year}:${normCity(city)}`))) continue;
+      if (seen.has(key) || (city && haveCity.has(`${year}:${cityId(cc, city)}`))) continue;
       seen.add(key);
       found.push({ cc, year, ...(city ? { city } : {}) });
     }

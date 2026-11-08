@@ -1,25 +1,31 @@
+import { cityId, cityXY, findCity, normCity } from "./cities";
 import { CAPITALS, CONTINENT, LANGS, MEMBERS } from "./geo";
+
+export { normCity };
 
 // "My World" statistics. Pure functions, shared by the screen (and later the share card / yearly summary).
 
 export type Visit = { cc: string; year: number; city?: string; addedAt?: number; source?: "manual" | "trip" };
 export type VisitMap = Record<string, Visit>;
 
-// A city's identity for counting: lower case, no accents or niqqud, only letters and digits. "Venice " and "venice"
-// are one city; different languages ("Venezia", "ונציה") are not unified yet (that needs a city list).
-export function normCity(c: string): string {
-  return c.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
-}
-// A trip-derived visit is one per (country, year, city).
-export const tripVisitKey = (v: { cc: string; year: number; city?: string }) => `t:${v.cc}:${v.year}:${v.city ? normCity(v.city) : ""}`;
-// Distinct cities among visits that have one (a city only counts together with its country).
-function cityCount(visits: Visit[]): number {
-  const set = new Set<string>();
+// A trip-derived visit is one per (country, year, city); the same city in another language is the same city.
+export const tripVisitKey = (v: { cc: string; year: number; city?: string }) => `t:${v.cc}:${v.year}:${v.city ? cityId(v.cc, v.city) : ""}`;
+
+// Distinct cities among visits that have one (a city only counts together with its country), and the map positions
+// of those the city list knows.
+function cityInfo(visits: Visit[]): { count: number; dots: [number, number][] } {
+  const ids = new Set<string>();
+  const dots: [number, number][] = [];
   for (const v of visits) {
     const n = v.city ? normCity(v.city) : "";
-    if (n) set.add(`${v.cc}:${n}`);
+    if (!n) continue;
+    const id = cityId(v.cc, v.city as string);
+    if (ids.has(id)) continue;
+    ids.add(id);
+    const i = findCity(v.cc, v.city as string);
+    if (i >= 0) dots.push(cityXY(i));
   }
-  return set.size;
+  return { count: ids.size, dots };
 }
 
 const EARTH_RADIUS_KM = 6371;
@@ -44,6 +50,7 @@ export type WorldStats = {
   earthLaps: number | null; // km / earth circumference
   languages: number;
   cities: number; // distinct cities (with their country) among visits that name one
+  cityDots: [number, number][]; // map positions of the known ones
 };
 
 export function computeStats(home: string | null | undefined, visits: VisitMap): WorldStats {
@@ -53,6 +60,7 @@ export function computeStats(home: string | null | undefined, visits: VisitMap):
   const langs = new Set<string>();
   for (const c of members) for (const l of LANGS[c] || []) langs.add(l);
 
+  const ci = cityInfo(Object.values(visits));
   let km: number | null = null;
   const homeCap = home ? CAPITALS[home] : undefined;
   if (homeCap) {
@@ -73,7 +81,8 @@ export function computeStats(home: string | null | undefined, visits: VisitMap):
     km,
     earthLaps: km == null ? null : km / EARTH_CIRCUMFERENCE_KM,
     languages: langs.size,
-    cities: cityCount(Object.values(visits)),
+    cities: ci.count,
+    cityDots: ci.dots,
   };
 }
 
@@ -101,6 +110,7 @@ export type YearStats = {
   continents: number;
   km: number | null; // round trips of that year only
   cities: number; // distinct cities visited in that year
+  cityDots: [number, number][];
 };
 
 export function computeYearStats(home: string | null | undefined, visits: VisitMap, year: number): YearStats {
@@ -110,6 +120,7 @@ export function computeYearStats(home: string | null | undefined, visits: VisitM
   const earlier = new Set(all.filter((v) => v.year < year).map((v) => v.cc));
   const members = visited.filter((c) => MEMBER_SET.has(c));
   const homeCap = home ? CAPITALS[home] : undefined;
+  const yi = cityInfo(inYear);
   let km: number | null = null;
   if (homeCap) {
     km = 0;
@@ -128,6 +139,7 @@ export function computeYearStats(home: string | null | undefined, visits: VisitM
     newCountries: members.filter((c) => !earlier.has(c)).length,
     continents: new Set(visited.map((c) => CONTINENT[c]).filter(Boolean)).size,
     km,
-    cities: cityCount(inYear),
+    cities: yi.count,
+    cityDots: yi.dots,
   };
 }
