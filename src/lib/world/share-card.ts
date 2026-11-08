@@ -1,6 +1,6 @@
 // "My World" share card, drawn client-side with Canvas (same approach as post-card.ts: the browser's own
 // text engine shapes Hebrew and handles RTL correctly). Three designs x two formats.
-// PRIVACY: the card contains only the map, numbers and the TUlon brand. No name, e-mail, city, year or home country.
+// PRIVACY: the card contains only the map, numbers and the TUlon brand. No name, e-mail, city names, year or home country (only the number of cities).
 import { MAP_DOTS, MAP_H, MAP_PATHS, MAP_W } from "./geo";
 
 export type CardLang = "he" | "en" | "es";
@@ -25,6 +25,7 @@ export type ShareCardInput = {
   prev?: Set<string>;
   visits?: number; // entries in that year
   newCountries?: number; // countries whose first visit was that year
+  cities?: number; // distinct cities (only the number is shown, never a name); when > 0 it takes the place of languages / visits
 };
 
 const W = 1080;
@@ -34,9 +35,9 @@ const FONT = "Rubik, 'Segoe UI', Arial, sans-serif";
 
 // DRAFT COPY: every string below is pending the owner's approval before this ships.
 const TXT = {
-  he: { title: "העולם שלי", brand: "טיולון", continents: "יבשות", ofWorld: "מהעולם", km: "ק״מ בטיסה", langs: "שפות רשמיות שכנראה שמעתי", q: "בכמה מדינות ביקרתם?", cta: "צרו את המפה שלכם חינם", ticketWord: "העולם שלי", yearTitle: (y: number) => `${y} שלי בעולם`, visitsLabel: "ביקורים השנה", newLabel: (n: number) => (n === 1 ? "מדינה חדשה" : "מדינות חדשות") },
-  en: { title: "My World", brand: "TUlon", continents: "continents", ofWorld: "of the world", km: "km flown", langs: "Official languages I probably heard", q: "How many countries have you visited?", cta: "Make your own map for free", ticketWord: "My World", yearTitle: (y: number) => `My ${y} in the world`, visitsLabel: "visits this year", newLabel: (n: number) => (n === 1 ? "new country" : "new countries") },
-  es: { title: "Mi mundo", brand: "TUlon", continents: "continentes", ofWorld: "del mundo", km: "km volados", langs: "Idiomas oficiales que probablemente oí", q: "¿Cuántos países has visitado?", cta: "Crea tu mapa gratis", ticketWord: "Mi mundo", yearTitle: (y: number) => `Mi ${y} en el mundo`, visitsLabel: "visitas este año", newLabel: (n: number) => (n === 1 ? "país nuevo" : "países nuevos") },
+  he: { title: "העולם שלי", brand: "טיולון", continents: "יבשות", ofWorld: "מהעולם", km: "ק״מ בטיסה", langs: "שפות רשמיות שכנראה שמעתי", q: "בכמה מדינות ביקרתם?", cta: "צרו את המפה שלכם חינם", ticketWord: "העולם שלי", yearTitle: (y: number) => `${y} שלי בעולם`, visitsLabel: "ביקורים השנה", citiesLabel: "ערים", citiesYearLabel: "ערים השנה", newLabel: (n: number) => (n === 1 ? "מדינה חדשה" : "מדינות חדשות") },
+  en: { title: "My World", brand: "TUlon", continents: "continents", ofWorld: "of the world", km: "km flown", langs: "Official languages I probably heard", q: "How many countries have you visited?", cta: "Make your own map for free", ticketWord: "My World", yearTitle: (y: number) => `My ${y} in the world`, visitsLabel: "visits this year", citiesLabel: "cities", citiesYearLabel: "cities this year", newLabel: (n: number) => (n === 1 ? "new country" : "new countries") },
+  es: { title: "Mi mundo", brand: "TUlon", continents: "continentes", ofWorld: "del mundo", km: "km volados", langs: "Idiomas oficiales que probablemente oí", q: "¿Cuántos países has visitado?", cta: "Crea tu mapa gratis", ticketWord: "Mi mundo", yearTitle: (y: number) => `Mi ${y} en el mundo`, visitsLabel: "visitas este año", citiesLabel: "ciudades", citiesYearLabel: "ciudades este año", newLabel: (n: number) => (n === 1 ? "país nuevo" : "países nuevos") },
 };
 
 type Run = { t: string; accent?: boolean };
@@ -177,11 +178,11 @@ export async function renderWorldCard(input: ShareCardInput): Promise<Blob> {
   type Field = { v: string; l: string };
   const kmField: Field[] = input.km != null && input.km > 0 ? [{ v: input.km.toLocaleString(lang), l: tx.km }] : [];
   const main: Field[] = isYear
-    ? [{ v: String(input.visits ?? 0), l: tx.visitsLabel }, { v: String(input.continents), l: tx.continents }, ...kmField]
+    ? [(input.cities ?? 0) > 0 ? { v: String(input.cities), l: tx.citiesYearLabel } : { v: String(input.visits ?? 0), l: tx.visitsLabel }, { v: String(input.continents), l: tx.continents }, ...kmField]
     : [{ v: String(input.continents), l: tx.continents }, { v: `${input.pctWorld}%`, l: tx.ofWorld }, ...kmField];
   const extra: Field | null = isYear
     ? (input.newCountries ?? 0) > 0 ? { v: String(input.newCountries), l: tx.newLabel(input.newCountries ?? 0) } : null
-    : { v: String(input.languages), l: tx.langs };
+    : (input.cities ?? 0) > 0 ? { v: String(input.cities), l: tx.citiesLabel } : { v: String(input.languages), l: tx.langs };
   const title = isYear ? tx.yearTitle(input.year as number) : tx.title;
   const hl = isYear ? headlineYear(lang, input.countries) : headline(lang, input.countries);
 

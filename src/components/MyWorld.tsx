@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useLang } from "@/lib/LangContext";
 import { COUNTRY_ALIASES, COUNTRY_NAMES, norm } from "@/lib/world/countries";
 import { CONTINENT, MAP_DOTS, MAP_H, MAP_PATHS, MAP_W } from "@/lib/world/geo";
-import { annualYear, computeStats, computeYearStats, type VisitMap, type WorldStats, type YearStats } from "@/lib/world/stats";
+import { annualYear, computeStats, computeYearStats, tripVisitKey, type VisitMap, type WorldStats, type YearStats } from "@/lib/world/stats";
 import { CARD_DESIGNS, CARD_FORMATS, downloadImage, isNativeShell, renderWorldCard, shareImage, type CardDesign, type CardFormat } from "@/lib/world/share-card";
 
 const RF = "'Rubik',sans-serif";
@@ -42,6 +42,7 @@ const T = {
   homeChange: { he: "שינוי", en: "Change", es: "Cambiar" },
   homeLabel: { he: "מדינת מוצא", en: "Home country", es: "País de origen" },
   countries: { he: "מדינות", en: "Countries", es: "Países" },
+  cities: { he: "ערים", en: "Cities", es: "Ciudades" },
   continents: { he: "יבשות", en: "Continents", es: "Continentes" },
   ofContinents: { he: "מתוך 6", en: "of 6", es: "de 6" },
   ofWorld: { he: "מהעולם", en: "of the world", es: "del mundo" },
@@ -106,7 +107,7 @@ function buildSearch(lang: Lang): SearchEntry[] {
     .sort((a, b) => collator.compare(a.name, b.name));
 }
 
-type Data = { home: string | null; visits: VisitMap; suggestions: { cc: string; year: number }[] };
+type Data = { home: string | null; visits: VisitMap; suggestions: { cc: string; year: number; city?: string }[] };
 
 export default function MyWorld({ onClose, openYear = false }: { onClose: () => void; openYear?: boolean }) {
   const { user } = useAuth();
@@ -159,7 +160,7 @@ export default function MyWorld({ onClose, openYear = false }: { onClose: () => 
     if (y == null) return null;
     // The summary counts trips from the app too (suggestions), accepted or not, so it matches the yearly e-mail.
     const merged: VisitMap = { ...data.visits };
-    for (const t of data.suggestions) merged[`t:${t.cc}:${t.year}`] = { cc: t.cc, year: t.year, source: "trip" };
+    for (const t of data.suggestions) merged[tripVisitKey(t)] = { cc: t.cc, year: t.year, ...(t.city ? { city: t.city } : {}), source: "trip" };
     const ys = computeYearStats(data.home, merged, y);
     return ys.visits > 0 ? ys : null;
   }, [data, openYear]);
@@ -168,7 +169,7 @@ export default function MyWorld({ onClose, openYear = false }: { onClose: () => 
     setSaveErr(false);
     try {
       const r = await api("POST", { action: "add", items });
-      setData((d) => (d ? { ...d, visits: { ...d.visits, ...(r.added || {}) }, suggestions: d.suggestions.filter((s) => !items.some((i) => i.cc === s.cc && i.year === s.year)) } : d));
+      setData((d) => (d ? { ...d, visits: { ...d.visits, ...(r.added || {}) }, suggestions: d.suggestions.filter((s) => !items.some((i) => i.cc === s.cc && i.year === s.year && (i.city || "") === (s.city || ""))) } : d));
       return true;
     } catch {
       setSaveErr(true);
@@ -268,6 +269,7 @@ export default function MyWorld({ onClose, openYear = false }: { onClose: () => 
                   <Stat big={stats.continents} label={tr("continents")} sub={tr("ofContinents")} />
                   <Stat big={`${stats.pctWorld}%`} label={tr("ofWorld")} sub={tr("ofCountries")} />
                   <Stat big={stats.languages} label={tr("languages")} />
+                  {stats.cities > 0 && <Stat big={stats.cities} label={tr("cities")} />}
                 </div>
 
                 <div style={{ background: CARD, border: LINE, borderRadius: 14, padding: 14, marginTop: 10 }}>
@@ -535,7 +537,7 @@ function ShareSheet({ stats, yearStats, lang, dir, T: tr, onClose }: { stats: Wo
                 lang, design, format, kind: "year", year: yearStats.year,
                 visited: new Set(yearStats.visited), prev: new Set(yearStats.prev),
                 countries: yearStats.countries, continents: yearStats.continents, pctWorld: 0, km: yearStats.km, languages: 0,
-                visits: yearStats.visits, newCountries: yearStats.newCountries,
+                visits: yearStats.visits, newCountries: yearStats.newCountries, cities: yearStats.cities,
               }
             : {
                 lang, design, format,
@@ -545,6 +547,7 @@ function ShareSheet({ stats, yearStats, lang, dir, T: tr, onClose }: { stats: Wo
                 pctWorld: stats.pctWorld,
                 km: stats.km,
                 languages: stats.languages,
+                cities: stats.cities,
               },
         );
         if (!alive) return;
