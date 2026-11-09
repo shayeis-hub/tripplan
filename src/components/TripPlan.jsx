@@ -1043,8 +1043,13 @@ function calcSettlement(people,expenses){
     if(exp.participants?.length>0&&exp.payers?.length>0){
       const parts=exp.participants.filter(id=>balances[id]!==undefined);
       if(parts.length===0)return;
-      const share=exp.amountILS/parts.length;
-      parts.forEach(id=>{ balances[id]=(balances[id]||0)-share; });
+      if(exp.splitType==="custom"&&exp.shares?.length>0){
+        // split by consumption: every person is charged what they actually consumed (saved in ILS)
+        exp.shares.forEach(({id,amount})=>{ if(balances[id]!==undefined) balances[id]-=parseFloat(amount||0); });
+      }else{
+        const share=exp.amountILS/parts.length;
+        parts.forEach(id=>{ balances[id]=(balances[id]||0)-share; });
+      }
       exp.payers.forEach(({id,amount})=>{ if(balances[id]!==undefined) balances[id]=(balances[id]||0)+parseFloat(amount||0); });
     }
     // Old format: paidBy + splitWith
@@ -2171,7 +2176,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
   );
 }
 
-const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:defaultTripDate(dates),checkIn:defaultTripDate(dates),checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",isShared:true,participants:people.map(p=>p.id),payers:[]});
+const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:defaultTripDate(dates),checkIn:defaultTripDate(dates),checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",shares:[],isShared:true,participants:people.map(p=>p.id),payers:[]});
 
 function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo,prefill,onPrefillDone,isViewOnly}){
   const{lang}=useLang();
@@ -2325,6 +2330,25 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const payerOrig=(p,amt)=>p.orig!==undefined?p.orig:(p.amount===""||p.amount==null||isNaN(parseFloat(p.amount))?"":String(r2(parseFloat(p.amount)/payerRate(amt))));
   const payersSum=amt=>form.payers.reduce((s,p)=>s+(parseFloat(payerOrig(p,amt))||0),0);
   const payersForSave=amt=>{const r=payerRate(amt);return form.payers.map(({orig,...p})=>orig!==undefined?{...p,amount:r2((parseFloat(orig)||0)*r)}:p);};
+  // Consumption split: each participant's own share, typed in the expense currency like the payers (saved in ILS).
+  const shareOf=id=>form.shares.find(x=>x.id===id);
+  const shareOrig=(id,amt)=>{const x=shareOf(id);if(!x)return "";return x.orig!==undefined?x.orig:(isNaN(parseFloat(x.amount))?"":String(r2(parseFloat(x.amount)/payerRate(amt))));};
+  const sharesSum=amt=>form.participants.reduce((t,id)=>t+(parseFloat(shareOrig(id,amt))||0),0);
+  const setShare=(id,val)=>set({shares:form.shares.some(x=>x.id===id)?form.shares.map(x=>x.id===id?{...x,orig:val}:x):[...form.shares,{id,orig:val}]});
+  const setSplit=mode=>{
+    if(mode==="custom"&&form.splitType!=="custom"){
+      // start from the equal split so only the differences have to be typed
+      const a=parseFloat(form.amount);const n=form.participants.length;
+      set({splitType:"custom",shares:(a>0&&n>0)?form.participants.map(id=>({id,orig:String(r2(a/n))})):[]});
+    }else if(mode!=="custom")set({splitType:"equal"});
+  };
+  const sharesUnbalanced=amt=>form.splitType==="custom"&&form.participants.length>0&&Math.abs(sharesSum(amt)-amt)>=1/payerRate(amt);
+  const sharesForSave=amt=>{
+    if(form.splitType!=="custom")return [];
+    const r=payerRate(amt);
+    return form.participants.map(id=>{const x=shareOf(id);const keep=x&&x.orig===undefined&&!isNaN(parseFloat(x.amount));return {id,amount:keep?parseFloat(x.amount):r2((parseFloat(shareOrig(id,amt))||0)*r)};}).filter(x=>x.amount>0);
+  };
+  const sharesMsg=lang==="he"?"סכומי הצריכה לא תואמים לסכום ההוצאה":lang==="es"?"Los montos de consumo no coinciden con el total":"Consumption amounts don't add up to the expense total";
   const payersUnbalanced=amt=>{
     if(!(form.payers.length>0))return false;
     // about one shekel of tolerance, expressed in the expense's currency
@@ -2338,8 +2362,9 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     const amt=parseFloat(form.amount);
     if(!form.amount||isViewOnly||!(amt>0))return;
     if(payersUnbalanced(amt)){alert(lang==="he"?"סכומי המשלמים לא תואמים לסכום ההוצאה":lang==="es"?"Los montos de los pagadores no coinciden con el total":"Payer amounts don't add up to the expense total");return;}
+    if(sharesUnbalanced(amt)){alert(sharesMsg);return;}
     const date=form.category==="hotel"?form.checkIn:form.date;
-    onAdd({id:uid(),...form,payers:payersForSave(amt),date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
+    onAdd({id:uid(),...form,payers:payersForSave(amt),shares:sharesForSave(amt),date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
     setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
@@ -2361,7 +2386,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       time:exp.time||"",timeEnd:exp.timeEnd||"",
       address:exp.address||"",reminderHours:exp.reminderHours||5,
       paidBy:exp.paidBy||"",splitWith:exp.splitWith||[],
-      splitType:exp.splitType||"equal",isShared:exp.isShared!==false,
+      splitType:exp.splitType||"equal",shares:exp.shares||[],isShared:exp.isShared!==false,
       participants:expParticipants,payers:expPayers,
     });
     setEditId(exp.id);
@@ -2373,6 +2398,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     const amt=parseFloat(form.amount);
     if(!form.amount||isViewOnly||!(amt>0))return;
     if(payersUnbalanced(amt)){alert(lang==="he"?"סכומי המשלמים לא תואמים לסכום ההוצאה":lang==="es"?"Los montos de los pagadores no coinciden con el total":"Payer amounts don't add up to the expense total");return;}
+    if(sharesUnbalanced(amt)){alert(sharesMsg);return;}
     const date=form.category==="hotel"?form.checkIn:form.date;
     // amountILSLocked freezes the ILS value at the moment an expense is
     // marked paid, for reports that shouldn't shift with today's exchange
@@ -2384,7 +2410,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     const keep=amountUnchanged(amt);
     const ils=expILS(amt,form.currency);
     const locked=form.paid?(keep&&editingExp.paid&&Number.isFinite(Number(editingExp.amountILSLocked))?Number(editingExp.amountILSLocked):toILS(amt,form.currency)):undefined;
-    onEdit(editId,{...form,payers:payersForSave(amt),date,amount:amt,amountILS:ils,amountILSLocked:locked});
+    onEdit(editId,{...form,payers:payersForSave(amt),shares:sharesForSave(amt),date,amount:amt,amountILS:ils,amountILSLocked:locked});
     setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
@@ -2690,6 +2716,56 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                         );
                       })}
                     </div>
+                    {/* Equal split or by consumption */}
+                    {form.participants.length>0&&(
+                      <div style={{marginBottom:14}}>
+                        <div style={{display:"flex",gap:6,marginBottom:form.splitType==="custom"?8:0}}>
+                          {[["equal",lang==="he"?"שווה בשווה":lang==="es"?"A partes iguales":"Equal split"],["custom",lang==="he"?"לפי צריכה":lang==="es"?"Por consumo":"By consumption"]].map(([m,label])=>{
+                            const on=(form.splitType==="custom")===(m==="custom");
+                            return <button key={m} onClick={()=>setSplit(m)}
+                              style={{flex:1,padding:"8px 10px",borderRadius:10,border:`1.5px solid ${on?"#a78bfa":"rgba(255,255,255,0.15)"}`,background:on?"rgba(167,139,250,0.15)":"transparent",color:on?"#a78bfa":"rgba(255,255,255,0.5)",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>{label}</button>;
+                          })}
+                        </div>
+                        {form.splitType==="custom"&&(()=>{
+                          const expAmt=parseFloat(form.amount);
+                          const sym=CURR_SYMBOLS[form.currency]||form.currency;
+                          const fx=n=>String(r2(n));
+                          const total=sharesSum(expAmt);
+                          const diff=Math.abs(total-expAmt);
+                          const ok=!(expAmt>0)||diff<1/payerRate(expAmt);
+                          const remaining=r2(expAmt-total);
+                          const lastId=form.participants[form.participants.length-1];
+                          return(
+                            <div>
+                              {form.participants.map(id=>{
+                                const p=people.find(x=>x.id===id);
+                                if(!p)return null;
+                                const v=shareOrig(id,form.amount);
+                                return(
+                                  <div key={id} style={{display:"flex",gap:6,alignItems:"center",marginBottom:7}}>
+                                    <div style={{flex:1,padding:"8px 10px",borderRadius:10,border:`1.5px solid ${p.color}`,background:"rgba(0,0,0,0.2)",color:p.color,fontFamily:RF,fontWeight:700,fontSize:13}}>{p.name}</div>
+                                    <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.2)",border:"1.5px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"0 10px",flex:1}}>
+                                      <span style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>{sym}</span>
+                                      <input type="number" inputMode="decimal" value={v} onChange={e=>setShare(id,e.target.value)}
+                                        placeholder="0" style={{flex:1,minWidth:0,border:"none",background:"transparent",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",padding:"8px 0"}}/>
+                                      {form.currency!=="ILS"&&parseFloat(v)>0&&<span style={{color:"rgba(255,255,255,0.35)",fontSize:10,whiteSpace:"nowrap"}}>≈ ₪{(parseFloat(v)*payerRate(form.amount)).toFixed(0)}</span>}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {expAmt>0&&<div style={{fontSize:12,color:ok?"#4ade80":"#fbbf24",fontFamily:RF,marginTop:4,textAlign:"center"}}>
+                                {ok?"✓ ":"⚠️ "}{lang==="he"?"חולק":lang==="es"?"Repartido":"Split"}: {sym}{fx(total)} / {sym}{fx(expAmt)}
+                                {!ok&&<span style={{opacity:0.7}}> ({lang==="he"?"הפרש":lang==="es"?"dif.":"diff"}: {sym}{fx(diff)})</span>}
+                                {remaining>0&&!ok&&lastId&&<button onClick={()=>setShare(lastId,fx((parseFloat(shareOrig(lastId,expAmt))||0)+remaining))}
+                                  style={{display:"block",margin:"6px auto 0",padding:"5px 12px",borderRadius:8,border:"1px solid rgba(251,191,36,0.4)",background:"rgba(251,191,36,0.08)",color:"#fbbf24",fontFamily:RF,fontWeight:600,fontSize:12,cursor:"pointer"}}>
+                                  {lang==="he"?"השלם יתרה":lang==="es"?"Completar el saldo":"Fill the remainder"}: {sym}{fx(remaining)}
+                                </button>}
+                              </div>}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
                     {/* Who paid */}
                     <div style={{fontWeight:700,fontSize:13,color:"#a78bfa",marginBottom:8,display:"flex",alignItems:"center",gap:6}}><Wallet size={13} strokeWidth={2}/>{lang==="he"?"מי שילם?":lang==="es"?"¿Quién pagó?":"Who paid?"}</div>
                     {form.payers.map((payer,i)=>{
