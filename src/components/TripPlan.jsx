@@ -2317,11 +2317,18 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const editingExp=editId?expenses.find(e=>e.id===editId):null;
   const amountUnchanged=a=>!!editingExp&&editingExp.currency===form.currency&&Number(editingExp.amount)===a&&Number.isFinite(Number(editingExp.amountILS));
   const expILS=(a,cur)=>amountUnchanged(a)?Number(editingExp.amountILS):toILS(a,cur);
+  // Payers are typed in the expense's own currency (so 6000+1800+200 yen is simply 8000 yen, whatever the rate) and
+  // saved in ILS, which is what the settlement reads. A payer carries `orig` (the typed value) only once it was edited
+  // in this form; an untouched payer (an expense opened for editing) shows its saved ILS amount converted back.
+  const r2=n=>Math.round(n*100)/100;
+  const payerRate=amt=>{const a=parseFloat(amt);const r=a>0?expILS(a,form.currency)/a:1;return r>0&&isFinite(r)?r:1;};
+  const payerOrig=(p,amt)=>p.orig!==undefined?p.orig:(p.amount===""||p.amount==null||isNaN(parseFloat(p.amount))?"":String(r2(parseFloat(p.amount)/payerRate(amt))));
+  const payersSum=amt=>form.payers.reduce((s,p)=>s+(parseFloat(payerOrig(p,amt))||0),0);
+  const payersForSave=amt=>{const r=payerRate(amt);return form.payers.map(({orig,...p})=>orig!==undefined?{...p,amount:r2((parseFloat(orig)||0)*r)}:p);};
   const payersUnbalanced=amt=>{
     if(!(form.payers.length>0))return false;
-    const totalPaid=form.payers.reduce((s,p)=>s+parseFloat(p.amount||0),0);
-    const expAmt=expILS(amt,form.currency);
-    return Math.abs(totalPaid-expAmt)>=1;
+    // about one shekel of tolerance, expressed in the expense's currency
+    return Math.abs(payersSum(amt)-amt)>=1/payerRate(amt);
   };
 
   const handleAdd=()=>{
@@ -2332,7 +2339,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     if(!form.amount||isViewOnly||!(amt>0))return;
     if(payersUnbalanced(amt)){alert(lang==="he"?"סכומי המשלמים לא תואמים לסכום ההוצאה":lang==="es"?"Los montos de los pagadores no coinciden con el total":"Payer amounts don't add up to the expense total");return;}
     const date=form.category==="hotel"?form.checkIn:form.date;
-    onAdd({id:uid(),...form,date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
+    onAdd({id:uid(),...form,payers:payersForSave(amt),date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
     setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
@@ -2377,7 +2384,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     const keep=amountUnchanged(amt);
     const ils=expILS(amt,form.currency);
     const locked=form.paid?(keep&&editingExp.paid&&Number.isFinite(Number(editingExp.amountILSLocked))?Number(editingExp.amountILSLocked):toILS(amt,form.currency)):undefined;
-    onEdit(editId,{...form,date,amount:amt,amountILS:ils,amountILSLocked:locked});
+    onEdit(editId,{...form,payers:payersForSave(amt),date,amount:amt,amountILS:ils,amountILSLocked:locked});
     setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
@@ -2695,9 +2702,10 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                             {people.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
                           </select>
                           <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.2)",border:"1.5px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"0 10px",flex:1}}>
-                            <span style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>₪</span>
-                            <input type="number" value={payer.amount} onChange={e=>updatePayer(i,"amount",e.target.value)}
-                              placeholder="0" style={{flex:1,border:"none",background:"transparent",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",padding:"8px 0"}}/>
+                            <span style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>{CURR_SYMBOLS[form.currency]||form.currency}</span>
+                            <input type="number" inputMode="decimal" value={payerOrig(payer,form.amount)} onChange={e=>updatePayer(i,"orig",e.target.value)}
+                              placeholder="0" style={{flex:1,minWidth:0,border:"none",background:"transparent",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",padding:"8px 0"}}/>
+                            {form.currency!=="ILS"&&parseFloat(payerOrig(payer,form.amount))>0&&<span style={{color:"rgba(255,255,255,0.35)",fontSize:10,whiteSpace:"nowrap"}}>≈ ₪{(parseFloat(payerOrig(payer,form.amount))*payerRate(form.amount)).toFixed(0)}</span>}
                           </div>
                           <button onClick={()=>removePayer(i)} style={{background:"rgba(255,107,107,0.12)",border:"none",color:"#ff6b6b",borderRadius:8,padding:"8px 10px",cursor:"pointer",fontSize:13,flexShrink:0}}>✕</button>
                         </div>
@@ -2709,14 +2717,22 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                     </button>
                     {/* Total validation */}
                     {form.payers.length>0&&form.amount&&(()=>{
-                      const totalPaid=form.payers.reduce((s,p)=>s+parseFloat(p.amount||0),0);
-                      const expAmt=expILS(parseFloat(form.amount),form.currency);
+                      const expAmt=parseFloat(form.amount);
+                      const totalPaid=payersSum(expAmt);
                       const diff=Math.abs(totalPaid-expAmt);
-                      const ok=diff<1;
+                      const ok=diff<1/payerRate(expAmt);
+                      const sym=CURR_SYMBOLS[form.currency]||form.currency;
+                      const fx=n=>String(r2(n));
+                      const remaining=r2(expAmt-totalPaid);
+                      const last=form.payers.length-1;
                       return(
                         <div style={{fontSize:12,color:ok?"#4ade80":"#fbbf24",fontFamily:RF,marginTop:4,textAlign:"center"}}>
-                          {ok?"✓ ":"⚠️ "}{lang==="he"?"שולם":lang==="es"?"Pagado":"Paid"}: ₪{totalPaid.toFixed(0)} / ₪{expAmt.toFixed(0)}
-                          {!ok&&<span style={{opacity:0.7}}> ({lang==="he"?"הפרש":lang==="es"?"dif.":"diff"}: ₪{diff.toFixed(0)})</span>}
+                          {ok?"✓ ":"⚠️ "}{lang==="he"?"שולם":lang==="es"?"Pagado":"Paid"}: {sym}{fx(totalPaid)} / {sym}{fx(expAmt)}
+                          {!ok&&<span style={{opacity:0.7}}> ({lang==="he"?"הפרש":lang==="es"?"dif.":"diff"}: {sym}{fx(diff)})</span>}
+                          {remaining>0&&!ok&&<button onClick={()=>updatePayer(last,"orig",fx((parseFloat(payerOrig(form.payers[last],expAmt))||0)+remaining))}
+                            style={{display:"block",margin:"6px auto 0",padding:"5px 12px",borderRadius:8,border:"1px solid rgba(251,191,36,0.4)",background:"rgba(251,191,36,0.08)",color:"#fbbf24",fontFamily:RF,fontWeight:600,fontSize:12,cursor:"pointer"}}>
+                            {lang==="he"?"השלם יתרה":lang==="es"?"Completar el saldo":"Fill the remainder"}: {sym}{fx(remaining)}
+                          </button>}
                         </div>
                       );
                     })()}
