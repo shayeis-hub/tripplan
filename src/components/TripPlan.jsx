@@ -2311,10 +2311,16 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   // regardless, so an expense could silently carry payer amounts that
   // don't add up to what was actually spent, corrupting calcSettlement
   // for everyone on the trip. Mirrors the warning's own tolerance (<1).
+  // The ILS value of the expense being entered. When editing an existing expense whose amount and currency were not
+  // touched, it is the value saved with it, NOT today's exchange rate: the payers' ILS amounts were saved against
+  // that value, and the rate drifts, so re-converting made every edit (even just a date change) fail the check below.
+  const editingExp=editId?expenses.find(e=>e.id===editId):null;
+  const amountUnchanged=a=>!!editingExp&&editingExp.currency===form.currency&&Number(editingExp.amount)===a&&Number.isFinite(Number(editingExp.amountILS));
+  const expILS=(a,cur)=>amountUnchanged(a)?Number(editingExp.amountILS):toILS(a,cur);
   const payersUnbalanced=amt=>{
     if(!(form.payers.length>0))return false;
     const totalPaid=form.payers.reduce((s,p)=>s+parseFloat(p.amount||0),0);
-    const expAmt=toILS(amt,form.currency);
+    const expAmt=expILS(amt,form.currency);
     return Math.abs(totalPaid-expAmt)>=1;
   };
 
@@ -2367,7 +2373,11 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     // (now-wrong) locked value in place — same "paid → recompute at
     // today's rate, else clear" rule as handleAdd, so a report built off
     // the locked value can't silently disagree with the on-screen total.
-    onEdit(editId,{...form,date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
+    // Untouched amount+currency: keep the saved values (and an existing lock) instead of re-converting at today's rate.
+    const keep=amountUnchanged(amt);
+    const ils=expILS(amt,form.currency);
+    const locked=form.paid?(keep&&editingExp.paid&&Number.isFinite(Number(editingExp.amountILSLocked))?Number(editingExp.amountILSLocked):toILS(amt,form.currency)):undefined;
+    onEdit(editId,{...form,date,amount:amt,amountILS:ils,amountILSLocked:locked});
     setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
@@ -2700,7 +2710,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                     {/* Total validation */}
                     {form.payers.length>0&&form.amount&&(()=>{
                       const totalPaid=form.payers.reduce((s,p)=>s+parseFloat(p.amount||0),0);
-                      const expAmt=toILS(parseFloat(form.amount),form.currency);
+                      const expAmt=expILS(parseFloat(form.amount),form.currency);
                       const diff=Math.abs(totalPaid-expAmt);
                       const ok=diff<1;
                       return(
