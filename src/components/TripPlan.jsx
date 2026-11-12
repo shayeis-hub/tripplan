@@ -2537,7 +2537,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           </div>
           <div style={{flex:1,overflowY:"auto",padding:"12px 16px",maxWidth:480,width:"100%",margin:"0 auto"}}>
             {(!activityLog||activityLog.length===0)&&<div style={{textAlign:"center",color:W40,fontFamily:RF,fontSize:14,marginTop:40}}>{lang==="he"?"אין שינויים עדיין":lang==="es"?"Aún no hay cambios":"No changes yet"}</div>}
-            {[...(activityLog||[])].reverse().map(en=>{
+            {[...(activityLog||[])].sort((a,b)=>(a.t||0)-(b.t||0)).reverse().map(en=>{
               const verb=en.action==="add"?(lang==="he"?"הוסיף":lang==="es"?"añadió":"added"):en.action==="restore"?(lang==="he"?"שחזר":lang==="es"?"restauró":"restored"):en.action==="delete"?(lang==="he"?"מחק":lang==="es"?"eliminó":"deleted"):(lang==="he"?"עדכן":lang==="es"?"actualizó":"updated");
               const what=en.desc||catLabel(en.cat,lang);
               const when=new Date(en.t).toLocaleString(lang==="he"?"he-IL":lang==="es"?"es-ES":"en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
@@ -4886,7 +4886,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     const who=user?.displayName||(user?.email?user.email.split("@")[0]:"");
     const t=Date.now();
     const entries=items.map(it=>({id:uid(),t,uid:userId||"",who,...it}));
-    onMutateTripField(activeId,"activityLog",arr=>[...(arr||[]),...entries].slice(-300));
+    onMutateTripField(activeId,"activityLog",arr=>[...(arr||[]),...entries].sort((a,b)=>(a.t||0)-(b.t||0)).slice(-300));
   },[activeId,userId,user,onMutateTripField]);
   const logActivity=useCallback((action,e)=>{
     if(!e)return;
