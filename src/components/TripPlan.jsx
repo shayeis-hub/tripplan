@@ -2543,8 +2543,8 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
               const when=new Date(en.t).toLocaleString(lang==="he"?"he-IL":lang==="es"?"es-ES":"en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
               return(
                 <div key={en.id} style={{padding:"10px 0",borderBottom:"0.5px solid rgba(255,255,255,0.07)",fontFamily:RF}}>
-                  <div style={{fontSize:14,color:"#ffffff"}}><b>{en.who||"?"}</b> {verb}: {what}</div>
-                  <div style={{fontSize:12,color:W40,marginTop:3}}>{fmtAmt(en.amountILS,trip.displayCurrency||"ILS",rates)} · {when}</div>
+                  <div style={{fontSize:14,color:"#ffffff"}}><b>{en.who||"?"}</b> {verb} {en.kind==="activity"?(lang==="he"?"אטרקציה":lang==="es"?"una actividad":"an activity"):(lang==="he"?"הוצאה":lang==="es"?"un gasto":"an expense")}: {what}</div>
+                  <div style={{fontSize:12,color:W40,marginTop:3}}>{en.kind==="activity"?"":fmtAmt(en.amountILS,trip.displayCurrency||"ILS",rates)+" · "}{when}</div>
                 </div>
               );
             })}
@@ -4591,6 +4591,75 @@ function MapScreen({trip,expenses,onAddActivity,onAddExpense}){
   );
 }
 
+// What the person wants to be notified about. Stored on the server (/api/push-prefs) and checked there before any
+// push is sent, so it applies on every device.
+function NotificationSettings({lang,user,permission,subscribed,subscribe,onClose}){
+  const[prefs,setPrefs]=useState(null);
+  const[failed,setFailed]=useState(false);
+  const call=async(method,body)=>{
+    const token=await user.getIdToken();
+    const res=await fetch("/api/push-prefs",{method,headers:{authorization:`Bearer ${token}`,...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined});
+    if(!res.ok)throw new Error("prefs");
+    return (await res.json()).prefs;
+  };
+  useEffect(()=>{
+    let live=true;
+    call("GET").then(p=>{if(live)setPrefs(p);}).catch(()=>{if(live)setFailed(true);});
+    return()=>{live=false;};
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+  const flip=async(key)=>{
+    if(!prefs)return;
+    const next={...prefs,[key]:!prefs[key]};
+    setPrefs(next);setFailed(false);
+    try{setPrefs(await call("POST",{[key]:next[key]}));}catch{setPrefs(prefs);setFailed(true);}
+  };
+  const L=(he,en,es)=>lang==="he"?he:lang==="es"?es:en;
+  const rows=[
+    {key:"all",title:L("כל ההודעות","All notifications","Todas las notificaciones"),sub:L("מתג ראשי: כשהוא כבוי לא תגיע אליך אף הודעה","Master switch: when off, nothing is sent to you","Interruptor general: si está apagado no recibes nada")},
+    {key:"add",title:L("הוספה ועריכה בטיול","Additions and edits in the trip","Altas y ediciones en el viaje"),sub:L("הוצאה או אטרקציה שנוספו או שונו על ידי חברי הטיול","An expense or activity added or changed by trip members","Un gasto o actividad añadidos o cambiados por otros")},
+    {key:"delete",title:L("מחיקה מהטיול","Deletions from the trip","Eliminaciones del viaje"),sub:L("הוצאה או אטרקציה שנמחקו על ידי חברי הטיול","An expense or activity deleted by trip members","Un gasto o actividad eliminados por otros")},
+    {key:"system",title:L("התראות מערכת","System notifications","Notificaciones del sistema"),sub:L("תזכורת לפני טיסה והתראה שבוע לפני הטיול","Flight reminders and the week-before reminder","Recordatorio de vuelo y aviso una semana antes")},
+  ];
+  const granted=permission==="granted"&&subscribed;
+  return createPortal(
+    <div role="dialog" style={{position:"fixed",inset:0,zIndex:3100,background:"rgba(13,33,55,0.97)",display:"flex",flexDirection:"column",fontFamily:RF}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px",borderBottom:"0.5px solid rgba(255,255,255,0.1)",maxWidth:480,width:"100%",margin:"0 auto"}}>
+        <div style={{fontWeight:700,fontSize:17,color:"#ffffff"}}>{L("התראות","Notifications","Notificaciones")}</div>
+        <button onClick={onClose} aria-label="close" style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><X size={18} color="#ffffff"/></button>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"14px 16px",maxWidth:480,width:"100%",margin:"0 auto"}}>
+        <div style={{padding:"12px 14px",borderRadius:12,background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(255,255,255,0.1)",marginBottom:16}}>
+          <div style={{fontSize:13,color:granted?"#4ade80":"#fbbf24",fontWeight:700}}>
+            {granted?L("ההתראות מופעלות במכשיר הזה","Notifications are enabled on this device","Las notificaciones están activadas en este dispositivo")
+              :permission==="denied"?L("ההתראות חסומות במכשיר הזה","Notifications are blocked on this device","Las notificaciones están bloqueadas en este dispositivo")
+              :L("ההתראות עדיין לא הופעלו במכשיר הזה","Notifications are not enabled on this device yet","Las notificaciones aún no están activadas en este dispositivo")}
+          </div>
+          {permission==="denied"&&<div style={{fontSize:12,color:W40,marginTop:6,lineHeight:1.5}}>{L("כדי לקבל התראות צריך לאפשר אותן בהגדרות המכשיר או הדפדפן, ואז לחזור לכאן.","To receive them, allow notifications in your device or browser settings, then come back here.","Para recibirlas, permítelas en los ajustes del dispositivo o del navegador y vuelve aquí.")}</div>}
+          {!granted&&permission!=="denied"&&<button onClick={subscribe} style={{marginTop:10,padding:"9px 16px",borderRadius:10,border:"none",background:"rgba(100,223,223,0.18)",color:"#64dfdf",fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{L("הפעל התראות","Enable notifications","Activar notificaciones")}</button>}
+        </div>
+        {!prefs&&!failed&&<div style={{color:W40,fontSize:13,textAlign:"center",marginTop:20}}>...</div>}
+        {failed&&<div style={{color:"#fbbf24",fontSize:13,marginBottom:12}}>{L("לא הצלחנו לשמור או לטעון את ההגדרות. נסה שוב.","Could not load or save your settings. Try again.","No se pudieron cargar o guardar los ajustes. Inténtalo de nuevo.")}</div>}
+        {prefs&&rows.map(r=>{
+          const on=r.key==="all"?prefs.all:prefs.all&&prefs[r.key];
+          const dim=r.key!=="all"&&!prefs.all;
+          return(
+            <button key={r.key} role="switch" aria-checked={on} onClick={()=>flip(r.key)} disabled={dim}
+              style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,padding:"14px 4px",background:"none",border:"none",borderBottom:"0.5px solid rgba(255,255,255,0.08)",cursor:dim?"default":"pointer",opacity:dim?0.4:1,textAlign:"start",fontFamily:RF}}>
+              <span style={{flex:1}}>
+                <span style={{display:"block",fontSize:15,fontWeight:700,color:"#ffffff"}}>{r.title}</span>
+                <span style={{display:"block",fontSize:12,color:W40,marginTop:3,lineHeight:1.4}}>{r.sub}</span>
+              </span>
+              <span style={{width:46,height:26,borderRadius:13,background:on?"#12b3b3":"rgba(255,255,255,0.18)",position:"relative",flexShrink:0,transition:"background 0.15s"}}>
+                <span style={{position:"absolute",top:3,insetInlineStart:on?23:3,width:20,height:20,borderRadius:10,background:"#ffffff",transition:"inset-inline-start 0.15s"}}/>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>,document.body);
+}
+
 export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFields,onMutateTripField,onDeleteTrip,onShareTrip,onRemoveShare,onLogout,userEmail,userId,syncFailed,onRetrySync}){
   const{lang,setLang}=useLang();
   const{user}=useAuth();
@@ -4616,6 +4685,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   const[inspireSaving,setInspireSaving]=useState(false);
   const[showConverter,setShowConverter]=useState(false);
   const[showGuide,setShowGuide]=useState(false); // in-app user guide modal
+  const[showNotifSettings,setShowNotifSettings]=useState(false);
   const[worldOpenYear,setWorldOpenYear]=useState(false); // opened from the yearly e-mail: land on the summary card
   const[showWorld,setShowWorld]=useState(false); // "My World" screen (visited countries), from the side menu
   const[showTravelProfile,setShowTravelProfile]=useState(false); // Personal Travel Profile modal (manual edit, from menu)
@@ -4644,6 +4714,9 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     const env=detectPromptEnvironment();
     if(shouldAskForNotifications({permission,subscribed,pushReady:env.pushReady,startDate:trip.startDate||null,today:localDateStr(new Date()),dismissedAt:readPromptAnsweredAt(),now:Date.now()})) setShowNotifPrompt(true);
   };
+  const renderNotifSettings=()=>showNotifSettings&&user&&typeof document!=="undefined"&&(
+    <NotificationSettings lang={lang} user={user} permission={permission} subscribed={subscribed} subscribe={subscribe} onClose={()=>setShowNotifSettings(false)}/>
+  );
   const renderNotifPrompt=()=>showNotifPrompt&&(
     <NotificationPrompt lang={lang}
       onYes={()=>{markPromptAnswered();setShowNotifPrompt(false);subscribe();}}
@@ -4804,11 +4877,44 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
 
   // Change history: every add / edit / delete of an expense is appended (newest last, capped) to the trip's own
   // activityLog field, so everyone on a shared trip sees who did what and when.
-  const logActivity=useCallback((action,e)=>{
-    if(!e||!activeId)return;
-    const entry={id:uid(),t:Date.now(),uid:userId||"",who:user?.displayName||(user?.email?user.email.split("@")[0]:""),action,cat:e.category||"",desc:e.description||"",amountILS:Number(e.amountILS)||0};
-    onMutateTripField(activeId,"activityLog",arr=>[...(arr||[]),entry].slice(-300));
+  const pushLog=useCallback((items)=>{
+    if(!activeId||items.length===0)return;
+    const who=user?.displayName||(user?.email?user.email.split("@")[0]:"");
+    const t=Date.now();
+    const entries=items.map(it=>({id:uid(),t,uid:userId||"",who,...it}));
+    onMutateTripField(activeId,"activityLog",arr=>[...(arr||[]),...entries].slice(-300));
   },[activeId,userId,user,onMutateTripField]);
+  const logActivity=useCallback((action,e)=>{
+    if(!e)return;
+    pushLog([{kind:"expense",action,cat:e.category||"",desc:e.description||"",amountILS:Number(e.amountILS)||0}]);
+  },[pushLog]);
+  // Tells the other members of a shared trip (each one's own notification settings decide whether it reaches them).
+  const notifyMembers=useCallback((eventType,data)=>{
+    const tr=trips.find(x=>x.id===activeId);
+    if(!(tr?.sharedWith?.length>0)||!user)return;
+    user.getIdToken().then(idToken=>notifyTripMembers(idToken,activeId,eventType,data)).catch(()=>{});
+  },[trips,activeId,user]);
+  // The calendar saves a whole day map; work out what was added, changed or removed, log it and notify.
+  const saveActs=useCallback((acts)=>{
+    const tr=trips.find(x=>x.id===activeId);
+    const old=tr?.activities||{};
+    const norm=a=>typeof a==="string"?{text:a,time:"",timeEnd:"",type:"general"}:a;
+    const changes=[];
+    new Set([...Object.keys(old),...Object.keys(acts)]).forEach(d=>{
+      const before=(old[d]||[]).map(norm),after=(acts[d]||[]).map(norm);
+      after.forEach(a=>{
+        const b=before.find(x=>(x.text||"").trim()===(a.text||"").trim());
+        if(!b)changes.push(["add",a.text]);
+        else if((b.time||"")!==(a.time||"")||(b.timeEnd||"")!==(a.timeEnd||"")||(b.type||"")!==(a.type||""))changes.push(["edit",a.text]);
+      });
+      before.forEach(b=>{if(!after.some(x=>(x.text||"").trim()===(b.text||"").trim()))changes.push(["delete",b.text]);});
+    });
+    updTrip({activities:acts});
+    if(tr?.archived||changes.length===0)return;
+    pushLog(changes.slice(0,10).map(([action,text])=>({kind:"activity",action,cat:"",desc:text,amountILS:0})));
+    const [action,text]=changes[0];
+    notifyMembers(`activity_${action==="add"?"added":action==="edit"?"edited":"deleted"}`,{name:text});
+  },[trips,activeId,updTrip,pushLog,notifyMembers]);
 
   const addExp=useCallback((e)=>{
     let ok=false;
@@ -4823,13 +4929,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     // the setTimeout that used to live here (hardcoded 3h, and only fired
     // at all if the tab happened to stay open for up to 24h straight).
     // Notify shared trip members about new expense
-    const active=trips.find(t=>t.id===activeId);
-    if(active?.sharedWith?.length>0&&e.isShared!==false&&user){
-      user.getIdToken().then(idToken=>{
-        notifyTripMembers(idToken,active.id,"new_expense",{category:e.category,amountILS:e.amountILS});
-      }).catch(()=>{});
-    }
-  },[activeId,onMutateTripField,userId,user,trips,logActivity]);
+    if(ok&&e.isShared!==false) notifyMembers("expense_added",{category:e.category,amountILS:e.amountILS});
+  },[activeId,onMutateTripField,logActivity,notifyMembers]);
 
   const togglePay=useCallback((id)=>{
     let ok=false;
@@ -4849,8 +4950,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       ok=true;
       return ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.filter(e=>e.id!==id)}:t);
     });
-    if(ok){ onMutateTripField(activeId,"expenses",arr=>(arr||[]).filter(e=>e.id!==id)); logActivity("delete",gone); }
-  },[activeId,onMutateTripField,trips,logActivity]);
+    if(ok){
+      onMutateTripField(activeId,"expenses",arr=>(arr||[]).filter(e=>e.id!==id)); logActivity("delete",gone);
+      if(gone&&gone.isShared!==false) notifyMembers("expense_deleted",{category:gone.category,amountILS:gone.amountILS});
+    }
+  },[activeId,onMutateTripField,trips,logActivity,notifyMembers]);
 
   const editExp=useCallback((id,patch)=>{
     const before=trips.find(t=>t.id===activeId)?.expenses?.find(e=>e.id===id);
@@ -4860,8 +4964,12 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       ok=true;
       return ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)}:t);
     });
-    if(ok){ onMutateTripField(activeId,"expenses",arr=>(arr||[]).map(e=>e.id===id?{...e,...patch}:e)); logActivity("edit",{...before,...patch}); }
-  },[activeId,onMutateTripField,trips,logActivity]);
+    if(ok){
+      onMutateTripField(activeId,"expenses",arr=>(arr||[]).map(e=>e.id===id?{...e,...patch}:e)); logActivity("edit",{...before,...patch});
+      const merged={...before,...patch};
+      if(merged.isShared!==false) notifyMembers("expense_edited",{category:merged.category,amountILS:merged.amountILS});
+    }
+  },[activeId,onMutateTripField,trips,logActivity,notifyMembers]);
 
   const handleShare=async(tripId)=>{
     if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
@@ -5116,6 +5224,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"start"}}>
             <Sparkles size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"פרופיל הטיולים שלי":lang==="es"?"Mi perfil de viaje":"My Travel Profile"}
           </button>
+          <button onClick={()=>{setShowNotifSettings(true);setSideMenu(false);}}
+            style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
+            <Bell size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"התראות":lang==="es"?"Notificaciones":"Notifications"}
+          </button>
           <button onClick={()=>{setShowGuide(true);setSideMenu(false);}}
             style={{width:"100%",padding:"11px 20px",background:"none",border:"none",color:"rgba(255,255,255,0.8)",fontFamily:RF,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"start"}}>
             <BookOpen size={18} color={W50} strokeWidth={1.5}/>{lang==="he"?"חוברת הסבר":lang==="es"?"Guía de usuario":"User Guide"}
@@ -5220,7 +5332,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     <>{showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={trips[0]?.currencies||["ILS","USD","EUR"]} defaultCurrency={trips[0]?.defaultCurrency} displayCurrency={trips[0]?.displayCurrency}/>}</>
   );
   const renderHomeCluster=()=>(
-    <><Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld openYear={worldOpenYear} onClose={()=>{setShowWorld(false);setWorldOpenYear(false);}}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}</>
+    <><Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{renderNotifSettings()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld openYear={worldOpenYear} onClose={()=>{setShowWorld(false);setWorldOpenYear(false);}}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}</>
   );
   const renderTripList=(selectedId)=>(
     <TripSelectorScreen trips={trips} onSelect={handleSelect} onCreate={handleCreate} onDelete={handleDelete} onArchive={handleArchive} userId={userId} rates={rates} selectedId={selectedId}/>
@@ -5496,7 +5608,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           </div>
           <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
           <Fx show={!!inspireModal}>{inspireModal&&renderInspireModal()}</Fx>
-          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld openYear={worldOpenYear} onClose={()=>{setShowWorld(false);setWorldOpenYear(false);}}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{renderNotifSettings()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld openYear={worldOpenYear} onClose={()=>{setShowWorld(false);setWorldOpenYear(false);}}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             <TripSplashScreen trip={active} expenses={active.expenses||[]}
               onBudget={()=>{pushNav("screen",activeId,"budget","expenses");setSection("budget");setScreen("expenses");}}
@@ -5533,7 +5645,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
           <Fx show={!!inspireModal}>{inspireModal&&renderInspireModal()}</Fx>
-          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld openYear={worldOpenYear} onClose={()=>{setShowWorld(false);setWorldOpenYear(false);}}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{renderNotifSettings()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld openYear={worldOpenYear} onClose={()=>{setShowWorld(false);setWorldOpenYear(false);}}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:"auto"}}>
             {/* Trip settings button */}
             {screen!=="destination"&&!isViewOnly&&(
@@ -5580,10 +5692,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
           {showConverter&&<CurrencyConverter rates={rates} onClose={()=>setShowConverter(false)} tripCurrencies={active?.currencies||["ILS","USD","EUR"]} defaultCurrency={active?.defaultCurrency} displayCurrency={active?.displayCurrency}/>}
           <Fx show={!!shareModal}>{shareModal&&renderShareModal()}</Fx><Fx show={showNotifPrompt}>{renderNotifPrompt()}</Fx>
           <Fx show={!!inspireModal}>{inspireModal&&renderInspireModal()}</Fx>
-          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld openYear={worldOpenYear} onClose={()=>{setShowWorld(false);setWorldOpenYear(false);}}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
+          <Fx show={sideMenu}>{sideMenu&&renderSideMenu()}</Fx><Fx show={showGuide}>{showGuide&&renderGuideModal()}</Fx>{renderNotifSettings()}{showTravelProfile&&<TravelProfile onClose={()=>setShowTravelProfile(false)}/>}{showWorld&&<MyWorld openYear={worldOpenYear} onClose={()=>{setShowWorld(false);setWorldOpenYear(false);}}/>}{onboarding&&<TravelProfile onboarding onClose={()=>{setOnboarding(false);startWizard();}} onSaved={()=>setHasProfile(true)}/>}
           <div style={{flex:1,overflowY:screen==="map"?"hidden":"auto",position:"relative",minHeight:0}}>
             <div key={screen} className="screen-enter" style={screen==="map"?{height:"100%"}:undefined}>
-              {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={isViewOnly?null:(acts=>updTrip({activities:acts}))}/>}
+              {screen==="calendar"&&<CalendarScreen trip={active} expenses={expenses} onSaveActs={isViewOnly?null:saveActs}/>}
               {screen==="discover"&&<DiscoverScreen trip={active}/>}
               {screen==="packing"&&<PackingListScreen trip={active} onUpdate={isViewOnly?null:updTrip}/>}
               {screen==="map"&&(

@@ -28,11 +28,13 @@ import {
   type PushChannel,
 } from "./preTripReminder";
 import { dayNumber, homeToday } from "./tripLifecycle";
+import { prefAllows } from "./notifPrefs";
 
 export interface StoredSubscription {
   fcmToken?: string;
   subscription?: unknown;
   lang?: unknown;
+  prefs?: unknown;
 }
 
 export interface Pre7Db {
@@ -128,8 +130,10 @@ export async function runPre7Reminders(deps: Pre7Deps, opts: { dryRun: boolean }
     const owner = lite.owner;
     if (!owner) { push("skipped_no_owner"); continue; }
     const sub = subs.get(owner) ?? {};
-    const fcm = !!sub.fcmToken;
-    const web = !!sub.subscription;
+    // The owner switched system notifications off in the app settings: treated like having no channel.
+    const muted = !prefAllows(sub.prefs, "system");
+    const fcm = !muted && !!sub.fcmToken;
+    const web = !muted && !!sub.subscription;
     const channel: PushChannel = fcm && web ? "both" : fcm ? "fcm" : web ? "web" : "none";
     const eventId = notificationEventId(id);
     const existing = evs.get(eventId) ?? null;

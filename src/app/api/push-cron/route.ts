@@ -3,6 +3,7 @@ import webpush from "web-push";
 import { getAdminDb, getAdminMessaging } from "@/lib/firebase-admin";
 import { runPre7Reminders } from "@/lib/pre7Reminder";
 import { createFirestorePre7Db, createPre7Senders } from "@/lib/pre7Adapters";
+import { prefAllows } from "@/lib/notifPrefs";
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -79,7 +80,9 @@ async function sendPush(userId: string, title: string, body: string) {
   try {
     const subDoc = await getAdminDb().collection("pushSubscriptions").doc(userId).get();
     if (!subDoc.exists) return;
-    const { subscription, fcmToken } = subDoc.data() as { subscription?: any; fcmToken?: string };
+    const { subscription, fcmToken, prefs } = subDoc.data() as { subscription?: any; fcmToken?: string; prefs?: unknown };
+    // The person switched system notifications (flight reminders) off in the app settings.
+    if (!prefAllows(prefs, "system")) return;
 
     if (fcmToken) {
       try {
