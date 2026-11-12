@@ -58,7 +58,7 @@ const MyWorld=dynamic(()=>import("@/components/MyWorld"),{ssr:false});
 import { isIosApp, openLegal, legalPath } from "@/lib/nativeApp";
 import {
   MapPin, Receipt, Wallet, Calendar, Sparkles, Backpack, Map,
-  Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send,
+  Trash2, Plus, BookOpen, Check, X, Filter, Share2, Plane, Send, History,
   Users, User, ChevronRight, ChevronLeft, Shirt, FileText, Zap, Heart, Package,
   AlertCircle, Loader, Link as LinkIcon, Ticket, Utensils, Car,
   Building2, Search, Clock, Menu, ArrowLeftRight, FileDown, BarChart2,
@@ -2178,12 +2178,13 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
 
 const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:defaultTripDate(dates),checkIn:defaultTripDate(dates),checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",shares:[],isShared:true,participants:people.map(p=>p.id),payers:[]});
 
-function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo,prefill,onPrefillDone,isViewOnly}){
+function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo,prefill,onPrefillDone,isViewOnly,activityLog}){
   const{lang}=useLang();
   const{user}=useAuth();
   const isOffline=useOnlineStatus();
   const[rootRef,twoCol]=useTwoCol(720); // summary + filters beside the list when there is room
   // Deleting an expense asks first, then offers a few seconds to take it back (it is re-added as it was).
+  const[showLog,setShowLog]=useState(false);
   const[undoExp,setUndoExp]=useState(null);
   const undoTimer=useRef(null);
   useEffect(()=>()=>clearTimeout(undoTimer.current),[]);
@@ -2502,7 +2503,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   return(
     <div ref={rootRef}>
       {undoExp&&typeof document!=="undefined"&&createPortal(
-        <div role="status" style={{position:"fixed",left:16,right:16,bottom:"calc(88px + env(safe-area-inset-bottom))",zIndex:300,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"12px 14px",borderRadius:14,background:"#1b2b44",border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 8px 24px rgba(0,0,0,0.4)",color:"#ffffff",fontFamily:RF,fontSize:14,maxWidth:480,margin:"0 auto"}}>
+        <div role="status" style={{position:"fixed",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:"calc(100% - 32px)",zIndex:3200,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"12px 14px",borderRadius:14,background:"#1b2b44",border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 8px 24px rgba(0,0,0,0.4)",color:"#ffffff",fontFamily:RF,fontSize:14,maxWidth:360,margin:0}}>
           <span>{lang==="he"?"ההוצאה נמחקה":lang==="es"?"Gasto eliminado":"Expense deleted"}</span>
           <button onClick={undoDelete} style={{padding:"6px 14px",borderRadius:8,border:"none",background:"rgba(100,223,223,0.18)",color:"#64dfdf",fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{lang==="he"?"בטל":lang==="es"?"Deshacer":"Undo"}</button>
         </div>,document.body
@@ -2510,8 +2511,12 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       <WaveHeader title={t("exp_title",lang)}
         subtitle={trip.destination?`${trip.destination}${nights>0?` · ${nights} ${t("days",lang)}`:""}`:""}
         action={
-          isViewOnly?null:(
           <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>setShowLog(true)} aria-label={lang==="he"?"היסטוריית שינויים":lang==="es"?"Historial de cambios":"Change history"}
+              style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <History size={17} color={W40} strokeWidth={1.5}/>
+            </button>
+            {!isViewOnly&&<>
             <button onClick={()=>{if(isOffline){alert(t("scan_offline",lang));return;}isNativeApp?nativeScan():setShowCamera(true);}} disabled={scanning}
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:scanning?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:scanning?"default":"pointer",opacity:scanning?0.5:1}}>
               {scanning?<Loader size={16} color={W40} strokeWidth={1.5} style={{animation:"spin 1s linear infinite"}}/>:<Camera size={17} color={W40} strokeWidth={1.5}/>}
@@ -2520,10 +2525,32 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
               style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(100,223,223,0.3)",background:"rgba(100,223,223,0.12)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
               <Plus size={18} color={TEAL} strokeWidth={2.5}/>
             </button>
+            </>}
           </div>
-          )
         }
       />
+      {showLog&&typeof document!=="undefined"&&createPortal(
+        <div style={{position:"fixed",inset:0,zIndex:3100,background:"rgba(13,33,55,0.96)",display:"flex",flexDirection:"column"}} role="dialog">
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px",borderBottom:"0.5px solid rgba(255,255,255,0.1)",maxWidth:480,width:"100%",margin:"0 auto"}}>
+            <div style={{fontWeight:700,fontSize:17,color:"#ffffff",fontFamily:RF}}>{lang==="he"?"היסטוריית שינויים":lang==="es"?"Historial de cambios":"Change history"}</div>
+            <button onClick={()=>setShowLog(false)} aria-label="close" style={{width:36,height:36,borderRadius:10,border:"0.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><X size={18} color="#ffffff"/></button>
+          </div>
+          <div style={{flex:1,overflowY:"auto",padding:"12px 16px",maxWidth:480,width:"100%",margin:"0 auto"}}>
+            {(!activityLog||activityLog.length===0)&&<div style={{textAlign:"center",color:W40,fontFamily:RF,fontSize:14,marginTop:40}}>{lang==="he"?"אין שינויים עדיין":lang==="es"?"Aún no hay cambios":"No changes yet"}</div>}
+            {[...(activityLog||[])].reverse().map(en=>{
+              const verb=en.action==="add"?(lang==="he"?"הוסיף":lang==="es"?"añadió":"added"):en.action==="delete"?(lang==="he"?"מחק":lang==="es"?"eliminó":"deleted"):(lang==="he"?"עדכן":lang==="es"?"actualizó":"updated");
+              const what=en.desc||catLabel(en.cat,lang);
+              const when=new Date(en.t).toLocaleString(lang==="he"?"he-IL":lang==="es"?"es-ES":"en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+              return(
+                <div key={en.id} style={{padding:"10px 0",borderBottom:"0.5px solid rgba(255,255,255,0.07)",fontFamily:RF}}>
+                  <div style={{fontSize:14,color:"#ffffff"}}><b>{en.who||"?"}</b> {verb}: {what}</div>
+                  <div style={{fontSize:12,color:W40,marginTop:3}}>{fmtAmt(en.amountILS,trip.displayCurrency||"ILS",rates)} · {when}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>,document.body
+      )}
 
       {/* In-app receipt camera with framing guide + capture tips */}
       {showCamera&&(
@@ -4775,6 +4802,14 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     onUpdateTripFields(activeId,patch);
   },[activeId,trips,onUpdateTripFields]);
 
+  // Change history: every add / edit / delete of an expense is appended (newest last, capped) to the trip's own
+  // activityLog field, so everyone on a shared trip sees who did what and when.
+  const logActivity=useCallback((action,e)=>{
+    if(!e||!activeId)return;
+    const entry={id:uid(),t:Date.now(),uid:userId||"",who:user?.displayName||(user?.email?user.email.split("@")[0]:""),action,cat:e.category||"",desc:e.description||"",amountILS:Number(e.amountILS)||0};
+    onMutateTripField(activeId,"activityLog",arr=>[...(arr||[]),entry].slice(-300));
+  },[activeId,userId,user,onMutateTripField]);
+
   const addExp=useCallback((e)=>{
     let ok=false;
     setTrips((ts)=>{
@@ -4782,7 +4817,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       ok=true;
       return ts.map(t=>t.id===activeId?{...t,expenses:[...t.expenses,e]}:t);
     });
-    if(ok) onMutateTripField(activeId,"expenses",arr=>[...(arr||[]),e]);
+    if(ok){ onMutateTripField(activeId,"expenses",arr=>[...(arr||[]),e]); logActivity("add",e); }
     // Flight reminders are handled server-side by /api/push-cron now — it's
     // timezone-aware and respects the trip's actual reminderHours, unlike
     // the setTimeout that used to live here (hardcoded 3h, and only fired
@@ -4794,7 +4829,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
         notifyTripMembers(idToken,active.id,"new_expense",{category:e.category,amountILS:e.amountILS});
       }).catch(()=>{});
     }
-  },[activeId,onMutateTripField,userId,user,trips]);
+  },[activeId,onMutateTripField,userId,user,trips,logActivity]);
 
   const togglePay=useCallback((id)=>{
     let ok=false;
@@ -4807,24 +4842,26 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   },[activeId,onMutateTripField]);
 
   const delExp=useCallback((id)=>{
+    const gone=trips.find(t=>t.id===activeId)?.expenses?.find(e=>e.id===id);
     let ok=false;
     setTrips((ts)=>{
       if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
       ok=true;
       return ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.filter(e=>e.id!==id)}:t);
     });
-    if(ok) onMutateTripField(activeId,"expenses",arr=>(arr||[]).filter(e=>e.id!==id));
-  },[activeId,onMutateTripField]);
+    if(ok){ onMutateTripField(activeId,"expenses",arr=>(arr||[]).filter(e=>e.id!==id)); logActivity("delete",gone); }
+  },[activeId,onMutateTripField,trips,logActivity]);
 
   const editExp=useCallback((id,patch)=>{
+    const before=trips.find(t=>t.id===activeId)?.expenses?.find(e=>e.id===id);
     let ok=false;
     setTrips((ts)=>{
       if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
       ok=true;
       return ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)}:t);
     });
-    if(ok) onMutateTripField(activeId,"expenses",arr=>(arr||[]).map(e=>e.id===id?{...e,...patch}:e));
-  },[activeId,onMutateTripField]);
+    if(ok){ onMutateTripField(activeId,"expenses",arr=>(arr||[]).map(e=>e.id===id?{...e,...patch}:e)); logActivity("edit",{...before,...patch}); }
+  },[activeId,onMutateTripField,trips,logActivity]);
 
   const handleShare=async(tripId)=>{
     if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
@@ -5508,7 +5545,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             )}
             <div key={screen} className="screen-enter">
               {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>{const wasWizard=wizardMode;setWizardMode(false);setScreen("expenses");if(wasWizard)askAboutNotifications(active);}} allCodes={allCodes} rates={rates} wizard={wizardMode} onShare={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} lastTripPrefs={lastTripPrefs}/>}
-              {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)} isViewOnly={isViewOnly}/>}
+              {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)} isViewOnly={isViewOnly} activityLog={active?.activityLog}/>}
               {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates}/>}
             </div>
           </div>
