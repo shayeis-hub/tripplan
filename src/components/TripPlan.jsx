@@ -2183,6 +2183,25 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const{user}=useAuth();
   const isOffline=useOnlineStatus();
   const[rootRef,twoCol]=useTwoCol(720); // summary + filters beside the list when there is room
+  // Deleting an expense asks first, then offers a few seconds to take it back (it is re-added as it was).
+  const[undoExp,setUndoExp]=useState(null);
+  const undoTimer=useRef(null);
+  useEffect(()=>()=>clearTimeout(undoTimer.current),[]);
+  const askDelete=exp=>{
+    const name=exp.description||catLabel(exp.category,lang);
+    const q=lang==="he"?`למחוק את ההוצאה "${name}"?`:lang==="es"?`¿Eliminar el gasto "${name}"?`:`Delete the expense "${name}"?`;
+    if(!window.confirm(q))return;
+    onDelete(exp.id);
+    setUndoExp(exp);
+    clearTimeout(undoTimer.current);
+    undoTimer.current=setTimeout(()=>setUndoExp(null),7000);
+  };
+  const undoDelete=()=>{
+    if(!undoExp)return;
+    clearTimeout(undoTimer.current);
+    onAdd(undoExp);
+    setUndoExp(null);
+  };
   const dates=getRange(trip.startDate,trip.endDate);
   const people=trip.people||[];
   const[sel,setSel]=useState(dates[0]||"");
@@ -2468,7 +2487,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         {/* Amount + delete — RTL end (physical LEFT) */}
         <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
           <div style={{fontWeight:700,fontSize:17,color:"#ffffff",fontFamily:RF,letterSpacing:"-0.3px"}}>{fmtAmt(exp.amountILS,trip.displayCurrency||"ILS",rates)}</div>
-          {!isViewOnly&&<button onClick={e=>{e.stopPropagation();onDelete(exp.id);}}
+          {!isViewOnly&&<button onClick={e=>{e.stopPropagation();askDelete(exp);}}
             style={{padding:"3px 7px",borderRadius:6,border:"none",background:"rgba(255,107,107,0.1)",cursor:"pointer",display:"flex",alignItems:"center"}}>
             <Trash2 size={11} color="#ff6b6b"/>
           </button>}
@@ -2482,6 +2501,12 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
   return(
     <div ref={rootRef}>
+      {undoExp&&(
+        <div role="status" style={{position:"fixed",left:16,right:16,bottom:"calc(88px + env(safe-area-inset-bottom))",zIndex:300,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"12px 14px",borderRadius:14,background:"#1b2b44",border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 8px 24px rgba(0,0,0,0.4)",color:"#ffffff",fontFamily:RF,fontSize:14,maxWidth:480,margin:"0 auto"}}>
+          <span>{lang==="he"?"ההוצאה נמחקה":lang==="es"?"Gasto eliminado":"Expense deleted"}</span>
+          <button onClick={undoDelete} style={{padding:"6px 14px",borderRadius:8,border:"none",background:"rgba(100,223,223,0.18)",color:"#64dfdf",fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{lang==="he"?"בטל":lang==="es"?"Deshacer":"Undo"}</button>
+        </div>
+      )}
       <WaveHeader title={t("exp_title",lang)}
         subtitle={trip.destination?`${trip.destination}${nights>0?` · ${nights} ${t("days",lang)}`:""}`:""}
         action={
