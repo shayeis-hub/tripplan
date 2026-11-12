@@ -2501,11 +2501,11 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
 
   return(
     <div ref={rootRef}>
-      {undoExp&&(
+      {undoExp&&typeof document!=="undefined"&&createPortal(
         <div role="status" style={{position:"fixed",left:16,right:16,bottom:"calc(88px + env(safe-area-inset-bottom))",zIndex:300,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"12px 14px",borderRadius:14,background:"#1b2b44",border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 8px 24px rgba(0,0,0,0.4)",color:"#ffffff",fontFamily:RF,fontSize:14,maxWidth:480,margin:"0 auto"}}>
           <span>{lang==="he"?"ההוצאה נמחקה":lang==="es"?"Gasto eliminado":"Expense deleted"}</span>
           <button onClick={undoDelete} style={{padding:"6px 14px",borderRadius:8,border:"none",background:"rgba(100,223,223,0.18)",color:"#64dfdf",fontFamily:RF,fontWeight:700,fontSize:14,cursor:"pointer"}}>{lang==="he"?"בטל":lang==="es"?"Deshacer":"Undo"}</button>
-        </div>
+        </div>,document.body
       )}
       <WaveHeader title={t("exp_title",lang)}
         subtitle={trip.destination?`${trip.destination}${nights>0?` · ${nights} ${t("days",lang)}`:""}`:""}
