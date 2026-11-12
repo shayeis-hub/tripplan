@@ -2200,7 +2200,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const undoDelete=()=>{
     if(!undoExp)return;
     clearTimeout(undoTimer.current);
-    onAdd(undoExp);
+    onAdd(undoExp,{restore:true});
     setUndoExp(null);
   };
   const dates=getRange(trip.startDate,trip.endDate);
@@ -2538,7 +2538,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
           <div style={{flex:1,overflowY:"auto",padding:"12px 16px",maxWidth:480,width:"100%",margin:"0 auto"}}>
             {(!activityLog||activityLog.length===0)&&<div style={{textAlign:"center",color:W40,fontFamily:RF,fontSize:14,marginTop:40}}>{lang==="he"?"אין שינויים עדיין":lang==="es"?"Aún no hay cambios":"No changes yet"}</div>}
             {[...(activityLog||[])].reverse().map(en=>{
-              const verb=en.action==="add"?(lang==="he"?"הוסיף":lang==="es"?"añadió":"added"):en.action==="delete"?(lang==="he"?"מחק":lang==="es"?"eliminó":"deleted"):(lang==="he"?"עדכן":lang==="es"?"actualizó":"updated");
+              const verb=en.action==="add"?(lang==="he"?"הוסיף":lang==="es"?"añadió":"added"):en.action==="restore"?(lang==="he"?"שחזר":lang==="es"?"restauró":"restored"):en.action==="delete"?(lang==="he"?"מחק":lang==="es"?"eliminó":"deleted"):(lang==="he"?"עדכן":lang==="es"?"actualizó":"updated");
               const what=en.desc||catLabel(en.cat,lang);
               const when=new Date(en.t).toLocaleString(lang==="he"?"he-IL":lang==="es"?"es-ES":"en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
               return(
@@ -4672,6 +4672,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     return()=>document.removeEventListener("touchstart",noop);
   },[]);
   const[trips,setTrips]=useState(initialTrips);
+  // The latest trips for handlers that must decide synchronously. A flag set inside a setState updater is not reliable:
+  // React may run the updater later, so the code after it saw the flag still false and skipped the save and the log.
+  const tripsRef=useRef(trips);
+  tripsRef.current=trips;
   const[activeId,setActiveId]=useState(null);
   const[section,setSection]=useState(null); // null=splash | "budget" | "trip"
   const[screen,setScreen]=useState("expenses");
@@ -4916,14 +4920,11 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     notifyMembers(`activity_${action==="add"?"added":action==="edit"?"edited":"deleted"}`,{name:text});
   },[trips,activeId,updTrip,pushLog,notifyMembers]);
 
-  const addExp=useCallback((e)=>{
-    let ok=false;
-    setTrips((ts)=>{
-      if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
-      ok=true;
-      return ts.map(t=>t.id===activeId?{...t,expenses:[...t.expenses,e]}:t);
-    });
-    if(ok){ onMutateTripField(activeId,"expenses",arr=>[...(arr||[]),e]); logActivity("add",e); }
+  // opts.restore: the expense is coming back through the undo button after a delete, so the history says "restored".
+  const addExp=useCallback((e,opts)=>{
+    const ok=!tripsRef.current.find(t=>t.id===activeId)?.archived; // archived trips are read-only
+    if(ok) setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,expenses:[...t.expenses,e]}:t));
+    if(ok){ onMutateTripField(activeId,"expenses",arr=>[...(arr||[]),e]); logActivity(opts?.restore?"restore":"add",e); }
     // Flight reminders are handled server-side by /api/push-cron now — it's
     // timezone-aware and respects the trip's actual reminderHours, unlike
     // the setTimeout that used to live here (hardcoded 3h, and only fired
@@ -4933,23 +4934,16 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   },[activeId,onMutateTripField,logActivity,notifyMembers]);
 
   const togglePay=useCallback((id)=>{
-    let ok=false;
-    setTrips((ts)=>ts.map(t=>{
-      if(t.id!==activeId||t.archived)return t;
-      ok=true;
-      return{...t,expenses:t.expenses.map(e=>e.id===id?{...e,paid:!e.paid}:e)};
-    }));
+    const cur=tripsRef.current.find(t=>t.id===activeId);
+    const ok=!!cur&&!cur.archived;
+    if(ok) setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.map(e=>e.id===id?{...e,paid:!e.paid}:e)}:t));
     if(ok) onMutateTripField(activeId,"expenses",arr=>(arr||[]).map(e=>e.id===id?{...e,paid:!e.paid}:e));
   },[activeId,onMutateTripField]);
 
   const delExp=useCallback((id)=>{
     const gone=trips.find(t=>t.id===activeId)?.expenses?.find(e=>e.id===id);
-    let ok=false;
-    setTrips((ts)=>{
-      if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
-      ok=true;
-      return ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.filter(e=>e.id!==id)}:t);
-    });
+    const ok=!tripsRef.current.find(t=>t.id===activeId)?.archived; // archived trips are read-only
+    if(ok) setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.filter(e=>e.id!==id)}:t));
     if(ok){
       onMutateTripField(activeId,"expenses",arr=>(arr||[]).filter(e=>e.id!==id)); logActivity("delete",gone);
       if(gone&&gone.isShared!==false) notifyMembers("expense_deleted",{category:gone.category,amountILS:gone.amountILS});
@@ -4958,12 +4952,8 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
 
   const editExp=useCallback((id,patch)=>{
     const before=trips.find(t=>t.id===activeId)?.expenses?.find(e=>e.id===id);
-    let ok=false;
-    setTrips((ts)=>{
-      if(ts.find(t=>t.id===activeId)?.archived)return ts; // read-only
-      ok=true;
-      return ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)}:t);
-    });
+    const ok=!tripsRef.current.find(t=>t.id===activeId)?.archived; // archived trips are read-only
+    if(ok) setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)}:t));
     if(ok){
       onMutateTripField(activeId,"expenses",arr=>(arr||[]).map(e=>e.id===id?{...e,...patch}:e)); logActivity("edit",{...before,...patch});
       const merged={...before,...patch};
