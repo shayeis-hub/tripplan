@@ -589,6 +589,15 @@ function SkeletonRec(){
 }
 const FL=({children})=><label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:W40,letterSpacing:"0.5px",textTransform:"uppercase"}}>{children}</label>;
 
+// Booking links: only http(s) is accepted ("www." gets https:// added). Anything else (javascript:, data:, ...) is rejected,
+// because on a shared trip the link is opened by other people.
+function safeUrl(u){
+  let x=String(u||"").trim();
+  if(/^www\./i.test(x))x="https://"+x;
+  if(!/^https?:\/\/\S+$/i.test(x))return "";
+  try{new URL(x);return x;}catch{return "";}
+}
+
 function SI({label,value,onChange,type="text",placeholder,min,max,style}){
   return(
     <div style={{marginBottom:14,...style}}>
@@ -2176,7 +2185,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
   );
 }
 
-const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:defaultTripDate(dates),checkIn:defaultTripDate(dates),checkOut:dates[1]||dates[0]||"",flightNumber:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",shares:[],isShared:true,participants:people.map(p=>p.id),payers:[]});
+const mkForm=(dates,cur,people=[])=>({category:"food",amount:"",currency:cur||"ILS",description:"",paid:false,date:defaultTripDate(dates),checkIn:defaultTripDate(dates),checkOut:dates[1]||dates[0]||"",flightNumber:"",bookingRef:"",bookingUrl:"",departureTime:"",landingTime:"",time:"",timeEnd:"",address:"",reminderHours:5,paidBy:"",splitWith:[],splitType:"equal",shares:[],isShared:true,participants:people.map(p=>p.id),payers:[]});
 
 function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,rates,ratesInfo,prefill,onPrefillDone,isViewOnly,activityLog}){
   const{lang}=useLang();
@@ -2187,6 +2196,13 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   const[showLog,setShowLog]=useState(false);
   const[undoExp,setUndoExp]=useState(null);
   const undoTimer=useRef(null);
+  // Tapping a booking reference copies it; the chip shows "copied" for a moment.
+  const[copiedId,setCopiedId]=useState(null);
+  const copyRef=(id,text)=>{
+    try{Promise.resolve(navigator.clipboard?.writeText(text)).catch(()=>{});}catch{}
+    setCopiedId(id);
+    setTimeout(()=>setCopiedId(c=>c===id?null:c),1500);
+  };
   useEffect(()=>()=>clearTimeout(undoTimer.current),[]);
   const askDelete=exp=>{
     const name=exp.description||catLabel(exp.category,lang);
@@ -2369,6 +2385,11 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     return form.participants.map(id=>{const x=shareOf(id);const keep=x&&x.orig===undefined&&!isNaN(parseFloat(x.amount));return {id,amount:keep?parseFloat(x.amount):r2((parseFloat(shareOrig(id,amt))||0)*r)};}).filter(x=>x.amount>0);
   };
   const sharesMsg=lang==="he"?"סכומי הצריכה לא תואמים לסכום ההוצאה":lang==="es"?"Los montos de consumo no coinciden con el total":"Consumption amounts don't add up to the expense total";
+  // Booking reference + link: flights and hotels only.
+  const isBk=form.category==="hotel"||form.category==="flight";
+  const bookingOk=()=>!isBk||!String(form.bookingUrl||"").trim()||!!safeUrl(form.bookingUrl);
+  const bookingMsg=lang==="he"?"הקישור צריך להתחיל ב-https://":lang==="es"?"El enlace debe empezar con https://":"The link must start with https://";
+  const bookingForSave=()=>isBk?{bookingRef:String(form.bookingRef||"").trim(),bookingUrl:safeUrl(form.bookingUrl)}:{bookingRef:"",bookingUrl:""};
   const payersUnbalanced=amt=>{
     if(!(form.payers.length>0))return false;
     // about one shekel of tolerance, expressed in the expense's currency
@@ -2383,8 +2404,9 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     if(!form.amount||isViewOnly||!(amt>0))return;
     if(payersUnbalanced(amt)){alert(lang==="he"?"סכומי המשלמים לא תואמים לסכום ההוצאה":lang==="es"?"Los montos de los pagadores no coinciden con el total":"Payer amounts don't add up to the expense total");return;}
     if(sharesUnbalanced(amt)){alert(sharesMsg);return;}
+    if(!bookingOk()){alert(bookingMsg);return;}
     const date=form.category==="hotel"?form.checkIn:form.date;
-    onAdd({id:uid(),...form,payers:payersForSave(amt),shares:sharesForSave(amt),date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
+    onAdd({id:uid(),...form,...bookingForSave(),payers:payersForSave(amt),shares:sharesForSave(amt),date,amount:amt,amountILS:toILS(amt,form.currency),amountILSLocked:form.paid?toILS(amt,form.currency):undefined});
     setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
@@ -2402,7 +2424,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
       category:exp.category,amount:String(exp.amount),currency:exp.currency,
       description:exp.description||"",paid:exp.paid,date:exp.date,
       checkIn:exp.checkIn||"",checkOut:exp.checkOut||"",
-      flightNumber:exp.flightNumber||"",departureTime:exp.departureTime||"",landingTime:exp.landingTime||"",
+      flightNumber:exp.flightNumber||"",departureTime:exp.departureTime||"",landingTime:exp.landingTime||"",bookingRef:exp.bookingRef||"",bookingUrl:exp.bookingUrl||"",
       time:exp.time||"",timeEnd:exp.timeEnd||"",
       address:exp.address||"",reminderHours:exp.reminderHours||5,
       paidBy:exp.paidBy||"",splitWith:exp.splitWith||[],
@@ -2419,6 +2441,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     if(!form.amount||isViewOnly||!(amt>0))return;
     if(payersUnbalanced(amt)){alert(lang==="he"?"סכומי המשלמים לא תואמים לסכום ההוצאה":lang==="es"?"Los montos de los pagadores no coinciden con el total":"Payer amounts don't add up to the expense total");return;}
     if(sharesUnbalanced(amt)){alert(sharesMsg);return;}
+    if(!bookingOk()){alert(bookingMsg);return;}
     const date=form.category==="hotel"?form.checkIn:form.date;
     // amountILSLocked freezes the ILS value at the moment an expense is
     // marked paid, for reports that shouldn't shift with today's exchange
@@ -2430,7 +2453,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
     const keep=amountUnchanged(amt);
     const ils=expILS(amt,form.currency);
     const locked=form.paid?(keep&&editingExp.paid&&Number.isFinite(Number(editingExp.amountILSLocked))?Number(editingExp.amountILSLocked):toILS(amt,form.currency)):undefined;
-    onEdit(editId,{...form,payers:payersForSave(amt),shares:sharesForSave(amt),date,amount:amt,amountILS:ils,amountILSLocked:locked});
+    onEdit(editId,{...form,...bookingForSave(),payers:payersForSave(amt),shares:sharesForSave(amt),date,amount:amt,amountILS:ils,amountILSLocked:locked});
     setForm(mkForm(dates,trip.defaultCurrency,people));
     setShow(false);
     setEditId(null);
@@ -2475,6 +2498,23 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontWeight:700,fontSize:14,color:"#ffffff",fontFamily:RF}}>{catLabel(cat?.id,lang)}</div>
           {exp.description&&<div style={{fontSize:12,color:W40,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{exp.description}</div>}
+          {(exp.category==="flight"||exp.category==="hotel")&&(exp.bookingRef||safeUrl(exp.bookingUrl))&&(
+            <div style={{marginTop:5,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+              {exp.bookingRef&&(
+                <button onClick={e=>{e.stopPropagation();copyRef(exp.id,exp.bookingRef);}}
+                  style={{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 8px",borderRadius:7,border:`0.5px solid ${TBB}`,background:TBL,color:TEAL,fontFamily:RF,fontWeight:700,fontSize:11,cursor:"pointer"}}>
+                  {copiedId===exp.id?<Check size={10} strokeWidth={2.5}/>:<Copy size={10} strokeWidth={2}/>}
+                  <span style={{direction:"ltr",unicodeBidi:"isolate"}}>{copiedId===exp.id?(lang==="he"?"המספר הועתק":lang==="es"?"Copiado":"Copied"):exp.bookingRef}</span>
+                </button>
+              )}
+              {safeUrl(exp.bookingUrl)&&(
+                <a href={safeUrl(exp.bookingUrl)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()}
+                  style={{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 8px",borderRadius:7,border:`0.5px solid ${TBB}`,background:TBL,color:TEAL,fontFamily:RF,fontWeight:700,fontSize:11,textDecoration:"none"}}>
+                  <LinkIcon size={10} strokeWidth={2}/>{lang==="he"?"פתח הזמנה":lang==="es"?"Abrir reserva":"Open booking"}
+                </a>
+              )}
+            </div>
+          )}
           {exp.payers?.length>0&&(
             <div style={{marginTop:4,display:"flex",gap:4,flexWrap:"wrap"}}>
               {exp.payers.map((py,i)=>(
@@ -2709,6 +2749,14 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                         )}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Booking reference + link (flights and hotels) */}
+                {isBk&&(
+                  <div style={{marginBottom:2}}>
+                    <SI label={t("booking_ref",lang)} value={form.bookingRef||""} onChange={v=>set({bookingRef:v.toUpperCase()})} placeholder={t("booking_ref_ph",lang)}/>
+                    <SI label={t("booking_url",lang)} value={form.bookingUrl||""} onChange={v=>set({bookingUrl:v})} type="url" placeholder={t("booking_url_ph",lang)} style={{direction:"ltr"}}/>
                   </div>
                 )}
 
@@ -3323,10 +3371,10 @@ function CalendarScreen({trip,expenses,onSaveActs}){
     };
     const eventLabel={
       flight:f=>f._leg==="arrival"
-        ?`🛬 ${t("cal_flight_land",lang)}${f.flightNumber?` ${f.flightNumber}`:""}  ${f.landingTime}`
-        :`✈️${f.flightNumber?` ${f.flightNumber}`:""}  ${f.departureTime}${f.landingTime?` → ${f.landingTime}`:""}`,
+        ?`🛬 ${t("cal_flight_land",lang)}${f.flightNumber?` ${f.flightNumber}`:""}  ${f.landingTime}${f.bookingRef?` · ${f.bookingRef}`:""}`
+        :`✈️${f.flightNumber?` ${f.flightNumber}`:""}  ${f.departureTime}${f.landingTime?` → ${f.landingTime}`:""}${f.bookingRef?` · ${f.bookingRef}`:""}`,
       reminder:f=>`${t("cal_arrive_by",lang)} ${remTime(f.departureTime,f.reminderHours||5)}`,
-      "hotel-in":h=>`${t("cal_hotel_in",lang)} ${h.description||t("cat_hotel",lang)}`,
+      "hotel-in":h=>`${t("cal_hotel_in",lang)} ${h.description||t("cat_hotel",lang)}${h.bookingRef?` · ${h.bookingRef}`:""}`,
       "hotel-out":h=>`${t("cal_hotel_out",lang)} ${h.description||t("cat_hotel",lang)}`,
       "hotel-stay":h=>`🏨 ${h.description||t("cat_hotel",lang)}`,
       activity:a=>`${actIcon(a.type)} ${a.text}${a.time&&a.timeEnd?` (${a.time}–${a.timeEnd})`:""}`,
