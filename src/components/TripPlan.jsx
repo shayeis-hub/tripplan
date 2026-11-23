@@ -348,6 +348,15 @@ const fromILS=(amtILS,displayCur,rates)=>
 const fmtAmt=(amtILS,displayCur,rates,decimals=0)=>
   `${symFor(displayCur??'ILS')}${fromILS(amtILS,displayCur??'ILS',rates).toFixed(decimals)}`;
 
+// Each expense is stored in ILS at the rate of the day it was entered, and (new) also remembers the display-currency
+// rate of that moment (dispCur/dispRate = ILS per 1 unit of the trip's display currency). Showing it later with
+// today's rate made old expenses drift. kOf() is the factor that turns the stored ILS into "ILS at today's rate"
+// that, divided by today's rate in fromILS(), gives the frozen display amount. 1 when nothing was frozen
+// (ILS display, or an older expense without a stamp), so those behave exactly as before.
+const kOf=(exp,displayCur,rates)=>
+  (!displayCur||displayCur==="ILS"||!(exp.dispRate>0)||exp.dispCur!==displayCur)?1:((rates[displayCur]||1)/exp.dispRate);
+const effILS=(exp,displayCur,rates)=>exp.amountILS*kOf(exp,displayCur,rates);
+
 function useWeather(destination,startDate,endDate){
   const[wx,setWx]=useState(null);const[loading,setLoading]=useState(false);const[wxError,setWxError]=useState(null);
   useEffect(()=>{
@@ -1043,30 +1052,31 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 // this always uses the live amountILS (matching BudgetScreen), not the
 // paid-time amountILSLocked snapshot — settlement is about what people
 // currently owe each other, not a frozen historical total.
-function calcSettlement(people,expenses){
+function calcSettlement(people,expenses,kf){
   if(!people||people.length<2)return[];
   const balances={};
   people.forEach(p=>balances[p.id]=0);
   expenses.filter(e=>e.isShared!==false).forEach(exp=>{
+    const K=kf?kf(exp):1; // frozen-rate factor (see kOf); 1 = unchanged behaviour
     // New format: participants + payers
     if(exp.participants?.length>0&&exp.payers?.length>0){
       const parts=exp.participants.filter(id=>balances[id]!==undefined);
       if(parts.length===0)return;
       if(exp.splitType==="custom"&&exp.shares?.length>0){
         // split by consumption: every person is charged what they actually consumed (saved in ILS)
-        exp.shares.forEach(({id,amount})=>{ if(balances[id]!==undefined) balances[id]-=parseFloat(amount||0); });
+        exp.shares.forEach(({id,amount})=>{ if(balances[id]!==undefined) balances[id]-=parseFloat(amount||0)*K; });
       }else{
-        const share=exp.amountILS/parts.length;
+        const share=exp.amountILS*K/parts.length;
         parts.forEach(id=>{ balances[id]=(balances[id]||0)-share; });
       }
-      exp.payers.forEach(({id,amount})=>{ if(balances[id]!==undefined) balances[id]=(balances[id]||0)+parseFloat(amount||0); });
+      exp.payers.forEach(({id,amount})=>{ if(balances[id]!==undefined) balances[id]=(balances[id]||0)+parseFloat(amount||0)*K; });
     }
     // Old format: paidBy + splitWith
     else if(exp.paidBy){
       const participants=[exp.paidBy,...(exp.splitWith||[])];
       if(participants.length<2)return;
-      const share=exp.amountILS/participants.length;
-      balances[exp.paidBy]=(balances[exp.paidBy]||0)+exp.amountILS-share;
+      const share=exp.amountILS*K/participants.length;
+      balances[exp.paidBy]=(balances[exp.paidBy]||0)+exp.amountILS*K-share;
       (exp.splitWith||[]).forEach(id=>{ balances[id]=(balances[id]||0)-share; });
     }
   });
@@ -1521,7 +1531,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,r
           const accent=ACCENTS[idx%ACCENTS.length];
           const nights=trip.startDate&&trip.endDate?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
           const dc=trip.displayCurrency||"ILS";
-          const total=trip.expenses?.reduce((s,e)=>s+e.amountILS,0)||0;
+          const total=trip.expenses?.reduce((s,e)=>s+effILS(e,dc,rates),0)||0;
           return(
             <div key={trip.id} style={{borderRadius:18,overflow:"hidden",border:trip.id===selectedId?"1px solid rgba(100,223,223,0.6)":"0.5px solid rgba(255,255,255,0.07)",background:trip.id===selectedId?"rgba(100,223,223,0.06)":"transparent",cursor:"pointer",display:"flex"}}
               onClick={()=>onSelect(trip.id)}>
@@ -1618,7 +1628,7 @@ function TripSelectorScreen({trips,onSelect,onCreate,onDelete,onArchive,userId,r
               <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:8}}>
                 {archivedTrips.map(trip=>{
                   const nights=trip.startDate&&trip.endDate?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
-                  const total=trip.expenses?.reduce((s,e)=>s+e.amountILS,0)||0;
+                  const total=trip.expenses?.reduce((s,e)=>s+effILS(e,trip.displayCurrency||"ILS",rates),0)||0;
                   return(
                     <div key={trip.id} onClick={()=>onSelect(trip.id)}
                       style={{borderRadius:14,border:"0.5px solid rgba(255,255,255,0.06)",background:"rgba(255,255,255,0.025)",padding:"11px 14px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",opacity:0.75}}>
@@ -2527,7 +2537,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
         </div>
         {/* Amount + delete — RTL end (physical LEFT) */}
         <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
-          <div style={{fontWeight:700,fontSize:17,color:"#ffffff",fontFamily:RF,letterSpacing:"-0.3px"}}>{fmtAmt(exp.amountILS,trip.displayCurrency||"ILS",rates)}</div>
+          <div style={{fontWeight:700,fontSize:17,color:"#ffffff",fontFamily:RF,letterSpacing:"-0.3px"}}>{fmtAmt(effILS(exp,trip.displayCurrency||"ILS",rates),trip.displayCurrency||"ILS",rates)}</div>
           {!isViewOnly&&<button onClick={e=>{e.stopPropagation();askDelete(exp);}}
             style={{padding:"3px 7px",borderRadius:6,border:"none",background:"rgba(255,107,107,0.1)",cursor:"pointer",display:"flex",alignItems:"center"}}>
             <Trash2 size={11} color="#ff6b6b"/>
@@ -2538,7 +2548,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   };
 
   const nights=trip.startDate&&trip.endDate?Math.round((new Date(trip.endDate).getTime()-new Date(trip.startDate).getTime())/86400000)+1:0;
-  const totalILS=expenses.reduce((s,e)=>s+e.amountILS,0);
+  const totalILS=expenses.reduce((s,e)=>s+effILS(e,trip.displayCurrency||"ILS",rates),0);
 
   return(
     <div ref={rootRef}>
@@ -2980,17 +2990,18 @@ function BudgetScreen({trip,expenses,rates={}}){
   const people=trip.people||[];
   const sharedExp=expenses.filter(e=>e.isShared!==false);
   const personalExp=expenses.filter(e=>e.isShared===false);
-  const total=expenses.reduce((s,e)=>s+e.amountILS,0);
-  const totalShared=sharedExp.reduce((s,e)=>s+e.amountILS,0);
-  const totalPersonal=personalExp.reduce((s,e)=>s+e.amountILS,0);
-  const paid=expenses.filter(e=>e.paid).reduce((s,e)=>s+e.amountILS,0);
+  const eff=e=>effILS(e,dc,rates); // frozen display rate per expense
+  const total=expenses.reduce((s,e)=>s+eff(e),0);
+  const totalShared=sharedExp.reduce((s,e)=>s+eff(e),0);
+  const totalPersonal=personalExp.reduce((s,e)=>s+eff(e),0);
+  const paid=expenses.filter(e=>e.paid).reduce((s,e)=>s+eff(e),0);
   const unpaid=total-paid;
-  const byCat=CATS.map(cat=>{const ce=expenses.filter(e=>e.category===cat.id);return{...cat,total:ce.reduce((s,e)=>s+e.amountILS,0),count:ce.length};}).filter(c=>c.count>0);
+  const byCat=CATS.map(cat=>{const ce=expenses.filter(e=>e.category===cat.id);return{...cat,total:ce.reduce((s,e)=>s+eff(e),0),count:ce.length};}).filter(c=>c.count>0);
   const pieData=byCat.map(c=>({label:catLabel(c.id,lang),value:c.total,color:c.color,icon:c.icon}));
 
   // Settlement calculation — shared with the PDF export (calcSettlement)
   // so the two can never disagree about who owes whom.
-  const settlement=useMemo(()=>calcSettlement(people,expenses),[expenses,people]);
+  const settlement=useMemo(()=>calcSettlement(people,expenses,e=>kOf(e,dc,rates)),[expenses,people,dc,rates]);
 
   // PDF export
   const handlePDF=()=>exportTripPDF(trip,expenses,lang);
@@ -4969,7 +4980,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
   },[trips,activeId,updTrip,pushLog,notifyMembers]);
 
   // opts.restore: the expense is coming back through the undo button after a delete, so the history says "restored".
-  const addExp=useCallback((e,opts)=>{
+  const addExp=useCallback((e0,opts)=>{
+    // Freeze today's display-currency rate on the expense (see kOf). Restored expenses keep the stamp they already have.
+    const dcTrip=tripsRef.current.find(t=>t.id===activeId)?.displayCurrency||"ILS";
+    const e=(dcTrip==="ILS"||e0.dispRate>0||!(rates[dcTrip]>0))?e0:{...e0,dispCur:dcTrip,dispRate:rates[dcTrip]};
     const ok=!tripsRef.current.find(t=>t.id===activeId)?.archived; // archived trips are read-only
     if(ok) setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,expenses:[...t.expenses,e]}:t));
     if(ok){ onMutateTripField(activeId,"expenses",arr=>[...(arr||[]),e]); logActivity(opts?.restore?"restore":"add",e); }
@@ -4979,7 +4993,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     // at all if the tab happened to stay open for up to 24h straight).
     // Notify shared trip members about new expense
     if(ok&&e.isShared!==false) notifyMembers("expense_added",{category:e.category,amountILS:e.amountILS});
-  },[activeId,onMutateTripField,logActivity,notifyMembers]);
+  },[activeId,onMutateTripField,logActivity,notifyMembers,rates]);
 
   const togglePay=useCallback((id)=>{
     const cur=tripsRef.current.find(t=>t.id===activeId);
@@ -4998,8 +5012,15 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     }
   },[activeId,onMutateTripField,trips,logActivity,notifyMembers]);
 
-  const editExp=useCallback((id,patch)=>{
+  const editExp=useCallback((id,patch0)=>{
     const before=trips.find(t=>t.id===activeId)?.expenses?.find(e=>e.id===id);
+    // Re-freeze the display rate only if the amount was re-priced, or the expense has no frozen rate yet.
+    const dcTrip=tripsRef.current.find(t=>t.id===activeId)?.displayCurrency||"ILS";
+    let patch=patch0;
+    if(before&&dcTrip!=="ILS"&&rates[dcTrip]>0){
+      const reprice=!(before.dispRate>0)||before.dispCur!==dcTrip||Number(patch0.amountILS)!==Number(before.amountILS);
+      if(reprice)patch={...patch0,dispCur:dcTrip,dispRate:rates[dcTrip]};
+    }
     const ok=!tripsRef.current.find(t=>t.id===activeId)?.archived; // archived trips are read-only
     if(ok) setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)}:t));
     if(ok){
@@ -5007,7 +5028,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       const merged={...before,...patch};
       if(merged.isShared!==false) notifyMembers("expense_edited",{category:merged.category,amountILS:merged.amountILS});
     }
-  },[activeId,onMutateTripField,trips,logActivity,notifyMembers]);
+  },[activeId,onMutateTripField,trips,logActivity,notifyMembers,rates]);
 
   const handleShare=async(tripId)=>{
     if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
