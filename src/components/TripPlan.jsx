@@ -2843,8 +2843,8 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                                 const v=shareOrig(id,form.amount);
                                 return(
                                   <div key={id} style={{display:"flex",gap:6,alignItems:"center",marginBottom:7}}>
-                                    <div style={{flex:1,padding:"8px 10px",borderRadius:10,border:`1.5px solid ${p.color}`,background:"rgba(0,0,0,0.2)",color:p.color,fontFamily:RF,fontWeight:700,fontSize:13}}>{p.name}</div>
-                                    <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.2)",border:"1.5px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"0 10px",flex:1}}>
+                                    <div style={{flex:"0 0 34%",minWidth:0,boxSizing:"border-box",padding:"8px 10px",borderRadius:10,border:`1.5px solid ${p.color}`,background:"rgba(0,0,0,0.2)",color:p.color,fontFamily:RF,fontWeight:700,fontSize:13,overflowWrap:"anywhere",lineHeight:1.25}}>{p.name}</div>
+                                    <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.2)",border:"1.5px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"0 10px",flex:"1 1 0",minWidth:0,boxSizing:"border-box"}}>
                                       <span style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>{sym}</span>
                                       <input type="number" inputMode="decimal" value={v} onChange={e=>setShare(id,e.target.value)}
                                         placeholder="0" style={{flex:1,minWidth:0,border:"none",background:"transparent",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",padding:"8px 0"}}/>
@@ -2873,11 +2873,11 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                       return(
                         <div key={i} style={{display:"flex",gap:6,alignItems:"center",marginBottom:7}}>
                           <select value={payer.id} onChange={e=>updatePayer(i,"id",e.target.value)}
-                            style={{flex:1,padding:"8px 10px",borderRadius:10,border:`1.5px solid ${payer.id?pc:"rgba(255,255,255,0.15)"}`,background:"rgba(0,0,0,0.2)",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",cursor:"pointer"}}>
+                            style={{flex:"0 0 34%",minWidth:0,boxSizing:"border-box",padding:"8px 10px",borderRadius:10,border:`1.5px solid ${payer.id?pc:"rgba(255,255,255,0.15)"}`,background:"rgba(0,0,0,0.2)",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",cursor:"pointer"}}>
                             <option value="">{lang==="he"?"בחר...":lang==="es"?"Selecciona...":"Select..."}</option>
                             {people.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
                           </select>
-                          <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.2)",border:"1.5px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"0 10px",flex:1}}>
+                          <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.2)",border:"1.5px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"0 10px",flex:"1 1 0",minWidth:0,boxSizing:"border-box"}}>
                             <span style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>{CURR_SYMBOLS[form.currency]||form.currency}</span>
                             <input type="number" inputMode="decimal" value={payerOrig(payer,form.amount)} onChange={e=>updatePayer(i,"orig",e.target.value)}
                               placeholder="0" style={{flex:1,minWidth:0,border:"none",background:"transparent",color:"#ffffff",fontFamily:RF,fontSize:13,outline:"none",padding:"8px 0"}}/>
