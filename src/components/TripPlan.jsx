@@ -357,6 +357,26 @@ const kOf=(exp,displayCur,rates)=>
   (!displayCur||displayCur==="ILS"||!(exp.dispRate>0)||exp.dispCur!==displayCur)?1:((rates[displayCur]||1)/exp.dispRate);
 const effILS=(exp,displayCur,rates)=>exp.amountILS*kOf(exp,displayCur,rates);
 
+// Which person of the trip is the signed-in user: picked once in the budget screen (trip.meMap[uid]),
+// else matched by the optional e-mail on a person.
+function myPersonOf(trip,userId,userEmail){
+  const people=trip?.people||[];
+  const m=trip?.meMap?.[userId];
+  if(m&&people.some(p=>p.id===m))return m;
+  const em=(userEmail||"").toLowerCase().trim();
+  return (em&&people.find(p=>(p.email||"").toLowerCase().trim()===em)?.id)||null;
+}
+// What an expense cost one person (in stored ILS): their own personal expenses, or their share of a shared one.
+function myShareILS(exp,me,people){
+  if(exp.isShared===false)return exp.ownerPerson===me?exp.amountILS:0;
+  const ids=people.map(p=>p.id);
+  const raw=exp.participants?.length>0?exp.participants:(exp.paidBy?[exp.paidBy,...(exp.splitWith||[])]:ids);
+  const parts=raw.filter(id=>ids.includes(id));
+  if(!parts.includes(me))return 0;
+  if(exp.splitType==="custom"&&exp.shares?.length>0){const x=exp.shares.find(y=>y.id===me);return x?(parseFloat(x.amount)||0):0;}
+  return exp.amountILS/parts.length;
+}
+
 function useWeather(destination,startDate,endDate){
   const[wx,setWx]=useState(null);const[loading,setLoading]=useState(false);const[wxError,setWxError]=useState(null);
   useEffect(()=>{
@@ -2775,7 +2795,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
                   <div style={{flex:2}}><SI label={t("exp_amount",lang)} value={form.amount} onChange={v=>set({amount:v})} type="number" placeholder="0" min="0"/></div>
                   <div style={{flex:1}}><SS label={t("exp_currency",lang)} value={form.currency} onChange={v=>set({currency:v})}>{(trip.currencies||["ILS","USD","EUR"]).map(code=><option key={code} value={code}>{getCurrSymbol(code)} {code} – {getCurrLabel(code,lang)}</option>)}</SS></div>
                 </div>
-                {form.amount&&<div style={{marginBottom:12,padding:"9px 12px",background:`${C.palm}15`,borderRadius:10,fontSize:13,color:"#6ee7a0",fontWeight:700}}>≈ {toILS(parseFloat(form.amount)||0,form.currency).toFixed(2)} ₪</div>}
+                {form.amount&&<div style={{marginBottom:12,padding:"9px 12px",background:`${C.palm}15`,borderRadius:10,fontSize:13,color:"#6ee7a0",fontWeight:700}}>≈ {expILS(parseFloat(form.amount)||0,form.currency).toFixed(2)} ₪</div>}
 
                 <SI label={t("exp_desc",lang)} value={form.description} onChange={v=>set({description:v})} placeholder={t("exp_desc_ph",lang)}/>
                 {["hotel","attraction","food","other"].includes(form.category)&&(
@@ -2980,7 +3000,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   );
 }
 
-function BudgetScreen({trip,expenses,rates={}}){
+function BudgetScreen({trip,expenses:allExp,rates={},myPersonId,onPickMe}){
   const{lang}=useLang();
   const[budRef,twoCol]=useTwoCol(720); // use the extra width when this screen has it
   const dc=trip.displayCurrency||"ILS";
@@ -2988,6 +3008,21 @@ function BudgetScreen({trip,expenses,rates={}}){
   const fmt=(amt,dec=0)=>`${sym}${fromILS(amt,dc,rates).toFixed(dec)}`;
   const fmtN=(amt)=>fromILS(amt,dc,rates); // numeric only
   const people=trip.people||[];
+  // Two views: everyone's expenses (default) or only mine (my own personal expenses + my share of the shared ones).
+  const[tab,setTab]=useState("all");
+  const[meLocal,setMeLocal]=useState(null);
+  const me=meLocal||myPersonId||null;
+  const mineExp=useMemo(()=>{
+    if(!me)return [];
+    const out=[];
+    allExp.forEach(e=>{
+      const share=myShareILS(e,me,people);
+      if(share>0)out.push(e.isShared===false?e:{...e,amountILS:share});
+    });
+    return out;
+  },[allExp,me,trip.people]);
+  const expenses=tab==="mine"?mineExp:allExp;
+  const gate=tab==="mine"&&(people.length<2||!me);
   const sharedExp=expenses.filter(e=>e.isShared!==false);
   const personalExp=expenses.filter(e=>e.isShared===false);
   const eff=e=>effILS(e,dc,rates); // frozen display rate per expense
@@ -3004,9 +3039,9 @@ function BudgetScreen({trip,expenses,rates={}}){
   const settlement=useMemo(()=>calcSettlement(people,expenses,e=>kOf(e,dc,rates)),[expenses,people,dc,rates]);
 
   // PDF export
-  const handlePDF=()=>exportTripPDF(trip,expenses,lang);
+  const handlePDF=()=>exportTripPDF(trip,allExp,lang);
 
-  const budgetRemaining=trip.budget>0?trip.budget-total:null;
+  const budgetRemaining=trip.budget>0&&tab==="all"?trip.budget-total:null;
   const budgetPct=trip.budget>0?Math.min((total/trip.budget)*100,100):0;
   const barColor=budgetPct<70?"#4ade80":budgetPct<90?"#fbbf24":"#ff6b6b";
 
@@ -3016,6 +3051,30 @@ function BudgetScreen({trip,expenses,rates={}}){
         subtitle={trip.destination?`${trip.destination}${trip.startDate&&trip.endDate?` · ${fmtDate(trip.startDate)} – ${fmtDate(trip.endDate)}`:""}`:""}
         action={<button onClick={handlePDF} style={{padding:"7px 14px",borderRadius:10,border:"0.5px solid rgba(255,255,255,0.2)",background:"rgba(255,255,255,0.07)",color:"rgba(255,255,255,0.7)",fontFamily:RF,fontWeight:600,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}><FileDown size={13}/>{t("budget_export",lang)}</button>}/>
 
+      {/* Everyone's expenses / my expenses */}
+      <div style={{padding:"14px 16px 0",display:"flex",gap:8}}>
+        {[["all",lang==="he"?"הוצאות של כולם":lang==="es"?"Gastos de todos":"Everyone's expenses"],["mine",lang==="he"?"ההוצאות שלי":lang==="es"?"Mis gastos":"My expenses"]].map(([k,label])=>{
+          const on=tab===k;
+          return <button key={k} onClick={()=>setTab(k)} aria-pressed={on}
+            style={{flex:1,padding:"10px 12px",borderRadius:12,border:`1.5px solid ${on?TEAL:"rgba(255,255,255,0.15)"}`,background:on?TBL:"transparent",color:on?TEAL:"rgba(255,255,255,0.55)",fontFamily:RF,fontWeight:700,fontSize:13,cursor:"pointer"}}>{label}</button>;
+        })}
+      </div>
+      {tab==="mine"&&people.length>=2&&(
+        <div style={{padding:"12px 16px 0"}}>
+          <label style={{display:"block",fontWeight:500,fontSize:12,marginBottom:6,color:W40,fontFamily:RF}}>{lang==="he"?"מי אני בטיול?":lang==="es"?"¿Quién soy en este viaje?":"Who am I in this trip?"}</label>
+          <select value={me||""} onChange={e=>{const v=e.target.value;if(!v)return;setMeLocal(v);onPickMe?.(v);}}
+            style={{width:"100%",padding:"10px 12px",borderRadius:12,border:`1.5px solid ${me?(people.find(p=>p.id===me)?.color||TEAL):"rgba(255,255,255,0.15)"}`,background:"rgba(0,0,0,0.2)",color:"#ffffff",fontFamily:RF,fontSize:14,outline:"none",cursor:"pointer"}}>
+            <option value="">{lang==="he"?"בחר...":lang==="es"?"Selecciona...":"Select..."}</option>
+            {people.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+      )}
+      {gate&&people.length<2&&(
+        <div style={{margin:"16px",padding:"28px 20px",borderRadius:16,background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",textAlign:"center",color:"rgba(255,255,255,0.7)",fontFamily:RF,fontSize:14,lineHeight:1.7}}>
+          {lang==="he"?"הפעם זה טיול רק שלך מבחינת הוצאות. כשיצטרפו עוד אנשים לטיול, כל אחד יוכל לראות כאן את ההוצאות שלו.":lang==="es"?"Esta vez el viaje es solo tuyo en cuanto a gastos. Cuando se unan otras personas, cada una verá aquí sus propios gastos.":"This time the trip is just yours when it comes to expenses. When others join, each person will see their own expenses here."}
+        </div>
+      )}
+      {!gate&&(
       <div style={twoCol?{padding:"16px",display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:12,alignItems:"start"}:{padding:"16px",display:"flex",flexDirection:"column",gap:12}}>
 
         {/* KPI 2x2 (one row of four when wide) */}
@@ -3033,7 +3092,7 @@ function BudgetScreen({trip,expenses,rates={}}){
         </div>
 
         {/* Budget progress */}
-        {trip.budget>0&&(
+        {trip.budget>0&&tab==="all"&&(
           <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -3091,7 +3150,7 @@ function BudgetScreen({trip,expenses,rates={}}){
         )}
 
         {/* Settlement */}
-        {people.length>=2&&settlement.length>0&&(
+        {tab==="all"&&people.length>=2&&settlement.length>0&&(
           <div style={{background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px"}}>
             <div style={{fontFamily:RF,fontSize:15,fontWeight:700,color:"#ffffff",marginBottom:4}}>{t("budget_settle",lang)}</div>
             <div style={{fontSize:12,color:W35,marginBottom:12}}>{t("budget_settle_sub",lang)}</div>
@@ -3117,6 +3176,7 @@ function BudgetScreen({trip,expenses,rates={}}){
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
@@ -4979,11 +5039,21 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     notifyMembers(`activity_${action==="add"?"added":action==="edit"?"edited":"deleted"}`,{name:text});
   },[trips,activeId,updTrip,pushLog,notifyMembers]);
 
+  // "Who am I in this trip": remembered per signed-in account on the trip itself.
+  const pickMe=useCallback((pid)=>{
+    if(!pid)return;
+    setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,meMap:{...(t.meMap||{}),[userId]:pid}}:t));
+    onMutateTripField(activeId,"meMap",m=>({...(m||{}),[userId]:pid}));
+  },[activeId,userId,onMutateTripField]);
+
   // opts.restore: the expense is coming back through the undo button after a delete, so the history says "restored".
   const addExp=useCallback((e0,opts)=>{
     // Freeze today's display-currency rate on the expense (see kOf). Restored expenses keep the stamp they already have.
     const dcTrip=tripsRef.current.find(t=>t.id===activeId)?.displayCurrency||"ILS";
-    const e=(dcTrip==="ILS"||e0.dispRate>0||!(rates[dcTrip]>0))?e0:{...e0,dispCur:dcTrip,dispRate:rates[dcTrip]};
+    const e1=(dcTrip==="ILS"||e0.dispRate>0||!(rates[dcTrip]>0))?e0:{...e0,dispCur:dcTrip,dispRate:rates[dcTrip]};
+    // A personal expense remembers whose it is (used by the "my expenses" view).
+    const owner=(e1.isShared===false&&!e1.ownerPerson)?myPersonOf(tripsRef.current.find(t=>t.id===activeId),userId,userEmail):null;
+    const e=owner?{...e1,ownerPerson:owner}:e1;
     const ok=!tripsRef.current.find(t=>t.id===activeId)?.archived; // archived trips are read-only
     if(ok) setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,expenses:[...t.expenses,e]}:t));
     if(ok){ onMutateTripField(activeId,"expenses",arr=>[...(arr||[]),e]); logActivity(opts?.restore?"restore":"add",e); }
@@ -4993,7 +5063,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     // at all if the tab happened to stay open for up to 24h straight).
     // Notify shared trip members about new expense
     if(ok&&e.isShared!==false) notifyMembers("expense_added",{category:e.category,amountILS:e.amountILS});
-  },[activeId,onMutateTripField,logActivity,notifyMembers,rates]);
+  },[activeId,onMutateTripField,logActivity,notifyMembers,rates,userId,userEmail]);
 
   const togglePay=useCallback((id)=>{
     const cur=tripsRef.current.find(t=>t.id===activeId);
@@ -5021,6 +5091,10 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       const reprice=!(before.dispRate>0)||before.dispCur!==dcTrip||Number(patch0.amountILS)!==Number(before.amountILS);
       if(reprice)patch={...patch0,dispCur:dcTrip,dispRate:rates[dcTrip]};
     }
+    if(before&&(patch.isShared??before.isShared)===false&&!(patch.ownerPerson||before.ownerPerson)){
+      const o=myPersonOf(tripsRef.current.find(t=>t.id===activeId),userId,userEmail);
+      if(o)patch={...patch,ownerPerson:o};
+    }
     const ok=!tripsRef.current.find(t=>t.id===activeId)?.archived; // archived trips are read-only
     if(ok) setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,expenses:t.expenses.map(e=>e.id===id?{...e,...patch}:e)}:t));
     if(ok){
@@ -5028,7 +5102,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
       const merged={...before,...patch};
       if(merged.isShared!==false) notifyMembers("expense_edited",{category:merged.category,amountILS:merged.amountILS});
     }
-  },[activeId,onMutateTripField,trips,logActivity,notifyMembers,rates]);
+  },[activeId,onMutateTripField,trips,logActivity,notifyMembers,rates,userId,userEmail]);
 
   const handleShare=async(tripId)=>{
     if(!shareEmail.trim()){setShareMsg("הכנס אימייל");return;}
@@ -5717,7 +5791,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             <div key={screen} className="screen-enter">
               {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>{const wasWizard=wizardMode;setWizardMode(false);setScreen("expenses");if(wasWizard)askAboutNotifications(active);}} allCodes={allCodes} rates={rates} wizard={wizardMode} onShare={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} lastTripPrefs={lastTripPrefs}/>}
               {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)} isViewOnly={isViewOnly} activityLog={active?.activityLog}/>}
-              {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates}/>}
+              {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates} myPersonId={myPersonOf(active,userId,userEmail)} onPickMe={isViewOnly?null:pickMe}/>}
             </div>
           </div>
           {screen!=="destination"&&<NavBar screens={budgetScreens} current={screen} onNav={s=>{pushNav("screen",activeId,"budget",s);setScreen(s);}}/>}
