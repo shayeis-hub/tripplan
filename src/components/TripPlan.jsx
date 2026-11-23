@@ -1880,7 +1880,7 @@ const GROUP_TYPE_OPTIONS=[
 const guessGroupType=peopleCount=>peopleCount>=3?"family":peopleCount===2?"couple":"solo";
 
 // ── New-trip wizard: 4 light steps (where → money → who → preferences) ──
-function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,newName,setNewName,addPerson,removePerson,valid,lang,lastTripPrefs}){
+function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,newName,setNewName,newEmail,setNewEmail,emailOk,addPerson,removePerson,valid,lang,lastTripPrefs}){
   const[step,setStep]=useState(1);
   const prefsInitRef=useRef(false);
   useEffect(()=>{
@@ -2021,11 +2021,13 @@ function NewTripWizard({trip,onUpdate,onFinish,allCodes,rates,onShare,people,new
               <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder={t("dest_people_ph",lang)} onKeyDown={e=>e.key==="Enter"&&addPerson()} style={inp}/>
               <button onClick={addPerson} style={{padding:"11px 16px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,cursor:"pointer",display:"flex",alignItems:"center"}}><Plus size={16} color={DARK_BG} strokeWidth={2.5}/></button>
             </div>
+            <input type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)} placeholder={lang==="he"?"אימייל (לא חובה)":lang==="es"?"Correo (opcional)":"Email (optional)"} onKeyDown={e=>e.key==="Enter"&&addPerson()} style={{...inp,direction:"ltr",marginBottom:6,borderColor:emailOk?undefined:"#ff6b6b"}}/>
+            <div style={{fontSize:11,color:W35,marginBottom:12}}>{lang==="he"?"עם אימייל, האדם יזוהה אוטומטית כשייכנס לטיול.":lang==="es"?"Con un correo, la persona se reconoce automáticamente al abrir el viaje.":"With an email, the person is recognised automatically when they open the trip."}</div>
             {people.length>0&&(
               <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:18}}>
                 {people.map(p=>(
                   <div key={p.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:14,background:p.color+"15",border:`0.5px solid ${p.color}40`}}>
-                    <span style={{fontSize:13,fontWeight:700,color:"#fff"}}>{p.name}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:"#fff"}}>{p.name}{p.email&&<span style={{display:"block",fontSize:10,fontWeight:400,color:W35,direction:"ltr"}}>{p.email}</span>}</span>
                     <button onClick={()=>removePerson(p.id)} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex"}}><X size={13} color={W35}/></button>
                   </div>
                 ))}
@@ -2118,17 +2120,21 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
   const valid=trip.destination&&trip.startDate&&trip.endDate&&new Date(trip.endDate)>=new Date(trip.startDate);
   const people=trip.people||[];
   const[newName,setNewName]=useState("");
+  const[newEmail,setNewEmail]=useState("");
+  const emailOk=!newEmail.trim()||/^\S+@\S+\.\S+$/.test(newEmail.trim());
 
   const addPerson=()=>{
     const name=newName.trim();
-    if(!name)return;
-    onUpdate({people:[...people,{id:uid(),name,color:PERSON_COLORS[people.length%PERSON_COLORS.length]}]});
+    if(!name||!emailOk)return;
+    const email=newEmail.trim().toLowerCase();
+    onUpdate({people:[...people,{id:uid(),name,color:PERSON_COLORS[people.length%PERSON_COLORS.length],...(email?{email}:{})}]});
     setNewName("");
+    setNewEmail("");
   };
   const removePerson=id=>onUpdate({people:people.filter(p=>p.id!==id)});
 
   if(wizard) return <NewTripWizard trip={trip} onUpdate={onUpdate} onFinish={onNext} allCodes={allCodes} rates={rates} onShare={onShare}
-    people={people} newName={newName} setNewName={setNewName} addPerson={addPerson} removePerson={removePerson} valid={valid} lang={lang} lastTripPrefs={lastTripPrefs}/>;
+    people={people} newName={newName} setNewName={setNewName} newEmail={newEmail} setNewEmail={setNewEmail} emailOk={emailOk} addPerson={addPerson} removePerson={removePerson} valid={valid} lang={lang} lastTripPrefs={lastTripPrefs}/>;
 
   return(
     <div ref={destRef}>
@@ -2160,6 +2166,9 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
               onFocus={e=>(e.target.style.borderColor=C.ocean)} onBlur={e=>(e.target.style.borderColor=C.sandDark)}/>
             <button onClick={addPerson} style={{padding:"10px 16px",borderRadius:12,border:"none",background:TEAL,color:DARK_BG,cursor:"pointer",display:"flex",alignItems:"center"}}><Plus size={16} color={DARK_BG} strokeWidth={2.5}/></button>
           </div>
+          <input type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)} placeholder={lang==="he"?"אימייל (לא חובה)":lang==="es"?"Correo (opcional)":"Email (optional)"} onKeyDown={e=>e.key==="Enter"&&addPerson()}
+            style={{width:"100%",boxSizing:"border-box",padding:"10px 14px",borderRadius:12,border:`0.5px solid ${emailOk?"rgba(100,223,223,0.2)":"#ff6b6b"}`,fontFamily:RF,fontSize:14,direction:"ltr",background:W07,color:"#ffffff",outline:"none",marginBottom:6}}/>
+          <div style={{fontSize:11,color:W35,marginBottom:12}}>{lang==="he"?"עם אימייל, האדם יזוהה אוטומטית כשייכנס לטיול.":lang==="es"?"Con un correo, la persona se reconoce automáticamente al abrir el viaje.":"With an email, the person is recognised automatically when they open the trip."}</div>
           {people.length===0?(
             <div style={{textAlign:"center",color:W35,padding:"12px 0",fontSize:13}}>{t("dest_solo",lang)}</div>
           ):(
@@ -2169,7 +2178,7 @@ function DestinationScreen({trip,onUpdate,onNext,allCodes,rates,wizard,onShare,l
                   <div style={{width:34,height:34,borderRadius:10,background:p.color+"22",border:`0.5px solid ${p.color}44`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                     <span style={{fontSize:14,fontWeight:800,color:p.color}}>{p.name[0]}</span>
                   </div>
-                  <span style={{fontSize:13,fontWeight:700,color:"#ffffff"}}>{p.name}</span>
+                  <span style={{fontSize:13,fontWeight:700,color:"#ffffff"}}>{p.name}{p.email&&<span style={{display:"block",fontSize:10,fontWeight:400,color:W35,direction:"ltr"}}>{p.email}</span>}</span>
                   <button onClick={()=>removePerson(p.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"2px",display:"flex",alignItems:"center",marginInlineStart:"auto"}}><X size={13} color={W35}/></button>
                 </div>
               ))}
@@ -3000,7 +3009,7 @@ function ExpensesScreen({trip,expenses,onAdd,onEdit,onTogglePaid,onDelete,toILS,
   );
 }
 
-function BudgetScreen({trip,expenses:allExp,rates={},myPersonId,onPickMe}){
+function BudgetScreen({trip,expenses:allExp,rates={},myPersonId,onPickMe,onAssign}){
   const{lang}=useLang();
   const[budRef,twoCol]=useTwoCol(720); // use the extra width when this screen has it
   const dc=trip.displayCurrency||"ILS";
@@ -3069,6 +3078,32 @@ function BudgetScreen({trip,expenses:allExp,rates={},myPersonId,onPickMe}){
           </select>
         </div>
       )}
+      {tab==="mine"&&people.length>=2&&me&&onAssign&&(()=>{
+        const un=allExp.filter(e=>e.isShared===false&&!e.ownerPerson);
+        if(un.length===0)return null;
+        const L=(he,en,es)=>lang==="he"?he:lang==="es"?es:en;
+        const markAll=()=>{
+          const q=L(`לסמן את כל ${un.length} ההוצאות כשלך?`,`Mark all ${un.length} expenses as yours?`,`¿Marcar los ${un.length} gastos como tuyos?`);
+          if(window.confirm(q))onAssign(un.map(e=>e.id),me);
+        };
+        const btn={padding:"6px 12px",borderRadius:8,border:`0.5px solid ${TBB}`,background:TBL,color:TEAL,fontFamily:RF,fontWeight:700,fontSize:12,cursor:"pointer",flexShrink:0};
+        return(
+          <div style={{margin:"12px 16px 0",padding:"14px",borderRadius:16,background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)"}}>
+            <div style={{fontFamily:RF,fontSize:14,fontWeight:700,color:"#ffffff",marginBottom:4}}>{L("הוצאות אישיות ללא שיוך","Personal expenses not yet assigned","Gastos personales sin asignar")}</div>
+            <div style={{fontSize:12,color:W40,marginBottom:10,lineHeight:1.5}}>{L("סמנו את אלה ששלכם. השאר יישארו ללא שיוך עד שבעליהן יסמנו אותן.","Mark the ones that are yours. The rest stay unassigned until their owners mark them.","Marca los que son tuyos. El resto seguirá sin asignar hasta que sus dueños los marquen.")}</div>
+            <button onClick={markAll} style={{...btn,width:"100%",marginBottom:10}}>{L("סמן הכול כשלי","Mark all as mine","Marcar todo como mío")}</button>
+            {un.map(e=>(
+              <div key={e.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderTop:"0.5px solid rgba(255,255,255,0.06)"}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,color:"#ffffff",fontFamily:RF,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.description||catLabel(e.category,lang)}</div>
+                  <div style={{fontSize:11,color:W40,fontFamily:RF}}>{fmtAmt(effILS(e,dc,rates),dc,rates)}{e.date?` · ${fmtDate(e.date)}`:""}</div>
+                </div>
+                <button onClick={()=>onAssign([e.id],me)} style={btn}>{L("שלי","Mine","Mío")}</button>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
       {gate&&people.length<2&&(
         <div style={{margin:"16px",padding:"28px 20px",borderRadius:16,background:"rgba(255,255,255,0.04)",border:"0.5px solid rgba(255,255,255,0.08)",textAlign:"center",color:"rgba(255,255,255,0.7)",fontFamily:RF,fontSize:14,lineHeight:1.7}}>
           {lang==="he"?"הפעם זה טיול רק שלך מבחינת הוצאות. כשיצטרפו עוד אנשים לטיול, כל אחד יוכל לראות כאן את ההוצאות שלו.":lang==="es"?"Esta vez el viaje es solo tuyo en cuanto a gastos. Cuando se unan otras personas, cada una verá aquí sus propios gastos.":"This time the trip is just yours when it comes to expenses. When others join, each person will see their own expenses here."}
@@ -5046,6 +5081,15 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
     onMutateTripField(activeId,"meMap",m=>({...(m||{}),[userId]:pid}));
   },[activeId,userId,onMutateTripField]);
 
+  // Mark old personal expenses (nobody's yet) as belonging to one person; done silently, it is not an edit of the expense.
+  const assignMine=useCallback((ids,pid)=>{
+    if(!pid||!ids?.length)return;
+    const set=new Set(ids);
+    const fix=e=>(set.has(e.id)&&e.isShared===false&&!e.ownerPerson)?{...e,ownerPerson:pid}:e;
+    setTrips((ts)=>ts.map(t=>t.id===activeId?{...t,expenses:(t.expenses||[]).map(fix)}:t));
+    onMutateTripField(activeId,"expenses",arr=>(arr||[]).map(fix));
+  },[activeId,onMutateTripField]);
+
   // opts.restore: the expense is coming back through the undo button after a delete, so the history says "restored".
   const addExp=useCallback((e0,opts)=>{
     // Freeze today's display-currency rate on the expense (see kOf). Restored expenses keep the stamp they already have.
@@ -5791,7 +5835,7 @@ export default function TripPlan({trips:initialTrips,onSaveTrip,onUpdateTripFiel
             <div key={screen} className="screen-enter">
               {screen==="destination"&&<DestinationScreen trip={active} onUpdate={updTrip} onNext={()=>{const wasWizard=wizardMode;setWizardMode(false);setScreen("expenses");if(wasWizard)askAboutNotifications(active);}} allCodes={allCodes} rates={rates} wizard={wizardMode} onShare={()=>{setShareModal(activeId);setShareEmail("");setShareMsg("");}} lastTripPrefs={lastTripPrefs}/>}
               {screen==="expenses"&&<ExpensesScreen trip={active} expenses={expenses} onAdd={addExp} onEdit={editExp} onTogglePaid={togglePay} onDelete={delExp} toILS={toILS} rates={rates} ratesInfo={info} prefill={expensePrefill} onPrefillDone={()=>setExpensePrefill(null)} isViewOnly={isViewOnly} activityLog={active?.activityLog}/>}
-              {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates} myPersonId={myPersonOf(active,userId,userEmail)} onPickMe={isViewOnly?null:pickMe}/>}
+              {screen==="budget"&&<BudgetScreen trip={active} expenses={expenses} rates={rates} myPersonId={myPersonOf(active,userId,userEmail)} onPickMe={isViewOnly?null:pickMe} onAssign={isViewOnly?null:assignMine}/>}
             </div>
           </div>
           {screen!=="destination"&&<NavBar screens={budgetScreens} current={screen} onNav={s=>{pushNav("screen",activeId,"budget",s);setScreen(s);}}/>}
